@@ -201,14 +201,13 @@
 
     function whatsappMessage(row){
       return [
-        "Hola, som del servei de fisioteràpia del CB Sant Josep.",
+        "Hola,",
+        "Sóc en Pol Amigó del servei de fisioteràpia del CB Sant Josep.",
         "",
-        "Hem rebut la petició de visita:",
-        "Jugador/a: " + (row.player || "—"),
-        "Equip: " + (row.team || "—") + (row.gender ? " " + row.gender : ""),
+        "Hem rebut la petició per " + (row.player || "—") + " (" + (row.team || "—") + (row.gender ? " " + row.gender : "") + ").",
         "Data de la lesió: " + formatDate(row.injuryDate, false),
         "",
-        "Ens posem en contacte amb vosaltres per coordinar la visita."
+        "Em poso en contacte per a coordinar la visita."
       ].join("\n");
     }
 

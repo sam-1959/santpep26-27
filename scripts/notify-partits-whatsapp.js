@@ -6,7 +6,7 @@ const fs = require("fs");
 const https = require("https");
 const { execFileSync } = require("child_process");
 
-const PAGE_URL = "https://ricky-1979.github.io/santpep26-27/partits.html";
+const PAGE_URL = "https://sam-1959.github.io/santpep26-27/partits.html";
 
 function requiredEnv(name) {
   return (process.env[name] || "").trim();

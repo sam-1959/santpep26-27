@@ -11,8 +11,8 @@
 function doPost(e) {
   try {
     var request = JSON.parse((e.postData && e.postData.contents) || "{}");
-    enviarCorreuAAdrecesFixes(adaptarPeticioANamedValues(request));
-    return respostaJson({ ok: true });
+    var resultat = enviarCorreuAAdrecesFixes(adaptarPeticioANamedValues(request));
+    return respostaJson({ ok: true, sentTo: resultat.sentTo, sentCount: resultat.sentTo.length });
   } catch (error) {
     Logger.log("Error enviant correu de fisio: " + error);
     return respostaJson({ ok: false, error: String(error) });
@@ -44,6 +44,11 @@ function enviarCorreuAAdrecesFixes(e) {
   var llistaCorreus = [
     "ricard.fuste@gmail.com"
   ];
+  var destinataris = normalitzarCorreus(llistaCorreus);
+
+  if (!destinataris.length) {
+    throw new Error("No hi ha destinataris configurats.");
+  }
 
   var filesResumHTML = "";
   var textResumPla = "";
@@ -104,12 +109,28 @@ function enviarCorreuAAdrecesFixes(e) {
     </div>
   `;
 
-  GmailApp.sendEmail(llistaCorreus.join(","), assumpte, cosText, {
-    htmlBody: cosHTML,
-    name: "CB Sant Josep Badalona"
+  destinataris.forEach(function(correu) {
+    GmailApp.sendEmail(correu, assumpte, cosText, {
+      htmlBody: cosHTML,
+      name: "CB Sant Josep Badalona"
+    });
+    Logger.log("Correu enviat a: " + correu);
   });
 
-  Logger.log("Correu enviat amb disseny Sant Pep a: " + llistaCorreus.join(","));
+  Logger.log("Correus enviats amb disseny Sant Pep a: " + destinataris.join(", "));
+  return { sentTo: destinataris };
+}
+
+function normalitzarCorreus(llistaCorreus) {
+  return llistaCorreus
+    .join(",")
+    .split(/[,\n;]/)
+    .map(function(correu) {
+      return String(correu || "").trim();
+    })
+    .filter(function(correu) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correu);
+    });
 }
 
 function formatarDataHora(value) {

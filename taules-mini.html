@@ -79,8 +79,9 @@
     .badge.warn { background:#fff6df; color:var(--warn); }
     .badge.review { background:#fdecec; color:var(--danger); }
     .title { display:flex; flex-wrap:wrap; gap:7px; align-items:baseline; font-weight:900; font-size:1rem; color:var(--ink); }
-    .team { color:#2b97d5; text-transform:uppercase; }
-    .rival { color:var(--ink); text-transform:uppercase; }
+    .team, .rival { text-transform:uppercase; }
+    .local-team { color:#2b97d5; }
+    .visitor-team { color:var(--ink); }
     .loc { margin-top:6px; color:var(--muted); font-size:0.82rem; }
     .cost { margin-top:4px; color:var(--brand-dark); font-size:0.82rem; font-weight:900; }
     .assign { display:grid; gap:8px; }
@@ -605,12 +606,12 @@
         const title = document.createElement("div");
         title.className = "title";
         const team = document.createElement("span");
-        team.className = "team";
+        team.className = `team ${game.home ? "local-team" : "visitor-team"}`;
         team.textContent = game.team || "Equip";
         const versus = document.createElement("span");
         versus.textContent = "vs";
         const rival = document.createElement("span");
-        rival.className = "rival";
+        rival.className = `rival ${game.home ? "visitor-team" : "local-team"}`;
         rival.textContent = game.rival || "Rival pendent";
         title.append(team, versus, rival);
         const loc = document.createElement("div");

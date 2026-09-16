@@ -27,8 +27,8 @@ const OWN = {
   // Masculí
   IAM: { team: "Infantil A", fam: "INFANTIL", sex: "M" },
   IBM: { team: "Infantil B", fam: "INFANTIL", sex: "M" },
-  PBM: { team: "Premini B",  fam: "PREMINI",  sex: "M" },
-  PAM: { team: "Premini A",  fam: "PREMINI",  sex: "M" },
+  PBM: { team: "Premini B",  fam: "MINI",  sex: "M" },
+  PAM: { team: "Premini A",  fam: "MINI",  sex: "M" },
   MAM: { team: "Mini A",     fam: "MINI",     sex: "M" },
   MBM: { team: "Mini B",     fam: "MINI",     sex: "M" },
   CAM: { team: "Cadet A",    fam: "CADET",    sex: "M" },

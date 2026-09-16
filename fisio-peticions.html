@@ -458,6 +458,11 @@
     function renderAnalysis(rowsToAnalyze){
       const genderCounts = countBy(rowsToAnalyze, "gender");
       const teamTop = topEntries(countBy(rowsToAnalyze, "team"), 5);
+      const playerTop = topEntries(rowsToAnalyze.reduce((acc, row) => {
+        const player = shortName(row.player);
+        acc[player] = (acc[player] || 0) + 1;
+        return acc;
+      }, {}), 3);
       const injuryTop = topEntries(rowsToAnalyze.reduce((acc, row) => {
         const type = injuryType(row);
         acc[type] = (acc[type] || 0) + 1;
@@ -478,6 +483,9 @@
       const injuryList = injuryTop.length
         ? '<ul class="analysis-list">' + injuryTop.map(([type, count]) => '<li><span>' + escapeHtml(type) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
         : "—";
+      const playerList = playerTop.length
+        ? '<ul class="analysis-list">' + playerTop.map(([player, count]) => '<li><span>' + escapeHtml(player) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
+        : "—";
 
       analysisEl.innerHTML =
         '<h3>Anàlisi de dades</h3>' +
@@ -487,6 +495,7 @@
           '<div class="analysis-card"><strong>' + averageDaysSinceInjury(rowsToAnalyze) + '</strong><span>Dies mitjans fins a sol·licitar</span></div>' +
           '<div class="analysis-card"><strong>' + latest + '</strong><span>Última petició</span></div>' +
           '<div class="analysis-card"><strong>Top equips</strong>' + teamList + '</div>' +
+          '<div class="analysis-card"><strong>Top jugadors/es</strong>' + playerList + '</div>' +
           '<div class="analysis-card"><strong>Tipus de lesió</strong>' + injuryList + '</div>' +
           '<div class="analysis-card"><strong>Per mes</strong>' + monthList + '</div>' +
         '</div>';

@@ -35,7 +35,10 @@ Prova manual:
 
 ## Avís email de noves peticions de fisio amb Apps Script
 
-Per fer una prova gratuïta d'avís per correu:
+Per fer una prova gratuïta d'avís per correu, el formulari pot cridar un Web
+App d'Apps Script després de guardar la petició a Firebase. El script manté el
+disseny Sant Pep de l'antic avís del Google Form i ara està configurat en mode
+prova amb destinatari `ricard.fuste@gmail.com`.
 
 1. Crea un projecte a https://script.google.com/.
 2. Enganxa el contingut de `scripts/fisio-email-appscript.js`.
@@ -44,7 +47,7 @@ Per fer una prova gratuïta d'avís per correu:
    - Who has access: `Anyone`
 4. Autoritza l'enviament de correus quan Google ho demani.
 5. Copia la URL `/exec` del desplegament.
-6. Posa aquesta URL a `APP_SCRIPT_NOTIFY_URL` dins `fisio.html`.
+6. Posa aquesta URL a `APP_SCRIPT_NOTIFY_URL` dins `fisio.html` i publica.
 
 El formulari guarda primer la petició a Firebase. Després crida Apps Script per
 enviar l'email. Si l'avís per email falla, la petició continua quedant guardada.

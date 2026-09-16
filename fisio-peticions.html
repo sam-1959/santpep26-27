@@ -61,6 +61,15 @@
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
     .page-button:disabled { opacity:0.45; cursor:not-allowed; }
     .page-info { font-weight:800; color:var(--brand-dark); }
+    .analysis { margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+    .analysis h3 { margin:0 0 12px; color:var(--brand-dark); font-size:1rem; }
+    .analysis-grid { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; }
+    .analysis-card { border:1px solid var(--line); border-radius:14px; background:#faf8fd; padding:12px; }
+    .analysis-card strong { display:block; color:var(--brand-dark); font-size:1.35rem; line-height:1.1; }
+    .analysis-card span { display:block; margin-top:4px; color:var(--muted); font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
+    .analysis-list { margin:6px 0 0; padding:0; list-style:none; color:var(--ink); font-size:0.88rem; }
+    .analysis-list li { display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-bottom:1px dashed #ddd4e8; }
+    .analysis-list li:last-child { border-bottom:0; }
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
@@ -97,6 +106,7 @@
       <div class="status" id="status">Carregant peticions...</div>
       <div class="table-wrap" id="tableWrap"></div>
       <div class="pagination" id="pagination"></div>
+      <div class="analysis" id="analysis"></div>
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Tecnificació 26-27</footer>
@@ -119,6 +129,7 @@
     const statusEl = document.getElementById("status");
     const tableWrap = document.getElementById("tableWrap");
     const paginationEl = document.getElementById("pagination");
+    const analysisEl = document.getElementById("analysis");
     const totalEl = document.getElementById("totalRequests");
     const filtersEl = document.getElementById("filters");
     const privacyText = document.getElementById("privacyText");
@@ -347,6 +358,7 @@
       if(!visible.length){
         tableWrap.innerHTML = '<div class="empty">Cap petició amb aquest filtre.</div>';
         paginationEl.innerHTML = "";
+        analysisEl.innerHTML = "";
         return;
       }
       const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
@@ -376,6 +388,7 @@
         }).join("") +
         '</tbody></table>';
       renderPagination(visible.length, totalPages);
+      renderAnalysis(visible);
     }
 
     function renderPagination(total, totalPages){
@@ -393,6 +406,56 @@
           render();
         });
       });
+    }
+
+    function countBy(rowsToCount, field){
+      return rowsToCount.reduce((acc, row) => {
+        const value = row[field] || "Sense dades";
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function topEntries(counts, limit){
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ca-ES"))
+        .slice(0, limit);
+    }
+
+    function averageDaysSinceInjury(rowsToAnalyze){
+      const values = rowsToAnalyze
+        .filter(row => row.createdAt && row.injuryDate)
+        .map(row => Math.max(0, Math.round((row.createdAt.getTime() - row.injuryDate.getTime()) / 86400000)));
+      if(!values.length) return "—";
+      return (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1);
+    }
+
+    function renderAnalysis(rowsToAnalyze){
+      const genderCounts = countBy(rowsToAnalyze, "gender");
+      const teamTop = topEntries(countBy(rowsToAnalyze, "team"), 5);
+      const monthTop = topEntries(rowsToAnalyze.reduce((acc, row) => {
+        const key = row.createdAt ? new Intl.DateTimeFormat("ca-ES", { month:"long", year:"numeric" }).format(row.createdAt) : "Sense data";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}), 3);
+      const latest = rowsToAnalyze[0] && rowsToAnalyze[0].createdAt ? formatDate(rowsToAnalyze[0].createdAt, false) : "—";
+      const teamList = teamTop.length
+        ? '<ul class="analysis-list">' + teamTop.map(([team, count]) => '<li><span>' + escapeHtml(team) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
+        : "—";
+      const monthList = monthTop.length
+        ? '<ul class="analysis-list">' + monthTop.map(([month, count]) => '<li><span>' + escapeHtml(month) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
+        : "—";
+
+      analysisEl.innerHTML =
+        '<h3>Anàlisi de dades</h3>' +
+        '<div class="analysis-grid">' +
+          '<div class="analysis-card"><strong>' + rowsToAnalyze.length + '</strong><span>Peticions filtrades</span></div>' +
+          '<div class="analysis-card"><strong>' + (genderCounts.M || 0) + ' / ' + (genderCounts.F || 0) + '</strong><span>Masculins / Femenins</span></div>' +
+          '<div class="analysis-card"><strong>' + averageDaysSinceInjury(rowsToAnalyze) + '</strong><span>Dies mitjans fins a sol·licitar</span></div>' +
+          '<div class="analysis-card"><strong>' + latest + '</strong><span>Última petició</span></div>' +
+          '<div class="analysis-card"><strong>Top equips</strong>' + teamList + '</div>' +
+          '<div class="analysis-card"><strong>Per mes</strong>' + monthList + '</div>' +
+        '</div>';
     }
 
     async function loadPublicRequests(message){

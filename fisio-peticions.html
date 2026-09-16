@@ -430,6 +430,21 @@
       return (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1);
     }
 
+    function weekKey(date){
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const day = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - day);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return d.getUTCFullYear() + "-W" + String(week).padStart(2, "0");
+    }
+
+    function averageRequestsPerWeek(rowsToAnalyze){
+      const weeks = new Set(rowsToAnalyze.filter(row => row.createdAt).map(row => weekKey(row.createdAt)));
+      if(!weeks.size) return "—";
+      return (rowsToAnalyze.length / weeks.size).toFixed(1);
+    }
+
     function normalizeText(value){
       return String(value || "")
         .normalize("NFD")
@@ -473,7 +488,6 @@
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {}), 3);
-      const latest = rowsToAnalyze[0] && rowsToAnalyze[0].createdAt ? formatDate(rowsToAnalyze[0].createdAt, false) : "—";
       const teamList = teamTop.length
         ? '<ul class="analysis-list">' + teamTop.map(([team, count]) => '<li><span>' + escapeHtml(team) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
         : "—";
@@ -493,7 +507,7 @@
           '<div class="analysis-card"><strong>' + rowsToAnalyze.length + '</strong><span>Peticions filtrades</span></div>' +
           '<div class="analysis-card"><strong>' + (genderCounts.M || 0) + ' / ' + (genderCounts.F || 0) + '</strong><span>Masculins / Femenins</span></div>' +
           '<div class="analysis-card"><strong>' + averageDaysSinceInjury(rowsToAnalyze) + '</strong><span>Dies mitjans fins a sol·licitar</span></div>' +
-          '<div class="analysis-card"><strong>' + latest + '</strong><span>Última petició</span></div>' +
+          '<div class="analysis-card"><strong>' + averageRequestsPerWeek(rowsToAnalyze) + '</strong><span>Peticions per setmana</span></div>' +
           '<div class="analysis-card"><strong>Top equips</strong>' + teamList + '</div>' +
           '<div class="analysis-card"><strong>Top players</strong>' + playerList + '</div>' +
           '<div class="analysis-card"><strong>Tipus de lesió</strong>' + injuryList + '</div>' +

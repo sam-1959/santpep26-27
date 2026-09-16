@@ -69,7 +69,8 @@
           <input id="playerName" type="text" required />
         </label>
         <label>Telèfon de contacte <span class="required">*</span>
-          <input id="phone" type="tel" inputmode="tel" autocomplete="tel" required />
+          <input id="phone" type="tel" inputmode="tel" autocomplete="tel" pattern="(?:\+?34|0034)?[67][0-9]{8}" title="Introdueix un mòbil vàlid, per exemple 612345678 o +34612345678" required />
+          <span class="hint">Ha de ser un mòbil vàlid: 6XXXXXXXX o 7XXXXXXXX.</span>
         </label>
         <label>Data de la lesió <span class="required">*</span>
           <input id="injuryDate" type="date" required />
@@ -138,6 +139,13 @@
       const el = document.getElementById(id);
       return el ? el.value.trim() : "";
     }
+    function isValidMobile(value){
+      const digits = String(value || "").replace(/\D/g, "");
+      const national = digits.startsWith("0034") ? digits.slice(4)
+        : digits.startsWith("34") && digits.length === 11 ? digits.slice(2)
+        : digits;
+      return /^[67]\d{8}$/.test(national);
+    }
     async function saveRequest(path, id, payload){
       const response = await fetch(firebaseUrl(path, id), {
         method:"PUT",
@@ -163,6 +171,11 @@
       event.preventDefault();
       if(!dateEl.value){
         setStatus("err", "Indica la data de la lesió.");
+        return;
+      }
+      if(!isValidMobile(inputValue("phone"))){
+        setStatus("err", "Introdueix un telèfon mòbil vàlid.");
+        document.getElementById("phone").focus();
         return;
       }
       submitButton.disabled = true;

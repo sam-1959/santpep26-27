@@ -102,7 +102,7 @@
   <footer>CB Sant Josep de Badalona · Tecnificació 26-27</footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     const REQUESTS = [
       { createdAt: "15/09/2026 17:56:19", player: "Oriol Piera", injuryDate: "09/09/2026", team: "INFANTIL", gender: "M", description: "Dolor i inflamació al genoll dret." },
@@ -459,6 +459,10 @@
         const app = initializeApp(FIREBASE_CONFIG);
         auth = getAuth(app);
         authReady = true;
+        getRedirectResult(auth).catch(error => {
+          statusMessage = "No s'ha pogut completar l'accés amb Google" + (error && error.code ? " (" + error.code + ")" : "") + ".";
+          render();
+        });
         onAuthStateChanged(auth, user => {
           currentUser = user || null;
           hasInitializedSeenRequests = false;
@@ -479,7 +483,17 @@
       try {
         await signInWithPopup(auth, new GoogleAuthProvider());
       } catch(error) {
-        statusMessage = "No s'ha pogut iniciar sessió amb Google.";
+        if(error && ["auth/popup-blocked", "auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(error.code)){
+          try {
+            authText.textContent = "Obrint Google...";
+            await signInWithRedirect(auth, new GoogleAuthProvider());
+            return;
+          } catch(redirectError) {
+            statusMessage = "No s'ha pogut iniciar sessió amb Google" + (redirectError && redirectError.code ? " (" + redirectError.code + ")" : "") + ".";
+          }
+        } else {
+          statusMessage = "No s'ha pogut iniciar sessió amb Google" + (error && error.code ? " (" + error.code + ")" : "") + ".";
+        }
         render();
       }
     });

@@ -47,10 +47,12 @@
     .col-phone { width:1%; white-space:nowrap; }
     tr:last-child td { border-bottom:0; }
     tr.today { background:#fff8d6; box-shadow:inset 4px 0 0 var(--accent); }
+    tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
     .today-icon { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; margin-right:6px; border-radius:999px; background:var(--accent); color:#4a3800; font-size:0.72rem; font-weight:900; vertical-align:middle; }
+    .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .whatsapp-link { color:#0b7f36; font-weight:900; text-decoration:none; white-space:nowrap; }
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
@@ -140,6 +142,7 @@
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
     const PAGE_SIZE = 10;
+    const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
     let activeTeam = "TOTS";
     let activeGender = "TOTS";
@@ -148,6 +151,12 @@
     let auth = null;
     let authReady = false;
     let isPrivateView = false;
+    let currentUser = null;
+    let seenRequestIds = new Set();
+    let newRequestIds = new Set();
+    let hasInitializedSeenRequests = false;
+    let refreshTimer = null;
+    let isRefreshing = false;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -252,6 +261,30 @@
       });
     }
 
+    function requestIdentity(row){
+      return String(row.id || [
+        row.createdAt ? row.createdAt.getTime() : "",
+        row.player || "",
+        row.team || "",
+        row.injuryDate ? row.injuryDate.getTime() : ""
+      ].join("|"));
+    }
+
+    function applyRequestMarkers(nextRows, resetSeen){
+      if(resetSeen || !hasInitializedSeenRequests){
+        seenRequestIds = new Set(nextRows.map(requestIdentity));
+        newRequestIds = new Set();
+        hasInitializedSeenRequests = true;
+      } else {
+        nextRows.forEach(row => {
+          const id = requestIdentity(row);
+          if(!seenRequestIds.has(id)) newRequestIds.add(id);
+          seenRequestIds.add(id);
+        });
+      }
+      return nextRows.map(row => ({ ...row, isNew: newRequestIds.has(requestIdentity(row)) }));
+    }
+
     function setPublicMode(message){
       isPrivateView = false;
       authTitle.textContent = "Vista pública";
@@ -326,6 +359,7 @@
       tableWrap.innerHTML = '<table><thead><tr><th class="col-date">Data sol·licitud</th><th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th></tr></thead><tbody>' +
         pageRows.map(row => {
           const isToday = isSameDay(row.createdAt, today);
+          const rowClass = row.isNew ? 'new-request' : (isToday ? 'today' : '');
           const whatsapp = whatsappLink(row);
           const phoneCell = whatsapp
             ? '<a class="whatsapp-link" href="' + escapeHtml(whatsapp) + '" target="_blank" rel="noopener">' + escapeHtml(row.phone || "—") + '</a>'
@@ -334,8 +368,8 @@
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
-          return '<tr class="' + (isToday ? 'today' : '') + '">' +
-          '<td class="col-date">' + (isToday ? '<span class="today-icon" title="Petició d’avui" aria-label="Petició d’avui">●</span>' : '') + escapeHtml(formatDate(row.createdAt, false)) + '</td>' +
+          return '<tr class="' + rowClass + '">' +
+          '<td class="col-date">' + (isToday ? '<span class="today-icon" title="Petició d’avui" aria-label="Petició d’avui">●</span>' : '') + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
           '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
@@ -366,7 +400,7 @@
 
     async function loadPublicRequests(message){
       try {
-        rows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
+        rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true);
         if(!rows.length) rows = normalizeRequests(REQUESTS);
         statusMessage = message || "";
       } catch(error) {
@@ -385,7 +419,7 @@
       }
       try {
         const token = await user.getIdToken();
-        rows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
+        rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
         render();
@@ -395,12 +429,42 @@
       }
     }
 
+    async function refreshRequests(){
+      if(isRefreshing || document.hidden) return;
+      isRefreshing = true;
+      try {
+        let nextRows;
+        if(isPrivateView && currentUser){
+          const token = await currentUser.getIdToken();
+          nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
+        } else {
+          nextRows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
+        }
+        rows = applyRequestMarkers(nextRows, false);
+        const newCount = newRequestIds.size;
+        statusMessage = newCount ? "Hi ha " + newCount + " petició" + (newCount === 1 ? " nova." : " noves.") : "";
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut actualitzar automàticament.";
+        render();
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    function startAutoRefresh(){
+      if(refreshTimer) return;
+      refreshTimer = window.setInterval(refreshRequests, REFRESH_INTERVAL_MS);
+    }
+
     function configureAuth(){
       try {
         const app = initializeApp(FIREBASE_CONFIG);
         auth = getAuth(app);
         authReady = true;
         onAuthStateChanged(auth, user => {
+          currentUser = user || null;
+          hasInitializedSeenRequests = false;
           if(user) loadPrivateRequests(user);
           else {
             setPublicMode();
@@ -431,6 +495,7 @@
       setPublicMode();
       configureAuth();
       if(!authReady) await loadPublicRequests();
+      startAutoRefresh();
     }
     init();
   </script>

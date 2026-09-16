@@ -65,10 +65,16 @@
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:14px; display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,330px); gap:14px; align-items:start; }
+    .game.masc { border-left:5px solid #1565c0; border-right:5px solid #1565c0; background:#f2f8fe; }
+    .game.fem { border-left:5px solid #c2185b; border-right:5px solid #c2185b; background:#fdf3f7; }
     .game.needs-attention { border-color:#f59e0b; background:#fff8e6; box-shadow:0 0 0 3px rgba(245,158,11,0.18), var(--shadow); }
+    .game.masc.needs-attention { border-left-color:#1565c0; border-right-color:#1565c0; }
+    .game.fem.needs-attention { border-left-color:#c2185b; border-right-color:#c2185b; }
     .game-main { min-width:0; }
     .meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:7px; color:var(--muted); font-size:0.78rem; font-weight:800; }
     .badge { border-radius:999px; background:#f3eef8; color:var(--brand-dark); padding:4px 8px; }
+    .badge.sex-masc { background:#e3f2fd; color:#0d47a1; }
+    .badge.sex-fem { background:#fce4ec; color:#880e4f; }
     .badge.ok { background:#e8f6ef; color:var(--ok); }
     .badge.warn { background:#fff6df; color:var(--warn); }
     .badge.review { background:#fdecec; color:var(--danger); }
@@ -579,7 +585,7 @@
         const assignment = assignmentFor(game.id);
         const state = assignmentState(assignment);
         const card = document.createElement("article");
-        card.className = "game";
+        card.className = `game ${game.sex === "F" ? "fem" : "masc"}`;
         if (state !== "complete" && isCurrentWeekGame(game)) card.classList.add("needs-attention");
 
         const main = document.createElement("div");
@@ -591,7 +597,7 @@
         stateBadge.textContent = stateText(state);
         meta.append(
           Object.assign(document.createElement("span"), { className:"badge", textContent:`${formatDate(game.date)} · ${game.time || "Hora pendent"}` }),
-          Object.assign(document.createElement("span"), { className:"badge", textContent:game.sex === "F" ? "Femení" : "Masculí" }),
+          Object.assign(document.createElement("span"), { className:`badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}`, textContent:game.sex === "F" ? "Femení" : "Masculí" }),
           Object.assign(document.createElement("span"), { className:"badge", textContent:game.fam === "MINI" ? "Mini" : game.fam === "PREMINI" ? "Premini" : "Amistós" }),
           stateBadge
         );

@@ -102,7 +102,7 @@
   <footer>CB Sant Josep de Badalona · Tecnificació 26-27</footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     const REQUESTS = [
       { createdAt: "15/09/2026 17:56:19", player: "Oriol Piera", injuryDate: "09/09/2026", team: "INFANTIL", gender: "M", description: "Dolor i inflamació al genoll dret." },
@@ -477,8 +477,11 @@
     loginButton.addEventListener("click", async () => {
       if(!authReady || !auth) return;
       try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
+        loginButton.disabled = true;
+        authText.textContent = "Redirigint a Google...";
+        await signInWithRedirect(auth, new GoogleAuthProvider());
       } catch(error) {
+        loginButton.disabled = false;
         statusMessage = "No s'ha pogut iniciar sessió amb Google.";
         render();
       }

@@ -430,9 +430,39 @@
       return (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1);
     }
 
+    function normalizeText(value){
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    }
+
+    function injuryType(row){
+      const text = normalizeText([
+        row.fullDescription,
+        row.description,
+        row.player,
+        row.team
+      ].filter(Boolean).join(" "));
+      if(/\b(turmell|tobillo|esguinc|esguince)\b/.test(text)) return "Turmell";
+      if(/\b(genoll|rodilla)\b/.test(text)) return "Genoll";
+      if(/\b(esquena|lumbar|lumbars|espalda)\b/.test(text)) return "Esquena";
+      if(/\b(isquio|isqui|quadriceps|quads|besso|bessons|gemel|adductor|muscular|contractura|estrebada|tiron|punxada)\b/.test(text)) return "Muscular";
+      if(/\b(espatlla|hombro|colze|codo|canell|muneca|ma|dit|dedo)\b/.test(text)) return "Braç / mà";
+      if(/\b(peu|pie|taló|talon|planta)\b/.test(text)) return "Peu";
+      if(/\b(maluc|cadera|pelvis|ingle)\b/.test(text)) return "Maluc / pelvis";
+      if(/\b(cop|contusio|contusion|hematoma)\b/.test(text)) return "Cop / contusió";
+      return "Altres / sense classificar";
+    }
+
     function renderAnalysis(rowsToAnalyze){
       const genderCounts = countBy(rowsToAnalyze, "gender");
       const teamTop = topEntries(countBy(rowsToAnalyze, "team"), 5);
+      const injuryTop = topEntries(rowsToAnalyze.reduce((acc, row) => {
+        const type = injuryType(row);
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {}), 8);
       const monthTop = topEntries(rowsToAnalyze.reduce((acc, row) => {
         const key = row.createdAt ? new Intl.DateTimeFormat("ca-ES", { month:"long", year:"numeric" }).format(row.createdAt) : "Sense data";
         acc[key] = (acc[key] || 0) + 1;
@@ -445,6 +475,9 @@
       const monthList = monthTop.length
         ? '<ul class="analysis-list">' + monthTop.map(([month, count]) => '<li><span>' + escapeHtml(month) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
         : "—";
+      const injuryList = injuryTop.length
+        ? '<ul class="analysis-list">' + injuryTop.map(([type, count]) => '<li><span>' + escapeHtml(type) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
+        : "—";
 
       analysisEl.innerHTML =
         '<h3>Anàlisi de dades</h3>' +
@@ -454,6 +487,7 @@
           '<div class="analysis-card"><strong>' + averageDaysSinceInjury(rowsToAnalyze) + '</strong><span>Dies mitjans fins a sol·licitar</span></div>' +
           '<div class="analysis-card"><strong>' + latest + '</strong><span>Última petició</span></div>' +
           '<div class="analysis-card"><strong>Top equips</strong>' + teamList + '</div>' +
+          '<div class="analysis-card"><strong>Tipus de lesió</strong>' + injuryList + '</div>' +
           '<div class="analysis-card"><strong>Per mes</strong>' + monthList + '</div>' +
         '</div>';
     }

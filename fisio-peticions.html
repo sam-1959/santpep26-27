@@ -44,7 +44,6 @@
     .col-date { width:1%; white-space:nowrap; }
     .col-name { width:1%; white-space:nowrap; }
     .col-team { width:1%; white-space:nowrap; }
-    .col-email { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
     tr:last-child td { border-bottom:0; }
     tr.today { background:#fff8d6; box-shadow:inset 4px 0 0 var(--accent); }
@@ -323,7 +322,7 @@
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const today = new Date();
-      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-email">Email</th><th class="col-phone">Telèfon</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-date">Data sol·licitud</th><th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th></tr></thead><tbody>' +
         pageRows.map(row => {
           const isToday = isSameDay(row.createdAt, today);
@@ -333,7 +332,6 @@
             : '<span class="whatsapp-link empty">—</span>';
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
-            '<td class="col-email">' + escapeHtml(row.email || "—") + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
           return '<tr class="' + (isToday ? 'today' : '') + '">' +

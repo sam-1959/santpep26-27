@@ -304,8 +304,14 @@
       });
     });
     gamesByPlaceTime.forEach(function(games,key){
-      if(games.length>1) conflictKeys.add(key);
+      if(games.length>1 && !isAllowedMiniSaturdayAfternoon(games)) conflictKeys.add(key);
     });
+
+    function isAllowedMiniSaturdayAfternoon(games){
+      return games.length<=3 && games.every(function(g){
+        return g.dow===6 && g.time==='16:00' && (g.fam==='MINI' || g.fam==='PREMINI');
+      });
+    }
 
     function conflictMark(g){
       const key=placeTimeKey(g);
@@ -318,6 +324,7 @@
       const conflicts=[];
       gamesByPlaceTime.forEach(function(games,key){
         if(games.length<=1) return;
+        if(isAllowedMiniSaturdayAfternoon(games)) return;
         conflicts.push({key,games});
       });
       if(!conflicts.length) return '';

@@ -195,8 +195,11 @@
 
     function whatsappPhone(value){
       const digits = String(value || "").replace(/\D/g, "");
-      if(!digits) return "";
-      return digits.startsWith("34") ? digits : "34" + digits;
+      const national = digits.startsWith("0034") ? digits.slice(4)
+        : digits.startsWith("34") && digits.length === 11 ? digits.slice(2)
+        : digits;
+      if(!/^[67]\d{8}$/.test(national)) return "";
+      return "34" + national;
     }
 
     function whatsappMessage(row){

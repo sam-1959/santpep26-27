@@ -342,7 +342,7 @@
         (activeGender === "TOTS" || r.gender === activeGender)
       );
       totalEl.textContent = visible.length;
-      statusEl.textContent = statusMessage || (rows.length ? "Dades carregades des de Firebase." : "No hi ha peticions.");
+      statusEl.textContent = statusMessage || (rows.length ? "Dades carregades." : "No hi ha peticions.");
       renderFilters();
       if(!visible.length){
         tableWrap.innerHTML = '<div class="empty">Cap petició amb aquest filtre.</div>';

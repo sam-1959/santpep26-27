@@ -60,7 +60,7 @@
       </div>
       <form id="accidentForm">
         <label>Adreça electrònica <span class="required">*</span>
-          <input id="email" type="email" autocomplete="email" required />
+          <input id="email" type="email" autocomplete="email" inputmode="email" pattern="^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" title="Introdueix una adreça de correu electrònic vàlida, per exemple nom@domini.cat" required />
         </label>
         <label>Dia de la lesió <span class="required">*</span>
           <input id="injuryDate" type="date" required />
@@ -120,6 +120,9 @@
       const el = document.getElementById(id);
       return el ? el.value.trim() : "";
     }
+    function isValidEmail(value){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+    }
     async function saveRequest(path, id, payload){
       const response = await fetch(firebaseUrl(path, id), {
         method:"PUT",
@@ -144,6 +147,11 @@
 
     form.addEventListener("submit", async function(event){
       event.preventDefault();
+      if(!isValidEmail(inputValue("email"))){
+        setStatus("err", "Introdueix una adreça electrònica vàlida.");
+        document.getElementById("email").focus();
+        return;
+      }
       submitButton.disabled = true;
       setStatus("ok", "Enviant comunicat...");
       const id = requestId();

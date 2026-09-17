@@ -53,7 +53,8 @@
     .team.female { background:#fce4ec; color:#880e4f; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
-    .paid-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
+    .col-quota { width:1%; white-space:nowrap; text-align:center; }
+    .paid-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
     .paid-badge::before { content:"✓"; margin-right:4px; font-weight:900; }
     .whatsapp-link { color:#0b7f36; font-weight:900; text-decoration:none; white-space:nowrap; }
     .whatsapp-link::before { content:"💬 "; }
@@ -435,8 +436,9 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
+      const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th><th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -446,11 +448,15 @@
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
+          const quotaCell = isPrivateView
+            ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="empty">—</span>') + '</td>'
+            : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
-          '<td class="col-name">' + escapeHtml(shortName(row.player)) + (row.quotaPaid ? '<span class="paid-badge">Quota</span>' : '') + '</td>' +
+          quotaCell +
+          '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +

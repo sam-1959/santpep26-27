@@ -24,6 +24,9 @@ function adaptarComunicatANamedValues(request) {
     namedValues: {
       "Marca de temps": [formatarDataHora(request.createdAt)],
       "Adreça electrònica": [valor(request.email)],
+      "Nom i cognoms pare/mare": [valor(request.guardianName)],
+      "Nom i cognoms jugador/a": [valor(request.player)],
+      "Telèfon de contacte": [valor(request.phone)],
       "Dia de la lesió": [formatarData(request.injuryDate)],
       "Instal·lació on s'ha fet la lesió": [valor(request.venue)],
       "Danys soferts": [valor(request.damage)],

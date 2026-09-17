@@ -77,6 +77,16 @@
         <label>Adreça electrònica <span class="required">*</span>
           <input id="email" type="email" autocomplete="email" inputmode="email" title="Introdueix una adreça de correu electrònic vàlida, per exemple nom@domini.cat" required />
         </label>
+        <label>Nom i cognoms pare/mare <span class="required">*</span>
+          <input id="guardianName" type="text" autocomplete="name" required />
+        </label>
+        <label>Nom i cognoms jugador/a <span class="required">*</span>
+          <input id="playerName" type="text" required />
+        </label>
+        <label>Telèfon de contacte <span class="required">*</span>
+          <input id="phone" type="tel" inputmode="tel" autocomplete="tel" pattern="(?:\+?34|0034)?[67][0-9]{8}" title="Introdueix un mòbil vàlid, per exemple 612345678 o +34612345678" required />
+          <span class="hint">Ha de ser un mòbil vàlid: 6XXXXXXXX o 7XXXXXXXX.</span>
+        </label>
         <label>Dia de la lesió <span class="required">*</span>
           <input id="injuryDate" type="date" required />
         </label>
@@ -165,6 +175,13 @@
     function isValidEmail(value){
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
     }
+    function isValidMobile(value){
+      const digits = String(value || "").replace(/\D/g, "");
+      const national = digits.startsWith("0034") ? digits.slice(4)
+        : digits.startsWith("34") && digits.length === 11 ? digits.slice(2)
+        : digits;
+      return /^[67]\d{8}$/.test(national);
+    }
     async function saveRequest(path, id, payload){
       const response = await fetch(firebaseUrl(path, id), {
         method:"PUT",
@@ -194,6 +211,11 @@
         document.getElementById("email").focus();
         return;
       }
+      if(!isValidMobile(inputValue("phone"))){
+        setStatus("err", "Introdueix un telèfon mòbil vàlid.");
+        document.getElementById("phone").focus();
+        return;
+      }
       submitButton.disabled = true;
       setStatus("ok", "Enviant comunicat...");
       const id = requestId();
@@ -210,6 +232,9 @@
       const privateRequest = {
         ...publicRequest,
         email: inputValue("email"),
+        guardianName: inputValue("guardianName"),
+        player: inputValue("playerName"),
+        phone: inputValue("phone"),
         claimNumber: inputValue("claimNumber")
       };
       try {

@@ -20,6 +20,10 @@
     .intro h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
     .intro p { margin:0 0 6px; color:var(--muted); font-size:0.84rem; }
     .tag { display:inline-flex; margin-top:2px; color:var(--brand-dark); background:var(--accent); border-radius:999px; padding:3px 9px; font-size:0.72rem; font-weight:800; }
+    .insurance-box { margin:10px 0 0; border:1px solid var(--line); border-radius:12px; background:#faf8fd; padding:10px; color:var(--ink); font-size:0.82rem; }
+    .insurance-box h3 { margin:0 0 6px; color:var(--brand-dark); font-size:0.88rem; }
+    .insurance-box p { margin:3px 0; color:var(--ink); }
+    .insurance-box a { color:var(--brand-dark); font-weight:900; }
     form { display:grid; gap:10px; }
     label { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
     input, textarea { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
@@ -55,7 +59,13 @@
       <div class="intro">
         <h2>Comunicat d'accident esportiu</h2>
         <p>Aquest formulari és per a comunicar una lesió esportiva i recollir les dades necessàries per gestionar el comunicat d'accident.</p>
-        <p>Telèfon de la Mútua LLOYD'S: <strong><a href="tel:911599590">911 599 590</a></strong>. Si ja hi heu trucat, indiqueu també el número d'expedient.</p>
+        <div class="insurance-box">
+          <h3>Mútua LLOYD'S (digglo)</h3>
+          <p><strong>Núm. de pòlissa:</strong> B1819A260395</p>
+          <p><strong>Telèfon d'atenció 24 hores:</strong> <a href="tel:911599590">911 599 590</a></p>
+          <p><strong>Servei disponible:</strong> 24 hores al dia, 7 dies a la setmana.</p>
+          <p>Si ja heu trucat, indiqueu també el número d'expedient.</p>
+        </div>
         <span class="tag">#SantpepÉsÚnic 🟡🟣</span>
       </div>
       <form id="accidentForm">
@@ -76,7 +86,7 @@
         </label>
         <label>Número d'expedient LLOYD'S
           <input id="claimNumber" type="text" />
-          <span class="hint">Només si la família ja ha trucat a la Mútua LLOYD'S: 911 599 590.</span>
+          <span class="hint">Només si la família ja ha trucat a la Mútua LLOYD'S (digglo): 911 599 590.</span>
         </label>
         <div id="status" class="status" role="status" aria-live="polite"></div>
         <div class="actions">

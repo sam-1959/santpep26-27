@@ -12,6 +12,7 @@
     header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
     .logo { display:inline-grid; place-items:center; width:48px; height:48px; text-decoration:none; flex-shrink:0; background:#fff; color:var(--brand); border-radius:10px; font-size:1.55rem; font-weight:900; }
     .club-logo { width:48px; height:48px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:10px; padding:3px; }
+    .htext { flex:1; min-width:0; }
     .htext h1 { margin:0; font-size:1.05rem; font-weight:700; letter-spacing:-0.01em; }
     .htext h1 .club { display:block; font-size:0.72rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
     .htext p { margin:2px 0 0; font-size:0.8rem; opacity:0.9; }
@@ -84,11 +85,11 @@
 <body>
   <header>
     <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
-    <div class="logo" aria-hidden="true">✚</div>
     <div class="htext">
       <h1><span class="club">CB Sant Josep de Badalona</span> Peticions de fisioteràpia</h1>
       <p>Vista pública resumida</p>
     </div>
+    <div class="logo" aria-hidden="true">✚</div>
   </header>
   <main>
     <section class="panel">

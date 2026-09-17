@@ -56,6 +56,7 @@
     .col-quota { width:1%; white-space:nowrap; text-align:center; }
     .paid-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
     .paid-badge::before { content:"✓"; margin-right:4px; font-weight:900; }
+    .unpaid-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; background:#f1eef5; color:var(--muted); border:1px solid var(--line); padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
     .whatsapp-link { color:#0b7f36; font-weight:900; text-decoration:none; white-space:nowrap; }
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
@@ -254,7 +255,8 @@
         const headers = lines.length ? parseCsvLine(lines[0]).map(normalizeName) : [];
         const nameIndex = headers.indexOf("nom complet");
         const quotaIndex = headers.indexOf("quota");
-        paidPlayerNames = new Set(lines
+        const paidNames = [];
+        lines
           .slice(1)
           .map(parseCsvLine)
           .filter(cells => {
@@ -262,7 +264,12 @@
             const quota = Number(String(cells[quotaIndex >= 0 ? quotaIndex : 1] || "").replace(",", "."));
             return name && !/\b(total|femeni|masculi)\b/.test(name) && quota > 0;
           })
-          .map(cells => normalizeName(cells[nameIndex >= 0 ? nameIndex : 0])));
+          .forEach(cells => {
+            const fullName = cells[nameIndex >= 0 ? nameIndex : 0];
+            paidNames.push(normalizeName(fullName));
+            paidNames.push(normalizeName(shortName(fullName)));
+          });
+        paidPlayerNames = new Set(paidNames.filter(Boolean));
       } catch(error) {
         paidPlayerNames = new Set();
         console.warn("No s'ha pogut carregar el full de quotes.", error);
@@ -449,7 +456,7 @@
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
           const quotaCell = isPrivateView
-            ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="empty">—</span>') + '</td>'
+            ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
           return '<tr class="' + rowClass + '">' +

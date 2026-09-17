@@ -153,7 +153,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
-    const QUOTA_CSV_URL = "https://docs.google.com/spreadsheets/d/12DUEzc-OsmVbIeQ2pP3QxmHCNRGhpfMM/export?format=csv";
+    const QUOTA_CSV_URL = "https://docs.google.com/spreadsheets/d/15Ep8VIQWEHi_ST9vbnDz6Y_97FBCT_uU/export?format=csv&gid=1209425339";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -249,12 +249,19 @@
         const response = await fetch(QUOTA_CSV_URL, { cache:"no-store" });
         if(!response.ok) throw new Error("Quota CSV read failed");
         const csv = await response.text();
-        paidPlayerNames = new Set(csv.split(/\r?\n/)
+        const lines = csv.split(/\r?\n/).filter(Boolean);
+        const headers = lines.length ? parseCsvLine(lines[0]).map(normalizeName) : [];
+        const nameIndex = headers.indexOf("nom complet");
+        const quotaIndex = headers.indexOf("quota");
+        paidPlayerNames = new Set(lines
           .slice(1)
           .map(parseCsvLine)
-          .filter(cells => Number(String(cells[1] || "").replace(",", ".")) > 0)
-          .map(cells => normalizeName(cells[0]))
-          .filter(name => name && !/\b(femeni|masculi)\b/.test(name)));
+          .filter(cells => {
+            const name = normalizeName(cells[nameIndex >= 0 ? nameIndex : 0]);
+            const quota = Number(String(cells[quotaIndex >= 0 ? quotaIndex : 1] || "").replace(",", "."));
+            return name && !/\b(total|femeni|masculi)\b/.test(name) && quota > 0;
+          })
+          .map(cells => normalizeName(cells[nameIndex >= 0 ? nameIndex : 0])));
       } catch(error) {
         paidPlayerNames = new Set();
         console.warn("No s'ha pogut carregar el full de quotes.", error);

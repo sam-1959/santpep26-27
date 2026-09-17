@@ -40,6 +40,7 @@ function enviarCorreuComunicatsAccident(e) {
   }
 
   var llistaCorreus = [
+    "info@cbsantjosep.cat",
     "dtecnic@cbsantjosep.cat"
   ];
   var destinataris = normalitzarCorreus(llistaCorreus);

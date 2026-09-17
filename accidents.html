@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Comunicat d'accident esportiu · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --ok:#1b5e20; --ok-bg:#e8f5e9; --err:#b71c1c; --err-bg:#ffebee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.35; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .logo-mark { display:inline-grid; place-items:center; width:40px; height:40px; flex-shrink:0; background:#fff; color:var(--brand); border-radius:9px; font-size:1.35rem; font-weight:900; }
+    .htext h1 { margin:0; font-size:0.98rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.66rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:1px 0 0; font-size:0.74rem; opacity:0.9; }
+    main { max-width:680px; margin:0 auto; padding:16px 12px 44px; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px; }
+    .intro { margin-bottom:14px; }
+    .intro h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
+    .intro p { margin:0 0 6px; color:var(--muted); font-size:0.84rem; }
+    .tag { display:inline-flex; margin-top:2px; color:var(--brand-dark); background:var(--accent); border-radius:999px; padding:3px 9px; font-size:0.72rem; font-weight:800; }
+    form { display:grid; gap:10px; }
+    label { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
+    input, textarea { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
+    input:focus, textarea:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
+    textarea { min-height:88px; resize:vertical; }
+    .required { color:#c62828; }
+    .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:2px; }
+    button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 16px; font-weight:800; cursor:pointer; box-shadow:var(--shadow); }
+    button:disabled { opacity:0.58; cursor:not-allowed; }
+    .status { display:none; border-radius:10px; padding:8px 10px; font-size:0.8rem; font-weight:700; }
+    .status.ok { display:block; color:var(--ok); background:var(--ok-bg); border:1px solid #c8e6c9; }
+    .status.err { display:block; color:var(--err); background:var(--err-bg); border:1px solid #ffcdd2; }
+    .success-view { display:none; text-align:center; padding:14px 0 2px; }
+    .success-view.show { display:block; }
+    .success-icon { display:inline-grid; place-items:center; width:56px; height:56px; margin:0 0 12px; border-radius:50%; background:var(--ok-bg); color:var(--ok); font-size:1.7rem; font-weight:900; }
+    .success-view h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
+    .success-view p { margin:0 0 12px; color:var(--muted); font-size:0.84rem; }
+    .note { color:var(--muted); font-size:0.72rem; margin:3px 0 0; }
+    .hint { color:var(--muted); font-size:0.72rem; font-weight:650; text-transform:none; letter-spacing:0; }
+    footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo-mark" aria-hidden="true">!</span>
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Comunicat d'accident esportiu</h1>
+      <p>Sol·licitud de comunicat</p>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="intro">
+        <h2>Comunicat d'accident esportiu</h2>
+        <p>Aquest formulari és per a comunicar una lesió esportiva i recollir les dades necessàries per gestionar el comunicat d'accident.</p>
+        <p>Si abans heu trucat al telèfon de la Mútua LLOYD'S, indiqueu també el número d'expedient.</p>
+        <span class="tag">#SantpepÉsÚnic 🟡🟣</span>
+      </div>
+      <form id="accidentForm">
+        <label>Adreça electrònica <span class="required">*</span>
+          <input id="email" type="email" autocomplete="email" required />
+        </label>
+        <label>Dia de la lesió <span class="required">*</span>
+          <input id="injuryDate" type="date" required />
+        </label>
+        <label>Instal·lació on s'ha fet la lesió <span class="required">*</span>
+          <input id="venue" type="text" required />
+        </label>
+        <label>Danys soferts <span class="required">*</span>
+          <textarea id="damage" required></textarea>
+        </label>
+        <label>Lloc de la lesió, dret o esquerra <span class="required">*</span>
+          <input id="side" type="text" placeholder="Exemple: genoll dret, turmell esquerre..." required />
+        </label>
+        <label>Número d'expedient LLOYD'S
+          <input id="claimNumber" type="text" />
+          <span class="hint">Només si la família ja ha trucat al telèfon de la Mútua LLOYD'S.</span>
+        </label>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div class="actions">
+          <button id="submitButton" type="submit">Enviar comunicat</button>
+          <p class="note">Tots els camps són obligatoris excepte el número d'expedient.</p>
+        </div>
+      </form>
+      <div id="successView" class="success-view" aria-live="polite">
+        <div class="success-icon">✓</div>
+        <h2>Comunicat enviat correctament</h2>
+        <p>Hem rebut les dades del comunicat d'accident esportiu.</p>
+        <button id="newRequestButton" type="button">Fer una nova petició</button>
+      </div>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const form = document.getElementById("accidentForm");
+    const statusEl = document.getElementById("status");
+    const submitButton = document.getElementById("submitButton");
+    const successView = document.getElementById("successView");
+    const newRequestButton = document.getElementById("newRequestButton");
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
+    const PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
+
+    function setStatus(type, text){
+      statusEl.className = "status " + type;
+      statusEl.textContent = text;
+    }
+    function firebaseUrl(path, id){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const safePath = path.split("/").map(encodeURIComponent).join("/");
+      return base + "/" + safePath + (id ? "/" + encodeURIComponent(id) : "") + ".json";
+    }
+    function requestId(){
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+    function inputValue(id){
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : "";
+    }
+    async function saveRequest(path, id, payload){
+      const response = await fetch(firebaseUrl(path, id), {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(payload)
+      });
+      if(!response.ok) throw new Error("Firebase write failed");
+    }
+
+    form.addEventListener("submit", async function(event){
+      event.preventDefault();
+      submitButton.disabled = true;
+      setStatus("ok", "Enviant comunicat...");
+      const id = requestId();
+      const createdAt = new Date().toISOString();
+      const publicRequest = {
+        id,
+        createdAt,
+        injuryDate: inputValue("injuryDate"),
+        venue: inputValue("venue"),
+        damage: inputValue("damage"),
+        side: inputValue("side"),
+        hasClaimNumber: !!inputValue("claimNumber")
+      };
+      const privateRequest = {
+        ...publicRequest,
+        email: inputValue("email"),
+        claimNumber: inputValue("claimNumber")
+      };
+      try {
+        await Promise.all([
+          saveRequest(PRIVATE_REQUESTS_PATH, id, privateRequest),
+          saveRequest(PUBLIC_REQUESTS_PATH, id, publicRequest)
+        ]);
+        form.reset();
+        statusEl.className = "status";
+        statusEl.textContent = "";
+        form.style.display = "none";
+        successView.classList.add("show");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch(error) {
+        setStatus("err", "No s'ha pogut enviar el comunicat. Revisa la connexió o els permisos de Firebase.");
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    newRequestButton.addEventListener("click", function(){
+      successView.classList.remove("show");
+      form.style.display = "grid";
+      submitButton.disabled = false;
+      form.querySelector("input, textarea").focus();
+    });
+  </script>
+</body>
+</html>

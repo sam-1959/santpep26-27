@@ -378,7 +378,7 @@
             '<td class="col-phone">' + phoneCell + '</td>' : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
           return '<tr class="' + rowClass + '">' +
-          '<td class="col-count">' + (start + index + 1) + '</td>' +
+          '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
           '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +

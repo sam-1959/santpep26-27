@@ -229,6 +229,11 @@
         document.getElementById("email").focus();
         return;
       }
+      if(!inputValue("playerName")){
+        setStatus("err", "Introdueix el nom i cognoms del jugador/a.");
+        document.getElementById("playerName").focus();
+        return;
+      }
       if(!isValidMobile(inputValue("phone"))){
         setStatus("err", "Introdueix un telèfon mòbil vàlid.");
         document.getElementById("phone").focus();

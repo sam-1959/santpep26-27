@@ -217,6 +217,7 @@
         const publicRows = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
         const publicById = new Map(publicRows.map(row => [row.id, row]));
         const updates = privateRows
+          .map(row => ({ id: row.id, player: row.player || row.playerName || row["Nom i cognoms jugador/a"] }))
           .filter(row => row.id && row.player && !(publicById.get(row.id) || {}).player)
           .map(row => patchFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, { player: row.player }));
         if(updates.length) await Promise.all(updates);

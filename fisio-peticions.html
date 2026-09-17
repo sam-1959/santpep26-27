@@ -53,6 +53,8 @@
     .team.female { background:#fce4ec; color:#880e4f; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
+    .paid-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; white-space:nowrap; }
+    .paid-badge::before { content:"✓"; margin-right:4px; font-weight:900; }
     .whatsapp-link { color:#0b7f36; font-weight:900; text-decoration:none; white-space:nowrap; }
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
@@ -151,6 +153,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
+    const QUOTA_CSV_URL = "https://docs.google.com/spreadsheets/d/12DUEzc-OsmVbIeQ2pP3QxmHCNRGhpfMM/export?format=csv";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -167,6 +170,8 @@
     let hasInitializedSeenRequests = false;
     let refreshTimer = null;
     let isRefreshing = false;
+    let paidPlayerNames = new Set();
+    let paidPlayersLoaded = false;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -203,6 +208,63 @@
       const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
       if(parts.length <= 2) return parts.join(" ") || "—";
       return parts.slice(0, 2).join(" ");
+    }
+
+    function normalizeName(value){
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[’']/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function parseCsvLine(line){
+      const cells = [];
+      let current = "";
+      let quoted = false;
+      for(let i = 0; i < line.length; i++){
+        const char = line[i];
+        if(char === '"' && line[i + 1] === '"'){
+          current += '"';
+          i++;
+        } else if(char === '"'){
+          quoted = !quoted;
+        } else if(char === "," && !quoted){
+          cells.push(current);
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      cells.push(current);
+      return cells;
+    }
+
+    async function loadPaidPlayers(){
+      if(paidPlayersLoaded) return;
+      paidPlayersLoaded = true;
+      try {
+        const response = await fetch(QUOTA_CSV_URL, { cache:"no-store" });
+        if(!response.ok) throw new Error("Quota CSV read failed");
+        const csv = await response.text();
+        paidPlayerNames = new Set(csv.split(/\r?\n/)
+          .slice(1)
+          .map(parseCsvLine)
+          .filter(cells => Number(String(cells[1] || "").replace(",", ".")) > 0)
+          .map(cells => normalizeName(cells[0]))
+          .filter(name => name && !/\b(femeni|masculi)\b/.test(name)));
+      } catch(error) {
+        paidPlayerNames = new Set();
+        console.warn("No s'ha pogut carregar el full de quotes.", error);
+      }
+    }
+
+    function hasPaidQuota(player){
+      const full = normalizeName(player);
+      const short = normalizeName(shortName(player));
+      return !!full && (paidPlayerNames.has(full) || paidPlayerNames.has(short));
     }
 
     function isSameDay(a, b){
@@ -259,6 +321,7 @@
         team: row.team,
         gender: row.gender,
         player: row.player,
+        quotaPaid: hasPaidQuota(row.player),
         description: row.description,
         email: row.email,
         guardianName: row.guardianName,
@@ -380,7 +443,7 @@
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
-          '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
+          '<td class="col-name">' + escapeHtml(shortName(row.player)) + (row.quotaPaid ? '<span class="paid-badge">Quota</span>' : '') + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
@@ -518,6 +581,7 @@
 
     async function loadPublicRequests(message){
       try {
+        await loadPaidPlayers();
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true);
         if(!rows.length) rows = normalizeRequests(REQUESTS);
         statusMessage = message || "";
@@ -530,6 +594,7 @@
 
     async function loadPrivateRequests(user){
       try {
+        await loadPaidPlayers();
         const token = await user.getIdToken();
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
@@ -547,9 +612,11 @@
       try {
         let nextRows;
         if(isPrivateView && currentUser){
+          await loadPaidPlayers();
           const token = await currentUser.getIdToken();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         } else {
+          await loadPaidPlayers();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
         }
         rows = applyRequestMarkers(nextRows, false);

@@ -208,7 +208,7 @@
         id: row.id,
         createdAt: parseDateValue(row.createdAt),
         injuryDate: parseDateValue(row.injuryDate),
-        player: row.player,
+        player: row.player || row.playerName || row["Nom i cognoms jugador/a"],
         venue: row.venue,
         damage: row.damage,
         side: row.side,

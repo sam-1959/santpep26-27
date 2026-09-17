@@ -102,6 +102,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
     const PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
+    const ACCIDENT_NOTIFY_URL = "";
 
     function setStatus(type, text){
       statusEl.className = "status " + type;
@@ -126,6 +127,19 @@
         body:JSON.stringify(payload)
       });
       if(!response.ok) throw new Error("Firebase write failed");
+    }
+    async function notifyRequestByEmail(request){
+      if(!ACCIDENT_NOTIFY_URL) return;
+      try {
+        await fetch(ACCIDENT_NOTIFY_URL, {
+          method:"POST",
+          mode:"no-cors",
+          headers:{ "Content-Type":"text/plain;charset=utf-8" },
+          body:JSON.stringify(request)
+        });
+      } catch(error) {
+        console.warn("No s'ha pogut enviar l'avís per email.", error);
+      }
     }
 
     form.addEventListener("submit", async function(event){
@@ -153,6 +167,7 @@
           saveRequest(PRIVATE_REQUESTS_PATH, id, privateRequest),
           saveRequest(PUBLIC_REQUESTS_PATH, id, publicRequest)
         ]);
+        await notifyRequestByEmail(privateRequest);
         form.reset();
         statusEl.className = "status";
         statusEl.textContent = "";

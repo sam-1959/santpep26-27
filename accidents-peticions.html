@@ -203,6 +203,28 @@
       return Object.entries(data).map(([id, request]) => ({ id, ...(request || {}) }));
     }
 
+    async function patchFirebaseRequest(path, id, payload){
+      const response = await fetch(firebaseUrl(path + "/" + id), {
+        method:"PATCH",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(payload)
+      });
+      if(!response.ok) throw new Error("Firebase patch failed");
+    }
+
+    async function syncPublicPlayerNames(privateRows){
+      try {
+        const publicRows = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
+        const publicById = new Map(publicRows.map(row => [row.id, row]));
+        const updates = privateRows
+          .filter(row => row.id && row.player && !(publicById.get(row.id) || {}).player)
+          .map(row => patchFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, { player: row.player }));
+        if(updates.length) await Promise.all(updates);
+      } catch(error) {
+        console.warn("No s'han pogut sincronitzar els noms de jugador a la vista pública.", error);
+      }
+    }
+
     function normalizeRequests(requests){
       return requests.map(row => ({
         id: row.id,
@@ -448,7 +470,9 @@
     async function loadPrivateRequests(user){
       try {
         const token = await user.getIdToken();
-        rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
+        const privateRows = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
+        await syncPublicPlayerNames(privateRows);
+        rows = applyRequestMarkers(normalizeRequests(privateRows), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
         render();

@@ -81,7 +81,7 @@
       <div class="head">
         <div>
           <h2>Comunicats rebuts</h2>
-          <p id="privacyText">No es mostren noms, correus ni telèfons. Es mostren només les dades bàsiques del comunicat.</p>
+          <p id="privacyText">No es mostren correus ni telèfons. Es mostren només les dades bàsiques del comunicat.</p>
         </div>
         <div class="kpi"><strong id="totalRequests">—</strong><span>Comunicats</span></div>
       </div>
@@ -252,7 +252,7 @@
       isPrivateView = false;
       authTitle.textContent = "Vista pública";
       authText.textContent = message || "Inicia sessió amb un compte autoritzat per veure totes les dades.";
-      privacyText.textContent = "No es mostren noms, correus ni telèfons. Es mostren només les dades bàsiques del comunicat.";
+      privacyText.textContent = "No es mostren correus ni telèfons. Es mostren només les dades bàsiques del comunicat.";
       loginButton.hidden = false;
       logoutButton.hidden = true;
     }
@@ -284,12 +284,11 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
-      const privateHead = isPrivateView ? '<th class="col-name">Jugador/a</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th><th class="col-name">Expedient</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th>' + privateHead + '<th>Danys soferts</th></tr></thead><tbody>' +
+      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th><th class="col-name">Expedient</th>' : '';
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th>' + privateHead + '<th>Danys soferts</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const privateCells = isPrivateView ?
-            '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + escapeHtml(row.phone || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
@@ -297,6 +296,7 @@
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
+          '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           '<td class="col-name">' + escapeHtml(row.venue || "—") + '</td>' +
           '<td class="col-name">' + escapeHtml(row.side || "—") + '</td>' +

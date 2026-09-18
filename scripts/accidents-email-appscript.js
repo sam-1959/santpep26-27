@@ -14,7 +14,7 @@ var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 
 function doPost(e) {
   try {
-    var request = JSON.parse((e.postData && e.postData.contents) || "{}");
+    var request = obtenirRequest(e);
     if (request.action === "uploadPdf") {
       return respostaJson(guardarPdfComunicat(request));
     }
@@ -26,7 +26,15 @@ function doPost(e) {
   }
 }
 
+function obtenirRequest(e) {
+  if (e && e.parameter && Object.keys(e.parameter).length) {
+    return e.parameter;
+  }
+  return JSON.parse((e && e.postData && e.postData.contents) || "{}");
+}
+
 function guardarPdfComunicat(request) {
+  Logger.log("Inici uploadPdf requestId=" + valor(request && request.requestId) + ", fileName=" + valor(request && request.fileName) + ", base64Length=" + String((request && request.dataBase64 || "").length));
   if (!request || !request.requestId) {
     throw new Error("Falta requestId.");
   }
@@ -44,6 +52,7 @@ function guardarPdfComunicat(request) {
   var bytes = Utilities.base64Decode(request.dataBase64);
   var blob = Utilities.newBlob(bytes, mimeType, fileName);
   var file = folder.createFile(blob);
+  Logger.log("PDF creat a Drive: " + file.getId());
   try {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (sharingError) {
@@ -59,6 +68,7 @@ function guardarPdfComunicat(request) {
   };
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
+  Logger.log("Firebase actualitzat amb pdfUrl=" + payload.pdfUrl);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
 }
 

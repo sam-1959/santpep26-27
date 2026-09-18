@@ -238,19 +238,40 @@
         throw new Error("El fitxer ha de ser un PDF.");
       }
       const dataBase64 = await readFileAsBase64(file);
-      await fetch(ACCIDENT_FILES_URL, {
-        method:"POST",
-        mode:"no-cors",
-        headers:{ "Content-Type":"text/plain;charset=utf-8" },
-        body:JSON.stringify({
-          action:"uploadPdf",
-          requestId:row.id,
-          fileName:file.name,
-          mimeType:file.type,
-          dataBase64,
-          uploadedBy:currentUser.email || ""
-        })
+      postToAppsScript({
+        action:"uploadPdf",
+        requestId:row.id,
+        fileName:file.name,
+        mimeType:file.type,
+        dataBase64,
+        uploadedBy:currentUser.email || ""
       });
+    }
+
+    function postToAppsScript(payload){
+      const iframeName = "appsScriptUploadFrame";
+      let iframe = document.querySelector('iframe[name="' + iframeName + '"]');
+      if(!iframe){
+        iframe = document.createElement("iframe");
+        iframe.name = iframeName;
+        iframe.style.display = "none";
+        document.body.appendChild(iframe);
+      }
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = ACCIDENT_FILES_URL;
+      form.target = iframeName;
+      form.style.display = "none";
+      Object.entries(payload).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value == null ? "" : String(value);
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
     }
 
     async function waitForPdfUpdate(rowId, previousPdfUrl){

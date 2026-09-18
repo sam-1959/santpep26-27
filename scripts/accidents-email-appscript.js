@@ -10,7 +10,7 @@
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
-var ACCIDENT_PDFS_FOLDER_NAME = "Comunicats Accident 26-27";
+var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 
 function doPost(e) {
   try {
@@ -40,7 +40,7 @@ function guardarPdfComunicat(request) {
     throw new Error("El fitxer ha de ser un PDF.");
   }
 
-  var folder = obtenirOCrearCarpeta(ACCIDENT_PDFS_FOLDER_NAME);
+  var folder = DriveApp.getFolderById(ACCIDENT_PDFS_FOLDER_ID);
   var bytes = Utilities.base64Decode(request.dataBase64);
   var blob = Utilities.newBlob(bytes, mimeType, fileName);
   var file = folder.createFile(blob);
@@ -56,11 +56,6 @@ function guardarPdfComunicat(request) {
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
-}
-
-function obtenirOCrearCarpeta(name) {
-  var folders = DriveApp.getFoldersByName(name);
-  return folders.hasNext() ? folders.next() : DriveApp.createFolder(name);
 }
 
 function nomFitxerSegur(name) {

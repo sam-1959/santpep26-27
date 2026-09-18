@@ -5,8 +5,10 @@
 // 2. Deploy > New deployment > Web app.
 // 3. Execute as: Me.
 // 4. Who has access: Anyone.
-// 5. Autoritza GmailApp, DriveApp i UrlFetchApp.
-// 6. Copia la URL /exec i posa-la a ACCIDENT_NOTIFY_URL dins accidents.html.
+// 5. A Project Settings, activa "Show appsscript.json manifest file" i afegeix els scopes
+//    del fitxer scripts/accidents-appsscript.json.
+// 6. Autoritza GmailApp, DriveApp i UrlFetchApp.
+// 7. Copia la URL /exec i posa-la a ACCIDENT_NOTIFY_URL dins accidents.html.
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";

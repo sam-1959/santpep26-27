@@ -52,7 +52,7 @@
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
-    .desc { color:var(--muted); min-width:420px; }
+    .desc { color:var(--muted); width:30%; min-width:320px; max-width:560px; }
     .pdf-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:150px; }
     .pdf-link { color:var(--brand-dark); font-weight:900; text-decoration:none; white-space:nowrap; }
     .pdf-link:hover { text-decoration:underline; }
@@ -390,7 +390,7 @@
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const privateHead = isPrivateView ? '<th class="col-name">PDF</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th>Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th class="desc">Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const pdfCell = '<td class="col-name"><div class="pdf-actions">' +

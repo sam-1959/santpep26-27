@@ -425,7 +425,7 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
-      const privateHead = isPrivateView ? '<th class="col-name">PDF</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-name">Document (PDF)</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th class="desc">Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';

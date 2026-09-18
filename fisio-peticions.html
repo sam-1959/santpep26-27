@@ -160,8 +160,6 @@
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
     const QUOTA_CACHE_PATH = "physioQuota/season-26-27";
-    const QUOTA_CSV_URL = "https://docs.google.com/spreadsheets/d/15Ep8VIQWEHi_ST9vbnDz6Y_97FBCT_uU/export?format=csv&gid=1209425339";
-    const QUOTA_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -180,8 +178,6 @@
     let isRefreshing = false;
     let paidPlayerNames = new Set();
     let paidPlayersLoaded = false;
-    let quotaCacheUpdatedAt = null;
-    let quotaRefreshAttempted = false;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -230,96 +226,12 @@
         .toLowerCase();
     }
 
-    function parseCsvLine(line){
-      const cells = [];
-      let current = "";
-      let quoted = false;
-      for(let i = 0; i < line.length; i++){
-        const char = line[i];
-        if(char === '"' && line[i + 1] === '"'){
-          current += '"';
-          i++;
-        } else if(char === '"'){
-          quoted = !quoted;
-        } else if(char === "," && !quoted){
-          cells.push(current);
-          current = "";
-        } else {
-          current += char;
-        }
-      }
-      cells.push(current);
-      return cells;
-    }
-
     async function loadPaidPlayers(token){
-      if(paidPlayersLoaded && (!token || quotaRefreshAttempted || !isQuotaCacheStale())) return;
+      if(paidPlayersLoaded) return;
       paidPlayersLoaded = true;
-
       const cached = await loadQuotaCache();
       if(cached.paidNames.length){
         paidPlayerNames = new Set(cached.paidNames);
-        quotaCacheUpdatedAt = cached.updatedAt;
-      }
-      if(!isQuotaCacheStale()) return;
-      if(!token) return;
-
-      quotaRefreshAttempted = true;
-      try {
-        const response = await fetch(QUOTA_CSV_URL, { cache:"no-store" });
-        if(!response.ok) throw new Error("Quota CSV read failed");
-        const csv = await response.text();
-        const paidNames = parsePaidQuotaNames(csv);
-        paidPlayerNames = new Set(paidNames);
-        if(token) await saveQuotaCache(paidNames, token);
-      } catch(error) {
-        console.warn("No s'ha pogut actualitzar el full de quotes. Es manté la quota de Firebase.", error);
-      }
-    }
-
-    function isQuotaCacheStale(){
-      if(!quotaCacheUpdatedAt) return true;
-      const updatedTime = new Date(quotaCacheUpdatedAt).getTime();
-      if(Number.isNaN(updatedTime)) return true;
-      return Date.now() - updatedTime > QUOTA_CACHE_MAX_AGE_MS;
-    }
-
-    function parsePaidQuotaNames(csv){
-      const lines = csv.split(/\r?\n/).filter(Boolean);
-      const headers = lines.length ? parseCsvLine(lines[0]).map(normalizeName) : [];
-      const nameIndex = headers.indexOf("nom complet");
-      const quotaIndex = headers.indexOf("quota");
-      const paidNames = [];
-      lines
-        .slice(1)
-        .map(parseCsvLine)
-        .filter(cells => {
-          const name = normalizeName(cells[nameIndex >= 0 ? nameIndex : 0]);
-          const quota = Number(String(cells[quotaIndex >= 0 ? quotaIndex : 1] || "").replace(",", "."));
-          return name && !/\b(total|femeni|masculi)\b/.test(name) && quota > 0;
-        })
-        .forEach(cells => {
-          const fullName = cells[nameIndex >= 0 ? nameIndex : 0];
-          paidNames.push(normalizeName(fullName));
-          paidNames.push(normalizeName(shortName(fullName)));
-        });
-      return Array.from(new Set(paidNames.filter(Boolean)));
-    }
-
-    async function saveQuotaCache(paidNames, token){
-      try {
-        const response = await fetch(firebaseUrl(QUOTA_CACHE_PATH, token), {
-          method:"PUT",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({
-            paidNames,
-            updatedAt: new Date().toISOString(),
-            source: "google-sheet"
-          })
-        });
-        if(!response.ok) throw new Error("Quota cache write failed");
-      } catch(error) {
-        console.warn("No s'ha pogut persistir la quota a Firebase.", error);
       }
     }
 

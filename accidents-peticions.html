@@ -39,6 +39,9 @@
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:6px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0; }
+    .pending-docs-alert { display:none; align-items:center; gap:8px; margin:10px 0 12px; padding:10px 12px; border:1px solid #ead36b; border-left:4px solid var(--accent); border-radius:12px; background:#fff8d6; color:#5f4a00; font-size:0.86rem; font-weight:900; }
+    .pending-docs-alert.show { display:flex; }
+    .pending-docs-alert .icon { font-size:1rem; }
     .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; }
     table { width:100%; border-collapse:collapse; min-width:1180px; background:#fff; table-layout:auto; }
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
@@ -113,6 +116,7 @@
         </div>
       </div>
       <div class="status" id="status">Carregant comunicats...</div>
+      <div class="pending-docs-alert" id="pendingDocsAlert" role="status" aria-live="polite"></div>
       <div class="table-wrap" id="tableWrap"></div>
       <div class="pagination" id="pagination"></div>
       <div class="analysis" id="analysis"></div>
@@ -125,6 +129,7 @@
 
     const REQUESTS = [];
     const statusEl = document.getElementById("status");
+    const pendingDocsAlertEl = document.getElementById("pendingDocsAlert");
     const tableWrap = document.getElementById("tableWrap");
     const paginationEl = document.getElementById("pagination");
     const analysisEl = document.getElementById("analysis");
@@ -414,6 +419,11 @@
       const visible = rows;
       totalEl.textContent = visible.length;
       statusEl.textContent = statusMessage || (rows.length ? "Dades carregades." : "No hi ha comunicats.");
+      const missingPdfCount = isPrivateView ? rows.filter(row => !row.pdfUrl).length : 0;
+      pendingDocsAlertEl.classList.toggle("show", missingPdfCount > 0);
+      pendingDocsAlertEl.innerHTML = missingPdfCount > 0
+        ? '<span class="icon" aria-hidden="true">⚠</span><span>' + missingPdfCount + ' comunicat' + (missingPdfCount === 1 ? ' pendent' : 's pendents') + " d'adjuntar document</span>"
+        : "";
       renderFilters();
       if(!visible.length){
         tableWrap.innerHTML = '<div class="empty">Cap comunicat rebut.</div>';

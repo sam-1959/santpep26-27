@@ -17,6 +17,9 @@ var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 function doPost(e) {
   try {
     var request = obtenirRequest(e);
+    if (esEliminacioPdf(request)) {
+      return respostaJson(eliminarPdfComunicat(request));
+    }
     if (esPujadaPdf(request)) {
       return respostaJson(guardarPdfComunicat(request));
     }
@@ -32,6 +35,11 @@ function esPujadaPdf(request) {
   if (!request) return false;
   var action = String(request.action || "").trim();
   return action === "uploadPdf" || !!request.dataBase64 || !!request.fileName;
+}
+
+function esEliminacioPdf(request) {
+  if (!request) return false;
+  return String(request.action || "").trim() === "deletePdf";
 }
 
 function obtenirRequest(e) {
@@ -76,8 +84,38 @@ function guardarPdfComunicat(request) {
   };
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
+  eliminarFitxerDriveSiExisteix(request.previousPdfDriveId);
   Logger.log("Firebase actualitzat amb pdfUrl=" + payload.pdfUrl);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
+}
+
+function eliminarPdfComunicat(request) {
+  Logger.log("Inici deletePdf requestId=" + valor(request && request.requestId) + ", pdfDriveId=" + valor(request && request.pdfDriveId));
+  if (!request || !request.requestId) {
+    throw new Error("Falta requestId.");
+  }
+  eliminarFitxerDriveSiExisteix(request.pdfDriveId);
+  actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, {
+    pdfName: null,
+    pdfUrl: null,
+    pdfDriveId: null,
+    pdfUploadedAt: null,
+    pdfUploadedBy: null,
+    pdfDeletedAt: new Date().toISOString(),
+    pdfDeletedBy: valor(request.deletedBy)
+  });
+  Logger.log("PDF eliminat i Firebase actualitzat.");
+  return { ok: true, deleted: true };
+}
+
+function eliminarFitxerDriveSiExisteix(fileId) {
+  if (!fileId) return;
+  try {
+    DriveApp.getFileById(fileId).setTrashed(true);
+    Logger.log("PDF enviat a la paperera de Drive: " + fileId);
+  } catch (error) {
+    Logger.log("No s'ha pogut eliminar el PDF de Drive " + fileId + ": " + error);
+  }
 }
 
 function nomFitxerSegur(name) {

@@ -159,7 +159,9 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
+    const QUOTA_CACHE_PATH = "physioQuota/season-26-27";
     const QUOTA_CSV_URL = "https://docs.google.com/spreadsheets/d/15Ep8VIQWEHi_ST9vbnDz6Y_97FBCT_uU/export?format=csv&gid=1209425339";
+    const QUOTA_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -178,6 +180,8 @@
     let isRefreshing = false;
     let paidPlayerNames = new Set();
     let paidPlayersLoaded = false;
+    let quotaCacheUpdatedAt = null;
+    let quotaRefreshAttempted = false;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -248,35 +252,89 @@
       return cells;
     }
 
-    async function loadPaidPlayers(){
-      if(paidPlayersLoaded) return;
+    async function loadPaidPlayers(token){
+      if(paidPlayersLoaded && (!token || quotaRefreshAttempted || !isQuotaCacheStale())) return;
       paidPlayersLoaded = true;
+
+      const cached = await loadQuotaCache();
+      if(cached.paidNames.length){
+        paidPlayerNames = new Set(cached.paidNames);
+        quotaCacheUpdatedAt = cached.updatedAt;
+      }
+      if(!isQuotaCacheStale()) return;
+      if(!token) return;
+
+      quotaRefreshAttempted = true;
       try {
         const response = await fetch(QUOTA_CSV_URL, { cache:"no-store" });
         if(!response.ok) throw new Error("Quota CSV read failed");
         const csv = await response.text();
-        const lines = csv.split(/\r?\n/).filter(Boolean);
-        const headers = lines.length ? parseCsvLine(lines[0]).map(normalizeName) : [];
-        const nameIndex = headers.indexOf("nom complet");
-        const quotaIndex = headers.indexOf("quota");
-        const paidNames = [];
-        lines
-          .slice(1)
-          .map(parseCsvLine)
-          .filter(cells => {
-            const name = normalizeName(cells[nameIndex >= 0 ? nameIndex : 0]);
-            const quota = Number(String(cells[quotaIndex >= 0 ? quotaIndex : 1] || "").replace(",", "."));
-            return name && !/\b(total|femeni|masculi)\b/.test(name) && quota > 0;
-          })
-          .forEach(cells => {
-            const fullName = cells[nameIndex >= 0 ? nameIndex : 0];
-            paidNames.push(normalizeName(fullName));
-            paidNames.push(normalizeName(shortName(fullName)));
-          });
-        paidPlayerNames = new Set(paidNames.filter(Boolean));
+        const paidNames = parsePaidQuotaNames(csv);
+        paidPlayerNames = new Set(paidNames);
+        if(token) await saveQuotaCache(paidNames, token);
       } catch(error) {
-        paidPlayerNames = new Set();
-        console.warn("No s'ha pogut carregar el full de quotes.", error);
+        console.warn("No s'ha pogut actualitzar el full de quotes. Es manté la quota de Firebase.", error);
+      }
+    }
+
+    function isQuotaCacheStale(){
+      if(!quotaCacheUpdatedAt) return true;
+      const updatedTime = new Date(quotaCacheUpdatedAt).getTime();
+      if(Number.isNaN(updatedTime)) return true;
+      return Date.now() - updatedTime > QUOTA_CACHE_MAX_AGE_MS;
+    }
+
+    function parsePaidQuotaNames(csv){
+      const lines = csv.split(/\r?\n/).filter(Boolean);
+      const headers = lines.length ? parseCsvLine(lines[0]).map(normalizeName) : [];
+      const nameIndex = headers.indexOf("nom complet");
+      const quotaIndex = headers.indexOf("quota");
+      const paidNames = [];
+      lines
+        .slice(1)
+        .map(parseCsvLine)
+        .filter(cells => {
+          const name = normalizeName(cells[nameIndex >= 0 ? nameIndex : 0]);
+          const quota = Number(String(cells[quotaIndex >= 0 ? quotaIndex : 1] || "").replace(",", "."));
+          return name && !/\b(total|femeni|masculi)\b/.test(name) && quota > 0;
+        })
+        .forEach(cells => {
+          const fullName = cells[nameIndex >= 0 ? nameIndex : 0];
+          paidNames.push(normalizeName(fullName));
+          paidNames.push(normalizeName(shortName(fullName)));
+        });
+      return Array.from(new Set(paidNames.filter(Boolean)));
+    }
+
+    async function saveQuotaCache(paidNames, token){
+      try {
+        const response = await fetch(firebaseUrl(QUOTA_CACHE_PATH, token), {
+          method:"PUT",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({
+            paidNames,
+            updatedAt: new Date().toISOString(),
+            source: "google-sheet"
+          })
+        });
+        if(!response.ok) throw new Error("Quota cache write failed");
+      } catch(error) {
+        console.warn("No s'ha pogut persistir la quota a Firebase.", error);
+      }
+    }
+
+    async function loadQuotaCache(){
+      try {
+        const response = await fetch(firebaseUrl(QUOTA_CACHE_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("Quota cache read failed");
+        const data = await response.json();
+        return {
+          paidNames: Array.isArray(data?.paidNames) ? data.paidNames.map(normalizeName).filter(Boolean) : [],
+          updatedAt: data?.updatedAt || null
+        };
+      } catch(error) {
+        console.warn("No s'ha pogut carregar la quota persistida a Firebase.", error);
+        return { paidNames: [], updatedAt:null };
       }
     }
 
@@ -618,8 +676,8 @@
 
     async function loadPrivateRequests(user){
       try {
-        await loadPaidPlayers();
         const token = await user.getIdToken();
+        await loadPaidPlayers(token);
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
@@ -636,8 +694,8 @@
       try {
         let nextRows;
         if(isPrivateView && currentUser){
-          await loadPaidPlayers();
           const token = await currentUser.getIdToken();
+          await loadPaidPlayers(token);
           nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         } else {
           await loadPaidPlayers();

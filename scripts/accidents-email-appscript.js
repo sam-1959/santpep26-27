@@ -17,7 +17,7 @@ var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 function doPost(e) {
   try {
     var request = obtenirRequest(e);
-    if (request.action === "uploadPdf") {
+    if (esPujadaPdf(request)) {
       return respostaJson(guardarPdfComunicat(request));
     }
     var resultat = enviarCorreuComunicatsAccident(adaptarComunicatANamedValues(request));
@@ -26,6 +26,12 @@ function doPost(e) {
     Logger.log("Error enviant correu de comunicat d'accident: " + error);
     return respostaJson({ ok: false, error: String(error) });
   }
+}
+
+function esPujadaPdf(request) {
+  if (!request) return false;
+  var action = String(request.action || "").trim();
+  return action === "uploadPdf" || !!request.dataBase64 || !!request.fileName;
 }
 
 function obtenirRequest(e) {

@@ -51,7 +51,7 @@
     .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px;
       margin-bottom:20px; padding:12px; background:rgba(255,255,255,0.72); border:1px solid var(--line);
       border-radius:var(--radius); box-shadow:0 1px 2px rgba(60,40,90,0.04); }
-    .import-status { margin:-8px 0 18px; color:var(--muted); font-size:0.86rem; font-weight:700; text-align:right; }
+    .import-status { margin:4px 0 18px; color:var(--muted); font-size:0.86rem; font-weight:700; text-align:left; }
     .filter-group { min-width:0; }
     .filter-options { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
     .filters-label { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;
@@ -196,7 +196,6 @@
       </div>
     </section>
     <div class="filters" id="filters"></div>
-    <div class="import-status" id="importStatus"></div>
     <div id="content"></div>
   </main>
   <footer>Font: calendari Partits SamPep Masc · CB Sant Josep de Badalona</footer>
@@ -205,7 +204,6 @@
   <script>
     const DATA = JSON.parse(document.getElementById('partitsData').textContent);
     const content = document.getElementById('content');
-    const importStatus = document.getElementById('importStatus');
     const CHANGES_PER_PAGE = 3;
     let changesPage = 0;
     const DEFAULT_WHATSAPP_RECIPIENT = "";
@@ -362,6 +360,10 @@
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
         '</div>';
+    }
+    function renderImportStatus(){
+      const importedAt = fmtImportDate(DATA.latestChanges && DATA.latestChanges.importedAt);
+      return importedAt ? '<div class="import-status">Calendari actualitzat: ' + importedAt + '</div>' : '';
     }
 
     function miniMark(g){
@@ -688,11 +690,9 @@
     let currentIdx=0;     // índex global de setmana dins DATA.weeks
 
     function renderContent(){
-      const importedAt = fmtImportDate(DATA.latestChanges && DATA.latestChanges.importedAt);
-      importStatus.textContent = importedAt ? 'Calendari actualitzat: ' + importedAt : '';
       const html=renderWeek(DATA.weeks[currentIdx]);
       const weekHtml = html.trim() ? html : '<p class="empty-filter">Cap partit per als filtres seleccionats.</p>';
-      content.innerHTML = weekHtml + iconLegend() + renderConflicts() + renderLatestChanges();
+      content.innerHTML = weekHtml + iconLegend() + renderImportStatus() + renderConflicts() + renderLatestChanges();
       bindChangesNav();
     }
 

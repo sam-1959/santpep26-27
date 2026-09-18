@@ -645,10 +645,6 @@
       changesPage=Math.max(0, Math.min(changesPage, pages - 1));
       const start=changesPage * CHANGES_PER_PAGE;
       const visible=changes.slice(start, start + CHANGES_PER_PAGE);
-      const date=latest.importedAt ? new Date(latest.importedAt) : null;
-      const meta=date && !Number.isNaN(date.getTime())
-        ? 'Importat el ' + date.toLocaleDateString('ca-ES') + ' a les ' + date.toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit'})
-        : 'Última importació amb canvis';
       const items=visible.map(function(c){
         const details=(c.fields||[]).map(function(f){
           return '<div class="change-detail">' + f.label + ': ' +
@@ -665,7 +661,7 @@
           '</div>'
         : '';
       return '<section class="changes"><div class="changes-head"><div><h3>Últims canvis (' + total + ')</h3></div></div>' +
-        '<ul class="changes-list">' + items + '</ul><p class="changes-meta">' + meta + '</p>' + nav + '</section>';
+        '<ul class="changes-list">' + items + '</ul>' + nav + '</section>';
     }
 
     const currentMonthLabelEl = document.getElementById('currentMonthLabel');

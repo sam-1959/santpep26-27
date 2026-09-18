@@ -5,17 +5,85 @@
 // 2. Deploy > New deployment > Web app.
 // 3. Execute as: Me.
 // 4. Who has access: Anyone.
-// 5. Autoritza GmailApp.
+// 5. Autoritza GmailApp, DriveApp i UrlFetchApp.
 // 6. Copia la URL /exec i posa-la a ACCIDENT_NOTIFY_URL dins accidents.html.
+
+var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
+var ACCIDENT_PDFS_FOLDER_NAME = "Comunicats Accident 26-27";
 
 function doPost(e) {
   try {
     var request = JSON.parse((e.postData && e.postData.contents) || "{}");
+    if (request.action === "uploadPdf") {
+      return respostaJson(guardarPdfComunicat(request));
+    }
     var resultat = enviarCorreuComunicatsAccident(adaptarComunicatANamedValues(request));
     return respostaJson({ ok: true, sentTo: resultat.sentTo, sentCount: resultat.sentTo.length });
   } catch (error) {
     Logger.log("Error enviant correu de comunicat d'accident: " + error);
     return respostaJson({ ok: false, error: String(error) });
+  }
+}
+
+function guardarPdfComunicat(request) {
+  if (!request || !request.requestId) {
+    throw new Error("Falta requestId.");
+  }
+  if (!request.dataBase64) {
+    throw new Error("Falta el contingut del PDF.");
+  }
+
+  var fileName = nomFitxerSegur(request.fileName || ("comunicat-" + request.requestId + ".pdf"));
+  var mimeType = request.mimeType || "application/pdf";
+  if (mimeType !== "application/pdf") {
+    throw new Error("El fitxer ha de ser un PDF.");
+  }
+
+  var folder = obtenirOCrearCarpeta(ACCIDENT_PDFS_FOLDER_NAME);
+  var bytes = Utilities.base64Decode(request.dataBase64);
+  var blob = Utilities.newBlob(bytes, mimeType, fileName);
+  var file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  var payload = {
+    pdfName: fileName,
+    pdfUrl: file.getUrl(),
+    pdfDriveId: file.getId(),
+    pdfUploadedAt: new Date().toISOString(),
+    pdfUploadedBy: valor(request.uploadedBy)
+  };
+
+  actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
+  return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
+}
+
+function obtenirOCrearCarpeta(name) {
+  var folders = DriveApp.getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(name);
+}
+
+function nomFitxerSegur(name) {
+  var safe = String(name || "comunicat.pdf")
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!/\.pdf$/i.test(safe)) safe += ".pdf";
+  return safe;
+}
+
+function actualitzarFirebase(path, payload) {
+  var base = FIREBASE_DB_URL.replace(/\/$/, "");
+  var safePath = path.split("/").map(encodeURIComponent).join("/");
+  var response = UrlFetchApp.fetch(base + "/" + safePath + ".json", {
+    method: "patch",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+  var code = response.getResponseCode();
+  if (code < 200 || code >= 300) {
+    throw new Error("Firebase update failed: " + code + " " + response.getContentText());
   }
 }
 

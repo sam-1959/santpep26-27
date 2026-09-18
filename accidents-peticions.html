@@ -115,7 +115,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
 
     const REQUESTS = [];
     const statusEl = document.getElementById("status");
@@ -141,13 +140,13 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
+    const ACCIDENT_FILES_URL = "https://script.google.com/macros/s/AKfycbzT_q4ClUvZgG9gHpQU8fz4WF5BECdN_8307clyUadmjkJ7yvDamublciTIeyaeg50f/exec";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
     let currentPage = 1;
     let statusMessage = "";
     let auth = null;
-    let storage = null;
     let authReady = false;
     let isPrivateView = false;
     let currentUser = null;
@@ -224,34 +223,34 @@
       if(!response.ok) throw new Error("Firebase patch failed");
     }
 
-    function safeFileName(value){
-      return String(value || "comunicat")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9._-]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 80) || "comunicat";
+    function readFileAsBase64(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+        reader.onerror = () => reject(new Error("No s'ha pogut llegir el PDF."));
+        reader.readAsDataURL(file);
+      });
     }
 
     async function uploadAccidentPdf(row, file){
-      if(!storage || !currentUser || !row || !row.id) throw new Error("Storage not ready");
+      if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.id) throw new Error("No s'ha pogut preparar la pujada.");
       if(!file || file.type !== "application/pdf"){
         throw new Error("El fitxer ha de ser un PDF.");
       }
-      const path = "accidentReports/season-26-27/" + row.id + "/" + Date.now() + "-" + safeFileName(file.name);
-      const ref = storageRef(storage, path);
-      await uploadBytes(ref, file, { contentType:"application/pdf" });
-      const url = await getDownloadURL(ref);
-      const payload = {
-        pdfName: file.name,
-        pdfPath: path,
-        pdfUrl: url,
-        pdfUploadedAt: new Date().toISOString(),
-        pdfUploadedBy: currentUser.email || ""
-      };
-      const token = await currentUser.getIdToken();
-      await patchFirebaseRequest(PRIVATE_REQUESTS_PATH, row.id, payload, token);
-      Object.assign(row, payload);
+      const dataBase64 = await readFileAsBase64(file);
+      await fetch(ACCIDENT_FILES_URL, {
+        method:"POST",
+        mode:"no-cors",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body:JSON.stringify({
+          action:"uploadPdf",
+          requestId:row.id,
+          fileName:file.name,
+          mimeType:file.type,
+          dataBase64,
+          uploadedBy:currentUser.email || ""
+        })
+      });
     }
 
     async function syncPublicPlayerNames(privateRows){
@@ -401,9 +400,11 @@
             button.textContent = "Pujant...";
             try {
               await uploadAccidentPdf(row, file);
-              statusMessage = "PDF adjuntat al comunicat de " + shortName(row.player) + ".";
+              statusMessage = "PDF enviat. Actualitzant el comunicat...";
+              await new Promise(resolve => setTimeout(resolve, 1800));
+              await refreshRequests();
             } catch(error) {
-              statusMessage = error && error.message ? error.message : "No s'ha pogut pujar el PDF. Revisa permisos de Firebase Storage.";
+              statusMessage = error && error.message ? error.message : "No s'ha pogut pujar el PDF.";
             }
             render();
           });
@@ -595,7 +596,6 @@
       try {
         const app = initializeApp(FIREBASE_CONFIG);
         auth = getAuth(app);
-        storage = getStorage(app);
         authReady = true;
         getRedirectResult(auth).catch(error => {
           statusMessage = "No s'ha pogut completar l'accés amb Google" + (error && error.code ? " (" + error.code + ")" : "") + ".";

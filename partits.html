@@ -51,7 +51,7 @@
     .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px;
       margin-bottom:20px; padding:12px; background:rgba(255,255,255,0.72); border:1px solid var(--line);
       border-radius:var(--radius); box-shadow:0 1px 2px rgba(60,40,90,0.04); }
-    .import-status { margin:4px 0 18px; color:var(--muted); font-size:0.86rem; font-weight:700; text-align:left; }
+    .import-status { margin-left:auto; color:var(--muted); font-size:0.7rem; font-weight:700; text-align:right; white-space:nowrap; }
     .filter-group { min-width:0; }
     .filter-options { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
     .filters-label { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;
@@ -354,11 +354,13 @@
     }
 
     function iconLegend(){
+      const importStatus = renderImportStatus();
       return '<div class="legend" aria-label="Llegenda d&apos;icones">' +
         '<span class="legend-item"><span class="friendly" title="Partit amistós">🤝</span> Amistós</span>' +
         '<span class="legend-item"><span class="mini-mark" title="Partit de Mini">🍼</span> Mini</span>' +
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
+        importStatus +
         '</div>';
     }
     function renderImportStatus(){
@@ -692,7 +694,7 @@
     function renderContent(){
       const html=renderWeek(DATA.weeks[currentIdx]);
       const weekHtml = html.trim() ? html : '<p class="empty-filter">Cap partit per als filtres seleccionats.</p>';
-      content.innerHTML = weekHtml + iconLegend() + renderImportStatus() + renderConflicts() + renderLatestChanges();
+      content.innerHTML = weekHtml + iconLegend() + renderConflicts() + renderLatestChanges();
       bindChangesNav();
     }
 

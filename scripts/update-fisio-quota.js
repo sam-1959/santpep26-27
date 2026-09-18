@@ -3,6 +3,7 @@
 // pagada. Pensat per executar-se periòdicament amb GitHub Actions.
 
 const https = require("https");
+const crypto = require("crypto");
 
 const FIREBASE_DB_URL =
   process.env.FIREBASE_DB_URL ||
@@ -31,7 +32,7 @@ function fetchText(url) {
   });
 }
 
-function request(method, url, body) {
+function request(method, url, body, headers = {}) {
   return new Promise((resolve, reject) => {
     const req = https.request(
       url,
@@ -40,6 +41,7 @@ function request(method, url, body) {
         headers: {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(body || ""),
+          ...headers,
         },
       },
       (res) => {
@@ -61,10 +63,51 @@ function request(method, url, body) {
   });
 }
 
-function firebaseUrl(path) {
+function postForm(url, body) {
+  return request("POST", url, body, {
+    "Content-Type": "application/x-www-form-urlencoded",
+  });
+}
+
+function base64url(value) {
+  return Buffer.from(value)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+async function firebaseAuthToken() {
+  if (process.env.FIREBASE_AUTH_TOKEN) return process.env.FIREBASE_AUTH_TOKEN;
+  if (process.env.FIREBASE_DATABASE_SECRET) return process.env.FIREBASE_DATABASE_SECRET;
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT) return "";
+
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "RS256", typ: "JWT" };
+  const claims = {
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  };
+  const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claims))}`;
+  const signature = crypto
+    .createSign("RSA-SHA256")
+    .update(unsigned)
+    .sign(serviceAccount.private_key);
+  const jwt = `${unsigned}.${base64url(signature)}`;
+  const response = await postForm(
+    "https://oauth2.googleapis.com/token",
+    `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${encodeURIComponent(jwt)}`
+  );
+  return JSON.parse(response).access_token;
+}
+
+function firebaseUrl(path, auth) {
   const base = FIREBASE_DB_URL.replace(/\/$/, "");
   const safePath = path.split("/").map(encodeURIComponent).join("/");
-  const auth = process.env.FIREBASE_AUTH_TOKEN || process.env.FIREBASE_DATABASE_SECRET || "";
   return `${base}/${safePath}.json${auth ? `?auth=${encodeURIComponent(auth)}` : ""}`;
 }
 
@@ -133,6 +176,7 @@ function parsePaidQuotaNames(csv) {
 async function main() {
   const csv = await fetchText(QUOTA_CSV_URL);
   const paidNames = parsePaidQuotaNames(csv);
+  const auth = await firebaseAuthToken();
   const payload = {
     paidNames,
     updatedAt: new Date().toISOString(),
@@ -140,7 +184,7 @@ async function main() {
     count: paidNames.length,
   };
 
-  await request("PUT", firebaseUrl(QUOTA_CACHE_PATH), JSON.stringify(payload));
+  await request("PUT", firebaseUrl(QUOTA_CACHE_PATH, auth), JSON.stringify(payload));
   console.log(`Quota actualitzada a Firebase: ${paidNames.length} claus de nom.`);
 }
 

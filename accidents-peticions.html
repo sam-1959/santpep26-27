@@ -54,6 +54,8 @@
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
     .desc { color:var(--muted); width:30%; min-width:320px; max-width:560px; }
     .pdf-actions { display:flex; align-items:center; gap:6px; flex-wrap:nowrap; min-width:112px; }
+    .pdf-missing { background:#fff8d6; box-shadow:inset 3px 0 0 var(--accent); }
+    .pdf-warning { display:inline-grid; place-items:center; width:24px; height:24px; color:#8a6a00; font-size:0.9rem; }
     .pdf-link, .pdf-button { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:999px; font-size:0.9rem; line-height:1; text-decoration:none; white-space:nowrap; }
     .pdf-link { color:var(--brand-dark); background:#faf8fd; border:1px solid var(--line); font-weight:900; }
     .pdf-link:hover { border-color:var(--brand); }
@@ -429,12 +431,12 @@
           const rowClass = row.isNew ? 'new-request' : '';
           const isAnyPdfBusy = !!pdfBusy;
           const isThisPdfBusy = pdfBusy && pdfBusy.id === row.id;
-          const uploadTitle = row.pdfUrl ? "Canviar PDF" : "Adjuntar PDF";
+          const uploadTitle = row.pdfUrl ? "Canviar PDF" : "Adjuntar PDF pendent";
           const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
           const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
           const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
-          const pdfCell = '<td class="col-name"><div class="pdf-actions">' +
-            (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="muted">—</span>') +
+          const pdfCell = '<td class="col-name' + (row.pdfUrl ? '' : ' pdf-missing') + '"><div class="pdf-actions">' +
+            (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="pdf-warning" title="PDF pendent" aria-label="PDF pendent">⚠</span>') +
             '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
             (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';

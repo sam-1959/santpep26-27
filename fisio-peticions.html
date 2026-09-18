@@ -39,7 +39,7 @@
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:6px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0; }
-    .quota-status { color:var(--muted); font-size:0.76rem; margin:-2px 0 10px; }
+    .quota-status { color:var(--muted); font-size:0.76rem; margin:8px 0 0; text-align:right; }
     .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; }
     table { width:100%; border-collapse:collapse; min-width:1180px; background:#fff; table-layout:auto; }
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
@@ -70,7 +70,7 @@
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
     .page-button:disabled { opacity:0.45; cursor:not-allowed; }
     .page-info { font-weight:800; color:var(--brand-dark); }
-    .analysis { margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+    .analysis { margin-top:28px; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; box-shadow:var(--shadow); }
     .analysis h3 { margin:0 0 12px; color:var(--brand-dark); font-size:1rem; }
     .analysis-grid { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; }
     .analysis-card { border:1px solid var(--line); border-radius:14px; background:#faf8fd; padding:12px; }
@@ -114,9 +114,9 @@
       </div>
       <div class="filters" id="filters"></div>
       <div class="status" id="status">Carregant peticions...</div>
-      <div class="quota-status" id="quotaStatus"></div>
       <div class="table-wrap" id="tableWrap"></div>
       <div class="pagination" id="pagination"></div>
+      <div class="quota-status" id="quotaStatus"></div>
       <div class="analysis" id="analysis"></div>
     </section>
   </main>

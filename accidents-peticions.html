@@ -308,7 +308,7 @@
         const nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         const updated = nextRows.find(item => item.id === rowId);
         if(updated && updated.pdfUrl && updated.pdfUrl !== previousPdfUrl){
-          rows = applyRequestMarkers(nextRows, true);
+          rows = applyRequestMarkers(nextRows, false);
           return true;
         }
       }
@@ -323,7 +323,7 @@
         const nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         const updated = nextRows.find(item => item.id === rowId);
         if(updated && !updated.pdfUrl){
-          rows = applyRequestMarkers(nextRows, true);
+          rows = applyRequestMarkers(nextRows, false);
           return true;
         }
       }

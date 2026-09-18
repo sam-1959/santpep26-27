@@ -60,6 +60,9 @@
     .pdf-upload:disabled { opacity:0.5; cursor:not-allowed; }
     .pdf-delete { border:1px solid #ffcdd2; border-radius:999px; background:#fff5f5; color:#b71c1c; padding:6px 10px; font-weight:900; font-size:0.76rem; cursor:pointer; }
     .pdf-delete:disabled { opacity:0.5; cursor:not-allowed; }
+    .pdf-loading { display:inline-flex; align-items:center; gap:6px; }
+    .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
     .muted { color:var(--muted); }
     .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; color:var(--muted); font-size:0.82rem; }
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
@@ -157,6 +160,7 @@
     let hasInitializedSeenRequests = false;
     let refreshTimer = null;
     let isRefreshing = false;
+    let pdfBusy = null;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -423,10 +427,15 @@
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th class="desc">Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
+          const isAnyPdfBusy = !!pdfBusy;
+          const isThisPdfBusy = pdfBusy && pdfBusy.id === row.id;
+          const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading">Pujant...</span>' : (row.pdfUrl ? "Canviar" : "Adjuntar");
+          const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading">Eliminant...</span>' : "Eliminar";
+          const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
           const pdfCell = '<td class="col-name"><div class="pdf-actions">' +
             (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="' + escapeHtml(row.pdfName || "Comunicat d'accident") + '">Descarregar</a>' : '<span class="muted">—</span>') +
-            '<button class="pdf-upload" type="button" data-upload-pdf="' + escapeHtml(row.id) + '">' + (row.pdfUrl ? "Canviar" : "Adjuntar") + '</button>' +
-            (row.pdfUrl ? '<button class="pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '">Eliminar</button>' : '') +
+            '<button class="pdf-upload" type="button" data-upload-pdf="' + escapeHtml(row.id) + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
+            (row.pdfUrl ? '<button class="pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';
           const privateCells = isPrivateView ?
             pdfCell +
@@ -466,9 +475,10 @@
           input.addEventListener("change", async () => {
             const file = input.files && input.files[0];
             if(!file) return;
-            button.disabled = true;
-            button.textContent = "Pujant...";
             try {
+              pdfBusy = { id:row.id, action:"upload" };
+              statusMessage = (row.pdfUrl ? "Canviant PDF..." : "Pujant PDF...");
+              render();
               const previousPdfUrl = row.pdfUrl || "";
               await uploadAccidentPdf(row, file);
               statusMessage = "PDF enviat. Esperant confirmació...";
@@ -479,6 +489,8 @@
                 : "PDF enviat, però encara no apareix al comunicat. Revisa l'execució de l'Apps Script.";
             } catch(error) {
               statusMessage = error && error.message ? error.message : "No s'ha pogut pujar el PDF.";
+            } finally {
+              pdfBusy = null;
             }
             render();
           });
@@ -493,9 +505,10 @@
           if(!window.confirm("Això eliminarà el PDF associat del Drive i deixarà el comunicat sense fitxer. Vols continuar?")){
             return;
           }
-          button.disabled = true;
-          button.textContent = "Eliminant...";
           try {
+            pdfBusy = { id:row.id, action:"delete" };
+            statusMessage = "Eliminant PDF...";
+            render();
             await deleteAccidentPdf(row);
             statusMessage = "Eliminació enviada. Esperant confirmació...";
             render();
@@ -505,6 +518,8 @@
               : "Eliminació enviada, però encara apareix al comunicat. Revisa l'execució de l'Apps Script.";
           } catch(error) {
             statusMessage = error && error.message ? error.message : "No s'ha pogut eliminar el PDF.";
+          } finally {
+            pdfBusy = null;
           }
           render();
         });

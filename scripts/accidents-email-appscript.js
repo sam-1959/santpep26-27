@@ -44,7 +44,11 @@ function guardarPdfComunicat(request) {
   var bytes = Utilities.base64Decode(request.dataBase64);
   var blob = Utilities.newBlob(bytes, mimeType, fileName);
   var file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (sharingError) {
+    Logger.log("No s'ha pogut canviar el sharing del PDF. Es mantindran els permisos de la carpeta: " + sharingError);
+  }
 
   var payload = {
     pdfName: fileName,

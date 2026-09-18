@@ -253,6 +253,21 @@
       });
     }
 
+    async function waitForPdfUpdate(rowId, previousPdfUrl){
+      if(!currentUser || !rowId) return false;
+      for(let attempt = 0; attempt < 8; attempt += 1){
+        await new Promise(resolve => setTimeout(resolve, attempt ? 2000 : 1200));
+        const token = await currentUser.getIdToken();
+        const nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
+        const updated = nextRows.find(item => item.id === rowId);
+        if(updated && updated.pdfUrl && updated.pdfUrl !== previousPdfUrl){
+          rows = applyRequestMarkers(nextRows, true);
+          return true;
+        }
+      }
+      return false;
+    }
+
     async function syncPublicPlayerNames(privateRows){
       try {
         const publicRows = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
@@ -399,10 +414,14 @@
             button.disabled = true;
             button.textContent = "Pujant...";
             try {
+              const previousPdfUrl = row.pdfUrl || "";
               await uploadAccidentPdf(row, file);
-              statusMessage = "PDF enviat. Actualitzant el comunicat...";
-              await new Promise(resolve => setTimeout(resolve, 1800));
-              await refreshRequests();
+              statusMessage = "PDF enviat. Esperant confirmació...";
+              render();
+              const confirmed = await waitForPdfUpdate(row.id, previousPdfUrl);
+              statusMessage = confirmed
+                ? "PDF adjuntat al comunicat de " + shortName(row.player) + "."
+                : "PDF enviat, però encara no apareix al comunicat. Revisa l'execució de l'Apps Script.";
             } catch(error) {
               statusMessage = error && error.message ? error.message : "No s'ha pogut pujar el PDF.";
             }

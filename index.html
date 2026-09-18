@@ -37,6 +37,10 @@
     .card-icon { font-size:2rem; line-height:1; }
     .card h3 { margin:0; font-size:1.1rem; color:var(--brand-dark); font-weight:700; }
     .card p { margin:0; font-size:0.85rem; color:var(--muted); }
+    .card-total { display:inline-flex; align-items:center; align-self:flex-start; gap:6px; margin-top:2px;
+      padding:4px 9px; border-radius:999px; background:#faf8fd; border:1px solid var(--line);
+      color:var(--brand-dark); font-size:0.76rem; font-weight:900; }
+    .card-total.loading { color:var(--muted); }
     .card .go { margin-top:4px; font-size:0.82rem; font-weight:700; color:var(--brand);
       display:inline-flex; align-items:center; gap:5px; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
@@ -91,6 +95,7 @@
         <span class="card-icon">📋</span>
         <h3>Peticions de fisio</h3>
         <p>Consulta anonimitzada de les peticions rebudes pel servei de fisioteràpia.</p>
+        <span class="card-total loading" data-count-path="physioRequestsPublic/season-26-27">Carregant...</span>
         <span class="go">Veure peticions →</span>
       </a>
       <a class="card" href="accidents.html">
@@ -103,6 +108,7 @@
         <span class="card-icon">📋</span>
         <h3>Comunicats rebuts</h3>
         <p>Consulta dels comunicats d'accident esportiu rebuts.</p>
+        <span class="card-total loading" data-count-path="accidentReportsPublic/season-26-27">Carregant...</span>
         <span class="go">Veure comunicats →</span>
       </a>
       <a class="card" href="coaches.html">
@@ -120,5 +126,37 @@
     </div>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+
+    function firebaseUrl(path){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const safePath = path.split("/").map(encodeURIComponent).join("/");
+      return base + "/" + safePath + ".json";
+    }
+
+    function countRecords(data){
+      return data && typeof data === "object" ? Object.keys(data).length : 0;
+    }
+
+    function totalLabel(path, total){
+      return path.startsWith("physioRequests")
+        ? total + " petici" + (total === 1 ? "ó" : "ons")
+        : total + " comunicat" + (total === 1 ? "" : "s");
+    }
+
+    document.querySelectorAll("[data-count-path]").forEach(async badge => {
+      const path = badge.dataset.countPath;
+      try {
+        const response = await fetch(firebaseUrl(path), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        const total = countRecords(await response.json());
+        badge.textContent = totalLabel(path, total);
+        badge.classList.remove("loading");
+      } catch(error) {
+        badge.textContent = "No disponible";
+      }
+    });
+  </script>
 </body>
 </html>

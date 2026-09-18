@@ -402,7 +402,7 @@
       );
       totalEl.textContent = visible.length;
       statusEl.textContent = statusMessage || (rows.length ? "Dades carregades." : "No hi ha peticions.");
-      quotaStatusEl.textContent = quotaImportedAt ? "Quota actualitzada: " + formatDate(quotaImportedAt, true) : "";
+      quotaStatusEl.textContent = isPrivateView && quotaImportedAt ? "Quota actualitzada: " + formatDate(quotaImportedAt, true) : "";
       renderFilters();
       if(!visible.length){
         tableWrap.innerHTML = '<div class="empty">Cap petició amb aquest filtre.</div>';

@@ -247,16 +247,18 @@
         mimeType:file.type,
         dataBase64,
         uploadedBy:currentUser.email || "",
-        previousPdfDriveId:row.pdfDriveId || ""
+        previousPdfDriveId:row.pdfDriveId || "",
+        previousPdfUrl:row.pdfUrl || ""
       });
     }
 
     async function deleteAccidentPdf(row){
-      if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.id || !row.pdfDriveId) throw new Error("No hi ha cap PDF per eliminar.");
+      if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.id || (!row.pdfDriveId && !row.pdfUrl)) throw new Error("No hi ha cap PDF per eliminar.");
       postToAppsScript({
         action:"deletePdf",
         requestId:row.id,
-        pdfDriveId:row.pdfDriveId,
+        pdfDriveId:row.pdfDriveId || "",
+        pdfUrl:row.pdfUrl || "",
         deletedBy:currentUser.email || ""
       });
     }

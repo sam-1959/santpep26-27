@@ -84,7 +84,7 @@ function guardarPdfComunicat(request) {
   };
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
-  eliminarFitxerDriveSiExisteix(request.previousPdfDriveId);
+  eliminarFitxerDriveSiExisteix(request.previousPdfDriveId || extreureDriveFileId(request.previousPdfUrl));
   Logger.log("Firebase actualitzat amb pdfUrl=" + payload.pdfUrl);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
 }
@@ -94,7 +94,7 @@ function eliminarPdfComunicat(request) {
   if (!request || !request.requestId) {
     throw new Error("Falta requestId.");
   }
-  eliminarFitxerDriveSiExisteix(request.pdfDriveId);
+  eliminarFitxerDriveSiExisteix(request.pdfDriveId || extreureDriveFileId(request.pdfUrl));
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, {
     pdfName: null,
     pdfUrl: null,
@@ -116,6 +116,12 @@ function eliminarFitxerDriveSiExisteix(fileId) {
   } catch (error) {
     Logger.log("No s'ha pogut eliminar el PDF de Drive " + fileId + ": " + error);
   }
+}
+
+function extreureDriveFileId(url) {
+  var text = String(url || "");
+  var match = text.match(/\/d\/([^/]+)/) || text.match(/[?&]id=([^&]+)/);
+  return match ? match[1] : "";
 }
 
 function nomFitxerSegur(name) {

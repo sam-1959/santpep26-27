@@ -53,14 +53,14 @@
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
     .desc { color:var(--muted); width:30%; min-width:320px; max-width:560px; }
-    .pdf-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:150px; }
-    .pdf-link { color:var(--brand-dark); font-weight:900; text-decoration:none; white-space:nowrap; }
-    .pdf-link:hover { text-decoration:underline; }
-    .pdf-upload { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:6px 10px; font-weight:900; font-size:0.76rem; cursor:pointer; }
-    .pdf-upload:disabled { opacity:0.5; cursor:not-allowed; }
-    .pdf-delete { border:1px solid #ffcdd2; border-radius:999px; background:#fff5f5; color:#b71c1c; padding:6px 10px; font-weight:900; font-size:0.76rem; cursor:pointer; }
-    .pdf-delete:disabled { opacity:0.5; cursor:not-allowed; }
-    .pdf-loading { display:inline-flex; align-items:center; gap:6px; }
+    .pdf-actions { display:flex; align-items:center; gap:6px; flex-wrap:nowrap; min-width:112px; }
+    .pdf-link, .pdf-button { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:999px; font-size:0.9rem; line-height:1; text-decoration:none; white-space:nowrap; }
+    .pdf-link { color:var(--brand-dark); background:#faf8fd; border:1px solid var(--line); font-weight:900; }
+    .pdf-link:hover { border-color:var(--brand); }
+    .pdf-button { border:1px solid var(--line); background:#fff; color:var(--brand); font-weight:900; cursor:pointer; }
+    .pdf-button:disabled { opacity:0.5; cursor:not-allowed; }
+    .pdf-delete { border-color:#ffcdd2; background:#fff5f5; color:#b71c1c; }
+    .pdf-loading { display:inline-grid; place-items:center; }
     .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .muted { color:var(--muted); }
@@ -429,13 +429,14 @@
           const rowClass = row.isNew ? 'new-request' : '';
           const isAnyPdfBusy = !!pdfBusy;
           const isThisPdfBusy = pdfBusy && pdfBusy.id === row.id;
-          const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading">Pujant...</span>' : (row.pdfUrl ? "Canviar" : "Adjuntar");
-          const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading">Eliminant...</span>' : "Eliminar";
+          const uploadTitle = row.pdfUrl ? "Canviar PDF" : "Adjuntar PDF";
+          const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
+          const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
           const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
           const pdfCell = '<td class="col-name"><div class="pdf-actions">' +
-            (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="' + escapeHtml(row.pdfName || "Comunicat d'accident") + '">Descarregar</a>' : '<span class="muted">—</span>') +
-            '<button class="pdf-upload" type="button" data-upload-pdf="' + escapeHtml(row.id) + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
-            (row.pdfUrl ? '<button class="pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
+            (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="muted">—</span>') +
+            '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
+            (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';
           const privateCells = isPrivateView ?
             pdfCell +

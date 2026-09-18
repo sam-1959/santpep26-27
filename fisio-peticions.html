@@ -159,7 +159,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
-    const QUOTA_CACHE_PATH = "physioQuota/season-26-27";
+    const QUOTA_DATA_URL = "data/fisio-quota.json";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -226,27 +226,17 @@
         .toLowerCase();
     }
 
-    async function loadPaidPlayers(token){
+    async function loadPaidPlayers(){
       if(paidPlayersLoaded) return;
       paidPlayersLoaded = true;
-      const cached = await loadQuotaCache();
-      if(cached.paidNames.length){
-        paidPlayerNames = new Set(cached.paidNames);
-      }
-    }
-
-    async function loadQuotaCache(){
       try {
-        const response = await fetch(firebaseUrl(QUOTA_CACHE_PATH), { cache:"no-store" });
-        if(!response.ok) throw new Error("Quota cache read failed");
+        const response = await fetch(QUOTA_DATA_URL, { cache:"no-store" });
+        if(!response.ok) throw new Error("Quota JSON read failed");
         const data = await response.json();
-        return {
-          paidNames: Array.isArray(data?.paidNames) ? data.paidNames.map(normalizeName).filter(Boolean) : [],
-          updatedAt: data?.updatedAt || null
-        };
+        paidPlayerNames = new Set(Array.isArray(data?.paidNames) ? data.paidNames.map(normalizeName).filter(Boolean) : []);
       } catch(error) {
-        console.warn("No s'ha pogut carregar la quota persistida a Firebase.", error);
-        return { paidNames: [], updatedAt:null };
+        paidPlayerNames = new Set();
+        console.warn("No s'ha pogut carregar la quota persistida.", error);
       }
     }
 
@@ -589,7 +579,7 @@
     async function loadPrivateRequests(user){
       try {
         const token = await user.getIdToken();
-        await loadPaidPlayers(token);
+        await loadPaidPlayers();
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
@@ -607,7 +597,7 @@
         let nextRows;
         if(isPrivateView && currentUser){
           const token = await currentUser.getIdToken();
-          await loadPaidPlayers(token);
+          await loadPaidPlayers();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         } else {
           await loadPaidPlayers();

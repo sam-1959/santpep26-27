@@ -7,11 +7,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
@@ -19,9 +28,41 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Actualitza quota de fisio a Firebase
-        env:
-          FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
-          FIREBASE_DATABASE_SECRET: ${{ secrets.FIREBASE_DATABASE_SECRET }}
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Actualitza quota de fisio
         run: node scripts/update-fisio-quota.js
+
+      - name: Commit si hi ha canvis
+        run: |
+          if git diff --quiet -- data/fisio-quota.json; then
+            echo "Sense canvis a la quota de fisio."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/fisio-quota.json
+            git commit -m "Actualitza quota de fisio"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+      - id: deploy1
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - if: steps.deploy1.outcome == 'failure'
+        run: sleep 15
+
+      - id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 30
+
+      - id: deploy3
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        uses: actions/deploy-pages@v5

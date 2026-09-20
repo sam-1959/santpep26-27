@@ -119,7 +119,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
             Descarregar comunicat
           </a>
         </div>
-        <p style="font-size: 13px; color: #666;">Si teniu cap dubte, podeu contactar amb el club.</p>
+        <p style="font-size: 13px; color: #666;">Si teniu cap dubte, podeu contactar amb info@cbsantjosep.cat.</p>
       </div>
       <div style="background-color: #F4F4F4; padding: 15px; text-align: center; border-top: 1px solid #EEEEEE;">
         <p style="font-size: 12px; color: #666666; margin: 0;"><strong>CB Sant Josep Badalona</strong></p>

@@ -258,6 +258,9 @@
         mimeType:file.type,
         dataBase64,
         uploadedBy:currentUser.email || "",
+        recipientEmail:row.email || "",
+        player:row.player || "",
+        guardianName:row.guardianName || "",
         previousPdfDriveId:row.pdfDriveId || "",
         previousPdfUrl:row.pdfUrl || ""
       });

@@ -85,8 +85,55 @@ function guardarPdfComunicat(request) {
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
   eliminarFitxerDriveSiExisteix(request.previousPdfDriveId || extreureDriveFileId(request.previousPdfUrl));
+  enviarCorreuDocumentFamilia(request, payload);
   Logger.log("Firebase actualitzat amb pdfUrl=" + payload.pdfUrl);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
+}
+
+function enviarCorreuDocumentFamilia(request, pdf) {
+  var destinataris = normalitzarCorreus([request.recipientEmail || request.email]);
+  if (!destinataris.length) {
+    Logger.log("No s'envia correu a família: falta adreça electrònica vàlida.");
+    return;
+  }
+
+  var jugador = valor(request.player);
+  var assumpte = "Comunicat d'Accident Esportiu - CB Sant Josep";
+  var cosText = "CB SANT JOSEP BADALONA\n\n" +
+    "Hola,\n\n" +
+    "Us enviem el Comunicat d'Accident Esportiu" + (jugador !== "—" ? " de " + jugador : "") + ".\n\n" +
+    "Podeu descarregar-lo aquí:\n" + pdf.pdfUrl + "\n\n" +
+    "CB Sant Josep de Badalona";
+
+  var cosHTML = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #E5E5E5; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #4B1D6D; padding: 25px; text-align: center; border-bottom: 4px solid #FFC72C;">
+        <h1 style="color: #FFC72C; margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">CB Sant Josep Badalona</h1>
+        <p style="color: #FFFFFF; margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Comunicat d'Accident Esportiu</p>
+      </div>
+      <div style="padding: 25px; background-color: #FFFFFF;">
+        <p style="margin-top: 0;">Hola,</p>
+        <p>Us enviem el Comunicat d'Accident Esportiu${jugador !== "—" ? " de <strong>" + escaparHtml(jugador) + "</strong>" : ""}.</p>
+        <div style="text-align: center; margin: 26px 0; padding: 18px; background-color: #F9F6FC; border-radius: 6px; border: 1px dashed #4B1D6D;">
+          <a href="${pdf.pdfUrl}" target="_blank" style="background-color: #4B1D6D; color: #FFC72C; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; font-size: 14px; border: 2px solid #FFC72C;">
+            Descarregar comunicat
+          </a>
+        </div>
+        <p style="font-size: 13px; color: #666;">Si teniu cap dubte, podeu contactar amb el club.</p>
+      </div>
+      <div style="background-color: #F4F4F4; padding: 15px; text-align: center; border-top: 1px solid #EEEEEE;">
+        <p style="font-size: 12px; color: #666666; margin: 0;"><strong>CB Sant Josep Badalona</strong></p>
+      </div>
+    </div>
+  `;
+
+  destinataris.forEach(function(correu) {
+    GmailApp.sendEmail(correu, assumpte, cosText, {
+      htmlBody: cosHTML,
+      name: "CB Sant Josep Badalona"
+    });
+    Logger.log("Correu amb comunicat enviat a: " + correu);
+  });
 }
 
 function eliminarPdfComunicat(request) {

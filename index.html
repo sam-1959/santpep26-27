@@ -29,6 +29,16 @@
     .intro h2 { font-size:1.45rem; color:var(--brand-dark); margin:0 0 6px; }
     .intro p { color:var(--muted); margin:0; font-size:0.9rem; }
     .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
+    .section-group { margin-top:22px; padding:18px; border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,0.56); box-shadow:var(--shadow); }
+    .section-group:first-of-type { margin-top:0; }
+    .section-head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin:0 0 14px; }
+    .section-head h3 { margin:0; color:var(--brand-dark); font-size:1rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .section-head p { margin:3px 0 0; color:var(--muted); font-size:0.82rem; }
+    .section-head .section-icon { font-size:1.45rem; }
+    .section-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+    .section-group.fisio { border-top:5px solid #8e5bb4; }
+    .section-group.accidents { border-top:5px solid #f2b705; }
+    .section-group.general { border-top:5px solid var(--brand); }
     .card { display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit;
       background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:24px 22px; transition:transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
@@ -41,6 +51,8 @@
       padding:4px 9px; border-radius:999px; background:#faf8fd; border:1px solid var(--line);
       color:var(--brand-dark); font-size:0.76rem; font-weight:900; }
     .card-total.loading { color:var(--muted); }
+    .public-badge { display:inline-flex; align-items:center; align-self:flex-start; gap:5px; padding:4px 9px; border-radius:999px; background:#fff8cc; border:1px solid #efd96f; color:#5f4a00; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.03em; }
+    .public-badge::before { content:"🌐"; font-size:0.8rem; }
     .card .go { margin-top:4px; font-size:0.82rem; font-weight:700; color:var(--brand);
       display:inline-flex; align-items:center; gap:5px; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
@@ -60,76 +72,111 @@
       <h2>Què vols consultar?</h2>
       <p>Tria una secció</p>
     </div>
-    <div class="cards">
-      <a class="card" href="horaris.html">
-        <span class="card-icon">🗓️</span>
-        <h3>Horaris d'entrenament</h3>
-        <p>Pretemporada i temporada 26-27, per instal·lació i franja horària. Amb filtres per categoria.</p>
-        <span class="go">Veure horaris →</span>
-      </a>
-      <a class="card" href="partits.html">
-        <span class="card-icon">🏀</span>
-        <h3>Calendari de partits</h3>
-        <p>Calendari de partits de la setmana, amb rival, lloc i casa/fora. Amb filtres per categoria.</p>
-        <span class="go">Veure partits →</span>
-      </a>
-      <a class="card" href="torneigs.html">
-        <span class="card-icon">🏆</span>
-        <h3>Torneigs</h3>
-        <p>Vista agrupada dels amistosos i torneigs dels equips, amb lloc, dates, rivals i costos quan existeixen.</p>
-        <span class="go">Veure torneigs →</span>
-      </a>
-      <a class="card" href="taules-mini.html">
-        <span class="card-icon">🧾</span>
-        <h3>Taules</h3>
-        <p>Assignació de les dues persones de taula per als partits de cistella mini.</p>
-        <span class="go">Gestionar taules →</span>
-      </a>
-      <a class="card" href="fisio.html">
-        <span class="card-icon">✚</span>
-        <h3>Servei de fisioteràpia</h3>
-        <p>Sol·licitud de visita per al servei de fisioteràpia del club.</p>
-        <span class="go">Demanar visita →</span>
-      </a>
-      <a class="card" href="fisio-peticions.html">
-        <span class="card-icon">📋</span>
-        <h3>Peticions de fisio</h3>
-        <p>Consulta anonimitzada de les peticions rebudes pel servei de fisioteràpia.</p>
-        <span class="card-total loading" data-count-path="physioRequestsPublic/season-26-27">Carregant...</span>
-        <span class="go">Veure peticions →</span>
-      </a>
-      <a class="card" href="fisio-visites.html">
-        <span class="card-icon">🩺</span>
-        <h3>Visites de fisio</h3>
-        <p>Consulta les visites registrades pels fisios, amb valoració, tractament i pautes a seguir.</p>
-        <span class="go">Veure visites →</span>
-      </a>
-      <a class="card" href="accidents.html">
-        <span class="card-icon">⚠️</span>
-        <h3>Comunicats d'accident</h3>
-        <p>Formulari per recollir les dades necessàries del comunicat d'accident esportiu.</p>
-        <span class="go">Enviar comunicat →</span>
-      </a>
-      <a class="card" href="accidents-peticions.html">
-        <span class="card-icon">📋</span>
-        <h3>Comunicats rebuts</h3>
-        <p>Consulta dels comunicats d'accident esportiu rebuts.</p>
-        <span class="card-total loading" data-count-path="accidentReportsPublic/season-26-27">Carregant...</span>
-        <span class="go">Veure comunicats →</span>
-      </a>
-      <a class="card" href="coaches.html">
-        <span class="card-icon">👕</span>
-        <h3>Roba coachs Pentex</h3>
-        <p>Talles demanades per coach i equip, amb resum per peça i filtre de cerca.</p>
-        <span class="go">Veure roba →</span>
-      </a>
-      <a class="card" href="equips-4factors.html">
-        <span class="card-icon">4F</span>
-        <h3>Calculadora 4 Factors</h3>
-        <p>Calcula eFG%, TOV%, ORB% i FT/FGA comparant equip i rival. Un equip per equip del club.</p>
-        <span class="go">Triar equip →</span>
-      </a>
-    </div>
+    <section class="section-group general">
+      <div class="section-head">
+        <div>
+          <h3>Gestió esportiva</h3>
+          <p>Calendari, equips i eines de temporada.</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">🏀</span>
+      </div>
+      <div class="section-cards">
+        <a class="card" href="horaris.html">
+          <span class="card-icon">🗓️</span>
+          <h3>Horaris d'entrenament</h3>
+          <p>Pretemporada i temporada 26-27, per instal·lació i franja horària. Amb filtres per categoria.</p>
+          <span class="go">Veure horaris →</span>
+        </a>
+        <a class="card" href="partits.html">
+          <span class="card-icon">🏀</span>
+          <h3>Calendari de partits</h3>
+          <p>Calendari de partits de la setmana, amb rival, lloc i casa/fora. Amb filtres per categoria.</p>
+          <span class="go">Veure partits →</span>
+        </a>
+        <a class="card" href="torneigs.html">
+          <span class="card-icon">🏆</span>
+          <h3>Torneigs</h3>
+          <p>Vista agrupada dels amistosos i torneigs dels equips, amb lloc, dates, rivals i costos quan existeixen.</p>
+          <span class="go">Veure torneigs →</span>
+        </a>
+        <a class="card" href="taules-mini.html">
+          <span class="card-icon">🧾</span>
+          <h3>Taules</h3>
+          <p>Assignació de les dues persones de taula per als partits de cistella mini.</p>
+          <span class="go">Gestionar taules →</span>
+        </a>
+        <a class="card" href="coaches.html">
+          <span class="card-icon">👕</span>
+          <h3>Roba coachs Pentex</h3>
+          <p>Talles demanades per coach i equip, amb resum per peça i filtre de cerca.</p>
+          <span class="go">Veure roba →</span>
+        </a>
+        <a class="card" href="equips-4factors.html">
+          <span class="card-icon">4F</span>
+          <h3>Calculadora 4 Factors</h3>
+          <p>Calcula eFG%, TOV%, ORB% i FT/FGA comparant equip i rival. Un equip per equip del club.</p>
+          <span class="go">Triar equip →</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section-group fisio">
+      <div class="section-head">
+        <div>
+          <h3>Fisioteràpia</h3>
+          <p>Sol·licituds, seguiment de peticions i visites realitzades.</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">✚</span>
+      </div>
+      <div class="section-cards">
+        <a class="card" href="fisio.html">
+          <span class="card-icon">✚</span>
+          <h3>Servei de fisioteràpia</h3>
+          <p>Sol·licitud de visita per al servei de fisioteràpia del club.</p>
+          <span class="go">Demanar visita →</span>
+        </a>
+        <a class="card" href="fisio-peticions.html">
+          <span class="card-icon">📋</span>
+          <h3>Peticions de fisio</h3>
+          <p>Consulta anonimitzada de les peticions rebudes pel servei de fisioteràpia.</p>
+          <span class="public-badge">Públic club</span>
+          <span class="card-total loading" data-count-path="physioRequestsPublic/season-26-27">Carregant...</span>
+          <span class="go">Veure peticions →</span>
+        </a>
+        <a class="card" href="fisio-visites.html">
+          <span class="card-icon">🩺</span>
+          <h3>Visites de fisio</h3>
+          <p>Consulta les visites registrades pels fisios, amb valoració, tractament i pautes a seguir.</p>
+          <span class="go">Veure visites →</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section-group accidents">
+      <div class="section-head">
+        <div>
+          <h3>Comunicats d'accident</h3>
+          <p>Formulari i seguiment dels comunicats d'accident esportiu.</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">⚠️</span>
+      </div>
+      <div class="section-cards">
+        <a class="card" href="accidents.html">
+          <span class="card-icon">⚠️</span>
+          <h3>Comunicats d'accident</h3>
+          <p>Formulari per recollir les dades necessàries del comunicat d'accident esportiu.</p>
+          <span class="go">Enviar comunicat →</span>
+        </a>
+        <a class="card" href="accidents-peticions.html">
+          <span class="card-icon">📋</span>
+          <h3>Comunicats rebuts</h3>
+          <p>Consulta dels comunicats d'accident esportiu rebuts.</p>
+          <span class="public-badge">Públic club</span>
+          <span class="card-total loading" data-count-path="accidentReportsPublic/season-26-27">Carregant...</span>
+          <span class="go">Veure comunicats →</span>
+        </a>
+      </div>
+    </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>

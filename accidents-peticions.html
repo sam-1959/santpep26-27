@@ -51,6 +51,7 @@
     .col-date { width:1%; white-space:nowrap; }
     .col-name { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
+    .col-status { width:1%; white-space:nowrap; text-align:center; }
     tr:last-child td { border-bottom:0; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
@@ -444,7 +445,7 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
-      const privateHead = isPrivateView ? '<th class="col-name">Document (PDF)</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-status">Estat</th><th class="col-name">Document (PDF)</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th class="desc">Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
@@ -461,12 +462,12 @@
             ? '<span class="pdf-email-status pdf-email-sent" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>'
             : '<span class="pdf-email-status pdf-email-pending" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>';
           const pdfCell = '<td class="col-name' + (row.pdfUrl ? '' : ' pdf-missing') + '"><div class="pdf-actions">' +
-            emailStatusIcon +
             (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="pdf-warning" title="PDF pendent" aria-label="PDF pendent">⚠</span>') +
             '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
             (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';
           const privateCells = isPrivateView ?
+            '<td class="col-status">' + emailStatusIcon + '</td>' +
             pdfCell +
             '<td class="col-name">' + escapeHtml(row.claimNumber || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +

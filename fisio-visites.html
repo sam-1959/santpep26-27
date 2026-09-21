@@ -524,8 +524,8 @@
         guidelines: row.guidelines || "",
         prepaRead: Boolean(row.prepaRead),
         prepaReadAt: row.prepaReadAt || "",
-        prepaReadByName: row.prepaReadByName || row.prepaReadBy?.name || "",
-        prepaReadByEmail: row.prepaReadByEmail || row.prepaReadBy?.email || "",
+        prepaReadByName: row.prepaReadByName || row.prepaReadBy?.name || row.prepaFeedback?.byName || "",
+        prepaReadByEmail: row.prepaReadByEmail || row.prepaReadBy?.email || row.prepaFeedback?.byEmail || "",
         prepaFeedback: row.prepaFeedback && typeof row.prepaFeedback === "object" ? row.prepaFeedback : {}
       })).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
     }
@@ -735,6 +735,8 @@
           const feedbackText = feedback.text || "";
           const readMeta = actorMeta(row.prepaReadByName, row.prepaReadByEmail, row.prepaReadAt);
           const feedbackMeta = actorMeta(feedback.byName, feedback.byEmail, feedback.updatedAt);
+          const readByLabel = row.prepaReadByName || row.prepaReadByEmail || "";
+          const readLabel = row.prepaRead ? "✓ " + (readByLabel || "Llegit") : "Pendent";
           const feedbackHtml = feedbackStatus || feedbackText
             ? '<span class="feedback-pill ' + escapeHtml(feedbackStatus) + '">' + escapeHtml(feedbackStatusLabel(feedbackStatus)) + '</span>' +
               (feedbackText ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' : '') +
@@ -755,7 +757,7 @@
             '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
             '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
-            '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + (row.prepaRead ? "✓ Llegit" : "Pendent") + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(readMeta) + '</div>' : '') + '</td>' +
+            '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + escapeHtml(readLabel) + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(formatDateTime(row.prepaReadAt)) + '</div>' : '') + '</td>' +
             '<td class="col-feedback">' + feedbackHtml + '</td>' +
             '<td><div class="table-actions">' +
               (canUsePrepaActions() ? '<button class="row-action read" type="button" title="Marcar com llegit pel prepa" data-action="read" data-id="' + escapeHtml(row.id) + '">✓</button>' +

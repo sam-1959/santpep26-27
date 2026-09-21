@@ -285,7 +285,7 @@
       "ricard.fuste@gmail.com": "fisio",
       "albgrau@gmail.com": "prepa",
       "curagustin@gmail.com": "prepa",
-      "er25nicsab@gmail.com": "fisio",
+      "er25nicsab@gmail.com": "fisio_prepa",
       "j.costabarriga@gmail.com": "prepa",
       "miquelsaro@gmail.com": "prepa",
       "nacho22guzman@gmail.com": "prepa"
@@ -358,11 +358,11 @@
     }
 
     function isFisio(){
-      return currentRole === "fisio";
+      return currentRole === "fisio" || currentRole === "fisio_prepa";
     }
 
     function isPrepa(){
-      return currentRole === "prepa";
+      return currentRole === "prepa" || currentRole === "fisio_prepa";
     }
 
     function hasAccess(){
@@ -885,7 +885,7 @@
     function setRoleMode(user, role){
       currentUser = user;
       currentRole = role;
-      els.authTitle.textContent = role === "fisio" ? "Vista fisio" : "Vista prepa";
+      els.authTitle.textContent = role === "fisio_prepa" ? "Vista fisio i prepa" : role === "fisio" ? "Vista fisio" : "Vista prepa";
       els.authText.textContent = "Sessió iniciada com " + user.email + ".";
       els.loginButton.hidden = true;
       els.logoutButton.hidden = false;

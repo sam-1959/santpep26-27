@@ -320,9 +320,10 @@
       return Object.entries(data).map(([id, request]) => ({ id, ...(request || {}) }));
     }
 
-    async function loadLatestVisitGuidelines(){
+    async function loadLatestVisitGuidelines(token){
       try {
-        const visits = await fetchFirebaseRequests(VISITS_PATH);
+        const path = token ? VISITS_PATH : "physioVisitsPublic/season-26-27";
+        const visits = await fetchFirebaseRequests(path, token);
         const latest = new Map();
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
@@ -663,7 +664,7 @@
       try {
         const token = await user.getIdToken();
         await loadPaidPlayers();
-        await loadLatestVisitGuidelines();
+        await loadLatestVisitGuidelines(token);
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
@@ -682,7 +683,7 @@
         if(isPrivateView && currentUser){
           const token = await currentUser.getIdToken();
           await loadPaidPlayers();
-          await loadLatestVisitGuidelines();
+          await loadLatestVisitGuidelines(token);
           nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         } else {
           await loadPaidPlayers();

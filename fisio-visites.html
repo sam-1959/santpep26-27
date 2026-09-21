@@ -541,7 +541,8 @@
         team: visit.team || "",
         structure: visit.structure || "",
         location: visit.location || "",
-        assignedPhysio: visit.assignedPhysio || ""
+        assignedPhysio: visit.assignedPhysio || "",
+        guidelines: visit.guidelines || ""
       };
     }
 
@@ -833,7 +834,7 @@
       });
       if(!response.ok) throw new Error("Firebase patch failed");
       const publicPatch = {};
-      ["date", "gender", "team", "structure", "location", "assignedPhysio", "updatedAt"].forEach(field => {
+      ["date", "gender", "team", "structure", "location", "assignedPhysio", "guidelines", "updatedAt"].forEach(field => {
         if(Object.prototype.hasOwnProperty.call(patch, field)) publicPatch[field] = patch[field];
       });
       if(Object.keys(publicPatch).length){

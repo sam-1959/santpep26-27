@@ -542,14 +542,12 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender, "Tots") +
-        (hasAccess() ? renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") : "") +
         renderFilterGroup("team", uniqueTeamCategories(), activeTeam, "Categories") +
         renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
-          if(button.dataset.filter === "physio") activePhysio = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
           if(button.dataset.filter === "structure") activeStructure = button.dataset.value;
           currentPage = 1;
@@ -564,13 +562,23 @@
         els.prepaFilters.innerHTML = "";
         return;
       }
-      els.prepaFilters.innerHTML = renderFilterGroup("prepa", [
+      els.prepaFilters.innerHTML =
+        renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") +
+        renderFilterGroup("prepa", [
         { value:"NO_LLEGIDES", label:"Pendents prepa" },
         { value:"LLEGIDES", label:"Llegides" },
         { value:"AMB_FEEDBACK", label:"Amb feedback" },
         { value:"REVISAR", label:"A revisar" }
       ], activePrepaFilter, "Prepa: tots");
 
+      els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
+        button.addEventListener("click", () => {
+          activePhysio = button.dataset.value;
+          currentPage = 1;
+          renderPrepaFilters();
+          render();
+        });
+      });
       els.prepaFilters.querySelectorAll("[data-filter='prepa']").forEach(button => {
         button.addEventListener("click", () => {
           activePrepaFilter = button.dataset.value;

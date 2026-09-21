@@ -57,6 +57,7 @@
     .col-team { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
+    .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
     tr:last-child td { border-bottom:0; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
@@ -509,7 +510,7 @@
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
-          '<td class="col-guidelines">' + escapeHtml(latestGuidelines || "—") + '</td>' +
+          '<td class="col-guidelines">' + (latestGuidelines ? escapeHtml(latestGuidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
         '</tr>';
         }).join("") +
         '</tbody></table>';

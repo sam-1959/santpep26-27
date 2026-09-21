@@ -163,8 +163,11 @@
           </div>
           <div class="field">
             <label for="assignedPhysio">Fisio assignat</label>
-            <input id="assignedPhysio" name="assignedPhysio" type="text" list="physioOptions" placeholder="Opcional" autocomplete="off" />
-            <datalist id="physioOptions"></datalist>
+            <select id="assignedPhysio" name="assignedPhysio">
+              <option value="">Sense assignar</option>
+              <option value="Pol Amigó">Pol Amigó</option>
+              <option value="Eric Nicolàs">Eric Nicolàs</option>
+            </select>
           </div>
             <div class="field">
               <label for="team">Equip</label>
@@ -245,6 +248,7 @@
     const VISITS_PATH = "physioVisits/season-26-27";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PAGE_SIZE = 10;
+    const PHYSIOS = ["Pol Amigó", "Eric Nicolàs"];
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
@@ -273,7 +277,6 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
-      physioOptions: document.getElementById("physioOptions"),
       teamOptions: document.getElementById("teamOptions"),
       structureOptions: document.getElementById("structureOptions"),
       locationOptions: document.getElementById("locationOptions"),
@@ -435,7 +438,7 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender, "Tots") +
-        renderFilterGroup("physio", uniqueValues("assignedPhysio"), activePhysio, "Fisios") +
+        renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") +
         renderFilterGroup("team", uniqueValues("team"), activeTeam, "Equips") +
         renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
@@ -473,7 +476,6 @@
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
-        { el:els.physioOptions, field:"assignedPhysio" },
         { el:els.teamOptions, field:"team" },
         { el:els.structureOptions, field:"structure" },
         { el:els.locationOptions, field:"location" }
@@ -522,7 +524,6 @@
 
     function render(){
       const visible = filteredRows();
-      const physioOptions = uniqueValues("assignedPhysio");
       els.total.textContent = visible.length;
       els.status.textContent = rows.length
         ? "Dades carregades."
@@ -568,7 +569,7 @@
             '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio">' +
               '<option value="">Sense assignar</option>' +
-              physioOptions.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
+              PHYSIOS.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
             '</select></td>' +
             '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +

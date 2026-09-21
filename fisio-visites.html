@@ -39,9 +39,17 @@
     .actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
     .primary { border:0; border-radius:999px; padding:10px 18px; background:var(--brand); color:#fff; font-weight:900; cursor:pointer; }
     .primary:disabled { opacity:0.62; cursor:wait; }
+    .secondary { border:1px solid var(--line); border-radius:999px; padding:10px 18px; background:#fff; color:var(--brand); font-weight:900; cursor:pointer; }
     .form-status { font-size:0.86rem; color:var(--muted); }
     .form-status.ok { color:var(--ok); font-weight:800; }
     .form-status.err { color:var(--err); font-weight:800; }
+    .modal-backdrop { position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:40px 20px; background:rgba(20,12,32,0.52); z-index:20; overflow:auto; }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(1080px,100%); background:#fff; border-radius:18px; box-shadow:0 24px 70px rgba(20,12,32,0.34); border:1px solid var(--line); padding:18px; }
+    .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px; }
+    .modal-head h2 { margin:0 0 4px; color:var(--brand-dark); font-size:1.18rem; }
+    .modal-head p { margin:0; color:var(--muted); font-size:0.86rem; }
+    .icon-button { display:inline-grid; place-items:center; width:36px; height:36px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); cursor:pointer; font-size:1.2rem; font-weight:900; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
@@ -79,78 +87,13 @@
   </header>
   <main>
     <nav class="page-nav"><a class="back" href="fisio-peticions.html">← Peticions de fisio</a></nav>
-    <div class="stack">
-      <section class="panel">
-        <div class="head">
-          <div>
-            <h2>Nova visita</h2>
-            <p>Les dades introduïdes aquí es guarden a Firebase. El Google Sheet ja no és la font de persistència d’aquesta pàgina.</p>
-          </div>
-        </div>
-        <form id="visitForm">
-          <div class="form-grid">
-            <div class="field">
-              <label for="date">Data</label>
-              <input id="date" name="date" type="date" required />
-            </div>
-            <div class="field">
-              <label for="firstName">Nom</label>
-              <input id="firstName" name="firstName" type="text" autocomplete="off" required />
-            </div>
-            <div class="field">
-              <label for="lastName">Cognom</label>
-              <input id="lastName" name="lastName" type="text" autocomplete="off" required />
-            </div>
-            <div class="field">
-              <label for="gender">Gènere</label>
-              <select id="gender" name="gender" required>
-                <option value="">Selecciona...</option>
-                <option value="M">Masculí</option>
-                <option value="F">Femení</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="team">Equip</label>
-              <input id="team" name="team" type="text" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
-            </div>
-            <div class="field">
-              <label for="structure">Estructura</label>
-              <input id="structure" name="structure" type="text" placeholder="Ex. MUSCULAR" autocomplete="off" required />
-            </div>
-            <div class="field wide">
-              <label for="location">Localització</label>
-              <input id="location" name="location" type="text" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
-            </div>
-            <div class="field full">
-              <label for="mechanism">Mecanisme lesional</label>
-              <textarea id="mechanism" name="mechanism" required></textarea>
-            </div>
-            <div class="field full">
-              <label for="assessment">Valoració</label>
-              <textarea id="assessment" name="assessment" required></textarea>
-            </div>
-            <div class="field full">
-              <label for="treatment">Tractament</label>
-              <textarea id="treatment" name="treatment" required></textarea>
-            </div>
-            <div class="field full">
-              <label for="guidelines">Pautes a seguir</label>
-              <textarea id="guidelines" name="guidelines" required></textarea>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="primary" id="submitButton" type="submit">Guardar visita</button>
-            <span class="form-status" id="formStatus"></span>
-          </div>
-        </form>
-      </section>
-
       <section class="panel">
         <div class="head">
           <div>
             <h2>Visites registrades</h2>
             <p>Dades carregades des de Firebase.</p>
           </div>
+          <button class="primary" id="openCreateButton" type="button">Crear</button>
           <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
         </div>
         <div class="toolbar">
@@ -160,8 +103,75 @@
         <div class="status" id="status">Carregant visites...</div>
         <div class="table-wrap" id="tableWrap"></div>
       </section>
-    </div>
   </main>
+  <div class="modal-backdrop" id="visitModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="visitModalTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="visitModalTitle">Nova visita</h2>
+          <p>Les dades introduïdes aquí es guarden a Firebase.</p>
+        </div>
+        <button class="icon-button" id="closeCreateButton" type="button" aria-label="Tancar">×</button>
+      </div>
+      <form id="visitForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="date">Data</label>
+            <input id="date" name="date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="firstName">Nom</label>
+            <input id="firstName" name="firstName" type="text" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="lastName">Cognom</label>
+            <input id="lastName" name="lastName" type="text" autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="gender">Gènere</label>
+            <select id="gender" name="gender" required>
+              <option value="">Selecciona...</option>
+              <option value="M">Masculí</option>
+              <option value="F">Femení</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="team">Equip</label>
+            <input id="team" name="team" type="text" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
+          </div>
+          <div class="field">
+            <label for="structure">Estructura</label>
+            <input id="structure" name="structure" type="text" placeholder="Ex. MUSCULAR" autocomplete="off" required />
+          </div>
+          <div class="field wide">
+            <label for="location">Localització</label>
+            <input id="location" name="location" type="text" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
+          </div>
+          <div class="field full">
+            <label for="mechanism">Mecanisme lesional</label>
+            <textarea id="mechanism" name="mechanism" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="assessment">Valoració</label>
+            <textarea id="assessment" name="assessment" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="treatment">Tractament</label>
+            <textarea id="treatment" name="treatment" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="guidelines">Pautes a seguir</label>
+            <textarea id="guidelines" name="guidelines" required></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="submitButton" type="submit">Guardar visita</button>
+          <button class="secondary" id="cancelCreateButton" type="button">Cancel·lar</button>
+          <span class="form-status" id="formStatus"></span>
+        </div>
+      </form>
+    </div>
+  </div>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
 
   <script>
@@ -180,7 +190,11 @@
       table: document.getElementById("tableWrap"),
       form: document.getElementById("visitForm"),
       submit: document.getElementById("submitButton"),
-      formStatus: document.getElementById("formStatus")
+      formStatus: document.getElementById("formStatus"),
+      modal: document.getElementById("visitModal"),
+      openCreate: document.getElementById("openCreateButton"),
+      closeCreate: document.getElementById("closeCreateButton"),
+      cancelCreate: document.getElementById("cancelCreateButton")
     };
 
     function escapeHtml(value){
@@ -366,6 +380,18 @@
       els.formStatus.textContent = text || "";
     }
 
+    function openModal(){
+      setFormStatus("", "");
+      els.modal.classList.add("open");
+      els.modal.setAttribute("aria-hidden", "false");
+      setTimeout(() => document.getElementById("date").focus(), 0);
+    }
+
+    function closeModal(){
+      els.modal.classList.remove("open");
+      els.modal.setAttribute("aria-hidden", "true");
+    }
+
     els.form.addEventListener("submit", async event => {
       event.preventDefault();
       els.submit.disabled = true;
@@ -393,6 +419,7 @@
         renderFilters();
         render();
         setFormStatus("ok", "Visita guardada correctament.");
+        closeModal();
       } catch(error) {
         setFormStatus("err", "No s'ha pogut guardar. Revisa els permisos de Firebase.");
       } finally {
@@ -401,6 +428,15 @@
     });
 
     els.search.addEventListener("input", render);
+    els.openCreate.addEventListener("click", openModal);
+    els.closeCreate.addEventListener("click", closeModal);
+    els.cancelCreate.addEventListener("click", closeModal);
+    els.modal.addEventListener("click", event => {
+      if(event.target === els.modal) closeModal();
+    });
+    document.addEventListener("keydown", event => {
+      if(event.key === "Escape" && els.modal.classList.contains("open")) closeModal();
+    });
     load();
   </script>
 </body>

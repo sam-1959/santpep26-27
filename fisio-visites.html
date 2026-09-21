@@ -528,7 +528,7 @@
       }
       els.modal.classList.add("open");
       els.modal.setAttribute("aria-hidden", "false");
-      setTimeout(() => document.getElementById("firstName").focus(), 0);
+      setTimeout(() => document.getElementById(copyMode ? "mechanism" : "firstName").focus(), 0);
     }
 
     function closeModal(){

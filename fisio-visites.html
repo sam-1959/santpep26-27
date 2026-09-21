@@ -78,6 +78,8 @@
     .col-count, .col-date, .col-team, .col-gender, .col-structure, .col-location { width:1%; white-space:nowrap; }
     .col-count { text-align:right; color:var(--muted); font-weight:900; }
     .col-name { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
+    .col-physio { width:1%; min-width:170px; white-space:nowrap; }
+    .inline-select { min-width:150px; border-radius:999px; padding:7px 10px; font-size:0.8rem; font-weight:800; color:var(--brand-dark); background:#fff; }
     .long { min-width:230px; color:var(--ink); }
     .guidelines { min-width:300px; color:var(--brand-dark); font-weight:750; }
     .col-prepa { width:1%; white-space:nowrap; }
@@ -158,6 +160,11 @@
               <option value="M">Masculí</option>
               <option value="F">Femení</option>
             </select>
+          </div>
+          <div class="field">
+            <label for="assignedPhysio">Fisio assignat</label>
+            <input id="assignedPhysio" name="assignedPhysio" type="text" list="physioOptions" placeholder="Opcional" autocomplete="off" />
+            <datalist id="physioOptions"></datalist>
           </div>
             <div class="field">
               <label for="team">Equip</label>
@@ -242,6 +249,7 @@
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
     let activeStructure = "TOTS";
+    let activePhysio = "TOTS";
     let activePrepaFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
@@ -265,6 +273,7 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
+      physioOptions: document.getElementById("physioOptions"),
       teamOptions: document.getElementById("teamOptions"),
       structureOptions: document.getElementById("structureOptions"),
       locationOptions: document.getElementById("locationOptions"),
@@ -385,6 +394,7 @@
         lastName: row.lastName || "",
         name: row.name || [row.firstName, row.lastName].filter(Boolean).join(" "),
         gender: row.gender || "",
+        assignedPhysio: row.assignedPhysio || row.physio || "",
         team: row.team || "",
         structure: row.structure || "",
         location: row.location || "",
@@ -425,12 +435,14 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender, "Tots") +
+        renderFilterGroup("physio", uniqueValues("assignedPhysio"), activePhysio, "Fisios") +
         renderFilterGroup("team", uniqueValues("team"), activeTeam, "Equips") +
         renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
+          if(button.dataset.filter === "physio") activePhysio = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
           if(button.dataset.filter === "structure") activeStructure = button.dataset.value;
           currentPage = 1;
@@ -461,6 +473,7 @@
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
+        { el:els.physioOptions, field:"assignedPhysio" },
         { el:els.teamOptions, field:"team" },
         { el:els.structureOptions, field:"structure" },
         { el:els.locationOptions, field:"location" }
@@ -490,6 +503,7 @@
       const query = normalize(els.search.value);
       return rows.filter(row => {
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
+        if(activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
         if(activeTeam !== "TOTS" && row.team !== activeTeam) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
         if(activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
@@ -499,6 +513,7 @@
         if(!query) return true;
         return normalize([
           row.date, row.name, row.team, row.structure, row.location,
+          row.assignedPhysio,
           row.mechanism, row.assessment, row.treatment, row.guidelines,
           row.prepaFeedback?.status, row.prepaFeedback?.text
         ].join(" ")).includes(query);
@@ -507,6 +522,7 @@
 
     function render(){
       const visible = filteredRows();
+      const physioOptions = uniqueValues("assignedPhysio");
       els.total.textContent = visible.length;
       els.status.textContent = rows.length
         ? "Dades carregades."
@@ -525,6 +541,7 @@
         '<th class="col-date">Data</th>' +
         '<th class="col-name">Jugador/a</th>' +
         '<th class="col-gender">Gènere</th>' +
+        '<th class="col-physio">Fisio</th>' +
         '<th class="col-team">Equip</th>' +
         '<th class="col-structure">Estructura</th>' +
         '<th class="col-location">Localització</th>' +
@@ -549,6 +566,10 @@
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
+            '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio">' +
+              '<option value="">Sense assignar</option>' +
+              physioOptions.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
+            '</select></td>' +
             '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
@@ -664,6 +685,7 @@
         team: inputValue("team").toUpperCase(),
         structure: inputValue("structure").toUpperCase(),
         location: inputValue("location").toUpperCase(),
+        assignedPhysio: inputValue("assignedPhysio"),
         mechanism: inputValue("mechanism"),
         assessment: inputValue("assessment"),
         treatment: inputValue("treatment"),
@@ -675,6 +697,7 @@
       setInputValue("date", row.date);
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
       setInputValue("gender", row.gender);
+      setInputValue("assignedPhysio", row.assignedPhysio);
       setInputValue("team", row.team);
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
@@ -805,6 +828,28 @@
         setFeedbackFormStatus("err", "No s'ha pogut guardar el feedback.");
       } finally {
         els.feedbackSubmit.disabled = false;
+      }
+    });
+    els.table.addEventListener("change", async event => {
+      const select = event.target.closest("[data-action='assign-physio']");
+      if(!select) return;
+      const row = rows.find(item => item.id === select.dataset.id);
+      if(!row) return;
+      select.disabled = true;
+      const patch = {
+        assignedPhysio: select.value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      try {
+        await updateVisit(row.id, patch);
+        patchLocalVisit(row.id, patch);
+        renderFilters();
+        renderDatalistOptions();
+        render();
+      } catch(error) {
+        alert("No s'ha pogut assignar el fisio. Revisa els permisos de Firebase.");
+        select.value = row.assignedPhysio || "";
+        select.disabled = false;
       }
     });
     els.table.addEventListener("click", async event => {

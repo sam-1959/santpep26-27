@@ -195,7 +195,7 @@
 
     function totalLabel(path, total){
       if(path.startsWith("physioVisits")){
-        return total + " visita" + (total === 1 ? "" : "s");
+        return total === 1 ? "1 visita" : total + " visites";
       }
       return path.startsWith("physioRequests")
         ? total + " petici" + (total === 1 ? "ó" : "ons")

@@ -402,7 +402,7 @@
           '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
           '<td><div class="table-actions">' +
             '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +
-            '<button class="row-action copy" type="button" title="Crear nova visita a partir d’aquesta" data-action="copy" data-id="' + escapeHtml(row.id) + '">＋</button>' +
+            '<button class="row-action copy" type="button" title="Crear nova visita a partir d’aquesta" data-action="copy" data-id="' + escapeHtml(row.id) + '" aria-label="Crear nova visita a partir d’aquesta"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7V3h14v14h-4v4H3V7h4Zm2 0h8v8h2V5H9v2Zm6 2H5v10h10V9Z"/></svg></button>' +
             '<button class="row-action delete" type="button" title="Eliminar visita" data-action="delete" data-id="' + escapeHtml(row.id) + '">🗑️</button>' +
           '</div></td>' +
         '</tr>').join("") +

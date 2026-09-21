@@ -98,6 +98,8 @@
     .feedback-pill.dubte { background:#e3f2fd; color:#0d47a1; }
     .feedback-pill.treballat { background:#e8f5e9; color:#1b5e20; }
     .feedback-preview { color:var(--muted); font-size:0.78rem; line-height:1.3; white-space:normal; }
+    .feedback-legend { grid-column:1 / -1; margin:-2px 0 2px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; color:var(--muted); font-size:0.82rem; }
+    .feedback-legend strong { color:var(--brand-dark); }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
@@ -244,6 +246,11 @@
               <option value="dubte">Dubte</option>
               <option value="revisar">Revisar</option>
             </select>
+          </div>
+          <div class="feedback-legend">
+            <strong>Treballat</strong>: el prepa ja ho ha aplicat o gestionat ·
+            <strong>Dubte</strong>: cal aclariment del fisio ·
+            <strong>Revisar</strong>: cal que el fisio ho torni a mirar
           </div>
           <div class="field full">
             <label for="feedbackText">Feedback del prepa</label>

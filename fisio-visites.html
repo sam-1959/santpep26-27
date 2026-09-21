@@ -57,6 +57,11 @@
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0 12px; }
     .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    .table-footer { display:flex; justify-content:flex-end; align-items:center; gap:16px; flex-wrap:wrap; margin-top:12px; }
+    .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; color:var(--muted); font-size:0.82rem; }
+    .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
+    .page-button:disabled { opacity:0.45; cursor:not-allowed; }
+    .page-info { font-weight:800; color:var(--brand-dark); }
     table { width:100%; border-collapse:collapse; min-width:1380px; background:#fff; table-layout:auto; }
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
@@ -103,6 +108,9 @@
         </div>
         <div class="status" id="status">Carregant visites...</div>
         <div class="table-wrap" id="tableWrap"></div>
+        <div class="table-footer">
+          <div class="pagination" id="pagination"></div>
+        </div>
       </section>
   </main>
   <div class="modal-backdrop" id="visitModal" aria-hidden="true">
@@ -181,10 +189,12 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const VISITS_PATH = "physioVisits/season-26-27";
+    const PAGE_SIZE = 10;
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
     let activeStructure = "TOTS";
+    let currentPage = 1;
 
     const els = {
       total: document.getElementById("totalVisits"),
@@ -192,6 +202,7 @@
       filters: document.getElementById("filters"),
       search: document.getElementById("search"),
       table: document.getElementById("tableWrap"),
+      pagination: document.getElementById("pagination"),
       form: document.getElementById("visitForm"),
       submit: document.getElementById("submitButton"),
       formStatus: document.getElementById("formStatus"),
@@ -303,6 +314,7 @@
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
           if(button.dataset.filter === "structure") activeStructure = button.dataset.value;
+          currentPage = 1;
           renderFilters();
           render();
         });
@@ -343,8 +355,13 @@
         : "No hi ha visites registrades.";
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
+        els.pagination.innerHTML = "";
         return;
       }
+      const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageRows = visible.slice(start, start + PAGE_SIZE);
       els.table.innerHTML = '<table><thead><tr>' +
         '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
@@ -358,8 +375,8 @@
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
         '</tr></thead><tbody>' +
-        visible.map((row, index) => '<tr>' +
-          '<td class="col-count">' + (index + 1) + '</td>' +
+        pageRows.map((row, index) => '<tr>' +
+          '<td class="col-count">' + (start + index + 1) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
           '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
           '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
@@ -372,6 +389,24 @@
           '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
         '</tr>').join("") +
         '</tbody></table>';
+      renderPagination(visible.length, totalPages);
+    }
+
+    function renderPagination(total, totalPages){
+      const first = (currentPage - 1) * PAGE_SIZE + 1;
+      const last = Math.min(total, currentPage * PAGE_SIZE);
+      els.pagination.innerHTML =
+        '<span class="page-info">Mostrant ' + first + '–' + last + ' de ' + total + '</span>' +
+        (totalPages > 1
+          ? '<button class="page-button" type="button" data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>Anterior</button>' +
+            '<button class="page-button" type="button" data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Següent</button>'
+          : '');
+      els.pagination.querySelectorAll("[data-page]").forEach(button => {
+        button.addEventListener("click", () => {
+          currentPage += button.dataset.page === "next" ? 1 : -1;
+          render();
+        });
+      });
     }
 
     async function load(){
@@ -450,7 +485,10 @@
       }
     });
 
-    els.search.addEventListener("input", render);
+    els.search.addEventListener("input", () => {
+      currentPage = 1;
+      render();
+    });
     els.openCreate.addEventListener("click", openModal);
     els.closeCreate.addEventListener("click", closeModal);
     els.cancelCreate.addEventListener("click", closeModal);

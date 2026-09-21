@@ -65,7 +65,9 @@
     .pdf-button { border:1px solid var(--line); background:#fff; color:var(--brand); font-weight:900; cursor:pointer; }
     .pdf-button:disabled { opacity:0.5; cursor:not-allowed; }
     .pdf-delete { border-color:#ffcdd2; background:#fff5f5; color:#b71c1c; }
-    .pdf-email-sent { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; font-size:0.78rem; font-weight:900; }
+    .pdf-email-status { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; font-size:0.78rem; font-weight:900; }
+    .pdf-email-sent { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; }
+    .pdf-email-pending { background:#f1eef5; color:var(--muted); border:1px solid var(--line); }
     .pdf-loading { display:inline-grid; place-items:center; }
     .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -454,10 +456,13 @@
           const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
           const emailSentTitle = row.familyEmailSentAt
             ? "Correu enviat" + (row.familyEmailSentTo ? " a " + row.familyEmailSentTo : "") + " el " + formatDate(row.familyEmailSentAt, true)
-            : "";
+            : "Correu pendent d'enviar a la família";
+          const emailStatusIcon = row.familyEmailSentAt
+            ? '<span class="pdf-email-status pdf-email-sent" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>'
+            : '<span class="pdf-email-status pdf-email-pending" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>';
           const pdfCell = '<td class="col-name' + (row.pdfUrl ? '' : ' pdf-missing') + '"><div class="pdf-actions">' +
+            emailStatusIcon +
             (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="pdf-warning" title="PDF pendent" aria-label="PDF pendent">⚠</span>') +
-            (row.familyEmailSentAt ? '<span class="pdf-email-sent" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>' : '') +
             '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
             (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';

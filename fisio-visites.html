@@ -53,6 +53,7 @@
     .table-actions { display:flex; gap:6px; justify-content:flex-end; align-items:center; white-space:nowrap; }
     .row-action { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; cursor:pointer; font-size:0.92rem; }
     .row-action:hover { border-color:var(--brand); box-shadow:0 2px 8px rgba(60,40,90,0.12); }
+    .row-action.copy { color:var(--brand); }
     .row-action.delete { color:#b71c1c; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
@@ -401,6 +402,7 @@
           '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
           '<td><div class="table-actions">' +
             '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +
+            '<button class="row-action copy" type="button" title="Crear nova visita a partir d’aquesta" data-action="copy" data-id="' + escapeHtml(row.id) + '">＋</button>' +
             '<button class="row-action delete" type="button" title="Eliminar visita" data-action="delete" data-id="' + escapeHtml(row.id) + '">🗑️</button>' +
           '</div></td>' +
         '</tr>').join("") +
@@ -504,13 +506,18 @@
       setInputValue("guidelines", row.guidelines);
     }
 
-    function openModal(row){
+    function openModal(row, mode){
+      const copyMode = mode === "copy";
       editingId = row && row.id ? row.id : null;
       setFormStatus("", "");
-      els.modalTitle.textContent = editingId ? "Editar visita" : "Nova visita";
-      els.submit.textContent = editingId ? "Guardar canvis" : "Guardar visita";
-      if(editingId){
+      els.modalTitle.textContent = copyMode ? "Nova visita a partir d'una existent" : editingId ? "Editar visita" : "Nova visita";
+      els.submit.textContent = editingId && !copyMode ? "Guardar canvis" : "Guardar visita";
+      if(row){
         fillForm(row);
+        if(copyMode){
+          editingId = null;
+          document.getElementById("date").value = todayIso();
+        }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
@@ -562,6 +569,10 @@
       if(!row) return;
       if(button.dataset.action === "edit"){
         openModal(row);
+        return;
+      }
+      if(button.dataset.action === "copy"){
+        openModal(row, "copy");
         return;
       }
       if(button.dataset.action === "delete"){

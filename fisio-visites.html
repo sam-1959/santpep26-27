@@ -437,8 +437,19 @@
       els.formStatus.textContent = text || "";
     }
 
+    function todayIso(){
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return year + "-" + month + "-" + day;
+    }
+
     function openModal(){
       setFormStatus("", "");
+      if(!document.getElementById("date").value){
+        document.getElementById("date").value = todayIso();
+      }
       els.modal.classList.add("open");
       els.modal.setAttribute("aria-hidden", "false");
       setTimeout(() => document.getElementById("date").focus(), 0);

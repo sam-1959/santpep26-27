@@ -429,14 +429,14 @@
           '<button class="chip ' + (gender.value === activeGender ? "active" : "") + '" type="button" data-gender="' + escapeHtml(gender.value) + '">' +
           escapeHtml(gender.label) + '</button>'
         ).join("") +
-        '</div>';
-      filtersEl.innerHTML =
+        '</div>' +
         '<div class="filter-group"><div class="filter-label">Categoria</div>' +
         teams.map(team =>
         '<button class="chip ' + (team === activeTeam ? "active" : "") + '" type="button" data-team="' + escapeHtml(team) + '">' +
         (team === "TOTS" ? "Tots" : escapeHtml(team)) + '</button>'
       ).join("") + '</div>';
-      filtersEl.querySelectorAll("[data-team]").forEach(button => {
+      filtersEl.innerHTML = "";
+      genderFiltersEl.querySelectorAll("[data-team]").forEach(button => {
         button.addEventListener("click", () => {
           activeTeam = button.dataset.team;
           currentPage = 1;

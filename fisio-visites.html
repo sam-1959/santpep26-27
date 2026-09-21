@@ -932,7 +932,7 @@
       if(!canUsePrepaActions()) return;
       feedbackVisitId = row.id;
       const feedback = row.prepaFeedback || {};
-      els.feedbackModalTitle.textContent = "Feedback prepa · " + (row.name || "Visita");
+      els.feedbackModalTitle.textContent = "Feedback · " + (row.name || "Visita");
       els.feedbackStatus.value = feedback.status || "treballat";
       els.feedbackText.value = feedback.text || "";
       setFeedbackFormStatus("", "");

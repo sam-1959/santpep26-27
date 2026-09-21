@@ -618,7 +618,7 @@
       els.openCreate.hidden = !isFisio();
       els.total.textContent = visible.length;
       els.status.textContent = rows.length
-        ? (hasAccess() ? "Dades carregades." : "Vista pública anonimitzada. Entra amb Google per veure la vista completa.")
+        ? (hasAccess() ? "Dades carregades." : "Vista pública anonimitzada. Entra amb Google per veure la vista segons el teu rol.")
         : "No hi ha visites registrades.";
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';

@@ -136,18 +136,21 @@
               <option value="F">Femení</option>
             </select>
           </div>
-          <div class="field">
-            <label for="team">Equip</label>
-            <input id="team" name="team" type="text" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
-          </div>
-          <div class="field">
-            <label for="structure">Estructura</label>
-            <input id="structure" name="structure" type="text" placeholder="Ex. MUSCULAR" autocomplete="off" required />
-          </div>
-          <div class="field wide">
-            <label for="location">Localització</label>
-            <input id="location" name="location" type="text" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
-          </div>
+            <div class="field">
+              <label for="team">Equip</label>
+            <input id="team" name="team" type="text" list="teamOptions" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
+            <datalist id="teamOptions"></datalist>
+            </div>
+            <div class="field">
+              <label for="structure">Estructura</label>
+            <input id="structure" name="structure" type="text" list="structureOptions" placeholder="Ex. MUSCULAR" autocomplete="off" required />
+            <datalist id="structureOptions"></datalist>
+            </div>
+            <div class="field wide">
+              <label for="location">Localització</label>
+            <input id="location" name="location" type="text" list="locationOptions" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
+            <datalist id="locationOptions"></datalist>
+            </div>
           <div class="field full">
             <label for="mechanism">Mecanisme lesional</label>
             <textarea id="mechanism" name="mechanism" required></textarea>
@@ -195,7 +198,10 @@
       modal: document.getElementById("visitModal"),
       openCreate: document.getElementById("openCreateButton"),
       closeCreate: document.getElementById("closeCreateButton"),
-      cancelCreate: document.getElementById("cancelCreateButton")
+      cancelCreate: document.getElementById("cancelCreateButton"),
+      teamOptions: document.getElementById("teamOptions"),
+      structureOptions: document.getElementById("structureOptions"),
+      locationOptions: document.getElementById("locationOptions")
     };
 
     function escapeHtml(value){
@@ -303,6 +309,18 @@
       });
     }
 
+    function renderDatalistOptions(){
+      [
+        { el:els.teamOptions, field:"team" },
+        { el:els.structureOptions, field:"structure" },
+        { el:els.locationOptions, field:"location" }
+      ].forEach(config => {
+        config.el.innerHTML = uniqueValues(config.field)
+          .map(value => '<option value="' + escapeHtml(value) + '"></option>')
+          .join("");
+      });
+    }
+
     function filteredRows(){
       const query = normalize(els.search.value);
       return rows.filter(row => {
@@ -362,6 +380,7 @@
         if(!response.ok) throw new Error("Firebase read failed");
         rows = normalizeRows(await response.json());
         renderFilters();
+        renderDatalistOptions();
         render();
       } catch(error) {
         els.status.textContent = "No s'han pogut carregar les visites.";
@@ -420,6 +439,7 @@
         els.form.reset();
         rows = rows.concat([visit]).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
         renderFilters();
+        renderDatalistOptions();
         render();
         setFormStatus("ok", "Visita guardada correctament.");
         closeModal();

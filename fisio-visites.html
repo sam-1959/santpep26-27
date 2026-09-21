@@ -135,7 +135,8 @@
           </div>
           <div class="field wide">
             <label for="playerName">Nom i cognoms jugador/a</label>
-            <input id="playerName" name="playerName" type="text" autocomplete="off" required />
+            <input id="playerName" name="playerName" type="text" list="playerOptions" autocomplete="off" required />
+            <datalist id="playerOptions"></datalist>
           </div>
           <div class="field">
             <label for="gender">Gènere</label>
@@ -190,6 +191,7 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const VISITS_PATH = "physioVisits/season-26-27";
+    const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PAGE_SIZE = 10;
     let rows = [];
     let activeGender = "TOTS";
@@ -197,6 +199,7 @@
     let activeStructure = "TOTS";
     let currentPage = 1;
     let editingId = null;
+    let requestPlayerNames = [];
 
     const els = {
       total: document.getElementById("totalVisits"),
@@ -213,6 +216,7 @@
       openCreate: document.getElementById("openCreateButton"),
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
+      playerOptions: document.getElementById("playerOptions"),
       teamOptions: document.getElementById("teamOptions"),
       structureOptions: document.getElementById("structureOptions"),
       locationOptions: document.getElementById("locationOptions")
@@ -309,6 +313,11 @@
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
+    function uniquePlayerNames(){
+      return [...new Set(rows.map(row => row.name).concat(requestPlayerNames).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
+    }
+
     function renderFilterGroup(label, values, active, allLabel){
       return '<div class="filter-group" aria-label="' + escapeHtml(label) + '">' +
         [{ value:"TOTS", label:allLabel || "Tots" }].concat(values.map(item => typeof item === "string" ? { value:item, label:item } : item))
@@ -340,14 +349,30 @@
 
     function renderDatalistOptions(){
       [
+        { el:els.playerOptions, values:uniquePlayerNames() },
         { el:els.teamOptions, field:"team" },
         { el:els.structureOptions, field:"structure" },
         { el:els.locationOptions, field:"location" }
       ].forEach(config => {
-        config.el.innerHTML = uniqueValues(config.field)
+        const values = config.values || uniqueValues(config.field);
+        config.el.innerHTML = values
           .map(value => '<option value="' + escapeHtml(value) + '"></option>')
           .join("");
       });
+    }
+
+    async function loadRequestPlayerNames(){
+      try {
+        const response = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase requests read failed");
+        const data = await response.json();
+        requestPlayerNames = data && typeof data === "object"
+          ? Object.values(data).map(row => String(row?.player || "").trim()).filter(Boolean)
+          : [];
+      } catch(error) {
+        requestPlayerNames = [];
+        console.warn("No s'han pogut carregar els noms de peticions.", error);
+      }
     }
 
     function filteredRows(){
@@ -434,6 +459,7 @@
 
     async function load(){
       try {
+        await loadRequestPlayerNames();
         const response = await fetch(firebaseUrl(VISITS_PATH), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
         rows = normalizeRows(await response.json());

@@ -41,6 +41,7 @@ const OWN = {
   IF:  { team: "Infantil",   fam: "INFANTIL", sex: "F" },
   MF:  { team: "Mini",       fam: "MINI",     sex: "F" },
   CF:  { team: "Cadet",      fam: "CADET",    sex: "F" },
+  CBF: { team: "Cadet B",    fam: "CADET",    sex: "F" },
   JAF: { team: "Júnior A",   fam: "JÚNIOR",   sex: "F" },
   JBF: { team: "Júnior B",   fam: "JÚNIOR",   sex: "F" },
   SAF: { team: "Sènior A",   fam: "SÈNIOR",   sex: "F" },
@@ -76,6 +77,7 @@ const FRIENDLY_COSTS = {
   "SAM|CERDANYOLA": 23.5,
   "SAM|MONTCADA": 21,
   "IAM|GRUP BARNA": 11.5,
+  "CBF|GAVA": 25,
   "JAF|LLUISOS": 14.5,
   "JBF|LLUISOS": 18,
 };

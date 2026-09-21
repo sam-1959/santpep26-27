@@ -483,9 +483,6 @@
           if(!isPrivateView || !currentUser) return;
           const row = rows.find(item => item.id === button.dataset.uploadPdf);
           if(!row) return;
-          if(row.pdfUrl && !window.confirm("Aquest comunicat ja té un PDF associat. Si continues, el PDF actual s'eliminarà de Drive i se substituirà pel nou. Vols continuar?")){
-            return;
-          }
           const sendFamilyEmail = row.pdfUrl
             ? window.confirm("Vols tornar a enviar el comunicat per correu a la família?")
             : true;

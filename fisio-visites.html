@@ -133,13 +133,9 @@
             <label for="date">Data</label>
             <input id="date" name="date" type="date" required />
           </div>
-          <div class="field">
-            <label for="firstName">Nom</label>
-            <input id="firstName" name="firstName" type="text" autocomplete="off" required />
-          </div>
-          <div class="field">
-            <label for="lastName">Cognom</label>
-            <input id="lastName" name="lastName" type="text" autocomplete="off" required />
+          <div class="field wide">
+            <label for="playerName">Nom i cognoms jugador/a</label>
+            <input id="playerName" name="playerName" type="text" autocomplete="off" required />
           </div>
           <div class="field">
             <label for="gender">Gènere</label>
@@ -253,6 +249,15 @@
     function setInputValue(id, value){
       const el = document.getElementById(id);
       if(el) el.value = value || "";
+    }
+
+    function splitPlayerName(value){
+      const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+      if(!parts.length) return { firstName:"", lastName:"" };
+      return {
+        firstName: parts[0],
+        lastName: parts.slice(1).join(" ")
+      };
     }
 
     function parseDate(value){
@@ -472,15 +477,17 @@
 
     function visitFromForm(existing){
       const id = existing && existing.id ? existing.id : requestId();
+      const player = inputValue("playerName");
+      const nameParts = splitPlayerName(player);
       return {
         ...(existing || {}),
         id,
         createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
         updatedAt: existing ? new Date().toISOString() : "",
         date: inputValue("date"),
-        firstName: inputValue("firstName"),
-        lastName: inputValue("lastName"),
-        name: [inputValue("firstName"), inputValue("lastName")].filter(Boolean).join(" "),
+        firstName: nameParts.firstName,
+        lastName: nameParts.lastName,
+        name: player,
         gender: inputValue("gender"),
         team: inputValue("team").toUpperCase(),
         structure: inputValue("structure").toUpperCase(),
@@ -494,8 +501,7 @@
 
     function fillForm(row){
       setInputValue("date", row.date);
-      setInputValue("firstName", row.firstName);
-      setInputValue("lastName", row.lastName);
+      setInputValue("playerName", row.name || [row.firstName, row.lastName].filter(Boolean).join(" "));
       setInputValue("gender", row.gender);
       setInputValue("team", row.team);
       setInputValue("structure", row.structure);
@@ -528,7 +534,7 @@
       }
       els.modal.classList.add("open");
       els.modal.setAttribute("aria-hidden", "false");
-      setTimeout(() => document.getElementById(copyMode ? "mechanism" : "firstName").focus(), 0);
+      setTimeout(() => document.getElementById(copyMode ? "mechanism" : "playerName").focus(), 0);
     }
 
     function closeModal(){

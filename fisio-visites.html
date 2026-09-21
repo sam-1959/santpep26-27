@@ -264,6 +264,11 @@
       };
     }
 
+    function shortPlayerName(value){
+      const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+      return parts.slice(0, 2).join(" ");
+    }
+
     function parseDate(value){
       if(!value) return null;
       const iso = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -314,7 +319,7 @@
     }
 
     function uniquePlayerNames(){
-      return [...new Set(rows.map(row => row.name).concat(requestPlayerNames).filter(Boolean))]
+      return [...new Set(rows.map(row => shortPlayerName(row.name)).concat(requestPlayerNames.map(shortPlayerName)).filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
@@ -367,7 +372,7 @@
         if(!response.ok) throw new Error("Firebase requests read failed");
         const data = await response.json();
         requestPlayerNames = data && typeof data === "object"
-          ? Object.values(data).map(row => String(row?.player || "").trim()).filter(Boolean)
+          ? Object.values(data).map(row => shortPlayerName(row?.player)).filter(Boolean)
           : [];
       } catch(error) {
         requestPlayerNames = [];
@@ -503,7 +508,7 @@
 
     function visitFromForm(existing){
       const id = existing && existing.id ? existing.id : requestId();
-      const player = inputValue("playerName");
+      const player = shortPlayerName(inputValue("playerName"));
       const nameParts = splitPlayerName(player);
       return {
         ...(existing || {}),
@@ -527,7 +532,7 @@
 
     function fillForm(row){
       setInputValue("date", row.date);
-      setInputValue("playerName", row.name || [row.firstName, row.lastName].filter(Boolean).join(" "));
+      setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
       setInputValue("gender", row.gender);
       setInputValue("team", row.team);
       setInputValue("structure", row.structure);

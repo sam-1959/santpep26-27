@@ -245,7 +245,7 @@
       });
     }
 
-    async function uploadAccidentPdf(row, file){
+    async function uploadAccidentPdf(row, file, sendFamilyEmail){
       if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.id) throw new Error("No s'ha pogut preparar la pujada.");
       if(!file || file.type !== "application/pdf"){
         throw new Error("El fitxer ha de ser un PDF.");
@@ -261,6 +261,7 @@
         recipientEmail:row.email || "",
         player:row.player || "",
         guardianName:row.guardianName || "",
+        sendFamilyEmail:sendFamilyEmail ? "true" : "false",
         previousPdfDriveId:row.pdfDriveId || "",
         previousPdfUrl:row.pdfUrl || ""
       });
@@ -485,6 +486,9 @@
           if(row.pdfUrl && !window.confirm("Aquest comunicat ja té un PDF associat. Si continues, el PDF actual s'eliminarà de Drive i se substituirà pel nou. Vols continuar?")){
             return;
           }
+          const sendFamilyEmail = row.pdfUrl
+            ? window.confirm("Vols tornar a enviar el comunicat per correu a la família?")
+            : true;
           const input = document.createElement("input");
           input.type = "file";
           input.accept = "application/pdf";
@@ -496,7 +500,7 @@
               statusMessage = (row.pdfUrl ? "Canviant PDF..." : "Pujant PDF...");
               render();
               const previousPdfUrl = row.pdfUrl || "";
-              await uploadAccidentPdf(row, file);
+              await uploadAccidentPdf(row, file, sendFamilyEmail);
               statusMessage = "PDF enviat. Esperant confirmació...";
               render();
               const confirmed = await waitForPdfUpdate(row.id, previousPdfUrl);

@@ -85,7 +85,11 @@ function guardarPdfComunicat(request) {
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
   eliminarFitxerDriveSiExisteix(request.previousPdfDriveId || extreureDriveFileId(request.previousPdfUrl));
-  enviarCorreuDocumentFamilia(request, payload);
+  if (String(request.sendFamilyEmail || "true") === "true") {
+    enviarCorreuDocumentFamilia(request, payload);
+  } else {
+    Logger.log("No s'envia correu a família per decisió de l'usuari.");
+  }
   Logger.log("Firebase actualitzat amb pdfUrl=" + payload.pdfUrl);
   return { ok: true, pdfUrl: payload.pdfUrl, pdfName: payload.pdfName };
 }

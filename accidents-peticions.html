@@ -65,6 +65,7 @@
     .pdf-button { border:1px solid var(--line); background:#fff; color:var(--brand); font-weight:900; cursor:pointer; }
     .pdf-button:disabled { opacity:0.5; cursor:not-allowed; }
     .pdf-delete { border-color:#ffcdd2; background:#fff5f5; color:#b71c1c; }
+    .pdf-email-sent { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; font-size:0.78rem; font-weight:900; }
     .pdf-loading { display:inline-grid; place-items:center; }
     .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -304,14 +305,14 @@
       form.remove();
     }
 
-    async function waitForPdfUpdate(rowId, previousPdfUrl){
+    async function waitForPdfUpdate(rowId, previousPdfUrl, expectFamilyEmail){
       if(!currentUser || !rowId) return false;
       for(let attempt = 0; attempt < 8; attempt += 1){
         await new Promise(resolve => setTimeout(resolve, attempt ? 2000 : 1200));
         const token = await currentUser.getIdToken();
         const nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         const updated = nextRows.find(item => item.id === rowId);
-        if(updated && updated.pdfUrl && updated.pdfUrl !== previousPdfUrl){
+        if(updated && updated.pdfUrl && updated.pdfUrl !== previousPdfUrl && (!expectFamilyEmail || updated.familyEmailSentAt)){
           rows = applyRequestMarkers(nextRows, false);
           return true;
         }
@@ -366,7 +367,9 @@
         pdfPath: row.pdfPath,
         pdfUrl: row.pdfUrl,
         pdfUploadedAt: parseDateValue(row.pdfUploadedAt),
-        pdfUploadedBy: row.pdfUploadedBy
+        pdfUploadedBy: row.pdfUploadedBy,
+        familyEmailSentAt: parseDateValue(row.familyEmailSentAt),
+        familyEmailSentTo: row.familyEmailSentTo
       })).sort((a, b) => {
         const at = a.createdAt ? a.createdAt.getTime() : 0;
         const bt = b.createdAt ? b.createdAt.getTime() : 0;
@@ -449,8 +452,12 @@
           const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
           const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
           const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
+          const emailSentTitle = row.familyEmailSentAt
+            ? "Correu enviat" + (row.familyEmailSentTo ? " a " + row.familyEmailSentTo : "") + " el " + formatDate(row.familyEmailSentAt, true)
+            : "";
           const pdfCell = '<td class="col-name' + (row.pdfUrl ? '' : ' pdf-missing') + '"><div class="pdf-actions">' +
             (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="pdf-warning" title="PDF pendent" aria-label="PDF pendent">⚠</span>') +
+            (row.familyEmailSentAt ? '<span class="pdf-email-sent" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>' : '') +
             '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
             (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';
@@ -500,7 +507,7 @@
               await uploadAccidentPdf(row, file, sendFamilyEmail);
               statusMessage = "PDF enviat. Esperant confirmació...";
               render();
-              const confirmed = await waitForPdfUpdate(row.id, previousPdfUrl);
+              const confirmed = await waitForPdfUpdate(row.id, previousPdfUrl, sendFamilyEmail);
               statusMessage = confirmed
                 ? "PDF adjuntat al comunicat de " + shortName(row.player) + "."
                 : "PDF enviat, però encara no apareix al comunicat. Revisa l'execució de l'Apps Script.";

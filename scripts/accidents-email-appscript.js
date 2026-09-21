@@ -80,13 +80,21 @@ function guardarPdfComunicat(request) {
     pdfUrl: file.getUrl(),
     pdfDriveId: file.getId(),
     pdfUploadedAt: new Date().toISOString(),
-    pdfUploadedBy: valor(request.uploadedBy)
+    pdfUploadedBy: valor(request.uploadedBy),
+    familyEmailSentAt: null,
+    familyEmailSentTo: null
   };
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
   eliminarFitxerDriveSiExisteix(request.previousPdfDriveId || extreureDriveFileId(request.previousPdfUrl));
   if (String(request.sendFamilyEmail || "true") === "true") {
-    enviarCorreuDocumentFamilia(request, payload);
+    var destinatarisFamilia = enviarCorreuDocumentFamilia(request, payload);
+    if (destinatarisFamilia.length) {
+      actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, {
+        familyEmailSentAt: new Date().toISOString(),
+        familyEmailSentTo: destinatarisFamilia.join(", ")
+      });
+    }
   } else {
     Logger.log("No s'envia correu a família per decisió de l'usuari.");
   }
@@ -98,7 +106,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
   var destinataris = normalitzarCorreus([request.recipientEmail || request.email]);
   if (!destinataris.length) {
     Logger.log("No s'envia correu a família: falta adreça electrònica vàlida.");
-    return;
+    return [];
   }
 
   var jugador = valor(request.player);
@@ -139,6 +147,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
     });
     Logger.log("Correu amb comunicat enviat a: " + correu);
   });
+  return destinataris;
 }
 
 function eliminarPdfComunicat(request) {
@@ -153,6 +162,8 @@ function eliminarPdfComunicat(request) {
     pdfDriveId: null,
     pdfUploadedAt: null,
     pdfUploadedBy: null,
+    familyEmailSentAt: null,
+    familyEmailSentTo: null,
     pdfDeletedAt: new Date().toISOString(),
     pdfDeletedBy: valor(request.deletedBy)
   });

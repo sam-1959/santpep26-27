@@ -65,7 +65,9 @@
     .row-action.delete { color:#b71c1c; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
-    .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .filters { display:flex; gap:16px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
+    .filter-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .filter-label { color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:0 2px 0 0; }
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:7px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .prepa-filters { margin:-4px 0 14px; justify-content:flex-end; }
@@ -537,22 +539,23 @@
       return requestNames.concat(visitNames).sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
-    function renderFilterGroup(label, values, active, allLabel){
-      return '<div class="filter-group" aria-label="' + escapeHtml(label) + '">' +
-        [{ value:"TOTS", label:allLabel || "Tots" }].concat(values.map(item => typeof item === "string" ? { value:item, label:item } : item))
-          .map(item => '<button class="chip ' + (item.value === active ? "active" : "") + '" type="button" data-filter="' + escapeHtml(label) + '" data-value="' + escapeHtml(item.value) + '">' + escapeHtml(item.label) + '</button>')
+    function renderFilterGroup(key, title, values, active){
+      return '<div class="filter-group" aria-label="' + escapeHtml(title) + '">' +
+        '<div class="filter-label">' + escapeHtml(title) + '</div>' +
+        [{ value:"TOTS", label:"Tots" }].concat(values.map(item => typeof item === "string" ? { value:item, label:item } : item))
+          .map(item => '<button class="chip ' + (item.value === active ? "active" : "") + '" type="button" data-filter="' + escapeHtml(key) + '" data-value="' + escapeHtml(item.value) + '">' + escapeHtml(item.label) + '</button>')
           .join("") +
         '</div>';
     }
 
     function renderFilters(){
       els.filters.innerHTML =
-        renderFilterGroup("gender", [
+        renderFilterGroup("gender", "Gènere", [
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
-        ], activeGender, "Tots") +
-        renderFilterGroup("team", uniqueTeamCategories(), activeTeam, "Categories") +
-        renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
+        ], activeGender) +
+        renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam) +
+        renderFilterGroup("structure", "Estructura", uniqueValues("structure"), activeStructure);
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
@@ -572,13 +575,13 @@
         return;
       }
       els.prepaFilters.innerHTML =
-        renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") +
-        renderFilterGroup("prepa", [
+        renderFilterGroup("physio", "Fisio", PHYSIOS, activePhysio) +
+        renderFilterGroup("prepa", "Prepa", [
         { value:"NO_LLEGIDES", label:"Pendents prepa" },
         { value:"LLEGIDES", label:"Llegides" },
         { value:"AMB_FEEDBACK", label:"Amb feedback" },
         { value:"REVISAR", label:"A revisar" }
-      ], activePrepaFilter, "Prepa: tots");
+      ], activePrepaFilter);
 
       els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
         button.addEventListener("click", () => {

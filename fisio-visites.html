@@ -90,6 +90,7 @@
     .inline-select { min-width:126px; max-width:150px; border-radius:999px; padding:7px 10px; font-size:0.8rem; font-weight:800; color:var(--brand-dark); background:#fff; }
     .long { min-width:190px; max-width:320px; color:var(--ink); white-space:normal; }
     .guidelines { min-width:240px; max-width:360px; color:var(--brand-dark); font-weight:750; white-space:normal; }
+    .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
     .col-prepa { width:1%; white-space:nowrap; }
     .col-feedback { min-width:180px; max-width:260px; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
@@ -757,7 +758,7 @@
             '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
-            '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
+            '<td class="guidelines">' + (row.guidelines ? escapeHtml(row.guidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
             '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + escapeHtml(readLabel) + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(formatDateTime(row.prepaReadAt)) + '</div>' : '') + '</td>' +
             '<td class="col-feedback">' + feedbackHtml + '</td>' +
             '<td><div class="table-actions">' +

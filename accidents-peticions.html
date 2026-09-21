@@ -483,15 +483,15 @@
           if(!isPrivateView || !currentUser) return;
           const row = rows.find(item => item.id === button.dataset.uploadPdf);
           if(!row) return;
-          const sendFamilyEmail = row.pdfUrl
-            ? window.confirm("Vols tornar a enviar el comunicat d'accident per correu?")
-            : true;
           const input = document.createElement("input");
           input.type = "file";
           input.accept = "application/pdf";
           input.addEventListener("change", async () => {
             const file = input.files && input.files[0];
             if(!file) return;
+            const sendFamilyEmail = row.pdfUrl
+              ? window.confirm("Vols tornar a enviar el comunicat d'accident per correu?")
+              : true;
             try {
               pdfBusy = { id:row.id, action:"upload" };
               statusMessage = (row.pdfUrl ? "Canviant PDF..." : "Pujant PDF...");

@@ -277,6 +277,7 @@
 
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const VISITS_PATH = "physioVisits/season-26-27";
+    const PUBLIC_VISITS_PATH = "physioVisitsPublic/season-26-27";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PAGE_SIZE = 10;
     const PHYSIOS = ["Pol Amigó", "Eric Nicolàs"];
@@ -367,6 +368,10 @@
 
     function hasAccess(){
       return isFisio() || isPrepa();
+    }
+
+    function isPublicView(){
+      return !hasAccess();
     }
 
     async function authToken(){
@@ -480,6 +485,20 @@
       })).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
     }
 
+    function publicVisitFromVisit(visit){
+      return {
+        id: visit.id,
+        createdAt: visit.createdAt || "",
+        updatedAt: visit.updatedAt || "",
+        date: visit.date || "",
+        gender: visit.gender || "",
+        team: visit.team || "",
+        structure: visit.structure || "",
+        location: visit.location || "",
+        assignedPhysio: visit.assignedPhysio || ""
+      };
+    }
+
     function uniqueValues(field){
       return [...new Set(rows.map(row => row[field]).filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
@@ -507,7 +526,7 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender, "Tots") +
-        renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") +
+        (hasAccess() ? renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") : "") +
         renderFilterGroup("team", uniqueValues("team"), activeTeam, "Equips") +
         renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
@@ -525,6 +544,10 @@
     }
 
     function renderPrepaFilters(){
+      if(!hasAccess()){
+        els.prepaFilters.innerHTML = "";
+        return;
+      }
       els.prepaFilters.innerHTML = renderFilterGroup("prepa", [
         { value:"NO_LLEGIDES", label:"Pendents prepa" },
         { value:"LLEGIDES", label:"Llegides" },
@@ -574,39 +597,27 @@
       const query = normalize(els.search.value);
       return rows.filter(row => {
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
-        if(activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
+        if(hasAccess() && activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
         if(activeTeam !== "TOTS" && row.team !== activeTeam) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
-        if(activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
-        if(activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
-        if(activePrepaFilter === "AMB_FEEDBACK" && !(row.prepaFeedback?.status || row.prepaFeedback?.text)) return false;
-        if(activePrepaFilter === "REVISAR" && row.prepaFeedback?.status !== "revisar") return false;
+        if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
+        if(hasAccess() && activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
+        if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !(row.prepaFeedback?.status || row.prepaFeedback?.text)) return false;
+        if(hasAccess() && activePrepaFilter === "REVISAR" && row.prepaFeedback?.status !== "revisar") return false;
         if(!query) return true;
-        return normalize([
-          row.date, row.name, row.team, row.structure, row.location,
-          row.assignedPhysio,
-          row.mechanism, row.assessment, row.treatment, row.guidelines,
-          row.prepaFeedback?.status, row.prepaFeedback?.text
-        ].join(" ")).includes(query);
+        const searchable = hasAccess()
+          ? [row.date, row.name, row.team, row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.status, row.prepaFeedback?.text]
+          : [row.date, row.team, row.structure, row.location, row.gender];
+        return normalize(searchable.join(" ")).includes(query);
       });
     }
 
     function render(){
-      if(!hasAccess()){
-        els.total.textContent = "—";
-        els.status.textContent = currentUser
-          ? "Aquest correu no està autoritzat per veure les visites."
-          : "Inicia sessió amb Google per veure les visites.";
-        els.table.innerHTML = '<div class="empty">Accés restringit.</div>';
-        els.pagination.innerHTML = "";
-        els.openCreate.hidden = true;
-        return;
-      }
       const visible = filteredRows();
       els.openCreate.hidden = !isFisio();
       els.total.textContent = visible.length;
       els.status.textContent = rows.length
-        ? "Dades carregades."
+        ? (hasAccess() ? "Dades carregades." : "Vista pública anonimitzada. Entra amb Google per veure la vista completa.")
         : "No hi ha visites registrades.";
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
@@ -617,6 +628,27 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
+      if(isPublicView()){
+        els.table.innerHTML = '<table><thead><tr>' +
+          '<th class="col-count">#</th>' +
+          '<th class="col-date">Data</th>' +
+          '<th class="col-gender">Gènere</th>' +
+          '<th class="col-team">Equip</th>' +
+          '<th class="col-structure">Estructura</th>' +
+          '<th class="col-location">Localització</th>' +
+          '</tr></thead><tbody>' +
+          pageRows.map((row, index) => '<tr>' +
+            '<td class="col-count">' + (visible.length - start - index) + '</td>' +
+            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
+            '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
+            '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
+            '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
+            '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+          '</tr>').join("") +
+          '</tbody></table>';
+        renderPagination(visible.length, totalPages);
+        return;
+      }
       els.table.innerHTML = '<table><thead><tr>' +
         '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
@@ -692,13 +724,10 @@
 
     async function load(){
       try {
-        if(!hasAccess()){
-          render();
-          return;
-        }
-        const token = await authToken();
-        await loadRequestPlayerNames();
-        const response = await fetch(firebaseUrl(VISITS_PATH, "", token), { cache:"no-store" });
+        const token = hasAccess() ? await authToken() : "";
+        if(hasAccess()) await loadRequestPlayerNames();
+        else requestPlayerNames = [];
+        const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
         rows = normalizeRows(await response.json());
         renderFilters();
@@ -707,35 +736,60 @@
         render();
       } catch(error) {
         els.status.textContent = "No s'han pogut carregar les visites.";
-        els.table.innerHTML = '<div class="error">Revisa els permisos de Firebase per a physioVisits.</div>';
+        els.table.innerHTML = '<div class="error">Revisa els permisos de Firebase per a les visites de fisio.</div>';
       }
     }
 
     async function saveVisit(visit){
       if(!isFisio()) throw new Error("No permission");
-      const response = await fetch(firebaseUrl(VISITS_PATH, visit.id, await authToken()), {
+      const token = await authToken();
+      const response = await fetch(firebaseUrl(VISITS_PATH, visit.id, token), {
         method:"PUT",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify(visit)
       });
       if(!response.ok) throw new Error("Firebase write failed");
+      const publicResponse = await fetch(firebaseUrl(PUBLIC_VISITS_PATH, visit.id, token), {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(publicVisitFromVisit(visit))
+      });
+      if(!publicResponse.ok) throw new Error("Firebase public write failed");
     }
 
     async function updateVisit(id, patch){
-      const response = await fetch(firebaseUrl(VISITS_PATH, id, await authToken()), {
+      const token = await authToken();
+      const response = await fetch(firebaseUrl(VISITS_PATH, id, token), {
         method:"PATCH",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify(patch)
       });
       if(!response.ok) throw new Error("Firebase patch failed");
+      const publicPatch = {};
+      ["date", "gender", "team", "structure", "location", "assignedPhysio", "updatedAt"].forEach(field => {
+        if(Object.prototype.hasOwnProperty.call(patch, field)) publicPatch[field] = patch[field];
+      });
+      if(Object.keys(publicPatch).length){
+        const publicResponse = await fetch(firebaseUrl(PUBLIC_VISITS_PATH, id, token), {
+          method:"PATCH",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify(publicPatch)
+        });
+        if(!publicResponse.ok) throw new Error("Firebase public patch failed");
+      }
     }
 
     async function deleteVisit(id){
       if(!isFisio()) throw new Error("No permission");
-      const response = await fetch(firebaseUrl(VISITS_PATH, id, await authToken()), {
+      const token = await authToken();
+      const response = await fetch(firebaseUrl(VISITS_PATH, id, token), {
         method:"DELETE"
       });
       if(!response.ok) throw new Error("Firebase delete failed");
+      const publicResponse = await fetch(firebaseUrl(PUBLIC_VISITS_PATH, id, token), {
+        method:"DELETE"
+      });
+      if(!publicResponse.ok) throw new Error("Firebase public delete failed");
     }
 
     function setFormStatus(type, text){
@@ -871,8 +925,8 @@
       currentRole = "";
       rows = [];
       requestPlayerNames = [];
-      els.authTitle.textContent = "Accés restringit";
-      els.authText.textContent = message || "Inicia sessió amb un compte autoritzat.";
+      els.authTitle.textContent = "Vista pública anonimitzada";
+      els.authText.textContent = message || "Inicia sessió amb un compte autoritzat per veure la vista completa.";
       els.loginButton.hidden = false;
       els.logoutButton.hidden = true;
       els.openCreate.hidden = true;
@@ -903,6 +957,7 @@
         onAuthStateChanged(auth, user => {
           if(!user){
             setSignedOutMode();
+            load();
             return;
           }
           const role = userRole(user);
@@ -915,10 +970,7 @@
             els.authText.textContent = user.email + " no té accés a aquesta vista.";
             els.loginButton.hidden = true;
             els.logoutButton.hidden = false;
-            renderFilters();
-            renderPrepaFilters();
-            renderDatalistOptions();
-            render();
+            load();
             return;
           }
           setRoleMode(user, role);

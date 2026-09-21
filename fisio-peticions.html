@@ -34,8 +34,10 @@
     .auth-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:8px 12px; font-weight:800; font-size:0.82rem; cursor:pointer; }
     .auth-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .auth-button:disabled { opacity:0.55; cursor:not-allowed; }
+    .filter-toolbar { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin:0 0 12px; }
     .filters { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin:0 0 14px; }
-    .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); margin:0 0 12px; }
+    .filters.inline { margin:0; }
+    .search { width:min(360px,100%); border:1px solid var(--line); border-radius:999px; padding:8px 12px; font:inherit; font-size:0.84rem; background:#fff; color:var(--ink); margin:0; }
     .filter-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .filter-label { width:100%; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:2px 0 -2px; }
     .filter-group .filter-label { width:auto; margin:0 2px 0 0; }
@@ -116,7 +118,10 @@
           <button class="auth-button secondary" id="logoutButton" type="button" hidden>Sortir</button>
         </div>
       </div>
-      <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, descripció o pautes" autocomplete="off" />
+      <div class="filter-toolbar">
+        <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, descripció o pautes" autocomplete="off" />
+        <div class="filters inline" id="genderFilters"></div>
+      </div>
       <div class="filters" id="filters"></div>
       <div class="status" id="status">Carregant peticions...</div>
       <div class="table-wrap" id="tableWrap"></div>
@@ -151,6 +156,7 @@
     const analysisEl = document.getElementById("analysis");
     const totalEl = document.getElementById("totalRequests");
     const filtersEl = document.getElementById("filters");
+    const genderFiltersEl = document.getElementById("genderFilters");
     const searchEl = document.getElementById("search");
     const privacyText = document.getElementById("privacyText");
     const authTitle = document.getElementById("authTitle");
@@ -417,13 +423,15 @@
         { value: "M", label: "Masculins" },
         { value: "F", label: "Femenins" }
       ];
-      filtersEl.innerHTML =
+      genderFiltersEl.innerHTML =
         '<div class="filter-group"><div class="filter-label">Gènere</div>' +
         genders.map(gender =>
           '<button class="chip ' + (gender.value === activeGender ? "active" : "") + '" type="button" data-gender="' + escapeHtml(gender.value) + '">' +
           escapeHtml(gender.label) + '</button>'
         ).join("") +
-        '</div><div class="filter-group"><div class="filter-label">Categoria</div>' +
+        '</div>';
+      filtersEl.innerHTML =
+        '<div class="filter-group"><div class="filter-label">Categoria</div>' +
         teams.map(team =>
         '<button class="chip ' + (team === activeTeam ? "active" : "") + '" type="button" data-team="' + escapeHtml(team) + '">' +
         (team === "TOTS" ? "Tots" : escapeHtml(team)) + '</button>'
@@ -435,7 +443,7 @@
           render();
         });
       });
-      filtersEl.querySelectorAll("[data-gender]").forEach(button => {
+      genderFiltersEl.querySelectorAll("[data-gender]").forEach(button => {
         button.addEventListener("click", () => {
           activeGender = button.dataset.gender;
           currentPage = 1;

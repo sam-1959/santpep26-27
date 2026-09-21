@@ -187,8 +187,14 @@
           </div>
             <div class="field">
               <label for="team">Equip</label>
-            <input id="team" name="team" type="text" list="teamOptions" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
-            <datalist id="teamOptions"></datalist>
+            <select id="team" name="team" required>
+              <option value="">Selecciona...</option>
+              <option value="MINI">MINI</option>
+              <option value="INFANTIL">INFANTIL</option>
+              <option value="CADET">CADET</option>
+              <option value="JÚNIOR">JÚNIOR</option>
+              <option value="SÉNIOR">SÉNIOR</option>
+            </select>
             </div>
             <div class="field">
               <label for="structure">Estructura</label>
@@ -322,7 +328,6 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
-      teamOptions: document.getElementById("teamOptions"),
       structureOptions: document.getElementById("structureOptions"),
       locationOptions: document.getElementById("locationOptions"),
       feedbackModal: document.getElementById("feedbackModal"),
@@ -486,7 +491,7 @@
         name: row.name || [row.firstName, row.lastName].filter(Boolean).join(" "),
         gender: row.gender || "",
         assignedPhysio: row.assignedPhysio || row.physio || "",
-        team: row.team || "",
+        team: teamCategory(row.team || ""),
         structure: row.structure || "",
         location: row.location || "",
         mechanism: row.mechanism || "",
@@ -596,7 +601,6 @@
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
-        { el:els.teamOptions, field:"team" },
         { el:els.structureOptions, field:"structure" },
         { el:els.locationOptions, field:"location" }
       ].forEach(config => {
@@ -850,7 +854,7 @@
         lastName: nameParts.lastName,
         name: player,
         gender: inputValue("gender"),
-        team: inputValue("team").toUpperCase(),
+        team: teamCategory(inputValue("team")),
         structure: inputValue("structure").toUpperCase(),
         location: inputValue("location").toUpperCase(),
         assignedPhysio: inputValue("assignedPhysio"),
@@ -866,7 +870,7 @@
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
       setInputValue("gender", row.gender);
       setInputValue("assignedPhysio", row.assignedPhysio);
-      setInputValue("team", row.team);
+      setInputValue("team", teamCategory(row.team));
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
       setInputValue("mechanism", row.mechanism);

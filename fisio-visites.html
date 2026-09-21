@@ -376,7 +376,7 @@
         '<th>Pautes a seguir</th>' +
         '</tr></thead><tbody>' +
         pageRows.map((row, index) => '<tr>' +
-          '<td class="col-count">' + (start + index + 1) + '</td>' +
+          '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
           '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
           '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +

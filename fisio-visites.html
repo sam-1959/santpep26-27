@@ -82,7 +82,7 @@
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
     td { font-size:0.86rem; }
     tr:last-child td { border-bottom:0; }
-    .col-count, .col-date, .col-team, .col-gender, .col-structure, .col-location { width:1%; white-space:nowrap; }
+    .col-count, .col-date, .col-team, .col-structure, .col-location { width:1%; white-space:nowrap; }
     .col-count { text-align:left; color:var(--muted); font-weight:900; }
     .col-name { width:1%; min-width:130px; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
     .col-physio { width:1%; min-width:140px; white-space:nowrap; }
@@ -98,9 +98,9 @@
     .feedback-pill.dubte { background:#e3f2fd; color:#0d47a1; }
     .feedback-pill.treballat { background:#e8f5e9; color:#1b5e20; }
     .feedback-preview { color:var(--muted); font-size:0.78rem; line-height:1.3; white-space:normal; }
-    .badge { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; }
-    .badge.male { background:#e3f2fd; color:#0d47a1; }
-    .badge.female { background:#fce4ec; color:#880e4f; }
+    .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
+    .team.male { background:#e3f2fd; color:#0d47a1; }
+    .team.female { background:#fce4ec; color:#880e4f; }
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
@@ -456,8 +456,14 @@
       return date ? date.getTime() : 0;
     }
 
-    function genderLabel(value){
-      return value === "F" ? "Femení" : value === "M" ? "Masculí" : "—";
+    function teamCategory(value){
+      const code = normalize(value).toUpperCase();
+      if(code.startsWith("I")) return "INFANTIL";
+      if(code.startsWith("M")) return "MINI";
+      if(code.startsWith("C")) return "CADET";
+      if(code.startsWith("J")) return "JÚNIOR";
+      if(code.startsWith("S")) return "SÉNIOR";
+      return value || "—";
     }
 
     function feedbackStatusLabel(value){
@@ -509,6 +515,11 @@
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
+    function uniqueTeamCategories(){
+      return [...new Set(rows.map(row => teamCategory(row.team)).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
+    }
+
     function uniquePlayerNames(){
       const requestNames = dedupeNames(requestPlayerNames);
       const requestShortKeys = new Set(requestNames.map(shortPlayerKey).filter(Boolean));
@@ -532,7 +543,7 @@
           { value:"F", label:"Femení" }
         ], activeGender, "Tots") +
         (hasAccess() ? renderFilterGroup("physio", PHYSIOS, activePhysio, "Fisios") : "") +
-        renderFilterGroup("team", uniqueValues("team"), activeTeam, "Equips") +
+        renderFilterGroup("team", uniqueTeamCategories(), activeTeam, "Categories") +
         renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
@@ -603,7 +614,7 @@
       return rows.filter(row => {
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
         if(hasAccess() && activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
-        if(activeTeam !== "TOTS" && row.team !== activeTeam) return false;
+        if(activeTeam !== "TOTS" && teamCategory(row.team) !== activeTeam) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
         if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
         if(hasAccess() && activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
@@ -611,8 +622,8 @@
         if(hasAccess() && activePrepaFilter === "REVISAR" && row.prepaFeedback?.status !== "revisar") return false;
         if(!query) return true;
         const searchable = hasAccess()
-          ? [row.date, row.name, row.team, row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.status, row.prepaFeedback?.text]
-          : [row.date, row.team, row.structure, row.location, row.gender];
+          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.status, row.prepaFeedback?.text]
+          : [row.date, row.team, teamCategory(row.team), row.structure, row.location, row.gender];
         return normalize(searchable.join(" ")).includes(query);
       });
     }
@@ -638,7 +649,6 @@
           '<th class="col-count">#</th>' +
           '<th class="col-date">Data</th>' +
           '<th class="col-name">Jugador/a</th>' +
-          '<th class="col-gender">Gènere</th>' +
           '<th class="col-team">Equip</th>' +
           '<th class="col-structure">Estructura</th>' +
           '<th class="col-location">Localització</th>' +
@@ -647,8 +657,7 @@
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
-            '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
-            '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
+            '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
           '</tr>').join("") +
@@ -660,7 +669,6 @@
         '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
         '<th class="col-name">Jugador/a</th>' +
-        '<th class="col-gender">Gènere</th>' +
         '<th class="col-physio">Fisio</th>' +
         '<th class="col-team">Equip</th>' +
         '<th class="col-structure">Estructura</th>' +
@@ -685,12 +693,11 @@
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
-            '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +
               '<option value="">Sense assignar</option>' +
               PHYSIOS.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
             '</select></td>' +
-            '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
+            '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +

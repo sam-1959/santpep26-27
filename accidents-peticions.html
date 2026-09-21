@@ -484,7 +484,7 @@
           const row = rows.find(item => item.id === button.dataset.uploadPdf);
           if(!row) return;
           const sendFamilyEmail = row.pdfUrl
-            ? window.confirm("Vols tornar a enviar el comunicat per correu a la família?")
+            ? window.confirm("Vols tornar a enviar el comunicat d'accident per correu?")
             : true;
           const input = document.createElement("input");
           input.type = "file";

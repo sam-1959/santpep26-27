@@ -23,12 +23,11 @@
     .back { display:inline-flex; align-items:center; gap:6px; color:var(--brand); text-decoration:none; font-size:0.86rem; font-weight:800; }
     .stack { display:grid; gap:18px; }
     .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .head { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px; }
-    .head h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.24rem; }
-    .head p { margin:0; color:var(--muted); font-size:0.88rem; max-width:760px; }
-    .kpi { display:grid; place-items:center; min-width:112px; border:1px solid var(--line); border-radius:14px; padding:8px 12px; background:#faf8fd; }
-    .kpi strong { color:var(--brand-dark); font-size:1.4rem; line-height:1; }
-    .kpi span { color:var(--muted); font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
+    .head { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .head-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto; }
+    .kpi { display:flex; align-items:baseline; gap:5px; min-width:auto; border:1px solid var(--line); border-radius:999px; padding:7px 11px; background:#faf8fd; }
+    .kpi strong { color:var(--brand-dark); font-size:1.08rem; line-height:1; }
+    .kpi span { color:var(--muted); font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
     .form-grid { display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:12px; }
     .field { display:flex; flex-direction:column; gap:5px; }
     .field.wide { grid-column:span 2; }
@@ -40,7 +39,7 @@
     .primary { border:0; border-radius:999px; padding:10px 18px; background:var(--brand); color:#fff; font-weight:900; cursor:pointer; }
     .primary:disabled { opacity:0.62; cursor:wait; }
     .secondary { border:1px solid var(--line); border-radius:999px; padding:10px 18px; background:#fff; color:var(--brand); font-weight:900; cursor:pointer; }
-    .auth-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 14px; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#faf8fd; }
+    .auth-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:0; padding:8px 10px; border:1px solid var(--line); border-radius:14px; background:#faf8fd; flex:1 1 420px; }
     .auth-bar strong { display:block; color:var(--brand-dark); font-size:0.9rem; }
     .auth-bar span { display:block; color:var(--muted); font-size:0.78rem; }
     .auth-actions { display:flex; gap:8px; flex-wrap:wrap; }
@@ -123,21 +122,19 @@
     <nav class="page-nav"><a class="back" href="fisio-peticions.html">← Peticions de fisio</a></nav>
       <section class="panel">
         <div class="head">
-          <div>
-            <h2>Visites registrades</h2>
-            <p>Dades carregades.</p>
+          <div class="auth-bar">
+            <div>
+              <strong id="authTitle">Accés restringit</strong>
+              <span id="authText">Inicia sessió amb un compte autoritzat.</span>
+            </div>
+            <div class="auth-actions">
+              <button class="auth-button" id="loginButton" type="button">Entrar amb Google</button>
+              <button class="auth-button secondary" id="logoutButton" type="button" hidden>Sortir</button>
+            </div>
           </div>
-          <button class="primary" id="openCreateButton" type="button" hidden>Crear</button>
-          <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
-        </div>
-        <div class="auth-bar">
-          <div>
-            <strong id="authTitle">Accés restringit</strong>
-            <span id="authText">Inicia sessió amb un compte autoritzat.</span>
-          </div>
-          <div class="auth-actions">
-            <button class="auth-button" id="loginButton" type="button">Entrar amb Google</button>
-            <button class="auth-button secondary" id="logoutButton" type="button" hidden>Sortir</button>
+          <div class="head-actions">
+            <button class="primary" id="openCreateButton" type="button" hidden>Crear</button>
+            <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
           </div>
         </div>
         <div class="toolbar">

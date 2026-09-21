@@ -269,6 +269,22 @@
       return parts.slice(0, 2).join(" ");
     }
 
+    function accentScore(value){
+      return String(value || "").normalize("NFD").replace(/[^\u0300-\u036f]/g, "").length;
+    }
+
+    function dedupeNames(values){
+      const byKey = new Map();
+      values.map(shortPlayerName).filter(Boolean).forEach(value => {
+        const key = normalize(value);
+        const current = byKey.get(key);
+        if(!current || accentScore(value) > accentScore(current) || (accentScore(value) === accentScore(current) && value.length > current.length)){
+          byKey.set(key, value);
+        }
+      });
+      return [...byKey.values()].sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
+    }
+
     function parseDate(value){
       if(!value) return null;
       const iso = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -319,8 +335,7 @@
     }
 
     function uniquePlayerNames(){
-      return [...new Set(rows.map(row => shortPlayerName(row.name)).concat(requestPlayerNames.map(shortPlayerName)).filter(Boolean))]
-        .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
+      return dedupeNames(rows.map(row => row.name).concat(requestPlayerNames));
     }
 
     function renderFilterGroup(label, values, active, allLabel){

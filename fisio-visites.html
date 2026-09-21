@@ -62,7 +62,8 @@
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
     td { font-size:0.86rem; }
     tr:last-child td { border-bottom:0; }
-    .col-date, .col-team, .col-gender, .col-structure, .col-location { width:1%; white-space:nowrap; }
+    .col-count, .col-date, .col-team, .col-gender, .col-structure, .col-location { width:1%; white-space:nowrap; }
+    .col-count { text-align:right; color:var(--muted); font-weight:900; }
     .col-name { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
     .long { min-width:230px; color:var(--ink); }
     .guidelines { min-width:300px; color:var(--brand-dark); font-weight:750; }
@@ -327,6 +328,7 @@
         return;
       }
       els.table.innerHTML = '<table><thead><tr>' +
+        '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
         '<th class="col-name">Jugador/a</th>' +
         '<th class="col-gender">Gènere</th>' +
@@ -338,7 +340,8 @@
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
         '</tr></thead><tbody>' +
-        visible.map(row => '<tr>' +
+        visible.map((row, index) => '<tr>' +
+          '<td class="col-count">' + (index + 1) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
           '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
           '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +

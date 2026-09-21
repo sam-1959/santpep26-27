@@ -147,6 +147,7 @@
           <span class="card-icon">🩺</span>
           <h3>Visites de fisio</h3>
           <p>Consulta les visites registrades pels fisios, amb valoració, tractament i pautes a seguir.</p>
+          <span class="card-total loading" data-count-path="physioVisits/season-26-27">Carregant...</span>
           <span class="go">Veure visites →</span>
         </a>
       </div>
@@ -193,6 +194,9 @@
     }
 
     function totalLabel(path, total){
+      if(path.startsWith("physioVisits")){
+        return total + " visita" + (total === 1 ? "" : "s");
+      }
       return path.startsWith("physioRequests")
         ? total + " petici" + (total === 1 ? "ó" : "ons")
         : total + " comunicat" + (total === 1 ? "" : "s");

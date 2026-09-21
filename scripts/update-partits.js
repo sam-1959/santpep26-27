@@ -429,7 +429,13 @@ function mergeChangeHistory(oldData, newChanges, importedAt) {
         importedAt: change.importedAt || previousImportedAt,
       }))
     : [];
-  if (!newChanges.length && !previousChanges.length) return null;
+  if (!newChanges.length && !previousChanges.length) {
+    return {
+      checkedAt: importedAt,
+      importedAt: oldData.latestChanges?.importedAt || importedAt,
+      changes: [],
+    };
+  }
 
   const stampedNewChanges = newChanges.map((change) => ({
     ...change,
@@ -483,6 +489,7 @@ function mergeChangeHistory(oldData, newChanges, importedAt) {
   });
 
   return {
+    checkedAt: importedAt,
     importedAt: newChanges.length ? importedAt : oldData.latestChanges?.importedAt || importedAt,
     changes,
   };

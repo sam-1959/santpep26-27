@@ -517,6 +517,10 @@
         if(copyMode){
           editingId = null;
           document.getElementById("date").value = todayIso();
+          setInputValue("mechanism", "");
+          setInputValue("assessment", "");
+          setInputValue("treatment", "");
+          setInputValue("guidelines", "");
         }
       } else {
         els.form.reset();

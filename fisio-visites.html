@@ -279,18 +279,9 @@
     const VISITS_PATH = "physioVisits/season-26-27";
     const PUBLIC_VISITS_PATH = "physioVisitsPublic/season-26-27";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
+    const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 10;
     const PHYSIOS = ["Pol Amigó", "Eric Nicolàs"];
-    const USER_ROLES = {
-      "polammu@gmail.com": "fisio",
-      "ricard.fuste@gmail.com": "prepa",
-      "albgrau@gmail.com": "prepa",
-      "curagustin@gmail.com": "prepa",
-      "er25nicsab@gmail.com": "fisio_prepa",
-      "j.costabarriga@gmail.com": "prepa",
-      "miquelsaro@gmail.com": "prepa",
-      "nacho22guzman@gmail.com": "prepa"
-    };
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
@@ -354,8 +345,17 @@
         .toLowerCase();
     }
 
-    function userRole(user){
-      return USER_ROLES[String(user?.email || "").trim().toLowerCase()] || "";
+    function emailKey(email){
+      return String(email || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+    }
+
+    async function loadUserRole(user){
+      if(!user?.email) return "";
+      const token = await user.getIdToken();
+      const response = await fetch(firebaseUrl(USER_ROLES_PATH, emailKey(user.email), token), { cache:"no-store" });
+      if(!response.ok) throw new Error("User role read failed");
+      const data = await response.json();
+      return typeof data === "string" ? data : data?.role || "";
     }
 
     function isFisio(){
@@ -976,27 +976,39 @@
         getRedirectResult(auth).catch(error => {
           setSignedOutMode("No s'ha pogut completar l'accés amb Google" + (error && error.code ? " (" + error.code + ")" : "") + ".");
         });
-        onAuthStateChanged(auth, user => {
+        onAuthStateChanged(auth, async user => {
           if(!user){
             setSignedOutMode();
             load();
             return;
           }
-          const role = userRole(user);
-          if(!role){
+          try {
+            const role = await loadUserRole(user);
+            if(!role){
+              currentUser = user;
+              currentRole = "";
+              rows = [];
+              requestPlayerNames = [];
+              els.authTitle.textContent = "Vista pública anonimitzada";
+              els.authText.textContent = user.email + " no té un rol assignat. Es mostra la vista pública.";
+              els.loginButton.hidden = true;
+              els.logoutButton.hidden = false;
+              load();
+              return;
+            }
+            setRoleMode(user, role);
+            load();
+          } catch(error) {
             currentUser = user;
             currentRole = "";
             rows = [];
             requestPlayerNames = [];
-            els.authTitle.textContent = "Usuari no autoritzat";
-            els.authText.textContent = user.email + " no té accés a aquesta vista.";
+            els.authTitle.textContent = "Vista pública anonimitzada";
+            els.authText.textContent = "No s'ha pogut carregar el rol de " + user.email + ". Es mostra la vista pública.";
             els.loginButton.hidden = true;
             els.logoutButton.hidden = false;
             load();
-            return;
           }
-          setRoleMode(user, role);
-          load();
         });
       } catch(error) {
         els.loginButton.disabled = true;

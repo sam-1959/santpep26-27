@@ -23,6 +23,10 @@ function doPost(e) {
     if (esPujadaPdf(request)) {
       return respostaJson(guardarPdfComunicat(request));
     }
+    if (!esNovaPeticioValida(request)) {
+      Logger.log("No s'envia correu intern: crida sense dades mínimes de nova petició.");
+      return respostaJson({ ok: false, skipped: true, reason: "missing_required_request_fields" });
+    }
     var resultat = enviarCorreuComunicatsAccident(adaptarComunicatANamedValues(request));
     return respostaJson({ ok: true, sentTo: resultat.sentTo, sentCount: resultat.sentTo.length });
   } catch (error) {
@@ -40,6 +44,20 @@ function esPujadaPdf(request) {
 function esEliminacioPdf(request) {
   if (!request) return false;
   return String(request.action || "").trim() === "deletePdf";
+}
+
+function esNovaPeticioValida(request) {
+  if (!request) return false;
+  return !!(
+    String(request.email || "").trim() &&
+    String(request.guardianName || "").trim() &&
+    String(request.player || "").trim() &&
+    String(request.phone || "").trim() &&
+    String(request.injuryDate || "").trim() &&
+    String(request.venue || "").trim() &&
+    String(request.damage || "").trim() &&
+    String(request.side || "").trim()
+  );
 }
 
 function obtenirRequest(e) {

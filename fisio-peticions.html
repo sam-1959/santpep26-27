@@ -57,6 +57,7 @@
     .col-team { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
+    .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
     tr:last-child td { border-bottom:0; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
@@ -335,7 +336,13 @@
             .forEach(key => {
               const current = latest.get(key);
               if(!current || timestamp >= current.timestamp){
-                latest.set(key, { guidelines, timestamp });
+                latest.set(key, {
+                  guidelines,
+                  timestamp,
+                  date: visit.date || "",
+                  createdAt: visit.createdAt || "",
+                  updatedAt: visit.updatedAt || ""
+                });
               }
             });
         });
@@ -349,9 +356,9 @@
     function latestGuidelinesFor(player){
       for(const key of playerLookupKeys(player)){
         const match = latestGuidelinesByPlayer.get(key);
-        if(match?.guidelines) return match.guidelines;
+        if(match?.guidelines) return match;
       }
-      return "";
+      return null;
     }
 
     function normalizeRequests(requests){
@@ -467,7 +474,7 @@
           isPrivateView ? r.phone : "",
           r.description,
           r.fullDescription,
-          latestGuidelinesFor(r.player)
+          latestGuidelinesFor(r.player)?.guidelines
         ].join(" ")).includes(searchQuery))
       );
       totalEl.textContent = visible.length;
@@ -501,6 +508,11 @@
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
           const latestGuidelines = latestGuidelinesFor(row.player);
+          const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
+          const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
+          const guidelinesHtml = latestGuidelines
+            ? escapeHtml(latestGuidelines.guidelines) + (guidelinesDateText ? '<div class="guidelines-meta">Última pauta: ' + escapeHtml(guidelinesDateText) + '</div>' : '')
+            : '<span class="no-guidelines-badge">Sense pauta</span>';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -510,7 +522,7 @@
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
-          '<td class="col-guidelines">' + (latestGuidelines ? escapeHtml(latestGuidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
+          '<td class="col-guidelines">' + guidelinesHtml + '</td>' +
         '</tr>';
         }).join("") +
         '</tbody></table>';

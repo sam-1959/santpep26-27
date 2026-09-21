@@ -54,12 +54,15 @@
     .row-action { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; cursor:pointer; font-size:0.92rem; }
     .row-action:hover { border-color:var(--brand); box-shadow:0 2px 8px rgba(60,40,90,0.12); }
     .row-action.copy { color:var(--brand); }
+    .row-action.read { color:var(--ok); }
+    .row-action.feedback { color:var(--brand-dark); }
     .row-action.delete { color:#b71c1c; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:7px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
+    .prepa-filters { margin:-4px 0 14px; justify-content:flex-end; }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0 12px; }
     .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:#fff; }
     .table-footer { display:flex; justify-content:flex-end; align-items:center; gap:16px; flex-wrap:wrap; margin-top:12px; }
@@ -67,7 +70,7 @@
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
     .page-button:disabled { opacity:0.45; cursor:not-allowed; }
     .page-info { font-weight:800; color:var(--brand-dark); }
-    table { width:100%; border-collapse:collapse; min-width:1380px; background:#fff; table-layout:auto; }
+    table { width:100%; border-collapse:collapse; min-width:1680px; background:#fff; table-layout:auto; }
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
     td { font-size:0.86rem; }
@@ -77,6 +80,15 @@
     .col-name { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
     .long { min-width:230px; color:var(--ink); }
     .guidelines { min-width:300px; color:var(--brand-dark); font-weight:750; }
+    .col-prepa { width:1%; white-space:nowrap; }
+    .col-feedback { min-width:220px; max-width:300px; }
+    .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
+    .prepa-badge.read { background:#e8f5e9; border-color:#a5d6a7; color:#1b5e20; }
+    .feedback-pill { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; background:#f3edf8; color:var(--brand-dark); margin-bottom:4px; }
+    .feedback-pill.revisar { background:#fff4cc; color:#6b4d00; }
+    .feedback-pill.dubte { background:#e3f2fd; color:#0d47a1; }
+    .feedback-pill.treballat { background:#e8f5e9; color:#1b5e20; }
+    .feedback-preview { color:var(--muted); font-size:0.78rem; line-height:1.3; white-space:normal; }
     .badge { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; }
     .badge.male { background:#e3f2fd; color:#0d47a1; }
     .badge.female { background:#fce4ec; color:#880e4f; }
@@ -111,6 +123,7 @@
           <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
           <div class="filters" id="filters"></div>
         </div>
+        <div class="filters prepa-filters" id="prepaFilters"></div>
         <div class="status" id="status">Carregant visites...</div>
         <div class="table-wrap" id="tableWrap"></div>
         <div class="table-footer">
@@ -186,6 +199,38 @@
       </form>
     </div>
   </div>
+  <div class="modal-backdrop" id="feedbackModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="feedbackModalTitle">Feedback prepa</h2>
+          <p>Comentari visible per als fisios al registre de la visita.</p>
+        </div>
+        <button class="icon-button" id="closeFeedbackButton" type="button" aria-label="Tancar">×</button>
+      </div>
+      <form id="feedbackForm">
+        <div class="form-grid">
+          <div class="field wide">
+            <label for="feedbackStatus">Estat</label>
+            <select id="feedbackStatus" name="feedbackStatus" required>
+              <option value="treballat">Treballat</option>
+              <option value="dubte">Dubte</option>
+              <option value="revisar">Revisar</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="feedbackText">Feedback del prepa</label>
+            <textarea id="feedbackText" name="feedbackText" required></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="feedbackSubmitButton" type="submit">Guardar feedback</button>
+          <button class="secondary" id="cancelFeedbackButton" type="button">Cancel·lar</button>
+          <span class="form-status" id="feedbackFormStatus"></span>
+        </div>
+      </form>
+    </div>
+  </div>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
 
   <script>
@@ -197,14 +242,17 @@
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
     let activeStructure = "TOTS";
+    let activePrepaFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
+    let feedbackVisitId = null;
     let requestPlayerNames = [];
 
     const els = {
       total: document.getElementById("totalVisits"),
       status: document.getElementById("status"),
       filters: document.getElementById("filters"),
+      prepaFilters: document.getElementById("prepaFilters"),
       search: document.getElementById("search"),
       table: document.getElementById("tableWrap"),
       pagination: document.getElementById("pagination"),
@@ -219,7 +267,16 @@
       playerOptions: document.getElementById("playerOptions"),
       teamOptions: document.getElementById("teamOptions"),
       structureOptions: document.getElementById("structureOptions"),
-      locationOptions: document.getElementById("locationOptions")
+      locationOptions: document.getElementById("locationOptions"),
+      feedbackModal: document.getElementById("feedbackModal"),
+      feedbackForm: document.getElementById("feedbackForm"),
+      feedbackModalTitle: document.getElementById("feedbackModalTitle"),
+      feedbackStatus: document.getElementById("feedbackStatus"),
+      feedbackText: document.getElementById("feedbackText"),
+      feedbackSubmit: document.getElementById("feedbackSubmitButton"),
+      feedbackFormStatus: document.getElementById("feedbackFormStatus"),
+      closeFeedback: document.getElementById("closeFeedbackButton"),
+      cancelFeedback: document.getElementById("cancelFeedbackButton")
     };
 
     function escapeHtml(value){
@@ -313,6 +370,11 @@
       return value === "F" ? "Femení" : value === "M" ? "Masculí" : "—";
     }
 
+    function feedbackStatusLabel(value){
+      const labels = { treballat:"Treballat", dubte:"Dubte", revisar:"Revisar" };
+      return labels[value] || "Feedback";
+    }
+
     function normalizeRows(data){
       if(!data || typeof data !== "object") return [];
       return Object.entries(data).map(([id, row]) => ({
@@ -329,7 +391,10 @@
         mechanism: row.mechanism || "",
         assessment: row.assessment || "",
         treatment: row.treatment || "",
-        guidelines: row.guidelines || ""
+        guidelines: row.guidelines || "",
+        prepaRead: Boolean(row.prepaRead),
+        prepaReadAt: row.prepaReadAt || "",
+        prepaFeedback: row.prepaFeedback && typeof row.prepaFeedback === "object" ? row.prepaFeedback : {}
       })).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
     }
 
@@ -375,6 +440,24 @@
       });
     }
 
+    function renderPrepaFilters(){
+      els.prepaFilters.innerHTML = renderFilterGroup("prepa", [
+        { value:"NO_LLEGIDES", label:"Pendents prepa" },
+        { value:"LLEGIDES", label:"Llegides" },
+        { value:"AMB_FEEDBACK", label:"Amb feedback" },
+        { value:"REVISAR", label:"A revisar" }
+      ], activePrepaFilter, "Prepa: tots");
+
+      els.prepaFilters.querySelectorAll("[data-filter='prepa']").forEach(button => {
+        button.addEventListener("click", () => {
+          activePrepaFilter = button.dataset.value;
+          currentPage = 1;
+          renderPrepaFilters();
+          render();
+        });
+      });
+    }
+
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
@@ -409,10 +492,15 @@
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
         if(activeTeam !== "TOTS" && row.team !== activeTeam) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
+        if(activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
+        if(activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
+        if(activePrepaFilter === "AMB_FEEDBACK" && !(row.prepaFeedback?.status || row.prepaFeedback?.text)) return false;
+        if(activePrepaFilter === "REVISAR" && row.prepaFeedback?.status !== "revisar") return false;
         if(!query) return true;
         return normalize([
           row.date, row.name, row.team, row.structure, row.location,
-          row.mechanism, row.assessment, row.treatment, row.guidelines
+          row.mechanism, row.assessment, row.treatment, row.guidelines,
+          row.prepaFeedback?.status, row.prepaFeedback?.text
         ].join(" ")).includes(query);
       });
     }
@@ -444,26 +532,41 @@
         '<th>Valoració</th>' +
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
+        '<th class="col-prepa">Prepa</th>' +
+        '<th class="col-feedback">Feedback</th>' +
         '<th>Accions</th>' +
         '</tr></thead><tbody>' +
-        pageRows.map((row, index) => '<tr>' +
-          '<td class="col-count">' + (visible.length - start - index) + '</td>' +
-          '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
-          '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
-          '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
-          '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
-          '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
-          '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
-          '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +
-          '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
-          '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
-          '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
-          '<td><div class="table-actions">' +
-            '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +
-            '<button class="row-action copy" type="button" title="Crear nova visita a partir d’aquesta" data-action="copy" data-id="' + escapeHtml(row.id) + '" aria-label="Crear nova visita a partir d’aquesta"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#efe6f6" stroke="#713f97" stroke-width="1.7" d="M8 3.75h10.25v10.5H8z"/><path fill="#fff" stroke="#713f97" stroke-width="1.7" d="M4.75 8h10.5v12.25H4.75z"/></svg></button>' +
-            '<button class="row-action delete" type="button" title="Eliminar visita" data-action="delete" data-id="' + escapeHtml(row.id) + '">🗑️</button>' +
-          '</div></td>' +
-        '</tr>').join("") +
+        pageRows.map((row, index) => {
+          const feedback = row.prepaFeedback || {};
+          const feedbackStatus = feedback.status || "";
+          const feedbackText = feedback.text || "";
+          const feedbackHtml = feedbackStatus || feedbackText
+            ? '<span class="feedback-pill ' + escapeHtml(feedbackStatus) + '">' + escapeHtml(feedbackStatusLabel(feedbackStatus)) + '</span>' +
+              (feedbackText ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' : '')
+            : '<span class="feedback-preview">—</span>';
+          return '<tr>' +
+            '<td class="col-count">' + (visible.length - start - index) + '</td>' +
+            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
+            '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
+            '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
+            '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
+            '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
+            '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+            '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +
+            '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
+            '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
+            '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
+            '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '">' + (row.prepaRead ? "✓ Llegit" : "Pendent") + '</span></td>' +
+            '<td class="col-feedback">' + feedbackHtml + '</td>' +
+            '<td><div class="table-actions">' +
+              '<button class="row-action read" type="button" title="Marcar com llegit pel prepa" data-action="read" data-id="' + escapeHtml(row.id) + '">✓</button>' +
+              '<button class="row-action feedback" type="button" title="Feedback prepa" data-action="feedback" data-id="' + escapeHtml(row.id) + '">💬</button>' +
+              '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +
+              '<button class="row-action copy" type="button" title="Crear nova visita a partir d’aquesta" data-action="copy" data-id="' + escapeHtml(row.id) + '" aria-label="Crear nova visita a partir d’aquesta"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#efe6f6" stroke="#713f97" stroke-width="1.7" d="M8 3.75h10.25v10.5H8z"/><path fill="#fff" stroke="#713f97" stroke-width="1.7" d="M4.75 8h10.5v12.25H4.75z"/></svg></button>' +
+              '<button class="row-action delete" type="button" title="Eliminar visita" data-action="delete" data-id="' + escapeHtml(row.id) + '">🗑️</button>' +
+            '</div></td>' +
+          '</tr>';
+        }).join("") +
         '</tbody></table>';
       renderPagination(visible.length, totalPages);
     }
@@ -492,6 +595,7 @@
         if(!response.ok) throw new Error("Firebase read failed");
         rows = normalizeRows(await response.json());
         renderFilters();
+        renderPrepaFilters();
         renderDatalistOptions();
         render();
       } catch(error) {
@@ -509,6 +613,15 @@
       if(!response.ok) throw new Error("Firebase write failed");
     }
 
+    async function updateVisit(id, patch){
+      const response = await fetch(firebaseUrl(VISITS_PATH, id), {
+        method:"PATCH",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(patch)
+      });
+      if(!response.ok) throw new Error("Firebase patch failed");
+    }
+
     async function deleteVisit(id){
       const response = await fetch(firebaseUrl(VISITS_PATH, id), {
         method:"DELETE"
@@ -519,6 +632,11 @@
     function setFormStatus(type, text){
       els.formStatus.className = "form-status " + (type || "");
       els.formStatus.textContent = text || "";
+    }
+
+    function setFeedbackFormStatus(type, text){
+      els.feedbackFormStatus.className = "form-status " + (type || "");
+      els.feedbackFormStatus.textContent = text || "";
     }
 
     function todayIso(){
@@ -600,6 +718,41 @@
       els.modalTitle.textContent = "Nova visita";
     }
 
+    function patchLocalVisit(id, patch){
+      rows = rows.map(row => row.id === id ? { ...row, ...patch } : row);
+    }
+
+    async function markPrepaRead(row){
+      const patch = {
+        prepaRead:true,
+        prepaReadAt: row.prepaReadAt || new Date().toISOString()
+      };
+      await updateVisit(row.id, patch);
+      patchLocalVisit(row.id, patch);
+      renderPrepaFilters();
+      render();
+    }
+
+    function openFeedbackModal(row){
+      feedbackVisitId = row.id;
+      const feedback = row.prepaFeedback || {};
+      els.feedbackModalTitle.textContent = "Feedback prepa · " + (row.name || "Visita");
+      els.feedbackStatus.value = feedback.status || "treballat";
+      els.feedbackText.value = feedback.text || "";
+      setFeedbackFormStatus("", "");
+      els.feedbackModal.classList.add("open");
+      els.feedbackModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => els.feedbackText.focus(), 0);
+    }
+
+    function closeFeedbackModal(){
+      feedbackVisitId = null;
+      els.feedbackModal.classList.remove("open");
+      els.feedbackModal.setAttribute("aria-hidden", "true");
+      els.feedbackForm.reset();
+      setFeedbackFormStatus("", "");
+    }
+
     els.form.addEventListener("submit", async event => {
       event.preventDefault();
       els.submit.disabled = true;
@@ -626,11 +779,53 @@
       currentPage = 1;
       render();
     });
+    els.feedbackForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const row = rows.find(item => item.id === feedbackVisitId);
+      if(!row) return;
+      els.feedbackSubmit.disabled = true;
+      setFeedbackFormStatus("", "Guardant feedback...");
+      const now = new Date().toISOString();
+      const patch = {
+        prepaRead:true,
+        prepaReadAt: row.prepaReadAt || now,
+        prepaFeedback:{
+          status: els.feedbackStatus.value,
+          text: els.feedbackText.value.trim(),
+          updatedAt: now
+        }
+      };
+      try {
+        await updateVisit(row.id, patch);
+        patchLocalVisit(row.id, patch);
+        renderPrepaFilters();
+        render();
+        closeFeedbackModal();
+      } catch(error) {
+        setFeedbackFormStatus("err", "No s'ha pogut guardar el feedback.");
+      } finally {
+        els.feedbackSubmit.disabled = false;
+      }
+    });
     els.table.addEventListener("click", async event => {
       const button = event.target.closest("[data-action]");
       if(!button) return;
       const row = rows.find(item => item.id === button.dataset.id);
       if(!row) return;
+      if(button.dataset.action === "read"){
+        button.disabled = true;
+        try {
+          await markPrepaRead(row);
+        } catch(error) {
+          alert("No s'ha pogut marcar com llegit. Revisa els permisos de Firebase.");
+          button.disabled = false;
+        }
+        return;
+      }
+      if(button.dataset.action === "feedback"){
+        openFeedbackModal(row);
+        return;
+      }
       if(button.dataset.action === "edit"){
         openModal(row);
         return;
@@ -657,11 +852,17 @@
     els.openCreate.addEventListener("click", () => openModal());
     els.closeCreate.addEventListener("click", closeModal);
     els.cancelCreate.addEventListener("click", closeModal);
+    els.closeFeedback.addEventListener("click", closeFeedbackModal);
+    els.cancelFeedback.addEventListener("click", closeFeedbackModal);
     els.modal.addEventListener("click", event => {
       if(event.target === els.modal) closeModal();
     });
+    els.feedbackModal.addEventListener("click", event => {
+      if(event.target === els.feedbackModal) closeFeedbackModal();
+    });
     document.addEventListener("keydown", event => {
       if(event.key === "Escape" && els.modal.classList.contains("open")) closeModal();
+      if(event.key === "Escape" && els.feedbackModal.classList.contains("open")) closeFeedbackModal();
     });
     load();
   </script>

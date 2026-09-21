@@ -53,6 +53,7 @@
     .col-name { width:1%; white-space:nowrap; }
     .col-team { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
+    .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
     tr:last-child td { border-bottom:0; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
@@ -166,6 +167,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
+    const VISITS_PATH = "physioVisits/season-26-27";
     const QUOTA_DATA_URL = "data/fisio-quota.json";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
@@ -186,6 +188,7 @@
     let paidPlayerNames = new Set();
     let paidPlayersLoaded = false;
     let quotaImportedAt = null;
+    let latestGuidelinesByPlayer = new Map();
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -256,6 +259,12 @@
       return !!full && (paidPlayerNames.has(full) || paidPlayerNames.has(short));
     }
 
+    function playerLookupKeys(player){
+      const full = normalizeName(player);
+      const short = normalizeName(shortName(player));
+      return [...new Set([full, short].filter(Boolean))];
+    }
+
     function isSameDay(a, b){
       return a && b &&
         a.getFullYear() === b.getFullYear() &&
@@ -300,6 +309,38 @@
       const data = await response.json();
       if(!data) return [];
       return Object.entries(data).map(([id, request]) => ({ id, ...(request || {}) }));
+    }
+
+    async function loadLatestVisitGuidelines(){
+      try {
+        const visits = await fetchFirebaseRequests(VISITS_PATH);
+        const latest = new Map();
+        visits.forEach(visit => {
+          const guidelines = String(visit.guidelines || "").trim();
+          if(!guidelines) return;
+          const visitDate = parseDateValue(visit.date);
+          const timestamp = visitDate ? visitDate.getTime() : 0;
+          playerLookupKeys(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" "))
+            .forEach(key => {
+              const current = latest.get(key);
+              if(!current || timestamp >= current.timestamp){
+                latest.set(key, { guidelines, timestamp });
+              }
+            });
+        });
+        latestGuidelinesByPlayer = latest;
+      } catch(error) {
+        latestGuidelinesByPlayer = new Map();
+        console.warn("No s'han pogut carregar les pautes de visites.", error);
+      }
+    }
+
+    function latestGuidelinesFor(player){
+      for(const key of playerLookupKeys(player)){
+        const match = latestGuidelinesByPlayer.get(key);
+        if(match?.guidelines) return match.guidelines;
+      }
+      return "";
     }
 
     function normalizeRequests(requests){
@@ -420,7 +461,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Pautes última visita</th><th>Descripció</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -434,6 +475,7 @@
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
+          const latestGuidelines = latestGuidelinesFor(row.player);
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -442,6 +484,7 @@
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
+          '<td class="col-guidelines">' + escapeHtml(latestGuidelines || "—") + '</td>' +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
         '</tr>';
         }).join("") +
@@ -577,6 +620,7 @@
     async function loadPublicRequests(message){
       try {
         await loadPaidPlayers();
+        await loadLatestVisitGuidelines();
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true);
         if(!rows.length) rows = normalizeRequests(REQUESTS);
         statusMessage = message || "";
@@ -591,6 +635,7 @@
       try {
         const token = await user.getIdToken();
         await loadPaidPlayers();
+        await loadLatestVisitGuidelines();
         rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
@@ -609,9 +654,11 @@
         if(isPrivateView && currentUser){
           const token = await currentUser.getIdToken();
           await loadPaidPlayers();
+          await loadLatestVisitGuidelines();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
         } else {
           await loadPaidPlayers();
+          await loadLatestVisitGuidelines();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
         }
         rows = applyRequestMarkers(nextRows, false);

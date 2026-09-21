@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Visites de fisioteràpia · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .club-logo { width:48px; height:48px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:10px; padding:3px; }
+    .logo-link { display:inline-flex; cursor:pointer; text-decoration:none; flex-shrink:0; }
+    .logo { display:inline-grid; place-items:center; width:48px; height:48px; text-decoration:none; flex-shrink:0; background:#fff; color:var(--brand); border-radius:10px; font-size:1.55rem; font-weight:900; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:1.05rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.72rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:2px 0 0; font-size:0.8rem; opacity:0.9; }
+    main { width:100%; max-width:none; margin:0; padding:22px 24px 18px; }
+    .page-nav { margin:0 0 14px; }
+    .back { display:inline-flex; align-items:center; gap:6px; color:var(--brand); text-decoration:none; font-size:0.86rem; font-weight:800; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+    .head { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px; }
+    .head h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.24rem; }
+    .head p { margin:0; color:var(--muted); font-size:0.88rem; max-width:760px; }
+    .kpi { display:grid; place-items:center; min-width:112px; border:1px solid var(--line); border-radius:14px; padding:8px 12px; background:#faf8fd; }
+    .kpi strong { color:var(--brand-dark); font-size:1.4rem; line-height:1; }
+    .kpi span { color:var(--muted); font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
+    .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
+    .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:7px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
+    .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
+    .status { color:var(--muted); font-size:0.86rem; margin:8px 0 12px; }
+    .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    table { width:100%; border-collapse:collapse; min-width:1380px; background:#fff; table-layout:auto; }
+    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
+    td { font-size:0.86rem; }
+    tr:last-child td { border-bottom:0; }
+    .col-date, .col-team, .col-gender, .col-structure, .col-location { width:1%; white-space:nowrap; }
+    .col-name { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
+    .long { min-width:230px; color:var(--ink); }
+    .guidelines { min-width:300px; color:var(--brand-dark); font-weight:750; }
+    .badge { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; }
+    .badge.male { background:#e3f2fd; color:#0d47a1; }
+    .badge.female { background:#fce4ec; color:#880e4f; }
+    .empty, .error { padding:18px; text-align:center; color:var(--muted); }
+    .error { color:#b71c1c; }
+    footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
+    @media (max-width:760px){ .toolbar { grid-template-columns:1fr; } .filters { justify-content:flex-start; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo-link" href="index.html" title="Tornar a l'inici"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Visites de fisioteràpia</h1>
+      <p>Seguiment de visites, tractaments i pautes</p>
+    </div>
+    <div class="logo" aria-hidden="true">✚</div>
+  </header>
+  <main>
+    <nav class="page-nav"><a class="back" href="index.html">← Tornar</a></nav>
+    <section class="panel">
+      <div class="head">
+        <div>
+          <h2>Visites registrades</h2>
+          <p>Dades carregades directament del Google Sheet dels fisios.</p>
+        </div>
+        <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
+        <div class="filters" id="filters"></div>
+      </div>
+      <div class="status" id="status">Carregant visites...</div>
+      <div class="table-wrap" id="tableWrap"></div>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+
+  <script>
+    const SHEET_ID = "1iX8rlYuMUU-ODXyKa5DiYBl5pRqOA84LJK9qK1EaFG0";
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv";
+    let rows = [];
+    let activeGender = "TOTS";
+    let activeTeam = "TOTS";
+    let activeStructure = "TOTS";
+
+    const els = {
+      total: document.getElementById("totalVisits"),
+      status: document.getElementById("status"),
+      filters: document.getElementById("filters"),
+      search: document.getElementById("search"),
+      table: document.getElementById("tableWrap")
+    };
+
+    function escapeHtml(value){
+      return String(value || "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+    }
+
+    function normalize(value){
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function parseCsv(text){
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+      for(let i = 0; i < text.length; i += 1){
+        const char = text[i];
+        const next = text[i + 1];
+        if(char === '"'){
+          if(inQuotes && next === '"'){
+            cell += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if(char === "," && !inQuotes){
+          row.push(cell);
+          cell = "";
+        } else if((char === "\n" || char === "\r") && !inQuotes){
+          if(char === "\r" && next === "\n") i += 1;
+          row.push(cell);
+          if(row.some(value => String(value).trim())) rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+      row.push(cell);
+      if(row.some(value => String(value).trim())) rows.push(row);
+      return rows;
+    }
+
+    function headerIndex(headers, name){
+      const target = normalize(name);
+      return headers.findIndex(header => normalize(header) === target);
+    }
+
+    function cell(row, headers, name){
+      const index = headerIndex(headers, name);
+      return index >= 0 ? String(row[index] || "").trim() : "";
+    }
+
+    function parseDate(value){
+      const match = String(value || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if(!match) return null;
+      return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+    }
+
+    function dateKey(value){
+      const date = parseDate(value);
+      return date ? date.getTime() : 0;
+    }
+
+    function cleanGender(value){
+      const text = normalize(value);
+      if(text.startsWith("fem")) return "F";
+      if(text.startsWith("masc")) return "M";
+      return "";
+    }
+
+    function genderLabel(value){
+      return value === "F" ? "Femení" : value === "M" ? "Masculí" : "—";
+    }
+
+    function normalizeRows(parsed){
+      const headers = parsed[0] || [];
+      return parsed.slice(1).map(row => {
+        const gender = cleanGender(cell(row, headers, "MASC/FEM"));
+        const first = cell(row, headers, "NOM");
+        const last = cell(row, headers, "COGNOM");
+        return {
+          date: cell(row, headers, "DATA"),
+          name: [first, last].filter(Boolean).join(" "),
+          gender,
+          team: cell(row, headers, "EQUIP"),
+          structure: cell(row, headers, "ESTRUCTURA"),
+          location: cell(row, headers, "LOCALITZACIÓ"),
+          mechanism: cell(row, headers, "MECANISME LESIONAL"),
+          assessment: cell(row, headers, "VALORACIÓ"),
+          treatment: cell(row, headers, "TRACTAMENT"),
+          guidelines: cell(row, headers, "PAUTES A SEGUIR")
+        };
+      }).filter(row => row.date || row.name || row.team)
+        .sort((a, b) => dateKey(b.date) - dateKey(a.date) || a.name.localeCompare(b.name, "ca-ES"));
+    }
+
+    function uniqueValues(field){
+      return [...new Set(rows.map(row => row[field]).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
+    }
+
+    function renderFilterGroup(label, values, active, setter, allLabel){
+      return '<div class="filter-group" aria-label="' + escapeHtml(label) + '">' +
+        [{ value:"TOTS", label:allLabel || "Tots" }].concat(values.map(value => ({ value, label:value })))
+          .map(item => '<button class="chip ' + (item.value === active ? "active" : "") + '" type="button" data-filter="' + escapeHtml(label) + '" data-value="' + escapeHtml(item.value) + '">' + escapeHtml(item.label) + '</button>')
+          .join("") +
+        '</div>';
+    }
+
+    function renderFilters(){
+      els.filters.innerHTML =
+        renderFilterGroup("gender", [
+          { value:"M", label:"Masculí" },
+          { value:"F", label:"Femení" }
+        ].map(item => item.value), activeGender, null, "Tots") +
+        renderFilterGroup("team", uniqueValues("team"), activeTeam, null, "Equips") +
+        renderFilterGroup("structure", uniqueValues("structure"), activeStructure, null, "Estructures");
+
+      els.filters.querySelectorAll("[data-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+          if(button.dataset.filter === "gender") activeGender = button.dataset.value;
+          if(button.dataset.filter === "team") activeTeam = button.dataset.value;
+          if(button.dataset.filter === "structure") activeStructure = button.dataset.value;
+          render();
+        });
+      });
+
+      els.filters.querySelectorAll('[data-filter="gender"]').forEach(button => {
+        if(button.dataset.value === "M") button.textContent = "Masculí";
+        if(button.dataset.value === "F") button.textContent = "Femení";
+      });
+    }
+
+    function filteredRows(){
+      const query = normalize(els.search.value);
+      return rows.filter(row => {
+        if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
+        if(activeTeam !== "TOTS" && row.team !== activeTeam) return false;
+        if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
+        if(!query) return true;
+        return normalize([
+          row.date, row.name, row.team, row.structure, row.location,
+          row.mechanism, row.assessment, row.treatment, row.guidelines
+        ].join(" ")).includes(query);
+      });
+    }
+
+    function render(){
+      const visible = filteredRows();
+      els.total.textContent = visible.length;
+      els.status.textContent = rows.length
+        ? "Dades carregades des del Google Sheet."
+        : "No hi ha visites registrades.";
+      if(!visible.length){
+        els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
+        return;
+      }
+      els.table.innerHTML = '<table><thead><tr>' +
+        '<th class="col-date">Data</th>' +
+        '<th class="col-name">Jugador/a</th>' +
+        '<th class="col-gender">Gènere</th>' +
+        '<th class="col-team">Equip</th>' +
+        '<th class="col-structure">Estructura</th>' +
+        '<th class="col-location">Localització</th>' +
+        '<th>Mecanisme lesional</th>' +
+        '<th>Valoració</th>' +
+        '<th>Tractament</th>' +
+        '<th>Pautes a seguir</th>' +
+        '</tr></thead><tbody>' +
+        visible.map(row => '<tr>' +
+          '<td class="col-date">' + escapeHtml(row.date || "—") + '</td>' +
+          '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
+          '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
+          '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
+          '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
+          '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+          '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +
+          '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
+          '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
+          '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
+        '</tr>').join("") +
+        '</tbody></table>';
+    }
+
+    async function load(){
+      try {
+        const response = await fetch(SHEET_URL, { cache:"no-store" });
+        if(!response.ok) throw new Error("HTTP " + response.status);
+        const text = await response.text();
+        if(/ServiceLogin|document-root/.test(text)) throw new Error("Google Sheet no accessible");
+        rows = normalizeRows(parseCsv(text));
+        renderFilters();
+        render();
+      } catch(error) {
+        els.status.textContent = "No s'han pogut carregar les visites.";
+        els.table.innerHTML = '<div class="error">Revisa que el Google Sheet sigui accessible amb l’enllaç.</div>';
+      }
+    }
+
+    els.search.addEventListener("input", render);
+    load();
+  </script>
+</body>
+</html>

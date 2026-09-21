@@ -461,7 +461,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Pautes última visita</th><th>Descripció</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Pautes última visita</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -484,8 +484,8 @@
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
-          '<td class="col-guidelines">' + escapeHtml(latestGuidelines || "—") + '</td>' +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
+          '<td class="col-guidelines">' + escapeHtml(latestGuidelines || "—") + '</td>' +
         '</tr>';
         }).join("") +
         '</tbody></table>';

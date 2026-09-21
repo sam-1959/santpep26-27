@@ -50,6 +50,10 @@
     .modal-head h2 { margin:0 0 4px; color:var(--brand-dark); font-size:1.18rem; }
     .modal-head p { margin:0; color:var(--muted); font-size:0.86rem; }
     .icon-button { display:inline-grid; place-items:center; width:36px; height:36px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); cursor:pointer; font-size:1.2rem; font-weight:900; }
+    .table-actions { display:flex; gap:6px; justify-content:flex-end; align-items:center; white-space:nowrap; }
+    .row-action { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; cursor:pointer; font-size:0.92rem; }
+    .row-action:hover { border-color:var(--brand); box-shadow:0 2px 8px rgba(60,40,90,0.12); }
+    .row-action.delete { color:#b71c1c; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
@@ -195,6 +199,7 @@
     let activeTeam = "TOTS";
     let activeStructure = "TOTS";
     let currentPage = 1;
+    let editingId = null;
 
     const els = {
       total: document.getElementById("totalVisits"),
@@ -207,6 +212,7 @@
       submit: document.getElementById("submitButton"),
       formStatus: document.getElementById("formStatus"),
       modal: document.getElementById("visitModal"),
+      modalTitle: document.getElementById("visitModalTitle"),
       openCreate: document.getElementById("openCreateButton"),
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
@@ -241,6 +247,11 @@
     function inputValue(id){
       const el = document.getElementById(id);
       return el ? el.value.trim() : "";
+    }
+
+    function setInputValue(id, value){
+      const el = document.getElementById(id);
+      if(el) el.value = value || "";
     }
 
     function parseDate(value){
@@ -374,6 +385,7 @@
         '<th>Valoració</th>' +
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
+        '<th>Accions</th>' +
         '</tr></thead><tbody>' +
         pageRows.map((row, index) => '<tr>' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -387,6 +399,10 @@
           '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
           '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
           '<td class="guidelines">' + escapeHtml(row.guidelines || "—") + '</td>' +
+          '<td><div class="table-actions">' +
+            '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +
+            '<button class="row-action delete" type="button" title="Eliminar visita" data-action="delete" data-id="' + escapeHtml(row.id) + '">🗑️</button>' +
+          '</div></td>' +
         '</tr>').join("") +
         '</tbody></table>';
       renderPagination(visible.length, totalPages);
@@ -432,6 +448,13 @@
       if(!response.ok) throw new Error("Firebase write failed");
     }
 
+    async function deleteVisit(id){
+      const response = await fetch(firebaseUrl(VISITS_PATH, id), {
+        method:"DELETE"
+      });
+      if(!response.ok) throw new Error("Firebase delete failed");
+    }
+
     function setFormStatus(type, text){
       els.formStatus.className = "form-status " + (type || "");
       els.formStatus.textContent = text || "";
@@ -445,28 +468,13 @@
       return year + "-" + month + "-" + day;
     }
 
-    function openModal(){
-      setFormStatus("", "");
-      if(!document.getElementById("date").value){
-        document.getElementById("date").value = todayIso();
-      }
-      els.modal.classList.add("open");
-      els.modal.setAttribute("aria-hidden", "false");
-      setTimeout(() => document.getElementById("firstName").focus(), 0);
-    }
-
-    function closeModal(){
-      els.modal.classList.remove("open");
-      els.modal.setAttribute("aria-hidden", "true");
-    }
-
-    els.form.addEventListener("submit", async event => {
-      event.preventDefault();
-      els.submit.disabled = true;
-      setFormStatus("", "Guardant visita...");
-      const visit = {
-        id: requestId(),
-        createdAt: new Date().toISOString(),
+    function visitFromForm(existing){
+      const id = existing && existing.id ? existing.id : requestId();
+      return {
+        ...(existing || {}),
+        id,
+        createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString(),
+        updatedAt: existing ? new Date().toISOString() : "",
         date: inputValue("date"),
         firstName: inputValue("firstName"),
         lastName: inputValue("lastName"),
@@ -480,14 +488,61 @@
         treatment: inputValue("treatment"),
         guidelines: inputValue("guidelines")
       };
+    }
+
+    function fillForm(row){
+      setInputValue("date", row.date);
+      setInputValue("firstName", row.firstName);
+      setInputValue("lastName", row.lastName);
+      setInputValue("gender", row.gender);
+      setInputValue("team", row.team);
+      setInputValue("structure", row.structure);
+      setInputValue("location", row.location);
+      setInputValue("mechanism", row.mechanism);
+      setInputValue("assessment", row.assessment);
+      setInputValue("treatment", row.treatment);
+      setInputValue("guidelines", row.guidelines);
+    }
+
+    function openModal(row){
+      editingId = row && row.id ? row.id : null;
+      setFormStatus("", "");
+      els.modalTitle.textContent = editingId ? "Editar visita" : "Nova visita";
+      els.submit.textContent = editingId ? "Guardar canvis" : "Guardar visita";
+      if(editingId){
+        fillForm(row);
+      } else {
+        els.form.reset();
+        document.getElementById("date").value = todayIso();
+      }
+      els.modal.classList.add("open");
+      els.modal.setAttribute("aria-hidden", "false");
+      setTimeout(() => document.getElementById("firstName").focus(), 0);
+    }
+
+    function closeModal(){
+      els.modal.classList.remove("open");
+      els.modal.setAttribute("aria-hidden", "true");
+      editingId = null;
+      els.form.reset();
+      els.submit.textContent = "Guardar visita";
+      els.modalTitle.textContent = "Nova visita";
+    }
+
+    els.form.addEventListener("submit", async event => {
+      event.preventDefault();
+      els.submit.disabled = true;
+      setFormStatus("", editingId ? "Guardant canvis..." : "Guardant visita...");
+      const existing = editingId ? rows.find(row => row.id === editingId) : null;
+      const visit = visitFromForm(existing);
       try {
         await saveVisit(visit);
-        els.form.reset();
-        rows = rows.concat([visit]).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
+        rows = rows.filter(row => row.id !== visit.id).concat([visit])
+          .sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
         renderFilters();
         renderDatalistOptions();
         render();
-        setFormStatus("ok", "Visita guardada correctament.");
+        setFormStatus("ok", editingId ? "Canvis guardats correctament." : "Visita guardada correctament.");
         closeModal();
       } catch(error) {
         setFormStatus("err", "No s'ha pogut guardar. Revisa els permisos de Firebase.");
@@ -500,7 +555,31 @@
       currentPage = 1;
       render();
     });
-    els.openCreate.addEventListener("click", openModal);
+    els.table.addEventListener("click", async event => {
+      const button = event.target.closest("[data-action]");
+      if(!button) return;
+      const row = rows.find(item => item.id === button.dataset.id);
+      if(!row) return;
+      if(button.dataset.action === "edit"){
+        openModal(row);
+        return;
+      }
+      if(button.dataset.action === "delete"){
+        if(!confirm("Vols eliminar aquesta visita? Aquesta acció no es pot desfer.")) return;
+        button.disabled = true;
+        try {
+          await deleteVisit(row.id);
+          rows = rows.filter(item => item.id !== row.id);
+          renderFilters();
+          renderDatalistOptions();
+          render();
+        } catch(error) {
+          alert("No s'ha pogut eliminar la visita. Revisa els permisos de Firebase.");
+          button.disabled = false;
+        }
+      }
+    });
+    els.openCreate.addEventListener("click", () => openModal());
     els.closeCreate.addEventListener("click", closeModal);
     els.cancelCreate.addEventListener("click", closeModal);
     els.modal.addEventListener("click", event => {

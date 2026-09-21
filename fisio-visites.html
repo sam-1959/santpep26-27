@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="assets/favicon.png" />
   <title>Visites de fisioteràpia · CB Sant Josep</title>
   <style>
-    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; }
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; --ok:#1b7f45; --err:#b71c1c; }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; -webkit-font-smoothing:antialiased; }
     header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
@@ -21,6 +21,7 @@
     main { width:100%; max-width:none; margin:0; padding:22px 24px 18px; }
     .page-nav { margin:0 0 14px; }
     .back { display:inline-flex; align-items:center; gap:6px; color:var(--brand); text-decoration:none; font-size:0.86rem; font-weight:800; }
+    .stack { display:grid; gap:18px; }
     .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
     .head { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px; }
     .head h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.24rem; }
@@ -28,6 +29,19 @@
     .kpi { display:grid; place-items:center; min-width:112px; border:1px solid var(--line); border-radius:14px; padding:8px 12px; background:#faf8fd; }
     .kpi strong { color:var(--brand-dark); font-size:1.4rem; line-height:1; }
     .kpi span { color:var(--muted); font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
+    .form-grid { display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:12px; }
+    .field { display:flex; flex-direction:column; gap:5px; }
+    .field.wide { grid-column:span 2; }
+    .field.full { grid-column:1 / -1; }
+    label { color:var(--brand-dark); font-size:0.76rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
+    textarea { min-height:82px; resize:vertical; }
+    .actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    .primary { border:0; border-radius:999px; padding:10px 18px; background:var(--brand); color:#fff; font-weight:900; cursor:pointer; }
+    .primary:disabled { opacity:0.62; cursor:wait; }
+    .form-status { font-size:0.86rem; color:var(--muted); }
+    .form-status.ok { color:var(--ok); font-weight:800; }
+    .form-status.err { color:var(--err); font-weight:800; }
     .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
     .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
@@ -50,7 +64,8 @@
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
-    @media (max-width:760px){ .toolbar { grid-template-columns:1fr; } .filters { justify-content:flex-start; } }
+    @media (max-width:900px){ .form-grid { grid-template-columns:1fr 1fr; } }
+    @media (max-width:760px){ .toolbar, .form-grid { grid-template-columns:1fr; } .field.wide { grid-column:1; } .filters { justify-content:flex-start; } }
   </style>
 </head>
 <body>
@@ -64,27 +79,94 @@
   </header>
   <main>
     <nav class="page-nav"><a class="back" href="index.html">← Tornar</a></nav>
-    <section class="panel">
-      <div class="head">
-        <div>
-          <h2>Visites registrades</h2>
-          <p>Dades carregades directament del Google Sheet dels fisios.</p>
+    <div class="stack">
+      <section class="panel">
+        <div class="head">
+          <div>
+            <h2>Nova visita</h2>
+            <p>Les dades introduïdes aquí es guarden a Firebase. El Google Sheet ja no és la font de persistència d’aquesta pàgina.</p>
+          </div>
         </div>
-        <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
-      </div>
-      <div class="toolbar">
-        <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
-        <div class="filters" id="filters"></div>
-      </div>
-      <div class="status" id="status">Carregant visites...</div>
-      <div class="table-wrap" id="tableWrap"></div>
-    </section>
+        <form id="visitForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="date">Data</label>
+              <input id="date" name="date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="firstName">Nom</label>
+              <input id="firstName" name="firstName" type="text" autocomplete="off" required />
+            </div>
+            <div class="field">
+              <label for="lastName">Cognom</label>
+              <input id="lastName" name="lastName" type="text" autocomplete="off" required />
+            </div>
+            <div class="field">
+              <label for="gender">Gènere</label>
+              <select id="gender" name="gender" required>
+                <option value="">Selecciona...</option>
+                <option value="M">Masculí</option>
+                <option value="F">Femení</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="team">Equip</label>
+              <input id="team" name="team" type="text" placeholder="Ex. JA, JB, CA..." autocomplete="off" required />
+            </div>
+            <div class="field">
+              <label for="structure">Estructura</label>
+              <input id="structure" name="structure" type="text" placeholder="Ex. MUSCULAR" autocomplete="off" required />
+            </div>
+            <div class="field wide">
+              <label for="location">Localització</label>
+              <input id="location" name="location" type="text" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
+            </div>
+            <div class="field full">
+              <label for="mechanism">Mecanisme lesional</label>
+              <textarea id="mechanism" name="mechanism" required></textarea>
+            </div>
+            <div class="field full">
+              <label for="assessment">Valoració</label>
+              <textarea id="assessment" name="assessment" required></textarea>
+            </div>
+            <div class="field full">
+              <label for="treatment">Tractament</label>
+              <textarea id="treatment" name="treatment" required></textarea>
+            </div>
+            <div class="field full">
+              <label for="guidelines">Pautes a seguir</label>
+              <textarea id="guidelines" name="guidelines" required></textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="primary" id="submitButton" type="submit">Guardar visita</button>
+            <span class="form-status" id="formStatus"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="head">
+          <div>
+            <h2>Visites registrades</h2>
+            <p>Dades carregades des de Firebase.</p>
+          </div>
+          <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
+        </div>
+        <div class="toolbar">
+          <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
+          <div class="filters" id="filters"></div>
+        </div>
+        <div class="status" id="status">Carregant visites...</div>
+        <div class="table-wrap" id="tableWrap"></div>
+      </section>
+    </div>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
 
   <script>
-    const SHEET_ID = "1iX8rlYuMUU-ODXyKa5DiYBl5pRqOA84LJK9qK1EaFG0";
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv";
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const VISITS_PATH = "physioVisits/season-26-27";
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
@@ -95,7 +177,10 @@
       status: document.getElementById("status"),
       filters: document.getElementById("filters"),
       search: document.getElementById("search"),
-      table: document.getElementById("tableWrap")
+      table: document.getElementById("tableWrap"),
+      form: document.getElementById("visitForm"),
+      submit: document.getElementById("submitButton"),
+      formStatus: document.getElementById("formStatus")
     };
 
     function escapeHtml(value){
@@ -111,53 +196,34 @@
         .toLowerCase();
     }
 
-    function parseCsv(text){
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let inQuotes = false;
-      for(let i = 0; i < text.length; i += 1){
-        const char = text[i];
-        const next = text[i + 1];
-        if(char === '"'){
-          if(inQuotes && next === '"'){
-            cell += '"';
-            i += 1;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if(char === "," && !inQuotes){
-          row.push(cell);
-          cell = "";
-        } else if((char === "\n" || char === "\r") && !inQuotes){
-          if(char === "\r" && next === "\n") i += 1;
-          row.push(cell);
-          if(row.some(value => String(value).trim())) rows.push(row);
-          row = [];
-          cell = "";
-        } else {
-          cell += char;
-        }
-      }
-      row.push(cell);
-      if(row.some(value => String(value).trim())) rows.push(row);
-      return rows;
+    function firebaseUrl(path, id){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const safePath = path.split("/").map(encodeURIComponent).join("/");
+      return base + "/" + safePath + (id ? "/" + encodeURIComponent(id) : "") + ".json";
     }
 
-    function headerIndex(headers, name){
-      const target = normalize(name);
-      return headers.findIndex(header => normalize(header) === target);
+    function requestId(){
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
 
-    function cell(row, headers, name){
-      const index = headerIndex(headers, name);
-      return index >= 0 ? String(row[index] || "").trim() : "";
+    function inputValue(id){
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : "";
     }
 
     function parseDate(value){
-      const match = String(value || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if(!match) return null;
-      return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+      if(!value) return null;
+      const iso = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if(iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+      const ca = String(value).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if(ca) return new Date(Number(ca[3]), Number(ca[2]) - 1, Number(ca[1]));
+      return null;
+    }
+
+    function formatDate(value){
+      const date = parseDate(value);
+      if(!date) return value || "";
+      return date.toLocaleDateString("ca-ES");
     }
 
     function dateKey(value){
@@ -165,37 +231,28 @@
       return date ? date.getTime() : 0;
     }
 
-    function cleanGender(value){
-      const text = normalize(value);
-      if(text.startsWith("fem")) return "F";
-      if(text.startsWith("masc")) return "M";
-      return "";
-    }
-
     function genderLabel(value){
       return value === "F" ? "Femení" : value === "M" ? "Masculí" : "—";
     }
 
-    function normalizeRows(parsed){
-      const headers = parsed[0] || [];
-      return parsed.slice(1).map(row => {
-        const gender = cleanGender(cell(row, headers, "MASC/FEM"));
-        const first = cell(row, headers, "NOM");
-        const last = cell(row, headers, "COGNOM");
-        return {
-          date: cell(row, headers, "DATA"),
-          name: [first, last].filter(Boolean).join(" "),
-          gender,
-          team: cell(row, headers, "EQUIP"),
-          structure: cell(row, headers, "ESTRUCTURA"),
-          location: cell(row, headers, "LOCALITZACIÓ"),
-          mechanism: cell(row, headers, "MECANISME LESIONAL"),
-          assessment: cell(row, headers, "VALORACIÓ"),
-          treatment: cell(row, headers, "TRACTAMENT"),
-          guidelines: cell(row, headers, "PAUTES A SEGUIR")
-        };
-      }).filter(row => row.date || row.name || row.team)
-        .sort((a, b) => dateKey(b.date) - dateKey(a.date) || a.name.localeCompare(b.name, "ca-ES"));
+    function normalizeRows(data){
+      if(!data || typeof data !== "object") return [];
+      return Object.entries(data).map(([id, row]) => ({
+        id,
+        createdAt: row.createdAt || "",
+        date: row.date || "",
+        firstName: row.firstName || "",
+        lastName: row.lastName || "",
+        name: row.name || [row.firstName, row.lastName].filter(Boolean).join(" "),
+        gender: row.gender || "",
+        team: row.team || "",
+        structure: row.structure || "",
+        location: row.location || "",
+        mechanism: row.mechanism || "",
+        assessment: row.assessment || "",
+        treatment: row.treatment || "",
+        guidelines: row.guidelines || ""
+      })).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
     }
 
     function uniqueValues(field){
@@ -203,9 +260,9 @@
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
-    function renderFilterGroup(label, values, active, setter, allLabel){
+    function renderFilterGroup(label, values, active, allLabel){
       return '<div class="filter-group" aria-label="' + escapeHtml(label) + '">' +
-        [{ value:"TOTS", label:allLabel || "Tots" }].concat(values.map(value => ({ value, label:value })))
+        [{ value:"TOTS", label:allLabel || "Tots" }].concat(values.map(item => typeof item === "string" ? { value:item, label:item } : item))
           .map(item => '<button class="chip ' + (item.value === active ? "active" : "") + '" type="button" data-filter="' + escapeHtml(label) + '" data-value="' + escapeHtml(item.value) + '">' + escapeHtml(item.label) + '</button>')
           .join("") +
         '</div>';
@@ -216,22 +273,18 @@
         renderFilterGroup("gender", [
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
-        ].map(item => item.value), activeGender, null, "Tots") +
-        renderFilterGroup("team", uniqueValues("team"), activeTeam, null, "Equips") +
-        renderFilterGroup("structure", uniqueValues("structure"), activeStructure, null, "Estructures");
+        ], activeGender, "Tots") +
+        renderFilterGroup("team", uniqueValues("team"), activeTeam, "Equips") +
+        renderFilterGroup("structure", uniqueValues("structure"), activeStructure, "Estructures");
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
           if(button.dataset.filter === "structure") activeStructure = button.dataset.value;
+          renderFilters();
           render();
         });
-      });
-
-      els.filters.querySelectorAll('[data-filter="gender"]').forEach(button => {
-        if(button.dataset.value === "M") button.textContent = "Masculí";
-        if(button.dataset.value === "F") button.textContent = "Femení";
       });
     }
 
@@ -253,7 +306,7 @@
       const visible = filteredRows();
       els.total.textContent = visible.length;
       els.status.textContent = rows.length
-        ? "Dades carregades des del Google Sheet."
+        ? "Dades carregades."
         : "No hi ha visites registrades.";
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
@@ -272,7 +325,7 @@
         '<th>Pautes a seguir</th>' +
         '</tr></thead><tbody>' +
         visible.map(row => '<tr>' +
-          '<td class="col-date">' + escapeHtml(row.date || "—") + '</td>' +
+          '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
           '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
           '<td class="col-gender"><span class="badge ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(genderLabel(row.gender)) + '</span></td>' +
           '<td class="col-team">' + escapeHtml(row.team || "—") + '</td>' +
@@ -288,18 +341,64 @@
 
     async function load(){
       try {
-        const response = await fetch(SHEET_URL, { cache:"no-store" });
-        if(!response.ok) throw new Error("HTTP " + response.status);
-        const text = await response.text();
-        if(/ServiceLogin|document-root/.test(text)) throw new Error("Google Sheet no accessible");
-        rows = normalizeRows(parseCsv(text));
+        const response = await fetch(firebaseUrl(VISITS_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        rows = normalizeRows(await response.json());
         renderFilters();
         render();
       } catch(error) {
         els.status.textContent = "No s'han pogut carregar les visites.";
-        els.table.innerHTML = '<div class="error">Revisa que el Google Sheet sigui accessible amb l’enllaç.</div>';
+        els.table.innerHTML = '<div class="error">Revisa els permisos de Firebase per a physioVisits.</div>';
       }
     }
+
+    async function saveVisit(visit){
+      const response = await fetch(firebaseUrl(VISITS_PATH, visit.id), {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(visit)
+      });
+      if(!response.ok) throw new Error("Firebase write failed");
+    }
+
+    function setFormStatus(type, text){
+      els.formStatus.className = "form-status " + (type || "");
+      els.formStatus.textContent = text || "";
+    }
+
+    els.form.addEventListener("submit", async event => {
+      event.preventDefault();
+      els.submit.disabled = true;
+      setFormStatus("", "Guardant visita...");
+      const visit = {
+        id: requestId(),
+        createdAt: new Date().toISOString(),
+        date: inputValue("date"),
+        firstName: inputValue("firstName"),
+        lastName: inputValue("lastName"),
+        name: [inputValue("firstName"), inputValue("lastName")].filter(Boolean).join(" "),
+        gender: inputValue("gender"),
+        team: inputValue("team").toUpperCase(),
+        structure: inputValue("structure").toUpperCase(),
+        location: inputValue("location").toUpperCase(),
+        mechanism: inputValue("mechanism"),
+        assessment: inputValue("assessment"),
+        treatment: inputValue("treatment"),
+        guidelines: inputValue("guidelines")
+      };
+      try {
+        await saveVisit(visit);
+        els.form.reset();
+        rows = rows.concat([visit]).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
+        renderFilters();
+        render();
+        setFormStatus("ok", "Visita guardada correctament.");
+      } catch(error) {
+        setFormStatus("err", "No s'ha pogut guardar. Revisa els permisos de Firebase.");
+      } finally {
+        els.submit.disabled = false;
+      }
+    });
 
     els.search.addEventListener("input", render);
     load();

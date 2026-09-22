@@ -67,23 +67,18 @@
       </div>
     </section>
     <section class="team-section">
-      <h3>Femení</h3>
+      <h3>Equips</h3>
       <div class="cards">
-        <div class="card"><h4>Cadet F</h4><span class="badge">10 jugadores</span><span class="count-badge loading" data-team-count="CF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=CF">Veure seguiment →</a></div></div>
-        <div class="card"><h4>Júnior A F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="JAF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JAF">Veure seguiment →</a></div></div>
-        <div class="card"><h4>Júnior B F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="JBF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JBF">Veure seguiment →</a></div></div>
-        <div class="card"><h4>Sènior A F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="SAF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=SAF">Veure seguiment →</a></div></div>
-      </div>
-    </section>
-    <section class="team-section">
-      <h3>Masculí</h3>
-      <div class="cards">
-        <div class="card"><h4>Cadet A M</h4><span class="badge">12 jugadors</span><span class="count-badge loading" data-team-count="CAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=CAM">Veure seguiment →</a></div></div>
         <div class="card"><h4>Cadet B M</h4><span class="badge">12 jugadors</span><span class="count-badge loading" data-team-count="CBM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=CBM">Veure seguiment →</a></div></div>
-        <div class="card"><h4>Júnior A M</h4><span class="badge">11 jugadors</span><span class="count-badge loading" data-team-count="JAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JAM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Cadet A M</h4><span class="badge">12 jugadors</span><span class="count-badge loading" data-team-count="CAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=CAM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Cadet F</h4><span class="badge">10 jugadores</span><span class="count-badge loading" data-team-count="CF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=CF">Veure seguiment →</a></div></div>
         <div class="card"><h4>Júnior B M</h4><span class="badge">12 jugadors</span><span class="count-badge loading" data-team-count="JBM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JBM">Veure seguiment →</a></div></div>
-        <div class="card"><h4>Sènior A M</h4><span class="badge">10 jugadors</span><span class="count-badge loading" data-team-count="SAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=SAM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Júnior A M</h4><span class="badge">11 jugadors</span><span class="count-badge loading" data-team-count="JAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JAM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Júnior B F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="JBF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JBF">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Júnior A F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="JAF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=JAF">Veure seguiment →</a></div></div>
         <div class="card"><h4>Sènior B M</h4><span class="badge">11 jugadors</span><span class="count-badge loading" data-team-count="SBM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=SBM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Sènior A M</h4><span class="badge">10 jugadors</span><span class="count-badge loading" data-team-count="SAM">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=SAM">Veure seguiment →</a></div></div>
+        <div class="card"><h4>Sènior A F</h4><span class="badge">12 jugadores</span><span class="count-badge loading" data-team-count="SAF">Carregant...</span><div class="card-actions"><a class="go primary" href="wellness-dades.html?team=SAF">Veure seguiment →</a></div></div>
       </div>
     </section>
   </main>
@@ -92,16 +87,16 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
     const TEAM_NAMES_BY_KEY = {
-      CF: "Cadet F",
-      CAM: "Cadet A M",
       CBM: "Cadet B M",
-      JAF: "Júnior A F",
-      JBF: "Júnior B F",
-      JAM: "Júnior A M",
+      CAM: "Cadet A M",
+      CF: "Cadet F",
       JBM: "Júnior B M",
-      SAF: "Sènior A F",
+      JAM: "Júnior A M",
+      JBF: "Júnior B F",
+      JAF: "Júnior A F",
+      SBM: "Sènior B M",
       SAM: "Sènior A M",
-      SBM: "Sènior B M"
+      SAF: "Sènior A F"
     };
     function firebaseUrl(path){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");

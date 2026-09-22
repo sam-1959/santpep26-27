@@ -171,17 +171,18 @@
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
     const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const TEAM_NAMES_BY_KEY = {
-      CF: "Cadet F",
-      CAM: "Cadet A M",
       CBM: "Cadet B M",
-      JAF: "Júnior A F",
-      JBF: "Júnior B F",
-      JAM: "Júnior A M",
+      CAM: "Cadet A M",
+      CF: "Cadet F",
       JBM: "Júnior B M",
-      SAF: "Sènior A F",
+      JAM: "Júnior A M",
+      JBF: "Júnior B F",
+      JAF: "Júnior A F",
+      SBM: "Sènior B M",
       SAM: "Sènior A M",
-      SBM: "Sènior B M"
+      SAF: "Sènior A F"
     };
+    const TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
     const TEAM_ROSTERS = {
       "Cadet F": [["9","Queralt Gratacós"],["4","Sofia Carabajal"],["5","Alejandra Marín"],["12","Aledis Macias"],["29","Aina Solano Egea"],["22","Ivana Benito"],["8","Silvia Muñoz"],["25","Nora Simón"],["6","Martina Carrillo"],["11","Àsia Tucci"]],
       "Cadet A M": [["20","Aniol Abrisqueta"],["9","Nicolas Masana"],["0","Luc Ramos"],["66","Pol Pallarolas"],["19","Marti Ordoñez"],["6","David Garcia"],["55","Oriol Ortega"],["99","Pol Simon"],["10","Lluc Muñoz"],["16","Gerard Vazquez"],["13","Huascar Ezcurra"],["47","Jan Benedicto"]],
@@ -342,7 +343,7 @@
     }
     function populateTeams(){
       const current = teamFilter.value;
-      const teams = Object.values(TEAM_NAMES_BY_KEY).sort((a, b) => a.localeCompare(b, "ca"));
+      const teams = TEAM_ORDER.map(key => TEAM_NAMES_BY_KEY[key]).filter(Boolean);
       teamFilter.disabled = hasTeamParam;
       teamFilter.title = hasTeamParam ? "L'equip ve determinat per la pàgina seleccionada." : "Selecciona l'equip.";
       teamFilter.innerHTML = (hasTeamParam ? "" : '<option value="">Tots</option>') + teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");

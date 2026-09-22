@@ -132,7 +132,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
   var teExpedient = expedient !== "—";
   var expedientText = teExpedient
     ? "Número d'expedient: " + expedient + "\n\n"
-    : "Encara no tenim el número d'expedient LLOYD'S. Si ja el teniu o us el facilita la mútua, envieu-lo a info@cbsantjosep.cat per poder completar el seguiment del comunicat.\n\n";
+    : "Encara no tenim el número d'expedient. Si ja el teniu o us el facilita la mútua, envieu-lo a info@cbsantjosep.cat per poder completar el seguiment del comunicat.\n\n";
   var expedientHTML = teExpedient
     ? `<p style="margin: 16px 0; padding: 12px; background-color: #F9F6FC; border-left: 4px solid #4B1D6D; border-radius: 6px;"><strong>Número d'expedient:</strong> ${escaparHtml(expedient)}</p>`
     : `<p style="margin: 16px 0; padding: 12px; background-color: #FFF8D6; border-left: 4px solid #FFC72C; border-radius: 6px;"><strong>Número d'expedient pendent.</strong><br>Si ja el teniu o us el facilita la mútua, envieu-lo a <a href="mailto:info@cbsantjosep.cat" style="color:#4B1D6D; font-weight:bold;">info@cbsantjosep.cat</a> per poder completar el seguiment del comunicat.</p>`;
@@ -251,7 +251,7 @@ function adaptarComunicatANamedValues(request) {
       "Instal·lació on s'ha fet la lesió": [valor(request.venue)],
       "Danys soferts": [valor(request.damage)],
       "Lloc de la lesió": [valor(request.side)],
-      "Número d'expedient LLOYD'S": [valor(request.claimNumber)]
+      "Número d'expedient": [valor(request.claimNumber)]
     }
   };
 }

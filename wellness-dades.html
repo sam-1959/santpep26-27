@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Dades Wellness + RPE · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --ok:#1b5e20; --warn:#b26a00; --err:#b71c1c; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.35; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .club-logo { width:42px; height:42px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:9px; padding:4px; }
+    .logo-mark { display:inline-grid; place-items:center; width:40px; height:40px; flex-shrink:0; margin-left:auto; background:#fff; color:var(--brand); border-radius:9px; font-size:1.25rem; font-weight:900; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:0.98rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.66rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:1px 0 0; font-size:0.74rem; opacity:0.9; }
+    main { width:100%; max-width:none; margin:0; padding:22px 24px 44px; }
+    .toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:16px; }
+    .intro h2 { margin:0 0 5px; color:var(--brand-dark); font-size:1.22rem; }
+    .intro p { margin:0; color:var(--muted); font-size:0.86rem; }
+    .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
+    .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
+    .filters { display:grid; grid-template-columns:minmax(220px,1fr) repeat(3, minmax(150px,auto)); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
+    input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
+    input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
+    .summary { display:grid; grid-template-columns:repeat(5,minmax(160px,1fr)); gap:12px; margin-bottom:14px; }
+    .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:13px; }
+    .kpi span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .kpi strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1.45rem; line-height:1; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#faf8fd; }
+    .panel-head h3 { margin:0; color:var(--brand-dark); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .status { color:var(--muted); font-size:0.78rem; font-weight:800; }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; font-size:0.86rem; }
+    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; white-space:nowrap; }
+    th { color:var(--brand-dark); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; background:#fff; position:sticky; top:0; z-index:1; }
+    td.player { font-weight:900; color:var(--brand-dark); }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:34px; border-radius:999px; padding:3px 8px; font-weight:900; font-size:0.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; }
+    .badge.low { background:#e8f5e9; color:var(--ok); border-color:#c8e6c9; }
+    .badge.mid { background:#fff8cc; color:#6f5600; border-color:#efd96f; }
+    .badge.high { background:#ffebee; color:var(--err); border-color:#ffcdd2; }
+    .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
+    .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .bars { padding:12px 16px 16px; }
+    .bar-row { display:grid; grid-template-columns:140px 1fr 48px; align-items:center; gap:10px; margin:9px 0; font-size:0.82rem; }
+    .bar-name { color:var(--ink); font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bar-track { height:10px; border-radius:999px; background:#eee8f4; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--brand),#b383d3); }
+    footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
+    @media (max-width:900px){
+      .filters, .summary, .charts { grid-template-columns:1fr; }
+      .toolbar { align-items:flex-start; flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Dades Wellness + RPE</h1>
+      <p>RPE, fatiga, qualitat de la son i càrrega</p>
+    </div>
+    <span class="logo-mark" aria-hidden="true">📊</span>
+  </header>
+  <main>
+    <div class="toolbar">
+      <div class="intro">
+        <h2>Seguiment Wellness + RPE</h2>
+        <p>Consulta de les respostes rebudes i resum per jugadora.</p>
+      </div>
+      <div class="actions">
+        <a class="btn secondary" href="wellness.html">Formulari Wellness + RPE</a>
+        <button class="btn" id="refreshButton" type="button">Actualitzar</button>
+      </div>
+    </div>
+
+    <section class="filters" aria-label="Filtres">
+      <label>Cerca
+        <input id="searchInput" type="search" placeholder="Nom de jugadora..." />
+      </label>
+      <label>Jugadora
+        <select id="playerFilter"><option value="">Totes</option></select>
+      </label>
+      <label>Des de
+        <input id="fromDate" type="date" />
+      </label>
+      <label>Fins a
+        <input id="toDate" type="date" />
+      </label>
+    </section>
+
+    <section class="summary" aria-label="Resum">
+      <div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div>
+      <div class="kpi"><span>RPE mitjà</span><strong id="kpiRpe">—</strong></div>
+      <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
+      <div class="kpi"><span>Son mitjana</span><strong id="kpiSleep">—</strong></div>
+      <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Registres rebuts</h3>
+        <span id="status" class="status">Carregant dades...</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data entrenament</th>
+              <th>Jugadora</th>
+              <th class="num">Minuts</th>
+              <th class="num">RPE</th>
+              <th class="num">Fatiga</th>
+              <th class="num">Qualitat son</th>
+              <th>Hores son</th>
+              <th class="num">Càrrega</th>
+            </tr>
+          </thead>
+          <tbody id="responsesBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty" hidden>No hi ha dades amb aquests filtres.</div>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="panel">
+        <div class="panel-head"><h3>Càrrega per jugadora</h3></div>
+        <div id="loadByPlayer" class="bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Mitjanes per jugadora</h3></div>
+        <div id="averagesByPlayer" class="bars"></div>
+      </div>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const RESPONSES_PATH = "wellnessResponses/season-26-27";
+    const state = { records: [], filtered: [] };
+
+    const statusEl = document.getElementById("status");
+    const responsesBody = document.getElementById("responsesBody");
+    const emptyState = document.getElementById("emptyState");
+    const playerFilter = document.getElementById("playerFilter");
+    const searchInput = document.getElementById("searchInput");
+    const fromDate = document.getElementById("fromDate");
+    const toDate = document.getElementById("toDate");
+
+    function firebaseUrl(path){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const safePath = path.split("/").map(encodeURIComponent).join("/");
+      return base + "/" + safePath + ".json";
+    }
+    function formatDate(value){
+      if(!value) return "—";
+      const [year, month, day] = value.split("-");
+      return year && month && day ? day + "/" + month + "/" + year : value;
+    }
+    function numeric(value){
+      const num = Number(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+    function average(records, field){
+      const values = records.map(item => numeric(item[field])).filter(value => value > 0);
+      if(!values.length) return null;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+    function formatNumber(value, decimals = 1){
+      return value === null || value === undefined || Number.isNaN(value) ? "—" : value.toLocaleString("ca-ES", { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+    }
+    function levelClass(value, max){
+      const ratio = max ? numeric(value) / max : 0;
+      if(ratio >= 0.75) return "high";
+      if(ratio >= 0.45) return "mid";
+      return "low";
+    }
+    function normalizeRecord(record, id){
+      const durationTotalMinutes = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
+      const rpe = numeric(record.rpe);
+      return {
+        id,
+        ...record,
+        durationTotalMinutes,
+        rpe,
+        muscleFatigue: numeric(record.muscleFatigue),
+        sleepQuality: numeric(record.sleepQuality),
+        load: numeric(record.load) || rpe * durationTotalMinutes
+      };
+    }
+    async function loadRecords(){
+      statusEl.textContent = "Carregant dades...";
+      const response = await fetch(firebaseUrl(RESPONSES_PATH), { cache:"no-store" });
+      if(!response.ok) throw new Error("No s'ha pogut llegir Firebase");
+      const data = await response.json() || {};
+      state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id))
+        .sort((a, b) => String(b.trainingDate || "").localeCompare(String(a.trainingDate || "")) || String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+      populatePlayers();
+      applyFilters();
+      statusEl.textContent = "Dades carregades.";
+    }
+    function populatePlayers(){
+      const current = playerFilter.value;
+      const players = [...new Set(state.records.map(record => record.player).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+      playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
+      if(players.includes(current)) playerFilter.value = current;
+    }
+    function applyFilters(){
+      const query = searchInput.value.trim().toLowerCase();
+      const player = playerFilter.value;
+      const from = fromDate.value;
+      const to = toDate.value;
+      state.filtered = state.records.filter(record => {
+        const name = String(record.player || "");
+        const date = String(record.trainingDate || "");
+        if(query && !name.toLowerCase().includes(query)) return false;
+        if(player && name !== player) return false;
+        if(from && date < from) return false;
+        if(to && date > to) return false;
+        return true;
+      });
+      render();
+    }
+    function render(){
+      renderSummary();
+      renderTable();
+      renderCharts();
+    }
+    function renderSummary(){
+      const records = state.filtered;
+      const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
+      document.getElementById("kpiRecords").textContent = records.length;
+      document.getElementById("kpiRpe").textContent = formatNumber(average(records, "rpe"));
+      document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "muscleFatigue"));
+      document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepQuality"));
+      document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
+    }
+    function renderTable(){
+      emptyState.hidden = state.filtered.length > 0;
+      responsesBody.innerHTML = state.filtered.map(record => {
+        return '<tr>' +
+          '<td>' + escapeHtml(formatDate(record.trainingDate)) + '</td>' +
+          '<td class="player">' + escapeHtml(record.player || "—") + '</td>' +
+          '<td class="num">' + numeric(record.durationTotalMinutes) + '</td>' +
+          '<td class="num"><span class="badge ' + levelClass(record.rpe, 10) + '">' + record.rpe + '</span></td>' +
+          '<td class="num"><span class="badge ' + levelClass(record.muscleFatigue, 5) + '">' + record.muscleFatigue + '</span></td>' +
+          '<td class="num"><span class="badge ' + levelClass(record.sleepQuality, 7) + '">' + record.sleepQuality + '</span></td>' +
+          '<td>' + escapeHtml(record.sleepHours || "—") + '</td>' +
+          '<td class="num">' + Math.round(numeric(record.load)).toLocaleString("ca-ES") + '</td>' +
+        '</tr>';
+      }).join("");
+    }
+    function groupedByPlayer(){
+      const groups = new Map();
+      state.filtered.forEach(record => {
+        const player = record.player || "Sense nom";
+        if(!groups.has(player)) groups.set(player, []);
+        groups.get(player).push(record);
+      });
+      return [...groups.entries()].map(([player, records]) => ({
+        player,
+        records,
+        load: records.reduce((sum, record) => sum + numeric(record.load), 0),
+        rpe: average(records, "rpe"),
+        fatigue: average(records, "muscleFatigue"),
+        sleep: average(records, "sleepQuality")
+      })).sort((a, b) => b.load - a.load || a.player.localeCompare(b.player, "ca"));
+    }
+    function renderCharts(){
+      const groups = groupedByPlayer();
+      renderLoadBars(groups);
+      renderAverageBars(groups);
+    }
+    function renderLoadBars(groups){
+      const maxLoad = Math.max(...groups.map(group => group.load), 1);
+      document.getElementById("loadByPlayer").innerHTML = groups.length ? groups.map(group => {
+        const pct = Math.round(group.load / maxLoad * 100);
+        return '<div class="bar-row"><span class="bar-name">' + escapeHtml(group.player) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span><strong class="num">' + Math.round(group.load).toLocaleString("ca-ES") + '</strong></div>';
+      }).join("") : '<div class="empty">No hi ha dades.</div>';
+    }
+    function renderAverageBars(groups){
+      document.getElementById("averagesByPlayer").innerHTML = groups.length ? groups.map(group => {
+        const label = "RPE " + formatNumber(group.rpe) + " · Fatiga " + formatNumber(group.fatigue) + " · Son " + formatNumber(group.sleep);
+        const pct = Math.min(100, Math.round((group.rpe || 0) / 10 * 100));
+        return '<div class="bar-row"><span class="bar-name">' + escapeHtml(group.player) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span><strong class="num" title="' + escapeAttr(label) + '">' + escapeHtml(label) + '</strong></div>';
+      }).join("") : '<div class="empty">No hi ha dades.</div>';
+    }
+    function escapeHtml(value){
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+    }
+    function escapeAttr(value){
+      return escapeHtml(value);
+    }
+
+    [searchInput, playerFilter, fromDate, toDate].forEach(el => el.addEventListener("input", applyFilters));
+    document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
+    loadRecords().catch(showError);
+    function showError(error){
+      console.error(error);
+      statusEl.textContent = "No s'han pogut carregar les dades. Revisa permisos de Firebase.";
+      emptyState.hidden = false;
+      emptyState.textContent = "No s'han pogut carregar les dades.";
+    }
+  </script>
+</body>
+</html>

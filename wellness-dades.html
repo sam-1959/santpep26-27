@@ -58,6 +58,9 @@
     .week-label { text-align:center; }
     .week-title { color:var(--brand-dark); font-weight:900; }
     .week-subtitle { color:var(--muted); font-size:0.78rem; font-weight:800; }
+    .player-pagination { display:none; align-items:center; justify-content:flex-end; gap:10px; margin:-2px 0 14px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .player-pagination.show { display:flex; }
+    .player-pagination .status { min-width:110px; text-align:center; }
     .metric-table td:first-child, .metric-table th:first-child { min-width:150px; text-align:left; }
     .metric-table th, .metric-table td { text-align:center; }
     .bars { padding:12px 16px 16px; }
@@ -115,6 +118,12 @@
         <div id="weekSubtitle" class="week-subtitle">—</div>
       </div>
       <button class="btn secondary" id="nextWeekButton" type="button">Setmana següent →</button>
+    </nav>
+
+    <nav id="playerPagination" class="player-pagination" aria-label="Paginació de jugadores">
+      <button class="btn secondary" id="prevPlayerPageButton" type="button">← Jugadores</button>
+      <span id="playerPageInfo" class="status">1–12</span>
+      <button class="btn secondary" id="nextPlayerPageButton" type="button">Jugadores →</button>
     </nav>
 
     <section class="summary" aria-label="Resum">
@@ -195,7 +204,8 @@
       "Sènior A M": [["14","Pol Peña"],["4","Àlex Furones"],["3","Roger Gil"],["5","Enric Curto"],["18","Xavi Zamora"],["15","Ferran Dauder"],["24","Ferran Santín"],["20","Haritz Botella"],["13","Quique Lázaro"],["44","Sergi Carmona"]],
       "Sènior B M": [["1","Fénix Erola"],["5","Álvaro Navarro"],["0","Deremi Tavares"],["6","Pau Laviña"],["8","Ian Soler"],["9","Biel Prats"],["17","Biel Borda"],["10","Dani Rojas"],["11","Emmanuel Efosa"],["3","Noam"],["16","Hugo Camacho"]]
     };
-    const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0 };
+    const PLAYERS_PER_PAGE = 12;
+    const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0, playerPageIndex: 0 };
     const params = new URLSearchParams(window.location.search);
     const hasTeamParam = params.has("team");
     const requestedTeamKey = String(params.get("team") || "").trim().toUpperCase();
@@ -211,6 +221,10 @@
     const weekSubtitle = document.getElementById("weekSubtitle");
     const prevWeekButton = document.getElementById("prevWeekButton");
     const nextWeekButton = document.getElementById("nextWeekButton");
+    const playerPagination = document.getElementById("playerPagination");
+    const playerPageInfo = document.getElementById("playerPageInfo");
+    const prevPlayerPageButton = document.getElementById("prevPlayerPageButton");
+    const nextPlayerPageButton = document.getElementById("nextPlayerPageButton");
 
     function firebaseUrl(path){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -397,12 +411,19 @@
       state.filtered = selectedWeek
         ? state.baseFiltered.filter(record => weekKey(record.trainingDate) === selectedWeek)
         : [];
+      state.playerPageIndex = 0;
       render();
     }
     function changeWeek(delta){
       if(!state.weeks.length) return;
       state.selectedWeekIndex = Math.min(Math.max(state.selectedWeekIndex + delta, 0), state.weeks.length - 1);
+      state.playerPageIndex = 0;
       applyWeek();
+    }
+    function changePlayerPage(delta){
+      const totalPages = Math.max(1, Math.ceil(groupedByPlayer().length / PLAYERS_PER_PAGE));
+      state.playerPageIndex = Math.min(Math.max(state.playerPageIndex + delta, 0), totalPages - 1);
+      render();
     }
     function render(){
       renderWeekNav();
@@ -449,11 +470,26 @@
     function renderMetricTables(){
       const dates = weekDates();
       const groups = groupedByPlayer();
-      renderMetricTable("rpe", "RPE", dates, groups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
-      renderMetricTable("fatigue", "Fatiga", dates, groups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
-      renderMetricTable("sleep", "Qualitat de la son", dates, groups, record => record.sleepQuality, value => colorClass(value, 7), value => value || "—");
+      const totalPages = Math.max(1, Math.ceil(groups.length / PLAYERS_PER_PAGE));
+      if(state.playerPageIndex >= totalPages) state.playerPageIndex = totalPages - 1;
+      const start = state.playerPageIndex * PLAYERS_PER_PAGE;
+      const pagedGroups = groups.slice(start, start + PLAYERS_PER_PAGE);
+      renderPlayerPagination(groups.length, start, pagedGroups.length, totalPages);
+      renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
+      renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
+      renderMetricTable("sleep", "Qualitat de la son", dates, pagedGroups, record => record.sleepQuality, value => colorClass(value, 7), value => value || "—");
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
-      renderMetricTable("load", "Càrrega", dates, groups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
+      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
+    }
+    function renderPlayerPagination(totalGroups, start, pageSize, totalPages){
+      const shouldPaginate = totalGroups > PLAYERS_PER_PAGE;
+      playerPagination.classList.toggle("show", shouldPaginate);
+      if(!shouldPaginate) return;
+      const from = start + 1;
+      const to = start + pageSize;
+      playerPageInfo.textContent = from + "–" + to + " de " + totalGroups;
+      prevPlayerPageButton.disabled = state.playerPageIndex <= 0;
+      nextPlayerPageButton.disabled = state.playerPageIndex >= totalPages - 1;
     }
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
       const head = document.getElementById(prefix + "Head");
@@ -604,6 +640,8 @@
     teamFilter.addEventListener("input", handleTeamFilterChange);
     prevWeekButton.addEventListener("click", () => changeWeek(1));
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
+    prevPlayerPageButton.addEventListener("click", () => changePlayerPage(-1));
+    nextPlayerPageButton.addEventListener("click", () => changePlayerPage(1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     emailButton.addEventListener("click", sendWeeklyEmail);
     updatePageTitle();

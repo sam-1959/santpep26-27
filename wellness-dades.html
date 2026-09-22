@@ -87,6 +87,7 @@
         <p>Consulta de les respostes rebudes i resum per jugadora.</p>
       </div>
       <div class="actions">
+        <span id="status" class="status">Carregant dades...</span>
         <a class="btn secondary" href="wellness.html">Formulari Wellness + RPE</a>
         <button class="btn" id="refreshButton" type="button">Actualitzar</button>
       </div>
@@ -116,31 +117,6 @@
       <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
       <div class="kpi"><span>Son mitjana</span><strong id="kpiSleep">—</strong></div>
       <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <h3>Registres rebuts</h3>
-        <span id="status" class="status">Carregant dades...</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data entrenament</th>
-              <th>Jugadora</th>
-              <th class="num">Minuts</th>
-              <th class="num">RPE</th>
-              <th class="num">Fatiga</th>
-              <th class="num">Qualitat son</th>
-              <th>Hores son</th>
-              <th class="num">Càrrega</th>
-            </tr>
-          </thead>
-          <tbody id="responsesBody"></tbody>
-        </table>
-        <div id="emptyState" class="empty" hidden>No hi ha dades amb aquests filtres.</div>
-      </div>
     </section>
 
     <section class="metrics-grid">
@@ -189,8 +165,6 @@
     const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0 };
 
     const statusEl = document.getElementById("status");
-    const responsesBody = document.getElementById("responsesBody");
-    const emptyState = document.getElementById("emptyState");
     const playerFilter = document.getElementById("playerFilter");
     const searchInput = document.getElementById("searchInput");
     const weekTitle = document.getElementById("weekTitle");
@@ -325,7 +299,6 @@
     function render(){
       renderWeekNav();
       renderSummary();
-      renderTable();
       renderMetricTables();
     }
     function renderWeekNav(){
@@ -343,22 +316,6 @@
       document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "muscleFatigue"));
       document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepQuality"));
       document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
-    }
-    function renderTable(){
-      const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
-      emptyState.hidden = state.filtered.length > 0;
-      responsesBody.innerHTML = state.filtered.map(record => {
-        return '<tr>' +
-          '<td>' + escapeHtml(formatDate(record.trainingDate)) + '</td>' +
-          '<td class="player">' + escapeHtml(record.player || "—") + '</td>' +
-          '<td class="num">' + numeric(record.durationTotalMinutes) + '</td>' +
-          '<td class="num"><span class="badge ' + colorClass(record.rpe, 10) + '">' + record.rpe + '</span></td>' +
-          '<td class="num"><span class="badge ' + colorClass(record.muscleFatigue, 5) + '">' + record.muscleFatigue + '</span></td>' +
-          '<td class="num"><span class="badge ' + colorClass(record.sleepQuality, 7) + '">' + record.sleepQuality + '</span></td>' +
-          '<td>' + escapeHtml(record.sleepHours || "—") + '</td>' +
-          '<td class="num"><span class="badge ' + loadColorClass(record.load, maxLoad) + '">' + Math.round(numeric(record.load)).toLocaleString("ca-ES") + '</span></td>' +
-        '</tr>';
-      }).join("");
     }
     function weekDates(){
       const selectedWeek = currentWeekKey();
@@ -431,8 +388,6 @@
     function showError(error){
       console.error(error);
       statusEl.textContent = "No s'han pogut carregar les dades. Revisa permisos de Firebase.";
-      emptyState.hidden = false;
-      emptyState.textContent = "No s'han pogut carregar les dades.";
     }
   </script>
 </body>

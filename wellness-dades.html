@@ -196,8 +196,9 @@
     };
     const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0 };
     const params = new URLSearchParams(window.location.search);
-    const requestedTeamKey = String(params.get("team") || "JBF").trim().toUpperCase();
-    const requestedTeamName = TEAM_NAMES_BY_KEY[requestedTeamKey] || TEAM_NAMES_BY_KEY.JBF;
+    const hasTeamParam = params.has("team");
+    const requestedTeamKey = String(params.get("team") || "").trim().toUpperCase();
+    const requestedTeamName = TEAM_NAMES_BY_KEY[requestedTeamKey] || "";
 
     const statusEl = document.getElementById("status");
     const emailButton = document.getElementById("emailButton");
@@ -215,7 +216,7 @@
       return base + "/" + safePath + ".json";
     }
     function visibleTeam(){
-      return requestedTeamName;
+      return hasTeamParam ? requestedTeamName : teamFilter.value;
     }
     function formatDate(value){
       if(!value) return "—";
@@ -327,11 +328,16 @@
       if(players.includes(current)) playerFilter.value = current;
     }
     function populateTeams(){
+      const current = teamFilter.value;
       const teams = Object.values(TEAM_NAMES_BY_KEY).sort((a, b) => a.localeCompare(b, "ca"));
-      teamFilter.disabled = true;
-      teamFilter.title = "L'equip ve determinat per la pàgina seleccionada.";
-      teamFilter.innerHTML = teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");
-      teamFilter.value = teams.includes(requestedTeamName) ? requestedTeamName : TEAM_NAMES_BY_KEY.JBF;
+      teamFilter.disabled = hasTeamParam;
+      teamFilter.title = hasTeamParam ? "L'equip ve determinat per la pàgina seleccionada." : "Selecciona l'equip.";
+      teamFilter.innerHTML = (hasTeamParam ? "" : '<option value="">Tots</option>') + teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");
+      if(hasTeamParam){
+        teamFilter.value = teams.includes(requestedTeamName) ? requestedTeamName : TEAM_NAMES_BY_KEY.JBF;
+      } else if(teams.includes(current)){
+        teamFilter.value = current;
+      }
     }
     function applyFilters(){
       const query = searchInput.value.trim().toLowerCase();

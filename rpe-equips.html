@@ -31,7 +31,9 @@
     .card p { margin:0; color:var(--muted); font-size:0.82rem; }
     .badge { display:inline-flex; align-items:center; align-self:flex-start; border-radius:999px; padding:4px 9px; background:#fff8cc; border:1px solid #efd96f; color:#5f4a00; font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.03em; }
     .pending { background:#f4eef9; border-color:#dccce9; color:var(--brand-dark); }
-    .go { margin-top:4px; font-size:0.82rem; font-weight:800; color:var(--brand); }
+    .card-actions { display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; }
+    .go { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:7px 10px; font-size:0.78rem; font-weight:900; color:var(--brand); background:#f9f5fc; border:1px solid #dccce9; text-decoration:none; }
+    .go.primary { color:#fff; background:var(--brand); border-color:var(--brand); }
     .back-link { display:inline-flex; align-items:center; gap:6px; margin-bottom:16px; color:var(--brand-dark); background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 12px; text-decoration:none; font-size:0.82rem; font-weight:900; box-shadow:var(--shadow); }
     .back-link:hover { border-color:var(--brand); }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
@@ -55,21 +57,21 @@
     <section class="team-section">
       <h3>Femení</h3>
       <div class="cards">
-        <a class="card" href="wellness.html?team=CF"><h4>Cadet F</h4><span class="badge">10 jugadores</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=JAF"><h4>Júnior A F</h4><span class="badge">12 jugadores</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=JBF"><h4>Júnior B F</h4><span class="badge">12 jugadores</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=SAF"><h4>Sènior A F</h4><span class="badge">12 jugadores</span><span class="go">Obrir formulari →</span></a>
+        <div class="card"><h4>Cadet F</h4><span class="badge">10 jugadores</span><div class="card-actions"><a class="go primary" href="wellness.html?team=CF">Formulari →</a><a class="go" href="wellness-dades.html?team=CF">Seguiment →</a></div></div>
+        <div class="card"><h4>Júnior A F</h4><span class="badge">12 jugadores</span><div class="card-actions"><a class="go primary" href="wellness.html?team=JAF">Formulari →</a><a class="go" href="wellness-dades.html?team=JAF">Seguiment →</a></div></div>
+        <div class="card"><h4>Júnior B F</h4><span class="badge">12 jugadores</span><div class="card-actions"><a class="go primary" href="wellness.html?team=JBF">Formulari →</a><a class="go" href="wellness-dades.html?team=JBF">Seguiment →</a></div></div>
+        <div class="card"><h4>Sènior A F</h4><span class="badge">12 jugadores</span><div class="card-actions"><a class="go primary" href="wellness.html?team=SAF">Formulari →</a><a class="go" href="wellness-dades.html?team=SAF">Seguiment →</a></div></div>
       </div>
     </section>
     <section class="team-section">
       <h3>Masculí</h3>
       <div class="cards">
-        <a class="card" href="wellness.html?team=CAM"><h4>Cadet A M</h4><span class="badge">12 jugadors</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=CBM"><h4>Cadet B M</h4><span class="badge">12 jugadors</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=JAM"><h4>Júnior A M</h4><span class="badge">11 jugadors</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=JBM"><h4>Júnior B M</h4><span class="badge">12 jugadors</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=SAM"><h4>Sènior A M</h4><span class="badge">10 jugadors</span><span class="go">Obrir formulari →</span></a>
-        <a class="card" href="wellness.html?team=SBM"><h4>Sènior B M</h4><span class="badge">11 jugadors</span><span class="go">Obrir formulari →</span></a>
+        <div class="card"><h4>Cadet A M</h4><span class="badge">12 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=CAM">Formulari →</a><a class="go" href="wellness-dades.html?team=CAM">Seguiment →</a></div></div>
+        <div class="card"><h4>Cadet B M</h4><span class="badge">12 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=CBM">Formulari →</a><a class="go" href="wellness-dades.html?team=CBM">Seguiment →</a></div></div>
+        <div class="card"><h4>Júnior A M</h4><span class="badge">11 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=JAM">Formulari →</a><a class="go" href="wellness-dades.html?team=JAM">Seguiment →</a></div></div>
+        <div class="card"><h4>Júnior B M</h4><span class="badge">12 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=JBM">Formulari →</a><a class="go" href="wellness-dades.html?team=JBM">Seguiment →</a></div></div>
+        <div class="card"><h4>Sènior A M</h4><span class="badge">10 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=SAM">Formulari →</a><a class="go" href="wellness-dades.html?team=SAM">Seguiment →</a></div></div>
+        <div class="card"><h4>Sènior B M</h4><span class="badge">11 jugadors</span><div class="card-actions"><a class="go primary" href="wellness.html?team=SBM">Formulari →</a><a class="go" href="wellness-dades.html?team=SBM">Seguiment →</a></div></div>
       </div>
     </section>
   </main>

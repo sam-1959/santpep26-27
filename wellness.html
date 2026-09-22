@@ -274,7 +274,7 @@
     const successView = document.getElementById("successView");
     const newRequestButton = document.getElementById("newRequestButton");
     const params = new URLSearchParams(window.location.search);
-    const teamKey = (params.get("team") || "JBF").toUpperCase();
+    const teamKey = resolveTeamKey(params.get("team"));
     const teamConfig = TEAMS[teamKey] || TEAMS.JBF;
 
     function firebaseUrl(path, id){
@@ -306,12 +306,23 @@
       const numericValue = Number(String(value || "").replace(/\D/g, ""));
       return Number.isFinite(numericValue) ? numericValue : 9999;
     }
+    function normalizeKey(value){
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    }
+    function resolveTeamKey(value){
+      const normalized = normalizeKey(value || "JBF");
+      if(TEAMS[normalized]) return normalized;
+      const byName = Object.entries(TEAMS).find(([, team]) => normalizeKey(team.name) === normalized);
+      return byName ? byName[0] : "JBF";
+    }
     function renderPlayers(){
       const select = document.getElementById("player");
       document.getElementById("teamName").textContent = teamConfig.name;
+      select.innerHTML = '<option value="">Selecciona jugador/a</option>';
       if(!teamConfig.players.length){
         setStatus("err", "Encara no hi ha jugadors configurats per aquest equip.");
         submitButton.disabled = true;
+        return;
       }
       [...teamConfig.players].sort((a, b) => numberSortValue(a.number) - numberSortValue(b.number) || a.name.localeCompare(b.name, "ca")).forEach(player => {
         const option = document.createElement("option");

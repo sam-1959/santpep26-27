@@ -59,6 +59,7 @@
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
     .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
+    .no-visit-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#fff8d6; color:#6b4d00; font-size:0.72rem; font-weight:900; }
     tr:last-child td { border-bottom:0; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
@@ -329,7 +330,6 @@
         const latest = new Map();
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
-          if(!guidelines) return;
           const visitDate = parseDateValue(visit.date);
           const timestamp = visitDate ? visitDate.getTime() : 0;
           playerLookupKeys(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" "))
@@ -511,8 +511,10 @@
           const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
           const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
           const guidelinesHtml = latestGuidelines
-            ? escapeHtml(latestGuidelines.guidelines) + (guidelinesDateText ? '<div class="guidelines-meta">Última pauta: ' + escapeHtml(guidelinesDateText) + '</div>' : '')
-            : '<span class="no-guidelines-badge">Sense pauta</span>';
+            ? (latestGuidelines.guidelines
+              ? escapeHtml(latestGuidelines.guidelines) + (guidelinesDateText ? '<div class="guidelines-meta">Última pauta: ' + escapeHtml(guidelinesDateText) + '</div>' : '')
+              : '<span class="no-guidelines-badge">Sense pauta</span>')
+            : '<span class="no-visit-badge">Sense visita</span>';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +

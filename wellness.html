@@ -275,7 +275,19 @@
     const successView = document.getElementById("successView");
     const newRequestButton = document.getElementById("newRequestButton");
     const params = new URLSearchParams(window.location.search);
-    const requestedTeamParam = params.get("team");
+    const TEAM_URL_KEYS = {
+      c26b:"CBM",
+      c26a:"CAM",
+      f26c:"CF",
+      j26b:"JBM",
+      j26a:"JAM",
+      f26j:"JBF",
+      f26a:"JAF",
+      s26b:"SBM",
+      s26a:"SAM",
+      f26s:"SAF"
+    };
+    const requestedTeamParam = TEAM_URL_KEYS[String(params.get("v") || "").trim().toLowerCase()] || params.get("team");
     let teamsConfig = DEFAULT_TEAMS;
     let teamKey = resolveTeamKey(requestedTeamParam);
     let teamConfig = teamsConfig[teamKey] || teamsConfig.JBF;

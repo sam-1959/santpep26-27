@@ -193,6 +193,18 @@
       SAF: "Sènior A F"
     };
     const TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
+    const TEAM_URL_KEYS = {
+      c26b:"CBM",
+      c26a:"CAM",
+      f26c:"CF",
+      j26b:"JBM",
+      j26a:"JAM",
+      f26j:"JBF",
+      f26a:"JAF",
+      s26b:"SBM",
+      s26a:"SAM",
+      f26s:"SAF"
+    };
     const TEAM_ROSTERS = {
       "Cadet F": [["9","Queralt Gratacós"],["4","Sofia Carabajal"],["5","Alejandra Marín"],["12","Aledis Macias"],["29","Aina Solano Egea"],["22","Ivana Benito"],["8","Silvia Muñoz"],["25","Nora Simón"],["6","Martina Carrillo"],["11","Àsia Tucci"]],
       "Cadet A M": [["20","Aniol Abrisqueta"],["9","Nicolas Masana"],["0","Luc Ramos"],["66","Pol Pallarolas"],["19","Marti Ordoñez"],["6","David Garcia"],["55","Oriol Ortega"],["99","Pol Simon"],["10","Lluc Muñoz"],["16","Gerard Vazquez"],["13","Huascar Ezcurra"],["47","Jan Benedicto"]],
@@ -208,8 +220,10 @@
     const PLAYERS_PER_PAGE = 12;
     const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0, playerPageIndex: 0 };
     const params = new URLSearchParams(window.location.search);
-    const hasTeamParam = params.has("team");
-    const requestedTeamKey = String(params.get("team") || "").trim().toUpperCase();
+    const requestedTeamToken = String(params.get("v") || "").trim().toLowerCase();
+    const requestedLegacyTeam = String(params.get("team") || "").trim().toUpperCase();
+    const requestedTeamKey = TEAM_URL_KEYS[requestedTeamToken] || requestedLegacyTeam;
+    const hasTeamParam = Boolean(requestedTeamToken || requestedLegacyTeam);
     const requestedTeamName = TEAM_NAMES_BY_KEY[requestedTeamKey] || "";
 
     const pageTitle = document.getElementById("pageTitle");

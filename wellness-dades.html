@@ -204,6 +204,9 @@
       const date = dateFromISO(value);
       return date ? isoFromDate(mondayOf(date)) : "";
     }
+    function currentCalendarWeekKey(){
+      return isoFromDate(mondayOf(new Date()));
+    }
     function weekRangeLabel(key){
       const start = dateFromISO(key);
       if(!start) return "—";
@@ -277,8 +280,25 @@
       state.weeks = [...new Set(state.baseFiltered.map(record => weekKey(record.trainingDate)).filter(Boolean))]
         .sort((a, b) => b.localeCompare(a));
       const selectedIndex = previousWeek ? state.weeks.indexOf(previousWeek) : -1;
-      state.selectedWeekIndex = selectedIndex >= 0 ? selectedIndex : 0;
+      const currentWeekIndex = state.weeks.indexOf(currentCalendarWeekKey());
+      state.selectedWeekIndex = selectedIndex >= 0 ? selectedIndex : currentWeekIndex >= 0 ? currentWeekIndex : closestWeekIndex(currentCalendarWeekKey());
       applyWeek();
+    }
+    function closestWeekIndex(targetWeek){
+      if(!state.weeks.length) return 0;
+      const target = dateFromISO(targetWeek);
+      if(!target) return 0;
+      let bestIndex = 0;
+      let bestDistance = Infinity;
+      state.weeks.forEach((week, index) => {
+        const date = dateFromISO(week);
+        const distance = date ? Math.abs(date.getTime() - target.getTime()) : Infinity;
+        if(distance < bestDistance){
+          bestDistance = distance;
+          bestIndex = index;
+        }
+      });
+      return bestIndex;
     }
     function currentWeekKey(){
       return state.weeks[state.selectedWeekIndex] || "";

@@ -86,7 +86,7 @@
   <main>
     <div class="toolbar">
       <div class="intro">
-        <h2>Seguiment RPE</h2>
+        <h2 id="pageTitle">Seguiment RPE</h2>
         <p>Consulta de les respostes rebudes i resum per jugadora.</p>
       </div>
       <div class="actions">
@@ -200,6 +200,7 @@
     const requestedTeamKey = String(params.get("team") || "").trim().toUpperCase();
     const requestedTeamName = TEAM_NAMES_BY_KEY[requestedTeamKey] || "";
 
+    const pageTitle = document.getElementById("pageTitle");
     const statusEl = document.getElementById("status");
     const emailButton = document.getElementById("emailButton");
     const playerFilter = document.getElementById("playerFilter");
@@ -217,6 +218,11 @@
     }
     function visibleTeam(){
       return hasTeamParam ? requestedTeamName : teamFilter.value;
+    }
+    function updatePageTitle(){
+      const title = hasTeamParam && requestedTeamName ? "Seguiment RPE " + requestedTeamName : "Seguiment RPE";
+      pageTitle.textContent = title;
+      document.title = title + " · CB Sant Josep";
     }
     function formatDate(value){
       if(!value) return "—";
@@ -586,6 +592,7 @@
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     emailButton.addEventListener("click", sendWeeklyEmail);
+    updatePageTitle();
     loadRecords().catch(showError);
     function showError(error){
       console.error(error);

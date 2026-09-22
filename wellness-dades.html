@@ -520,7 +520,7 @@
         });
         const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
         const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
-        return '<tr><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '<br><span class="status">' + escapeHtml(group.team) + '</span></span></span></td>' +
+        return '<tr><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span></span></td>' +
           values.map(value => metricCell(value, classGetter, formatter)).join("") +
           metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
         '</tr>';

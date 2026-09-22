@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Wellness + RPE · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --ok:#1b5e20; --ok-bg:#e8f5e9; --err:#b71c1c; --err-bg:#ffebee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.35; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .club-logo { width:42px; height:42px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:9px; padding:4px; }
+    .logo-mark { display:inline-grid; place-items:center; width:40px; height:40px; flex-shrink:0; margin-left:auto; background:#fff; color:var(--brand); border-radius:9px; font-size:1.25rem; font-weight:900; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:0.98rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.66rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:1px 0 0; font-size:0.74rem; opacity:0.9; }
+    main { max-width:760px; margin:0 auto; padding:16px 12px 44px; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px; }
+    .intro { margin-bottom:14px; }
+    .intro h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
+    .intro p { margin:0 0 6px; color:var(--muted); font-size:0.84rem; }
+    .tag { display:inline-flex; margin-top:2px; color:var(--brand-dark); background:var(--accent); border-radius:999px; padding:3px 9px; font-size:0.72rem; font-weight:800; }
+    form { display:grid; gap:12px; }
+    label, .field-title { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
+    input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
+    input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
+    .required { color:#c62828; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .scale-field { display:grid; gap:7px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; }
+    .scale-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .scale-title { margin:0; color:var(--brand-dark); font-size:0.78rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .scale-help { margin:0; color:var(--muted); font-size:0.76rem; }
+    .scale-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(42px,1fr)); gap:6px; }
+    .scale-options label { display:block; cursor:pointer; text-transform:none; letter-spacing:0; font-size:0.82rem; font-weight:900; color:var(--ink); }
+    .scale-options input { position:absolute; opacity:0; pointer-events:none; }
+    .scale-options span { display:grid; place-items:center; min-height:34px; border:1px solid var(--line); border-radius:999px; background:#fff; }
+    .scale-options input:checked + span { background:var(--brand); color:#fff; border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.14); }
+    .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:2px; }
+    button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 16px; font-weight:800; cursor:pointer; box-shadow:var(--shadow); }
+    button:disabled { opacity:0.58; cursor:not-allowed; }
+    .status { display:none; border-radius:10px; padding:8px 10px; font-size:0.8rem; font-weight:700; }
+    .status.ok { display:block; color:var(--ok); background:var(--ok-bg); border:1px solid #c8e6c9; }
+    .status.err { display:block; color:var(--err); background:var(--err-bg); border:1px solid #ffcdd2; }
+    .success-view { display:none; text-align:center; padding:14px 0 2px; }
+    .success-view.show { display:block; }
+    .success-icon { display:inline-grid; place-items:center; width:56px; height:56px; margin:0 0 12px; border-radius:50%; background:var(--ok-bg); color:var(--ok); font-size:1.7rem; font-weight:900; }
+    .success-view h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
+    .success-view p { margin:0 0 12px; color:var(--muted); font-size:0.84rem; }
+    .note { color:var(--muted); font-size:0.72rem; margin:3px 0 0; }
+    footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
+    @media (max-width:640px){ .grid-2 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Wellness + RPE</h1>
+      <p>Seguiment de l'entrenament</p>
+    </div>
+    <span class="logo-mark" aria-hidden="true">📈</span>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="intro">
+        <h2>Qüestionari Wellness + RPE</h2>
+        <p>Moltes gràcies per omplir el formulari. Ens ajuda a valorar els entrenaments individualment i com a grup.</p>
+        <span class="tag">#SantpepÉsÚnic 🟡🟣</span>
+      </div>
+      <form id="wellnessForm">
+        <label>Nom jugador/a <span class="required">*</span>
+          <select id="player" required>
+            <option value="">Selecciona jugadora</option>
+          </select>
+        </label>
+        <label>Dia de l'entrenament <span class="required">*</span>
+          <input id="trainingDate" type="date" required />
+        </label>
+        <div class="grid-2">
+          <label>Duració - hores <span class="required">*</span>
+            <input id="durationHours" type="number" min="0" max="6" step="1" inputmode="numeric" required />
+          </label>
+          <label>Duració - minuts <span class="required">*</span>
+            <input id="durationMinutes" type="number" min="0" max="59" step="1" inputmode="numeric" required />
+          </label>
+        </div>
+        <div id="scales"></div>
+        <label>Hores de son <span class="required">*</span>
+          <select id="sleepHours" required>
+            <option value="">Selecciona opció</option>
+            <option>menys de 6 hores</option>
+            <option>de 6 a 8 hores</option>
+            <option>8 hores</option>
+            <option>de 8 a 10 hores</option>
+            <option>més de 10 hores</option>
+          </select>
+        </label>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div class="actions">
+          <button id="submitButton" type="submit">Enviar resposta</button>
+          <p class="note">Les dades es guarden a la base de dades del club.</p>
+        </div>
+      </form>
+      <div id="successView" class="success-view" aria-live="polite">
+        <div class="success-icon">✓</div>
+        <h2>Resposta enviada correctament</h2>
+        <p>Gràcies per completar el qüestionari.</p>
+        <button id="newRequestButton" type="button">Enviar una nova resposta</button>
+      </div>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const RESPONSES_PATH = "wellnessResponses/season-26-27";
+    const PLAYERS = [
+      "Clàudia Gàmiz",
+      "Martina Guaita",
+      "Núria Navarrete",
+      "Joana Pla",
+      "Martina Rubio",
+      "Martina Rueda",
+      "Ainhoa Espinal",
+      "Thaïs Sampera",
+      "Aina Villà",
+      "Carla Perramón",
+      "Caterina Figueras",
+      "Noa Ambel"
+    ];
+    const SCALE_FIELDS = [
+      { id:"muscleFatigue", label:"Fatiga muscular", max:5, help:"1 = Molt recuperat · 2 = Recuperat · 3 = Normal · 4 = Més fatigat del normal · 5 = Molt fatigat" },
+      { id:"sleepQuality", label:"Qualitat de la son", max:7, help:"1 = Molt relaxant · 2 = Bo · 3 = Dificultat per dormir · 4 = Son inquiet · 5 = Insomni" },
+      { id:"musclePain", label:"Dolor muscular", max:5, help:"1 = Molt bones sensacions · 2 = Bones sensacions · 3 = Normal · 4 = Augment del dolor muscular · 5 = Molt adolorit" },
+      { id:"mentalStress", label:"Estrès i fatiga mental", max:5, help:"1 = Molt relaxat · 2 = Relaxat · 3 = Normal · 4 = Estressat · 5 = Molt estressat" },
+      { id:"mood", label:"Humor (en el dia d'avui)", max:5, help:"1 = Molt positiu · 2 = Bon humor · 3 = Normal · 4 = Mal geni · 5 = Molest" },
+      { id:"rpe", label:"Percepció de l'esforç en l'entrenament d'avui?", max:10, help:"1 = Molt suau · 10 = Màxim esforç" }
+    ];
+
+    const form = document.getElementById("wellnessForm");
+    const statusEl = document.getElementById("status");
+    const submitButton = document.getElementById("submitButton");
+    const successView = document.getElementById("successView");
+    const newRequestButton = document.getElementById("newRequestButton");
+
+    function firebaseUrl(path, id){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const safePath = path.split("/").map(encodeURIComponent).join("/");
+      return base + "/" + safePath + (id ? "/" + encodeURIComponent(id) : "") + ".json";
+    }
+    function requestId(){
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+    function todayISO(){
+      const date = new Date();
+      const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return offsetDate.toISOString().slice(0, 10);
+    }
+    function setStatus(type, text){
+      statusEl.className = "status " + type;
+      statusEl.textContent = text;
+    }
+    function inputValue(id){
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : "";
+    }
+    function selectedScale(id){
+      const checked = document.querySelector('input[name="' + id + '"]:checked');
+      return checked ? Number(checked.value) : null;
+    }
+    function renderPlayers(){
+      const select = document.getElementById("player");
+      PLAYERS.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+    function renderScales(){
+      const container = document.getElementById("scales");
+      container.innerHTML = SCALE_FIELDS.map(field => {
+        const options = Array.from({ length: field.max }, (_, index) => {
+          const value = index + 1;
+          return '<label><input type="radio" name="' + field.id + '" value="' + value + '" required><span>' + value + '</span></label>';
+        }).join("");
+        return '<section class="scale-field"><div class="scale-head"><div><p class="scale-title">' + field.label + ' <span class="required">*</span></p><p class="scale-help">' + field.help + '</p></div></div><div class="scale-options">' + options + '</div></section>';
+      }).join("");
+    }
+    function validateDuration(){
+      const hours = Number(inputValue("durationHours"));
+      const minutes = Number(inputValue("durationMinutes"));
+      return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && minutes >= 0 && minutes <= 59 && (hours > 0 || minutes > 0);
+    }
+    async function saveResponse(id, payload){
+      const response = await fetch(firebaseUrl(RESPONSES_PATH, id), {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(payload)
+      });
+      if(!response.ok) throw new Error("Firebase write failed");
+    }
+
+    renderPlayers();
+    renderScales();
+    document.getElementById("trainingDate").value = todayISO();
+    document.getElementById("durationHours").value = "1";
+    document.getElementById("durationMinutes").value = "30";
+
+    form.addEventListener("submit", async function(event){
+      event.preventDefault();
+      if(!validateDuration()){
+        setStatus("err", "Indica una duració vàlida de l'entrenament.");
+        document.getElementById("durationHours").focus();
+        return;
+      }
+      submitButton.disabled = true;
+      setStatus("ok", "Enviant resposta...");
+      const id = requestId();
+      const durationHours = Number(inputValue("durationHours"));
+      const durationMinutes = Number(inputValue("durationMinutes"));
+      const payload = {
+        id,
+        createdAt: new Date().toISOString(),
+        player: inputValue("player"),
+        trainingDate: inputValue("trainingDate"),
+        durationHours,
+        durationMinutes,
+        durationTotalMinutes: durationHours * 60 + durationMinutes,
+        muscleFatigue: selectedScale("muscleFatigue"),
+        sleepQuality: selectedScale("sleepQuality"),
+        sleepHours: inputValue("sleepHours"),
+        musclePain: selectedScale("musclePain"),
+        mentalStress: selectedScale("mentalStress"),
+        mood: selectedScale("mood"),
+        rpe: selectedScale("rpe")
+      };
+      try {
+        await saveResponse(id, payload);
+        form.reset();
+        document.getElementById("trainingDate").value = todayISO();
+        document.getElementById("durationHours").value = "1";
+        document.getElementById("durationMinutes").value = "30";
+        statusEl.className = "status";
+        statusEl.textContent = "";
+        form.style.display = "none";
+        successView.classList.add("show");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch(error) {
+        setStatus("err", "No s'ha pogut enviar la resposta. Revisa la connexió o els permisos de Firebase.");
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+    newRequestButton.addEventListener("click", function(){
+      successView.classList.remove("show");
+      form.style.display = "grid";
+      submitButton.disabled = false;
+      statusEl.className = "status";
+      statusEl.textContent = "";
+      document.getElementById("player").focus();
+    });
+  </script>
+</body>
+</html>

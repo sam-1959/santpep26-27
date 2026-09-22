@@ -302,6 +302,10 @@
       const checked = document.querySelector('input[name="' + id + '"]:checked');
       return checked ? Number(checked.value) : null;
     }
+    function numberSortValue(value){
+      const numericValue = Number(String(value || "").replace(/\D/g, ""));
+      return Number.isFinite(numericValue) ? numericValue : 9999;
+    }
     function renderPlayers(){
       const select = document.getElementById("player");
       document.getElementById("teamName").textContent = teamConfig.name;
@@ -309,7 +313,7 @@
         setStatus("err", "Encara no hi ha jugadors configurats per aquest equip.");
         submitButton.disabled = true;
       }
-      teamConfig.players.forEach(player => {
+      [...teamConfig.players].sort((a, b) => numberSortValue(a.number) - numberSortValue(b.number) || a.name.localeCompare(b.name, "ca")).forEach(player => {
         const option = document.createElement("option");
         option.value = player.name;
         option.dataset.number = player.number || "";

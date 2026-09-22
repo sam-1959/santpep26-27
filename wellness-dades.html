@@ -238,6 +238,10 @@
     function normalizeName(value){
       return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
     }
+    function numberSortValue(value){
+      const numericValue = Number(String(value || "").replace(/\D/g, ""));
+      return Number.isFinite(numericValue) ? numericValue : 9999;
+    }
     function rosterNumber(team, player){
       const roster = TEAM_ROSTERS[team] || [];
       const normalizedPlayer = normalizeName(player);
@@ -395,11 +399,11 @@
         rpe: average(group.records, "rpe"),
         fatigue: average(group.records, "muscleFatigue"),
         sleep: average(group.records, "sleepQuality")
-      })).sort((a, b) => b.load - a.load || a.team.localeCompare(b.team, "ca") || a.player.localeCompare(b.player, "ca"));
+      })).sort((a, b) => a.team.localeCompare(b.team, "ca") || numberSortValue(a.records.find(record => record.playerNumber)?.playerNumber) - numberSortValue(b.records.find(record => record.playerNumber)?.playerNumber) || a.player.localeCompare(b.player, "ca"));
     }
     function renderMetricTables(){
       const dates = weekDates();
-      const groups = groupedByPlayer().sort((a, b) => a.player.localeCompare(b.player, "ca"));
+      const groups = groupedByPlayer();
       renderMetricTable("rpe", "RPE", dates, groups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
       renderMetricTable("fatigue", "Fatiga", dates, groups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
       renderMetricTable("sleep", "Qualitat de la son", dates, groups, record => record.sleepQuality, value => colorClass(value, 7), value => value || "—");

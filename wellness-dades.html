@@ -24,7 +24,7 @@
     .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
-    .filters { display:grid; grid-template-columns:minmax(220px,1fr) repeat(3, minmax(150px,auto)); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
     input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
@@ -49,7 +49,14 @@
     .badge.orange { background:#ffcc80; color:#7a3d00; border-color:#ff9800; }
     .badge.red { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
     .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
-    .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .week-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .week-nav .btn { min-width:130px; }
+    .week-label { text-align:center; }
+    .week-title { color:var(--brand-dark); font-weight:900; }
+    .week-subtitle { color:var(--muted); font-size:0.78rem; font-weight:800; }
+    .metric-table td:first-child, .metric-table th:first-child { min-width:150px; text-align:left; }
+    .metric-table th, .metric-table td { text-align:center; }
     .bars { padding:12px 16px 16px; }
     .bar-row { display:grid; grid-template-columns:140px 1fr 48px; align-items:center; gap:10px; margin:9px 0; font-size:0.82rem; }
     .bar-name { color:var(--ink); font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -57,8 +64,10 @@
     .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--brand),#b383d3); }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
     @media (max-width:900px){
-      .filters, .summary, .charts { grid-template-columns:1fr; }
+      .filters, .summary, .metrics-grid { grid-template-columns:1fr; }
       .toolbar { align-items:flex-start; flex-direction:column; }
+      .week-nav { align-items:stretch; flex-direction:column; }
+      .week-nav .btn { width:100%; }
     }
   </style>
 </head>
@@ -90,13 +99,16 @@
       <label>Jugadora
         <select id="playerFilter"><option value="">Totes</option></select>
       </label>
-      <label>Des de
-        <input id="fromDate" type="date" />
-      </label>
-      <label>Fins a
-        <input id="toDate" type="date" />
-      </label>
     </section>
+
+    <nav class="week-nav" aria-label="Navegació per setmanes">
+      <button class="btn secondary" id="prevWeekButton" type="button">← Setmana anterior</button>
+      <div class="week-label">
+        <div id="weekTitle" class="week-title">Setmana</div>
+        <div id="weekSubtitle" class="week-subtitle">—</div>
+      </div>
+      <button class="btn secondary" id="nextWeekButton" type="button">Setmana següent →</button>
+    </nav>
 
     <section class="summary" aria-label="Resum">
       <div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div>
@@ -131,14 +143,42 @@
       </div>
     </section>
 
-    <section class="charts">
+    <section class="metrics-grid">
       <div class="panel">
-        <div class="panel-head"><h3>Càrrega per jugadora</h3></div>
-        <div id="loadByPlayer" class="bars"></div>
+        <div class="panel-head"><h3>RPE</h3></div>
+        <div class="table-wrap">
+          <table class="metric-table">
+            <thead id="rpeHead"></thead>
+            <tbody id="rpeBody"></tbody>
+          </table>
+        </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Mitjanes per jugadora</h3></div>
-        <div id="averagesByPlayer" class="bars"></div>
+        <div class="panel-head"><h3>Fatiga</h3></div>
+        <div class="table-wrap">
+          <table class="metric-table">
+            <thead id="fatigueHead"></thead>
+            <tbody id="fatigueBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Qualitat de la son</h3></div>
+        <div class="table-wrap">
+          <table class="metric-table">
+            <thead id="sleepHead"></thead>
+            <tbody id="sleepBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Càrrega</h3></div>
+        <div class="table-wrap">
+          <table class="metric-table">
+            <thead id="loadHead"></thead>
+            <tbody id="loadBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </main>
@@ -146,15 +186,17 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
-    const state = { records: [], filtered: [] };
+    const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0 };
 
     const statusEl = document.getElementById("status");
     const responsesBody = document.getElementById("responsesBody");
     const emptyState = document.getElementById("emptyState");
     const playerFilter = document.getElementById("playerFilter");
     const searchInput = document.getElementById("searchInput");
-    const fromDate = document.getElementById("fromDate");
-    const toDate = document.getElementById("toDate");
+    const weekTitle = document.getElementById("weekTitle");
+    const weekSubtitle = document.getElementById("weekSubtitle");
+    const prevWeekButton = document.getElementById("prevWeekButton");
+    const nextWeekButton = document.getElementById("nextWeekButton");
 
     function firebaseUrl(path){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -165,6 +207,35 @@
       if(!value) return "—";
       const [year, month, day] = value.split("-");
       return year && month && day ? day + "/" + month + "/" + year : value;
+    }
+    function dateFromISO(value){
+      const [year, month, day] = String(value || "").split("-").map(Number);
+      return year && month && day ? new Date(year, month - 1, day) : null;
+    }
+    function isoFromDate(date){
+      const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return offsetDate.toISOString().slice(0, 10);
+    }
+    function mondayOf(date){
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const day = copy.getDay() || 7;
+      copy.setDate(copy.getDate() - day + 1);
+      return copy;
+    }
+    function addDays(date, days){
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+    function weekKey(value){
+      const date = dateFromISO(value);
+      return date ? isoFromDate(mondayOf(date)) : "";
+    }
+    function weekRangeLabel(key){
+      const start = dateFromISO(key);
+      if(!start) return "—";
+      const end = addDays(start, 6);
+      return formatDate(isoFromDate(start)) + " – " + formatDate(isoFromDate(end));
     }
     function numeric(value){
       const num = Number(value);
@@ -223,23 +294,46 @@
     function applyFilters(){
       const query = searchInput.value.trim().toLowerCase();
       const player = playerFilter.value;
-      const from = fromDate.value;
-      const to = toDate.value;
-      state.filtered = state.records.filter(record => {
+      const previousWeek = currentWeekKey();
+      state.baseFiltered = state.records.filter(record => {
         const name = String(record.player || "");
-        const date = String(record.trainingDate || "");
         if(query && !name.toLowerCase().includes(query)) return false;
         if(player && name !== player) return false;
-        if(from && date < from) return false;
-        if(to && date > to) return false;
         return true;
       });
+      state.weeks = [...new Set(state.baseFiltered.map(record => weekKey(record.trainingDate)).filter(Boolean))]
+        .sort((a, b) => b.localeCompare(a));
+      const selectedIndex = previousWeek ? state.weeks.indexOf(previousWeek) : -1;
+      state.selectedWeekIndex = selectedIndex >= 0 ? selectedIndex : 0;
+      applyWeek();
+    }
+    function currentWeekKey(){
+      return state.weeks[state.selectedWeekIndex] || "";
+    }
+    function applyWeek(){
+      const selectedWeek = currentWeekKey();
+      state.filtered = selectedWeek
+        ? state.baseFiltered.filter(record => weekKey(record.trainingDate) === selectedWeek)
+        : [];
       render();
     }
+    function changeWeek(delta){
+      if(!state.weeks.length) return;
+      state.selectedWeekIndex = Math.min(Math.max(state.selectedWeekIndex + delta, 0), state.weeks.length - 1);
+      applyWeek();
+    }
     function render(){
+      renderWeekNav();
       renderSummary();
       renderTable();
-      renderCharts();
+      renderMetricTables();
+    }
+    function renderWeekNav(){
+      const selectedWeek = currentWeekKey();
+      weekTitle.textContent = selectedWeek ? "Setmana " + weekRangeLabel(selectedWeek) : "Sense setmanes";
+      weekSubtitle.textContent = state.weeks.length ? (state.selectedWeekIndex + 1) + " de " + state.weeks.length : "No hi ha dades";
+      prevWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex >= state.weeks.length - 1;
+      nextWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex <= 0;
     }
     function renderSummary(){
       const records = state.filtered;
@@ -266,6 +360,12 @@
         '</tr>';
       }).join("");
     }
+    function weekDates(){
+      const selectedWeek = currentWeekKey();
+      const start = dateFromISO(selectedWeek);
+      if(!start) return [];
+      return Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(start, index)));
+    }
     function groupedByPlayer(){
       const groups = new Map();
       state.filtered.forEach(record => {
@@ -282,24 +382,39 @@
         sleep: average(records, "sleepQuality")
       })).sort((a, b) => b.load - a.load || a.player.localeCompare(b.player, "ca"));
     }
-    function renderCharts(){
-      const groups = groupedByPlayer();
-      renderLoadBars(groups);
-      renderAverageBars(groups);
+    function renderMetricTables(){
+      const dates = weekDates();
+      const groups = groupedByPlayer().sort((a, b) => a.player.localeCompare(b.player, "ca"));
+      renderMetricTable("rpe", "RPE", dates, groups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
+      renderMetricTable("fatigue", "Fatiga", dates, groups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
+      renderMetricTable("sleep", "Qualitat de la son", dates, groups, record => record.sleepQuality, value => colorClass(value, 7), value => value || "—");
+      const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
+      renderMetricTable("load", "Càrrega", dates, groups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
     }
-    function renderLoadBars(groups){
-      const maxLoad = Math.max(...groups.map(group => group.load), 1);
-      document.getElementById("loadByPlayer").innerHTML = groups.length ? groups.map(group => {
-        const pct = Math.round(group.load / maxLoad * 100);
-        return '<div class="bar-row"><span class="bar-name">' + escapeHtml(group.player) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span><strong class="num">' + Math.round(group.load).toLocaleString("ca-ES") + '</strong></div>';
-      }).join("") : '<div class="empty">No hi ha dades.</div>';
+    function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
+      const head = document.getElementById(prefix + "Head");
+      const body = document.getElementById(prefix + "Body");
+      head.innerHTML = '<tr><th>Jugadora</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+      if(!groups.length || !dates.length){
+        body.innerHTML = '<tr><td colspan="' + (dates.length + 2) + '">No hi ha dades.</td></tr>';
+        return;
+      }
+      body.innerHTML = groups.map(group => {
+        const values = dates.map(date => {
+          const dayRecords = group.records.filter(record => record.trainingDate === date);
+          const value = dayRecords.length ? dayRecords.reduce((sum, record) => sum + numeric(valueGetter(record)), 0) / dayRecords.length : null;
+          return value;
+        });
+        const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
+        return '<tr><td class="player">' + escapeHtml(group.player) + '</td>' +
+          values.map(value => metricCell(value, classGetter, formatter)).join("") +
+          metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
+        '</tr>';
+      }).join("");
     }
-    function renderAverageBars(groups){
-      document.getElementById("averagesByPlayer").innerHTML = groups.length ? groups.map(group => {
-        const label = "RPE " + formatNumber(group.rpe) + " · Fatiga " + formatNumber(group.fatigue) + " · Son " + formatNumber(group.sleep);
-        const pct = Math.min(100, Math.round((group.rpe || 0) / 10 * 100));
-        return '<div class="bar-row"><span class="bar-name">' + escapeHtml(group.player) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span><strong class="num" title="' + escapeAttr(label) + '">' + escapeHtml(label) + '</strong></div>';
-      }).join("") : '<div class="empty">No hi ha dades.</div>';
+    function metricCell(value, classGetter, formatter){
+      if(value === null || value === undefined) return '<td>—</td>';
+      return '<td><span class="badge ' + classGetter(value) + '">' + escapeHtml(formatter(value)) + '</span></td>';
     }
     function escapeHtml(value){
       return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
@@ -308,7 +423,9 @@
       return escapeHtml(value);
     }
 
-    [searchInput, playerFilter, fromDate, toDate].forEach(el => el.addEventListener("input", applyFilters));
+    [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
+    prevWeekButton.addEventListener("click", () => changeWeek(1));
+    nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     loadRecords().catch(showError);
     function showError(error){

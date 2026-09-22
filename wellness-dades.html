@@ -344,15 +344,22 @@
     }
     function populatePlayers(){
       const current = playerFilter.value;
+      const normalizedCurrent = normalizeName(current);
       const team = visibleTeam();
       const rosterPlayers = team
         ? (TEAM_ROSTERS[team] || []).map(([, name]) => name).filter(Boolean)
         : Object.values(TEAM_ROSTERS).flatMap(roster => roster.map(([, name]) => name)).filter(Boolean);
       const sourceRecords = team ? state.records.filter(record => String(record.team || "") === team) : state.records;
       const fallbackPlayers = sourceRecords.map(record => record.player).filter(Boolean);
-      const players = [...new Set([...rosterPlayers, ...fallbackPlayers])].sort((a, b) => a.localeCompare(b, "ca"));
+      const playersByKey = new Map();
+      [...rosterPlayers, ...fallbackPlayers].forEach(player => {
+        const key = normalizeName(player);
+        if(key && !playersByKey.has(key)) playersByKey.set(key, player);
+      });
+      const players = [...playersByKey.values()].sort((a, b) => a.localeCompare(b, "ca"));
       playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
       if(players.includes(current)) playerFilter.value = current;
+      else if(normalizedCurrent && playersByKey.has(normalizedCurrent)) playerFilter.value = playersByKey.get(normalizedCurrent);
       else playerFilter.value = "";
     }
     function populateTeams(){
@@ -376,7 +383,7 @@
         const name = String(record.player || "");
         const teamName = String(record.team || "");
         if(query && !name.toLowerCase().includes(query)) return false;
-        if(player && name !== player) return false;
+        if(player && normalizeName(name) !== normalizeName(player)) return false;
         if(team && teamName !== team) return false;
         return true;
       });

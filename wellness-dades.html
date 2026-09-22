@@ -43,9 +43,11 @@
     td.player { font-weight:900; color:var(--brand-dark); }
     .num { text-align:right; font-variant-numeric:tabular-nums; }
     .badge { display:inline-flex; align-items:center; justify-content:center; min-width:34px; border-radius:999px; padding:3px 8px; font-weight:900; font-size:0.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; }
-    .badge.low { background:#e8f5e9; color:var(--ok); border-color:#c8e6c9; }
-    .badge.mid { background:#fff8cc; color:#6f5600; border-color:#efd96f; }
-    .badge.high { background:#ffebee; color:var(--err); border-color:#ffcdd2; }
+    .badge.green-strong { background:#1b5e20; color:#fff; border-color:#1b5e20; }
+    .badge.green-soft { background:#c8e6c9; color:#145a18; border-color:#a5d6a7; }
+    .badge.yellow { background:#fff176; color:#5f4a00; border-color:#fdd835; }
+    .badge.orange { background:#ffcc80; color:#7a3d00; border-color:#ff9800; }
+    .badge.red { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
     .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
     .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
     .bars { padding:12px 16px 16px; }
@@ -176,11 +178,17 @@
     function formatNumber(value, decimals = 1){
       return value === null || value === undefined || Number.isNaN(value) ? "—" : value.toLocaleString("ca-ES", { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
     }
-    function levelClass(value, max){
-      const ratio = max ? numeric(value) / max : 0;
-      if(ratio >= 0.75) return "high";
-      if(ratio >= 0.45) return "mid";
-      return "low";
+    function colorClass(value, maxScale = 5){
+      const normalized = maxScale === 5 ? numeric(value) : numeric(value) / maxScale * 5;
+      if(normalized <= 1) return "green-strong";
+      if(normalized <= 2) return "green-soft";
+      if(normalized <= 3) return "yellow";
+      if(normalized <= 4) return "orange";
+      return "red";
+    }
+    function loadColorClass(value, maxLoad){
+      if(!maxLoad) return "green-strong";
+      return colorClass(numeric(value) / maxLoad * 5, 5);
     }
     function normalizeRecord(record, id){
       const durationTotalMinutes = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
@@ -243,17 +251,18 @@
       document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
     }
     function renderTable(){
+      const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
       emptyState.hidden = state.filtered.length > 0;
       responsesBody.innerHTML = state.filtered.map(record => {
         return '<tr>' +
           '<td>' + escapeHtml(formatDate(record.trainingDate)) + '</td>' +
           '<td class="player">' + escapeHtml(record.player || "—") + '</td>' +
           '<td class="num">' + numeric(record.durationTotalMinutes) + '</td>' +
-          '<td class="num"><span class="badge ' + levelClass(record.rpe, 10) + '">' + record.rpe + '</span></td>' +
-          '<td class="num"><span class="badge ' + levelClass(record.muscleFatigue, 5) + '">' + record.muscleFatigue + '</span></td>' +
-          '<td class="num"><span class="badge ' + levelClass(record.sleepQuality, 7) + '">' + record.sleepQuality + '</span></td>' +
+          '<td class="num"><span class="badge ' + colorClass(record.rpe, 10) + '">' + record.rpe + '</span></td>' +
+          '<td class="num"><span class="badge ' + colorClass(record.muscleFatigue, 5) + '">' + record.muscleFatigue + '</span></td>' +
+          '<td class="num"><span class="badge ' + colorClass(record.sleepQuality, 7) + '">' + record.sleepQuality + '</span></td>' +
           '<td>' + escapeHtml(record.sleepHours || "—") + '</td>' +
-          '<td class="num">' + Math.round(numeric(record.load)).toLocaleString("ca-ES") + '</td>' +
+          '<td class="num"><span class="badge ' + loadColorClass(record.load, maxLoad) + '">' + Math.round(numeric(record.load)).toLocaleString("ca-ES") + '</span></td>' +
         '</tr>';
       }).join("");
     }

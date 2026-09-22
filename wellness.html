@@ -80,7 +80,7 @@
       <form id="wellnessForm">
         <label>Nom jugador/a <span class="required">*</span>
           <select id="player" required>
-            <option value="">Selecciona jugadora</option>
+            <option value="">Selecciona jugador/a</option>
           </select>
         </label>
         <label>Dia de l'entrenament <span class="required">*</span>
@@ -124,29 +124,139 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
     const TEAMS = {
-      CF: { name:"Cadet F", players:[] },
-      CAM: { name:"Cadet A M", players:[] },
-      CBM: { name:"Cadet B M", players:[] },
-      JAF: { name:"Júnior A F", players:[] },
-      JBF: { name:"Júnior B F", players:[
-        "Clàudia Gàmiz",
-        "Martina Guaita",
-        "Núria Navarrete",
-        "Joana Pla",
-        "Martina Rubio",
-        "Martina Rueda",
-        "Ainhoa Espinal",
-        "Thaïs Sampera",
-        "Aina Villà",
-        "Carla Perramón",
-        "Caterina Figueras",
-        "Noa Ambel"
+      CF: { name:"Cadet F", players:[
+        { number:"9", name:"Queralt Gratacós" },
+        { number:"4", name:"Sofia Carabajal" },
+        { number:"5", name:"Alejandra Marín" },
+        { number:"12", name:"Aledis Macias" },
+        { number:"29", name:"Aina Solano Egea" },
+        { number:"22", name:"Ivana Benito" },
+        { number:"8", name:"Silvia Muñoz" },
+        { number:"25", name:"Nora Simón" },
+        { number:"6", name:"Martina Carrillo" },
+        { number:"11", name:"Àsia Tucci" }
       ] },
-      JAM: { name:"Júnior A M", players:[] },
-      JBM: { name:"Júnior B M", players:[] },
-      SAF: { name:"Sènior A F", players:[] },
-      SAM: { name:"Sènior A M", players:[] },
-      SBM: { name:"Sènior B M", players:[] }
+      CAM: { name:"Cadet A M", players:[
+        { number:"20", name:"Aniol Abrisqueta" },
+        { number:"9", name:"Nicolas Masana" },
+        { number:"0", name:"Luc Ramos" },
+        { number:"66", name:"Pol Pallarolas" },
+        { number:"19", name:"Marti Ordoñez" },
+        { number:"6", name:"David Garcia" },
+        { number:"55", name:"Oriol Ortega" },
+        { number:"99", name:"Pol Simon" },
+        { number:"10", name:"Lluc Muñoz" },
+        { number:"16", name:"Gerard Vazquez" },
+        { number:"13", name:"Huascar Ezcurra" },
+        { number:"47", name:"Jan Benedicto" }
+      ] },
+      CBM: { name:"Cadet B M", players:[
+        { number:"4", name:"Ferran Villarreal" },
+        { number:"0", name:"Hugo Morales" },
+        { number:"7", name:"Miquel Lopez" },
+        { number:"9", name:"Joan Torrent" },
+        { number:"10", name:"Jan Rodríguez" },
+        { number:"14", name:"Eudald Ventura" },
+        { number:"00", name:"Joan Zanui" },
+        { number:"11", name:"Marc Sánchez" },
+        { number:"19", name:"Pau Turtos" },
+        { number:"30", name:"Hugo Párvez" },
+        { number:"95", name:"Arnau Albaigés" },
+        { number:"5", name:"Pablo Tomás" }
+      ] },
+      JAF: { name:"Júnior A F", players:[
+        { number:"", name:"Aina Manzano" },
+        { number:"", name:"Martina García" },
+        { number:"", name:"Maria Santana" },
+        { number:"", name:"Aina Parera" },
+        { number:"", name:"Jana Llibre" },
+        { number:"", name:"Marina Macías" },
+        { number:"", name:"Abril Barrau" },
+        { number:"", name:"Martina Barrero" },
+        { number:"", name:"Laia Cobarsi" },
+        { number:"", name:"Júlia Planell" },
+        { number:"", name:"Lucia López" },
+        { number:"", name:"Laia González" }
+      ] },
+      JBF: { name:"Júnior B F", players:[
+        { number:"1", name:"Martina Rubio" },
+        { number:"5", name:"Martina Guaita" },
+        { number:"6", name:"Martina Rueda" },
+        { number:"7", name:"Aina Villà" },
+        { number:"10", name:"Thais Sampera" },
+        { number:"11", name:"Núria Navarrete" },
+        { number:"13", name:"Carla Perramón" },
+        { number:"14", name:"Clàudia Gàmiz" },
+        { number:"16", name:"Joana Pla" },
+        { number:"18", name:"Ainhoa Espinal" },
+        { number:"30", name:"Caterina Figueras" },
+        { number:"77", name:"Noa Ambel" }
+      ] },
+      JAM: { name:"Júnior A M", players:[
+        { number:"0", name:"Pau Teruel" },
+        { number:"4", name:"Ignasi Zanui" },
+        { number:"5", name:"Miki Villareal" },
+        { number:"19", name:"Mario Puey" },
+        { number:"23", name:"Karim Garcia" },
+        { number:"1", name:"Jan González" },
+        { number:"32", name:"Oriol Azuaza" },
+        { number:"33", name:"Pau Planas" },
+        { number:"3", name:"Pol Garcia" },
+        { number:"7", name:"Enzo Romero" },
+        { number:"22", name:"Marc Estrada" }
+      ] },
+      JBM: { name:"Júnior B M", players:[
+        { number:"5", name:"Bruno Serrano" },
+        { number:"81", name:"Arturo Tovstanovskyy" },
+        { number:"7", name:"Marc Sànchez" },
+        { number:"8", name:"Teo Bigas" },
+        { number:"14", name:"Biel Moreno" },
+        { number:"30", name:"Hugo Àlvarez" },
+        { number:"2", name:"Marc López" },
+        { number:"10", name:"Arnau Pujol" },
+        { number:"23", name:"Nico Moreno" },
+        { number:"24", name:"Isaac Miguel" },
+        { number:"19", name:"Bernat López" }
+      ] },
+      SAF: { name:"Sènior A F", players:[
+        { number:"23", name:"Aina Sanchez" },
+        { number:"14", name:"Claudia Prim" },
+        { number:"44", name:"Mariona Cornet" },
+        { number:"15", name:"Belen Escribano" },
+        { number:"8", name:"Ivet Cantos" },
+        { number:"9", name:"Paula Carrasco" },
+        { number:"17", name:"Claudia Lerida" },
+        { number:"1", name:"Maria Castro" },
+        { number:"7", name:"Raquel López" },
+        { number:"10", name:"Judit Marot" },
+        { number:"21", name:"Leire Fernández" },
+        { number:"24", name:"Laia González" }
+      ] },
+      SAM: { name:"Sènior A M", players:[
+        { number:"14", name:"Pol Peña" },
+        { number:"4", name:"Àlex Furones" },
+        { number:"3", name:"Roger Gil" },
+        { number:"5", name:"Enric Curto" },
+        { number:"18", name:"Xavi Zamora" },
+        { number:"15", name:"Ferran Dauder" },
+        { number:"24", name:"Ferran Santín" },
+        { number:"20", name:"Haritz Botella" },
+        { number:"13", name:"Quique Lázaro" },
+        { number:"44", name:"Sergi Carmona" }
+      ] },
+      SBM: { name:"Sènior B M", players:[
+        { number:"1", name:"Fénix Erola" },
+        { number:"5", name:"Álvaro Navarro" },
+        { number:"0", name:"Deremi Tavares" },
+        { number:"6", name:"Pau Laviña" },
+        { number:"8", name:"Ian Soler" },
+        { number:"9", name:"Biel Prats" },
+        { number:"17", name:"Biel Borda" },
+        { number:"10", name:"Dani Rojas" },
+        { number:"11", name:"Emmanuel Efosa" },
+        { number:"3", name:"Noam" },
+        { number:"16", name:"Hugo Camacho" }
+      ] }
     };
     const SCALE_FIELDS = [
       { id:"muscleFatigue", label:"Fatiga muscular", max:5, help:"1 = Molt recuperat · 2 = Recuperat · 3 = Normal · 4 = Més fatigat del normal · 5 = Molt fatigat" },
@@ -198,10 +308,11 @@
         setStatus("err", "Encara no hi ha jugadors configurats per aquest equip.");
         submitButton.disabled = true;
       }
-      teamConfig.players.forEach(name => {
+      teamConfig.players.forEach(player => {
         const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
+        option.value = player.name;
+        option.dataset.number = player.number || "";
+        option.textContent = (player.number ? player.number + " · " : "") + player.name;
         select.appendChild(option);
       });
     }
@@ -247,12 +358,15 @@
       const id = requestId();
       const durationHours = Number(inputValue("durationHours"));
       const durationMinutes = Number(inputValue("durationMinutes"));
+      const playerSelect = document.getElementById("player");
+      const selectedPlayer = playerSelect.options[playerSelect.selectedIndex];
       const payload = {
         id,
         createdAt: new Date().toISOString(),
         teamKey,
         team: teamConfig.name,
         player: inputValue("player"),
+        playerNumber: selectedPlayer ? selectedPlayer.dataset.number || "" : "",
         trainingDate: inputValue("trainingDate"),
         durationHours,
         durationMinutes,

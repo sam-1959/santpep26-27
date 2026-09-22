@@ -41,6 +41,8 @@
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; white-space:nowrap; }
     th { color:var(--brand-dark); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; background:#fff; position:sticky; top:0; z-index:1; }
     td.player { font-weight:900; color:var(--brand-dark); }
+    .player-line { display:flex; align-items:center; gap:8px; }
+    .number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 7px; border-radius:999px; background:var(--brand-dark); color:#fff; font-size:0.72rem; font-weight:900; }
     .num { text-align:right; font-variant-numeric:tabular-nums; }
     .badge { display:inline-flex; align-items:center; justify-content:center; min-width:34px; border-radius:999px; padding:3px 8px; font-weight:900; font-size:0.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; }
     .badge.green-strong { background:#1b5e20; color:#fff; border-color:#1b5e20; }
@@ -164,6 +166,18 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
+    const TEAM_ROSTERS = {
+      "Cadet F": [["9","Queralt Gratacós"],["4","Sofia Carabajal"],["5","Alejandra Marín"],["12","Aledis Macias"],["29","Aina Solano Egea"],["22","Ivana Benito"],["8","Silvia Muñoz"],["25","Nora Simón"],["6","Martina Carrillo"],["11","Àsia Tucci"]],
+      "Cadet A M": [["20","Aniol Abrisqueta"],["9","Nicolas Masana"],["0","Luc Ramos"],["66","Pol Pallarolas"],["19","Marti Ordoñez"],["6","David Garcia"],["55","Oriol Ortega"],["99","Pol Simon"],["10","Lluc Muñoz"],["16","Gerard Vazquez"],["13","Huascar Ezcurra"],["47","Jan Benedicto"]],
+      "Cadet B M": [["4","Ferran Villarreal"],["0","Hugo Morales"],["7","Miquel Lopez"],["9","Joan Torrent"],["10","Jan Rodríguez"],["14","Eudald Ventura"],["00","Joan Zanui"],["11","Marc Sánchez"],["19","Pau Turtos"],["30","Hugo Párvez"],["95","Arnau Albaigés"],["5","Pablo Tomás"]],
+      "Júnior A F": [["","Aina Manzano"],["","Martina García"],["","Maria Santana"],["","Aina Parera"],["","Jana Llibre"],["","Marina Macías"],["","Abril Barrau"],["","Martina Barrero"],["","Laia Cobarsi"],["","Júlia Planell"],["","Lucia López"],["","Laia González"]],
+      "Júnior B F": [["1","Martina Rubio"],["5","Martina Guaita"],["6","Martina Rueda"],["7","Aina Villà"],["10","Thais Sampera"],["11","Núria Navarrete"],["13","Carla Perramón"],["14","Clàudia Gàmiz"],["16","Joana Pla"],["18","Ainhoa Espinal"],["30","Caterina Figueras"],["77","Noa Ambel"]],
+      "Júnior A M": [["0","Pau Teruel"],["4","Ignasi Zanui"],["5","Miki Villareal"],["19","Mario Puey"],["23","Karim Garcia"],["1","Jan González"],["32","Oriol Azuaza"],["33","Pau Planas"],["3","Pol Garcia"],["7","Enzo Romero"],["22","Marc Estrada"]],
+      "Júnior B M": [["5","Bruno Serrano"],["81","Arturo Tovstanovskyy"],["7","Marc Sànchez"],["8","Teo Bigas"],["14","Biel Moreno"],["30","Hugo Àlvarez"],["2","Marc López"],["10","Arnau Pujol"],["23","Nico Moreno"],["24","Isaac Miguel"],["19","Bernat López"]],
+      "Sènior A F": [["23","Aina Sanchez"],["14","Claudia Prim"],["44","Mariona Cornet"],["15","Belen Escribano"],["8","Ivet Cantos"],["9","Paula Carrasco"],["17","Claudia Lerida"],["1","Maria Castro"],["7","Raquel López"],["10","Judit Marot"],["21","Leire Fernández"],["24","Laia González"]],
+      "Sènior A M": [["14","Pol Peña"],["4","Àlex Furones"],["3","Roger Gil"],["5","Enric Curto"],["18","Xavi Zamora"],["15","Ferran Dauder"],["24","Ferran Santín"],["20","Haritz Botella"],["13","Quique Lázaro"],["44","Sergi Carmona"]],
+      "Sènior B M": [["1","Fénix Erola"],["5","Álvaro Navarro"],["0","Deremi Tavares"],["6","Pau Laviña"],["8","Ian Soler"],["9","Biel Prats"],["17","Biel Borda"],["10","Dani Rojas"],["11","Emmanuel Efosa"],["3","Noam"],["16","Hugo Camacho"]]
+    };
     const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0 };
 
     const statusEl = document.getElementById("status");
@@ -221,6 +235,15 @@
       const num = Number(value);
       return Number.isFinite(num) ? num : 0;
     }
+    function normalizeName(value){
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+    function rosterNumber(team, player){
+      const roster = TEAM_ROSTERS[team] || [];
+      const normalizedPlayer = normalizeName(player);
+      const match = roster.find(([number, name]) => normalizeName(name) === normalizedPlayer);
+      return match ? match[0] : "";
+    }
     function average(records, field){
       const values = records.map(item => numeric(item[field])).filter(value => value > 0);
       if(!values.length) return null;
@@ -249,6 +272,7 @@
         ...record,
         teamKey: record.teamKey || "JBF",
         team: record.team || "Júnior B F",
+        playerNumber: record.playerNumber || rosterNumber(record.team || "Júnior B F", record.player),
         durationTotalMinutes,
         rpe,
         muscleFatigue: numeric(record.muscleFatigue),
@@ -397,7 +421,8 @@
           return value;
         });
         const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
-        return '<tr><td class="player">' + escapeHtml(group.player) + '<br><span class="status">' + escapeHtml(group.team) + '</span></td>' +
+        const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
+        return '<tr><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '<br><span class="status">' + escapeHtml(group.team) + '</span></span></span></td>' +
           values.map(value => metricCell(value, classGetter, formatter)).join("") +
           metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
         '</tr>';

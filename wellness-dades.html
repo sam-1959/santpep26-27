@@ -24,6 +24,7 @@
     .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
+    .btn[disabled] { opacity:0.65; cursor:not-allowed; }
     .auth-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     .auth-bar strong { display:block; color:var(--brand-dark); font-size:0.82rem; }
     .auth-bar span { display:block; color:var(--muted); font-size:0.76rem; font-weight:700; }
@@ -94,6 +95,7 @@
       </div>
       <div class="actions">
         <span id="status" class="status">Carregant dades...</span>
+        <button class="btn secondary" id="emailButton" type="button" hidden>Enviar prova correu</button>
         <button class="btn" id="refreshButton" type="button">Actualitzar</button>
       </div>
     </div>
@@ -196,6 +198,8 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
     const USER_ROLES_PATH = "userRoles/season-26-27";
+    const RPE_EMAIL_APP_SCRIPT_URL = "";
+    const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const TEAM_NAMES_BY_KEY = {
       CF: "Cadet F",
       CAM: "Cadet A M",
@@ -232,6 +236,7 @@
     const authText = document.getElementById("authText");
     const loginButton = document.getElementById("loginButton");
     const logoutButton = document.getElementById("logoutButton");
+    const emailButton = document.getElementById("emailButton");
     const playerFilter = document.getElementById("playerFilter");
     const teamFilter = document.getElementById("teamFilter");
     const searchInput = document.getElementById("searchInput");
@@ -269,6 +274,7 @@
       const allowed = canChangeTeam();
       loginButton.hidden = !!user;
       logoutButton.hidden = !user;
+      emailButton.hidden = !allowed;
       authTitle.textContent = user
         ? "Sessió iniciada: " + (user.email || "")
         : "Vista pública per equip";
@@ -524,6 +530,113 @@
       if(value === null || value === undefined) return '<td>—</td>';
       return '<td><span class="badge ' + classGetter(value) + '">' + escapeHtml(formatter(value)) + '</span></td>';
     }
+    function buildWeeklyEmailPayload(){
+      const selectedWeek = currentWeekKey();
+      const dates = weekDates();
+      const groups = groupedByPlayer();
+      const teamName = visibleTeam() || "Tots els equips";
+      const records = state.filtered;
+      const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
+      return {
+        recipient: RPE_TEST_EMAIL,
+        testMode: true,
+        team: teamName,
+        week: selectedWeek,
+        weekLabel: selectedWeek ? weekRangeLabel(selectedWeek) : "Sense setmana",
+        summary: {
+          records: records.length,
+          rpe: formatNumber(average(records, "rpe")),
+          fatigue: formatNumber(average(records, "muscleFatigue")),
+          sleep: formatNumber(average(records, "sleepQuality")),
+          load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—"
+        },
+        dates: dates.map(date => ({ iso: date, label: formatDate(date).slice(0, 5) })),
+        players: groups.map(group => {
+          const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
+          const valuesFor = field => dates.map(date => {
+            const dayRecords = group.records.filter(record => record.trainingDate === date);
+            if(!dayRecords.length) return "";
+            const value = dayRecords.reduce((sum, record) => sum + numeric(field(record)), 0) / dayRecords.length;
+            return Math.round(value * 10) / 10;
+          });
+          return {
+            number,
+            player: group.player,
+            team: group.team,
+            rpe: valuesFor(record => record.rpe),
+            fatigue: valuesFor(record => record.muscleFatigue),
+            sleep: valuesFor(record => record.sleepQuality),
+            load: valuesFor(record => record.load).map(value => value === "" ? "" : Math.round(value)),
+            averages: {
+              rpe: formatNumber(group.rpe),
+              fatigue: formatNumber(group.fatigue),
+              sleep: formatNumber(group.sleep),
+              load: Math.round(group.load).toLocaleString("ca-ES")
+            }
+          };
+        })
+      };
+    }
+    function buildPlainEmail(payload){
+      const lines = [
+        "CB Sant Josep de Badalona",
+        "",
+        "Seguiment RPE setmanal",
+        "Equip: " + payload.team,
+        "Setmana: " + payload.weekLabel,
+        "",
+        "Resum:",
+        "- Registres: " + payload.summary.records,
+        "- RPE mitjà: " + payload.summary.rpe,
+        "- Fatiga mitjana: " + payload.summary.fatigue,
+        "- Son mitjana: " + payload.summary.sleep,
+        "- Càrrega total: " + payload.summary.load,
+        "",
+        "Detall per jugadora:"
+      ];
+      payload.players.forEach(player => {
+        lines.push(
+          (player.number ? "#" + player.number + " " : "") + player.player,
+          "  RPE: " + player.rpe.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.rpe,
+          "  Fatiga: " + player.fatigue.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.fatigue,
+          "  Son: " + player.sleep.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.sleep,
+          "  Càrrega: " + player.load.map(value => value || "—").join(" | ") + " · Total: " + player.averages.load,
+          ""
+        );
+      });
+      return lines.join("\n");
+    }
+    async function sendWeeklyEmail(){
+      if(!state.filtered.length){
+        statusEl.textContent = "No hi ha dades setmanals per enviar.";
+        return;
+      }
+      const payload = buildWeeklyEmailPayload();
+      const previousText = emailButton.textContent;
+      emailButton.disabled = true;
+      emailButton.textContent = "Enviant...";
+      try {
+        if(!RPE_EMAIL_APP_SCRIPT_URL){
+          const subject = "Prova Seguiment RPE - " + payload.team + " - " + payload.weekLabel;
+          window.location.href = "mailto:" + encodeURIComponent(RPE_TEST_EMAIL) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(buildPlainEmail(payload));
+          statusEl.textContent = "Correu de prova preparat per a " + RPE_TEST_EMAIL + ".";
+          return;
+        }
+        await fetch(RPE_EMAIL_APP_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        statusEl.textContent = "Correu RPE enviat a " + RPE_TEST_EMAIL + ".";
+      } catch(error) {
+        console.error(error);
+        statusEl.textContent = "No s'ha pogut enviar el correu RPE.";
+      } finally {
+        emailButton.disabled = false;
+        emailButton.textContent = previousText;
+      }
+    }
     function escapeHtml(value){
       return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
     }
@@ -535,6 +648,7 @@
     prevWeekButton.addEventListener("click", () => changeWeek(1));
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
+    emailButton.addEventListener("click", sendWeeklyEmail);
     loginButton.addEventListener("click", async () => {
       if(!auth) return;
       const provider = new GoogleAuthProvider();

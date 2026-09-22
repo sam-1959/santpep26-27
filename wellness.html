@@ -123,7 +123,8 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
-    const TEAMS = {
+    const ROSTERS_PATH = "rpeRosters/season-26-27";
+    const DEFAULT_TEAMS = {
       CF: { name:"Cadet F", players:[
         { number:"9", name:"Queralt Gratacós" },
         { number:"4", name:"Sofia Carabajal" },
@@ -274,8 +275,10 @@
     const successView = document.getElementById("successView");
     const newRequestButton = document.getElementById("newRequestButton");
     const params = new URLSearchParams(window.location.search);
-    const teamKey = resolveTeamKey(params.get("team"));
-    const teamConfig = TEAMS[teamKey] || TEAMS.JBF;
+    const requestedTeamParam = params.get("team");
+    let teamsConfig = DEFAULT_TEAMS;
+    let teamKey = resolveTeamKey(requestedTeamParam);
+    let teamConfig = teamsConfig[teamKey] || teamsConfig.JBF;
 
     function firebaseUrl(path, id){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -311,8 +314,8 @@
     }
     function resolveTeamKey(value){
       const normalized = normalizeKey(value || "JBF");
-      if(TEAMS[normalized]) return normalized;
-      const byName = Object.entries(TEAMS).find(([, team]) => normalizeKey(team.name) === normalized);
+      if(teamsConfig[normalized]) return normalized;
+      const byName = Object.entries(teamsConfig).find(([, team]) => normalizeKey(team.name) === normalized);
       return byName ? byName[0] : "JBF";
     }
     function renderPlayers(){
@@ -356,8 +359,41 @@
       if(!response.ok) throw new Error("Firebase write failed");
     }
 
-    renderPlayers();
-    renderScales();
+    async function loadRosters(){
+      try {
+        const response = await fetch(firebaseUrl(ROSTERS_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("No roster");
+        const data = await response.json();
+        if(data && typeof data === "object") {
+          teamsConfig = normalizeRosters(data);
+          teamKey = resolveTeamKey(requestedTeamParam);
+          teamConfig = teamsConfig[teamKey] || teamsConfig.JBF || DEFAULT_TEAMS.JBF;
+        }
+      } catch(error) {
+        teamsConfig = DEFAULT_TEAMS;
+        teamKey = resolveTeamKey(requestedTeamParam);
+        teamConfig = teamsConfig[teamKey] || teamsConfig.JBF;
+      }
+    }
+    function normalizeRosters(data){
+      const normalized = { ...DEFAULT_TEAMS };
+      Object.entries(data || {}).forEach(([key, team]) => {
+        const cleanKey = normalizeKey(key);
+        if(!cleanKey || !team) return;
+        const players = Array.isArray(team.players) ? team.players.map(player => ({
+          number: String(player.number || ""),
+          name: String(player.name || "").trim()
+        })).filter(player => player.name) : [];
+        normalized[cleanKey] = { name: team.name || normalized[cleanKey]?.name || cleanKey, players };
+      });
+      return normalized;
+    }
+    async function init(){
+      await loadRosters();
+      renderPlayers();
+      renderScales();
+    }
+    init();
     document.getElementById("trainingDate").value = todayISO();
     document.getElementById("durationHours").value = "1";
     document.getElementById("durationMinutes").value = "30";

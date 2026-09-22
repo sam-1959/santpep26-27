@@ -177,6 +177,7 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
+    const ROSTERS_PATH = "rpeRosters/season-26-27";
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
     const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const TEAM_NAMES_BY_KEY = {
@@ -292,6 +293,25 @@
       const normalizedPlayer = normalizeName(player);
       const match = roster.find(([number, name]) => normalizeName(name) === normalizedPlayer);
       return match ? match[0] : "";
+    }
+    async function loadRosters(){
+      try {
+        const response = await fetch(firebaseUrl(ROSTERS_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("No roster");
+        const data = await response.json();
+        Object.entries(data || {}).forEach(([key, team]) => {
+          const normalizedKey = String(key || "").trim().toUpperCase();
+          if(!normalizedKey || !team) return;
+          const name = String(team.name || TEAM_NAMES_BY_KEY[normalizedKey] || normalizedKey).trim();
+          const players = Array.isArray(team.players)
+            ? team.players.map(player => [String(player.number || ""), String(player.name || "").trim()]).filter(([, playerName]) => playerName)
+            : [];
+          TEAM_NAMES_BY_KEY[normalizedKey] = name;
+          if(players.length) TEAM_ROSTERS[name] = players;
+        });
+      } catch(error) {
+        console.warn("No s'ha pogut carregar el roster de Firebase. Es fa servir el roster local.", error);
+      }
     }
     function average(records, field){
       const values = records.map(item => numeric(item[field])).filter(value => value > 0);
@@ -652,7 +672,7 @@
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     emailButton.addEventListener("click", sendWeeklyEmail);
     updatePageTitle();
-    loadRecords().catch(showError);
+    loadRosters().then(() => loadRecords()).catch(showError);
     function showError(error){
       console.error(error);
       statusEl.textContent = "No s'han pogut carregar les dades. Revisa permisos de Firebase.";

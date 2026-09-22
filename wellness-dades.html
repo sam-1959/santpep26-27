@@ -322,16 +322,21 @@
       const data = await response.json() || {};
       state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id))
         .sort((a, b) => String(b.trainingDate || "").localeCompare(String(a.trainingDate || "")) || String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
-      populatePlayers();
       populateTeams();
+      populatePlayers();
       applyFilters();
       statusEl.textContent = "Dades carregades.";
     }
     function populatePlayers(){
       const current = playerFilter.value;
-      const players = [...new Set(state.records.map(record => record.player).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+      const team = visibleTeam();
+      const sourceRecords = team
+        ? state.records.filter(record => String(record.team || "") === team)
+        : state.records;
+      const players = [...new Set(sourceRecords.map(record => record.player).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
       playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
       if(players.includes(current)) playerFilter.value = current;
+      else playerFilter.value = "";
     }
     function populateTeams(){
       const current = teamFilter.value;
@@ -587,7 +592,11 @@
       return escapeHtml(value);
     }
 
-    [searchInput, playerFilter, teamFilter].forEach(el => el.addEventListener("input", applyFilters));
+    [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
+    teamFilter.addEventListener("input", () => {
+      populatePlayers();
+      applyFilters();
+    });
     prevWeekButton.addEventListener("click", () => changeWeek(1));
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));

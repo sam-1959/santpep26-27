@@ -24,7 +24,7 @@
     .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
-    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,auto) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
     input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
@@ -99,6 +99,9 @@
       <label>Jugadora
         <select id="playerFilter"><option value="">Totes</option></select>
       </label>
+      <label>Equip
+        <select id="teamFilter"><option value="">Tots</option></select>
+      </label>
     </section>
 
     <nav class="week-nav" aria-label="Navegació per setmanes">
@@ -165,6 +168,7 @@
 
     const statusEl = document.getElementById("status");
     const playerFilter = document.getElementById("playerFilter");
+    const teamFilter = document.getElementById("teamFilter");
     const searchInput = document.getElementById("searchInput");
     const weekTitle = document.getElementById("weekTitle");
     const weekSubtitle = document.getElementById("weekSubtitle");
@@ -243,6 +247,8 @@
       return {
         id,
         ...record,
+        teamKey: record.teamKey || "JBF",
+        team: record.team || "Júnior B F",
         durationTotalMinutes,
         rpe,
         muscleFatigue: numeric(record.muscleFatigue),
@@ -258,6 +264,7 @@
       state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id))
         .sort((a, b) => String(b.trainingDate || "").localeCompare(String(a.trainingDate || "")) || String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
       populatePlayers();
+      populateTeams();
       applyFilters();
       statusEl.textContent = "Dades carregades.";
     }
@@ -267,14 +274,23 @@
       playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
       if(players.includes(current)) playerFilter.value = current;
     }
+    function populateTeams(){
+      const current = teamFilter.value;
+      const teams = [...new Set(state.records.map(record => record.team).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+      teamFilter.innerHTML = '<option value="">Tots</option>' + teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");
+      if(teams.includes(current)) teamFilter.value = current;
+    }
     function applyFilters(){
       const query = searchInput.value.trim().toLowerCase();
       const player = playerFilter.value;
+      const team = teamFilter.value;
       const previousWeek = currentWeekKey();
       state.baseFiltered = state.records.filter(record => {
         const name = String(record.player || "");
+        const teamName = String(record.team || "");
         if(query && !name.toLowerCase().includes(query)) return false;
         if(player && name !== player) return false;
+        if(team && teamName !== team) return false;
         return true;
       });
       state.weeks = [...new Set(state.baseFiltered.map(record => weekKey(record.trainingDate)).filter(Boolean))]
@@ -345,18 +361,17 @@
     function groupedByPlayer(){
       const groups = new Map();
       state.filtered.forEach(record => {
-        const player = record.player || "Sense nom";
-        if(!groups.has(player)) groups.set(player, []);
-        groups.get(player).push(record);
+        const key = (record.teamKey || "") + "|" + (record.player || "Sense nom");
+        if(!groups.has(key)) groups.set(key, { player: record.player || "Sense nom", team: record.team || "Sense equip", records: [] });
+        groups.get(key).records.push(record);
       });
-      return [...groups.entries()].map(([player, records]) => ({
-        player,
-        records,
-        load: records.reduce((sum, record) => sum + numeric(record.load), 0),
-        rpe: average(records, "rpe"),
-        fatigue: average(records, "muscleFatigue"),
-        sleep: average(records, "sleepQuality")
-      })).sort((a, b) => b.load - a.load || a.player.localeCompare(b.player, "ca"));
+      return [...groups.values()].map(group => ({
+        ...group,
+        load: group.records.reduce((sum, record) => sum + numeric(record.load), 0),
+        rpe: average(group.records, "rpe"),
+        fatigue: average(group.records, "muscleFatigue"),
+        sleep: average(group.records, "sleepQuality")
+      })).sort((a, b) => b.load - a.load || a.team.localeCompare(b.team, "ca") || a.player.localeCompare(b.player, "ca"));
     }
     function renderMetricTables(){
       const dates = weekDates();
@@ -382,7 +397,7 @@
           return value;
         });
         const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
-        return '<tr><td class="player">' + escapeHtml(group.player) + '</td>' +
+        return '<tr><td class="player">' + escapeHtml(group.player) + '<br><span class="status">' + escapeHtml(group.team) + '</span></td>' +
           values.map(value => metricCell(value, classGetter, formatter)).join("") +
           metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
         '</tr>';
@@ -399,7 +414,7 @@
       return escapeHtml(value);
     }
 
-    [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
+    [searchInput, playerFilter, teamFilter].forEach(el => el.addEventListener("input", applyFilters));
     prevWeekButton.addEventListener("click", () => changeWeek(1));
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));

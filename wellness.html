@@ -23,6 +23,9 @@
     .intro h2 { margin:0 0 6px; color:var(--brand-dark); font-size:1.14rem; }
     .intro p { margin:0 0 6px; color:var(--muted); font-size:0.84rem; }
     .tag { display:inline-flex; margin-top:2px; color:var(--brand-dark); background:var(--accent); border-radius:999px; padding:3px 9px; font-size:0.72rem; font-weight:800; }
+    .team-card { margin:0 0 12px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; }
+    .team-card span { display:block; color:var(--muted); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
+    .team-card strong { display:block; margin-top:2px; color:var(--brand-dark); font-size:1rem; }
     form { display:grid; gap:12px; }
     label, .field-title { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
@@ -70,6 +73,10 @@
         <p>Moltes gràcies per omplir el formulari. Ens ajuda a valorar els entrenaments individualment i com a grup.</p>
         <span class="tag">#SantpepÉsÚnic 🟡🟣</span>
       </div>
+      <div class="team-card">
+        <span>Equip</span>
+        <strong id="teamName">Carregant equip...</strong>
+      </div>
       <form id="wellnessForm">
         <label>Nom jugador/a <span class="required">*</span>
           <select id="player" required>
@@ -116,20 +123,31 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
-    const PLAYERS = [
-      "Clàudia Gàmiz",
-      "Martina Guaita",
-      "Núria Navarrete",
-      "Joana Pla",
-      "Martina Rubio",
-      "Martina Rueda",
-      "Ainhoa Espinal",
-      "Thaïs Sampera",
-      "Aina Villà",
-      "Carla Perramón",
-      "Caterina Figueras",
-      "Noa Ambel"
-    ];
+    const TEAMS = {
+      CF: { name:"Cadet F", players:[] },
+      CAM: { name:"Cadet A M", players:[] },
+      CBM: { name:"Cadet B M", players:[] },
+      JAF: { name:"Júnior A F", players:[] },
+      JBF: { name:"Júnior B F", players:[
+        "Clàudia Gàmiz",
+        "Martina Guaita",
+        "Núria Navarrete",
+        "Joana Pla",
+        "Martina Rubio",
+        "Martina Rueda",
+        "Ainhoa Espinal",
+        "Thaïs Sampera",
+        "Aina Villà",
+        "Carla Perramón",
+        "Caterina Figueras",
+        "Noa Ambel"
+      ] },
+      JAM: { name:"Júnior A M", players:[] },
+      JBM: { name:"Júnior B M", players:[] },
+      SAF: { name:"Sènior A F", players:[] },
+      SAM: { name:"Sènior A M", players:[] },
+      SBM: { name:"Sènior B M", players:[] }
+    };
     const SCALE_FIELDS = [
       { id:"muscleFatigue", label:"Fatiga muscular", max:5, help:"1 = Molt recuperat · 2 = Recuperat · 3 = Normal · 4 = Més fatigat del normal · 5 = Molt fatigat" },
       { id:"sleepQuality", label:"Qualitat de la son", max:7, help:"1 = Molt relaxant · 2 = Bo · 3 = Dificultat per dormir · 4 = Son inquiet · 5 = Insomni" },
@@ -144,6 +162,9 @@
     const submitButton = document.getElementById("submitButton");
     const successView = document.getElementById("successView");
     const newRequestButton = document.getElementById("newRequestButton");
+    const params = new URLSearchParams(window.location.search);
+    const teamKey = (params.get("team") || "JBF").toUpperCase();
+    const teamConfig = TEAMS[teamKey] || TEAMS.JBF;
 
     function firebaseUrl(path, id){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -172,7 +193,12 @@
     }
     function renderPlayers(){
       const select = document.getElementById("player");
-      PLAYERS.forEach(name => {
+      document.getElementById("teamName").textContent = teamConfig.name;
+      if(!teamConfig.players.length){
+        setStatus("err", "Encara no hi ha jugadors configurats per aquest equip.");
+        submitButton.disabled = true;
+      }
+      teamConfig.players.forEach(name => {
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
@@ -224,6 +250,8 @@
       const payload = {
         id,
         createdAt: new Date().toISOString(),
+        teamKey,
+        team: teamConfig.name,
         player: inputValue("player"),
         trainingDate: inputValue("trainingDate"),
         durationHours,

@@ -330,10 +330,12 @@
     function populatePlayers(){
       const current = playerFilter.value;
       const team = visibleTeam();
-      const sourceRecords = team
-        ? state.records.filter(record => String(record.team || "") === team)
-        : state.records;
-      const players = [...new Set(sourceRecords.map(record => record.player).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+      const rosterPlayers = team
+        ? (TEAM_ROSTERS[team] || []).map(([, name]) => name).filter(Boolean)
+        : Object.values(TEAM_ROSTERS).flatMap(roster => roster.map(([, name]) => name)).filter(Boolean);
+      const sourceRecords = team ? state.records.filter(record => String(record.team || "") === team) : state.records;
+      const fallbackPlayers = sourceRecords.map(record => record.player).filter(Boolean);
+      const players = [...new Set([...rosterPlayers, ...fallbackPlayers])].sort((a, b) => a.localeCompare(b, "ca"));
       playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
       if(players.includes(current)) playerFilter.value = current;
       else playerFilter.value = "";

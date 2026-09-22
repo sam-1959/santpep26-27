@@ -42,7 +42,8 @@ function enviarCorreuAAdrecesFixes(e) {
 
   // Destinataris de prova. Amplia aquesta llista quan validem el funcionament.
   var llistaCorreus = [
-    "ricard.fuste@gmail.com"
+    "ricard.fuste@gmail.com",
+    "albgrau@gmail.com"
   ];
   var destinataris = normalitzarCorreus(llistaCorreus);
 

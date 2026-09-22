@@ -128,10 +128,19 @@ function enviarCorreuDocumentFamilia(request, pdf) {
   }
 
   var jugador = valor(request.player);
+  var expedient = valor(request.claimNumber);
+  var teExpedient = expedient !== "—";
+  var expedientText = teExpedient
+    ? "Número d'expedient LLOYD'S: " + expedient + "\n\n"
+    : "Encara no tenim el número d'expedient LLOYD'S. Si ja el teniu o us el facilita la mútua, envieu-lo a info@cbsantjosep.cat per poder completar el seguiment del comunicat.\n\n";
+  var expedientHTML = teExpedient
+    ? `<p style="margin: 16px 0; padding: 12px; background-color: #F9F6FC; border-left: 4px solid #4B1D6D; border-radius: 6px;"><strong>Número d'expedient LLOYD'S:</strong> ${escaparHtml(expedient)}</p>`
+    : `<p style="margin: 16px 0; padding: 12px; background-color: #FFF8D6; border-left: 4px solid #FFC72C; border-radius: 6px;"><strong>Número d'expedient pendent.</strong><br>Si ja el teniu o us el facilita la mútua, envieu-lo a <a href="mailto:info@cbsantjosep.cat" style="color:#4B1D6D; font-weight:bold;">info@cbsantjosep.cat</a> per poder completar el seguiment del comunicat.</p>`;
   var assumpte = "Comunicat d'Accident Esportiu - CB Sant Josep";
   var cosText = "CB SANT JOSEP BADALONA\n\n" +
     "Hola,\n\n" +
     "Us enviem el Comunicat d'Accident Esportiu" + (jugador !== "—" ? " de " + jugador : "") + ".\n\n" +
+    expedientText +
     "Podeu descarregar-lo aquí:\n" + pdf.pdfUrl + "\n\n" +
     "CB Sant Josep de Badalona";
 
@@ -144,6 +153,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
       <div style="padding: 25px; background-color: #FFFFFF;">
         <p style="margin-top: 0;">Hola,</p>
         <p>Us enviem el Comunicat d'Accident Esportiu${jugador !== "—" ? " de <strong>" + escaparHtml(jugador) + "</strong>" : ""}.</p>
+        ${expedientHTML}
         <div style="text-align: center; margin: 26px 0; padding: 18px; background-color: #F9F6FC; border-radius: 6px; border: 1px dashed #4B1D6D;">
           <a href="${pdf.pdfUrl}" target="_blank" style="background-color: #4B1D6D; color: #FFC72C; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; font-size: 14px; border: 2px solid #FFC72C;">
             Descarregar comunicat

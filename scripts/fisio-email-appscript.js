@@ -40,9 +40,13 @@ function enviarCorreuAAdrecesFixes(e) {
     return;
   }
 
-  // Destinataris de prova. Amplia aquesta llista quan validem el funcionament.
+  // Destinataris de notificació.
   var llistaCorreus = [
-    "ricard.fuste@gmail.com",
+    "dtecnic@cbsantjosep.cat",
+    "polammu@gmail.com",
+    "jessicagucero@gmail.com",
+    "victorfurones@gmail.com",
+    "xavirieracoach@gmail.com",
     "albgrau@gmail.com"
   ];
   var destinataris = normalitzarCorreus(llistaCorreus);

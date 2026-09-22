@@ -594,11 +594,13 @@
       return escapeHtml(value);
     }
 
-    [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
-    teamFilter.addEventListener("input", () => {
+    function handleTeamFilterChange(){
       populatePlayers();
       applyFilters();
-    });
+    }
+    [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
+    teamFilter.addEventListener("change", handleTeamFilterChange);
+    teamFilter.addEventListener("input", handleTeamFilterChange);
     prevWeekButton.addEventListener("click", () => changeWeek(1));
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));

@@ -25,10 +25,6 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
     .btn[disabled] { opacity:0.65; cursor:not-allowed; }
-    .auth-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
-    .auth-bar strong { display:block; color:var(--brand-dark); font-size:0.82rem; }
-    .auth-bar span { display:block; color:var(--muted); font-size:0.76rem; font-weight:700; }
-    .auth-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,auto) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
@@ -95,21 +91,10 @@
       </div>
       <div class="actions">
         <span id="status" class="status">Carregant dades...</span>
-        <button class="btn secondary" id="emailButton" type="button" hidden>Enviar prova correu</button>
+        <button class="btn secondary" id="emailButton" type="button">Enviar prova correu</button>
         <button class="btn" id="refreshButton" type="button">Actualitzar</button>
       </div>
     </div>
-
-    <section class="auth-bar" aria-label="Accés">
-      <div>
-        <strong id="authTitle">Vista pública per equip</strong>
-        <span id="authText">Entra amb Google per canviar l'equip si tens rol de coordinador o preparador físic.</span>
-      </div>
-      <div class="auth-actions">
-        <button class="btn secondary" id="loginButton" type="button">Entrar amb Google</button>
-        <button class="btn secondary" id="logoutButton" type="button" hidden>Sortir</button>
-      </div>
-    </section>
 
     <section class="filters" aria-label="Filtres">
       <label>Cerca
@@ -180,24 +165,9 @@
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU",
-      authDomain: "coord-fa09e.firebaseapp.com",
-      databaseURL: "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "coord-fa09e",
-      storageBucket: "coord-fa09e.firebasestorage.app",
-      messagingSenderId: "509431001997",
-      appId: "1:509431001997:web:561fa966029d873131c3c4",
-      measurementId: "G-ZD556SCF1T"
-    };
-
+  <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
-    const USER_ROLES_PATH = "userRoles/season-26-27";
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
     const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const TEAM_NAMES_BY_KEY = {
@@ -228,14 +198,8 @@
     const params = new URLSearchParams(window.location.search);
     const requestedTeamKey = String(params.get("team") || "JBF").trim().toUpperCase();
     const requestedTeamName = TEAM_NAMES_BY_KEY[requestedTeamKey] || TEAM_NAMES_BY_KEY.JBF;
-    let auth = null;
-    let currentRole = "";
 
     const statusEl = document.getElementById("status");
-    const authTitle = document.getElementById("authTitle");
-    const authText = document.getElementById("authText");
-    const loginButton = document.getElementById("loginButton");
-    const logoutButton = document.getElementById("logoutButton");
     const emailButton = document.getElementById("emailButton");
     const playerFilter = document.getElementById("playerFilter");
     const teamFilter = document.getElementById("teamFilter");
@@ -245,44 +209,13 @@
     const prevWeekButton = document.getElementById("prevWeekButton");
     const nextWeekButton = document.getElementById("nextWeekButton");
 
-    function firebaseUrl(path, token = ""){
+    function firebaseUrl(path){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
       const safePath = path.split("/").map(encodeURIComponent).join("/");
-      return base + "/" + safePath + ".json" + (token ? "?auth=" + encodeURIComponent(token) : "");
-    }
-    function emailKey(email){
-      return String(email || "").trim().toLowerCase().replace(/\./g, ",");
-    }
-    function canSelectTeam(role){
-      return ["admin", "coordinador", "coord", "prepa", "fisio_prepa"].includes(String(role || "").toLowerCase());
-    }
-    function canChangeTeam(){
-      return canSelectTeam(currentRole);
+      return base + "/" + safePath + ".json";
     }
     function visibleTeam(){
-      return canChangeTeam() ? teamFilter.value : requestedTeamName;
-    }
-    async function loadUserRole(user){
-      if(!user?.email) return "";
-      const token = await user.getIdToken();
-      const response = await fetch(firebaseUrl(USER_ROLES_PATH + "/" + emailKey(user.email), token), { cache:"no-store" });
-      if(!response.ok) return "";
-      const data = await response.json();
-      return typeof data === "string" ? data : String(data?.role || "");
-    }
-    function updateAuthUI(user = null){
-      const allowed = canChangeTeam();
-      loginButton.hidden = !!user;
-      logoutButton.hidden = !user;
-      emailButton.hidden = !allowed;
-      authTitle.textContent = user
-        ? "Sessió iniciada: " + (user.email || "")
-        : "Vista pública per equip";
-      authText.textContent = allowed
-        ? "Rol " + currentRole + ": pots seleccionar qualsevol equip."
-        : user
-          ? "Aquest rol no pot canviar l'equip. Es mostra " + requestedTeamName + "."
-          : "Entra amb Google per canviar l'equip si tens rol de coordinador o preparador físic.";
+      return requestedTeamName;
     }
     function formatDate(value){
       if(!value) return "—";
@@ -394,13 +327,11 @@
       if(players.includes(current)) playerFilter.value = current;
     }
     function populateTeams(){
-      const current = teamFilter.value || requestedTeamName;
       const teams = Object.values(TEAM_NAMES_BY_KEY).sort((a, b) => a.localeCompare(b, "ca"));
-      const allowAll = canChangeTeam();
-      teamFilter.disabled = !allowAll;
-      teamFilter.title = allowAll ? "Selecciona l'equip" : "Cal rol de coordinador o preparador físic per canviar l'equip";
-      teamFilter.innerHTML = (allowAll ? '<option value="">Tots</option>' : "") + teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");
-      teamFilter.value = allowAll && current === "" ? "" : teams.includes(current) ? current : requestedTeamName;
+      teamFilter.disabled = true;
+      teamFilter.title = "L'equip ve determinat per la pàgina seleccionada.";
+      teamFilter.innerHTML = teams.map(team => '<option value="' + escapeAttr(team) + '">' + escapeHtml(team) + '</option>').join("");
+      teamFilter.value = teams.includes(requestedTeamName) ? requestedTeamName : TEAM_NAMES_BY_KEY.JBF;
     }
     function applyFilters(){
       const query = searchInput.value.trim().toLowerCase();
@@ -649,51 +580,6 @@
     nextWeekButton.addEventListener("click", () => changeWeek(-1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     emailButton.addEventListener("click", sendWeeklyEmail);
-    loginButton.addEventListener("click", async () => {
-      if(!auth) return;
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch(error) {
-        if(error?.code === "auth/popup-blocked" || error?.code === "auth/cancelled-popup-request"){
-          await signInWithRedirect(auth, provider);
-          return;
-        }
-        console.error(error);
-        authText.textContent = "No s'ha pogut iniciar sessió amb Google.";
-      }
-    });
-    logoutButton.addEventListener("click", async () => {
-      if(!auth) return;
-      await signOut(auth);
-    });
-    function initAuth(){
-      try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        getRedirectResult(auth).catch(error => {
-          console.error(error);
-          authText.textContent = "No s'ha pogut completar l'inici de sessió.";
-        });
-        onAuthStateChanged(auth, async user => {
-          if(!user){
-            currentRole = "";
-            updateAuthUI(null);
-            populateTeams();
-            applyFilters();
-            return;
-          }
-          currentRole = await loadUserRole(user);
-          updateAuthUI(user);
-          populateTeams();
-          applyFilters();
-        });
-      } catch(error) {
-        console.error(error);
-        authText.textContent = "No s'ha pogut inicialitzar l'autenticació.";
-      }
-    }
-    initAuth();
     loadRecords().catch(showError);
     function showError(error){
       console.error(error);

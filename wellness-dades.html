@@ -471,6 +471,18 @@
       renderWeekNav();
       renderSummary();
       renderMetricTables();
+      updateEmailButtonState();
+    }
+    function hasTableData(){
+      return state.filtered.length > 0 && groupedByPlayer().length > 0;
+    }
+    function updateEmailButtonState(){
+      if(hasTeamParam){
+        emailButton.disabled = true;
+        return;
+      }
+      emailButton.disabled = !hasTableData();
+      emailButton.title = emailButton.disabled ? "No hi ha dades setmanals per enviar." : "Enviar el resum setmanal a coordinació.";
     }
     function renderWeekNav(){
       const selectedWeek = currentWeekKey();
@@ -636,11 +648,17 @@
       return lines.join("\n");
     }
     async function sendWeeklyEmail(){
-      if(!state.filtered.length){
+      if(!hasTableData()){
         statusEl.textContent = "No hi ha dades setmanals per enviar.";
+        updateEmailButtonState();
         return;
       }
       const payload = buildWeeklyEmailPayload();
+      if(!payload.players.length){
+        statusEl.textContent = "No hi ha dades setmanals per enviar.";
+        updateEmailButtonState();
+        return;
+      }
       const previousText = emailButton.textContent;
       emailButton.disabled = true;
       emailButton.textContent = "Enviant...";
@@ -662,8 +680,8 @@
         console.error(error);
         statusEl.textContent = "No s'ha pogut enviar el correu RPE.";
       } finally {
-        emailButton.disabled = false;
         emailButton.textContent = previousText;
+        updateEmailButtonState();
       }
     }
     function escapeHtml(value){

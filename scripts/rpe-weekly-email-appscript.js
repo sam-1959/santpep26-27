@@ -61,7 +61,7 @@ function construirTextPla(team, weekLabel, summary, players) {
     "- Son mitjana: " + valor(summary.sleep),
     "- Càrrega total: " + valor(summary.load),
     "",
-    "Detall per jugadora:"
+    "Detall per jugador/a:"
   ];
 
   players.forEach(function(player) {
@@ -144,7 +144,7 @@ function taulaMetrica(title, dates, players, field, averageField) {
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px;">
       <thead>
         <tr style="background-color: #4B1D6D; color: #FFC72C;">
-          <th style="padding: 8px; text-align: left;">Jugadora</th>
+          <th style="padding: 8px; text-align: left;">Jugador/a</th>
           ${headerDates}
           <th style="padding: 8px; text-align: center;">Mitjana</th>
         </tr>

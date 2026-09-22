@@ -90,7 +90,7 @@
     <div class="toolbar">
       <div class="intro">
         <h2 id="pageTitle">Seguiment RPE</h2>
-        <p>Consulta de les respostes rebudes i resum per jugadora.</p>
+        <p>Consulta de les respostes rebudes i resum per jugador/a.</p>
       </div>
       <div class="actions">
         <span id="status" class="status">Carregant dades...</span>
@@ -101,9 +101,9 @@
 
     <section class="filters" aria-label="Filtres">
       <label>Cerca
-        <input id="searchInput" type="search" placeholder="Nom de jugadora..." />
+        <input id="searchInput" type="search" placeholder="Nom de jugador/a..." />
       </label>
-      <label>Jugadora
+      <label>Jugador/a
         <select id="playerFilter"><option value="">Totes</option></select>
       </label>
       <label>Equip
@@ -120,7 +120,7 @@
       <button class="btn secondary" id="nextWeekButton" type="button">Setmana següent →</button>
     </nav>
 
-    <nav id="playerPagination" class="player-pagination" aria-label="Paginació de jugadores">
+    <nav id="playerPagination" class="player-pagination" aria-label="Paginació de jugadors/es">
       <button class="btn secondary" id="prevPlayerPageButton" type="button">← Jugadores</button>
       <span id="playerPageInfo" class="status">1–12</span>
       <button class="btn secondary" id="nextPlayerPageButton" type="button">Jugadores →</button>
@@ -548,7 +548,7 @@
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugadora</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
       if(!groups.length || !dates.length){
         body.innerHTML = '<tr><td colspan="' + (dates.length + 2) + '">No hi ha dades.</td></tr>';
         return;
@@ -633,7 +633,7 @@
         "- Son mitjana: " + payload.summary.sleep,
         "- Càrrega total: " + payload.summary.load,
         "",
-        "Detall per jugadora:"
+        "Detall per jugador/a:"
       ];
       payload.players.forEach(player => {
         lines.push(

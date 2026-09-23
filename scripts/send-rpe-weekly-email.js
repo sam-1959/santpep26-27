@@ -236,7 +236,6 @@ async function main(){
   }
 
   await loadRosters();
-  const recipients = await loadRecipients();
   const responses = await readFirebase(RESPONSES_PATH) || {};
   const selectedWeek = isoFromDate(mondayOf(dateInMadrid()));
   const dates = Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(dateFromISO(selectedWeek), index)));
@@ -267,6 +266,7 @@ async function main(){
     return;
   }
 
+  const recipients = await loadRecipients();
   const groups = new Map();
   records.forEach(record => {
     const key = record.player || "Sense nom";

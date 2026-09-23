@@ -181,9 +181,9 @@
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
     const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const RPE_COORDINATION_EMAILS = {
-      masculi: "xavirieracoach@gmail.com",
-      femeni: "jessicagucero@gmail.com",
-      fallback: RPE_TEST_EMAIL
+      masculi: { name:"Xavi Riera", email:"xavirieracoach@gmail.com" },
+      femeni: { name:"Jessica García", email:"jessicagucero@gmail.com" },
+      fallback: { name:"Ricard Fusté", email:RPE_TEST_EMAIL }
     };
     const TEAM_NAMES_BY_KEY = {
       CBM: "Cadet B M",
@@ -260,8 +260,15 @@
     }
     function coordinationEmailForTeam(teamName){
       const key = teamKeyFromName(teamName);
-      if(!key) return [RPE_COORDINATION_EMAILS.femeni, RPE_COORDINATION_EMAILS.masculi].join(",");
-      return key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni : RPE_COORDINATION_EMAILS.masculi;
+      if(!key) return [RPE_COORDINATION_EMAILS.femeni.email, RPE_COORDINATION_EMAILS.masculi.email].join(",");
+      return key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni.email : RPE_COORDINATION_EMAILS.masculi.email;
+    }
+    function coordinationNamesForTeam(teamName){
+      const key = teamKeyFromName(teamName);
+      const contacts = !key
+        ? [RPE_COORDINATION_EMAILS.femeni, RPE_COORDINATION_EMAILS.masculi]
+        : [key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni : RPE_COORDINATION_EMAILS.masculi];
+      return contacts.map(contact => contact.name).join(", ");
     }
     function updatePageTitle(){
       const title = hasTeamParam && requestedTeamName ? "Seguiment RPE " + requestedTeamName : "Seguiment RPE";
@@ -591,10 +598,12 @@
       const groups = groupedByPlayer();
       const teamName = visibleTeam() || "Tots els equips";
       const recipient = coordinationEmailForTeam(teamName);
+      const recipientNames = coordinationNamesForTeam(teamName);
       const records = state.filtered;
       const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
       return {
         recipient,
+        recipientNames,
         testMode: true,
         team: teamName,
         week: selectedWeek,
@@ -681,7 +690,7 @@
         if(!RPE_EMAIL_APP_SCRIPT_URL){
           const subject = "Prova Seguiment RPE - " + payload.team + " - " + payload.weekLabel;
           window.location.href = "mailto:" + encodeURIComponent(payload.recipient) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(buildPlainEmail(payload));
-          statusEl.textContent = "Correu de prova preparat per a " + payload.recipient + ".";
+          statusEl.textContent = "Correu de prova preparat per a: " + payload.recipientNames + ".";
           return;
         }
         await fetch(RPE_EMAIL_APP_SCRIPT_URL, {
@@ -690,7 +699,7 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        statusEl.textContent = "Correu RPE enviat a " + payload.recipient + ".";
+        statusEl.textContent = "Correu RPE enviat a: " + payload.recipientNames + ".";
       } catch(error) {
         console.error(error);
         statusEl.textContent = "No s'ha pogut enviar el correu RPE.";

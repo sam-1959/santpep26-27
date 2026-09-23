@@ -306,7 +306,7 @@
           '<text class="axis-label" x="' + (margin.left - 8) + '" y="' + (yy + 4) + '" text-anchor="end">' + escapeHtml(formatter(value)) + '</text>';
       }).join("");
       const xLabels = dates.map((date, index) => '<text class="axis-label" x="' + x(index) + '" y="' + (height - 10) + '" text-anchor="middle">' + escapeHtml(formatDate(date).slice(0, 5)) + '</text>').join("");
-      const series = groups.map((group, groupIndex) => {
+      const seriesModels = groups.map((group, groupIndex) => {
         const values = dates.map(date => {
           const records = group.records.filter(record => record.trainingDate === date);
           return records.length ? records.reduce((sum, record) => sum + numeric(valueGetter(record)), 0) / records.length : null;
@@ -320,14 +320,26 @@
         const color = COLORS[groupIndex % COLORS.length];
         const playerKey = normalizeName(group.player);
         const path = points.map((point, index) => (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1)).join(" ");
-        const circles = points.map(point => '<circle class="point" cx="' + point[0].toFixed(1) + '" cy="' + point[1].toFixed(1) + '" r="4" fill="' + color + '"><title>' + escapeHtml(group.player + " · " + formatter(point[2])) + '</title></circle>').join("");
-        return '<g class="series" data-player-key="' + escapeAttr(playerKey) + '">' +
+        return { group, groupIndex, color, playerKey, path, points };
+      }).filter(Boolean);
+      const linePlayers = seriesModels.reduce((acc, item) => {
+        if(!acc.has(item.path)) acc.set(item.path, []);
+        acc.get(item.path).push(item.group.player);
+        return acc;
+      }, new Map());
+      const series = seriesModels.map(item => {
+        const lineKey = item.path;
+        const tooltip = (linePlayers.get(lineKey) || [item.group.player]).join(", ");
+        const color = item.color;
+        const path = item.path;
+        const circles = item.points.map(point => '<circle class="point" cx="' + point[0].toFixed(1) + '" cy="' + point[1].toFixed(1) + '" r="4" fill="' + color + '"><title>' + escapeHtml(item.group.player + " · " + formatter(point[2])) + '</title></circle>').join("");
+        return '<g class="series" data-player-key="' + escapeAttr(item.playerKey) + '" data-line-key="' + escapeAttr(lineKey) + '">' +
           '<path class="line" d="' + path + '" stroke="' + color + '"></path>' +
-          '<path class="line-hit" d="' + path + '"><title>' + escapeHtml(group.player) + '</title></path>' +
+          '<path class="line-hit" d="' + path + '"><title>' + escapeHtml(tooltip) + '</title></path>' +
           circles +
           '</g>';
       }).join("");
-      const legend = '<div class="legend">' + groups.map((group, index) => '<span class="legend-row" data-player-key="' + escapeAttr(normalizeName(group.player)) + '" title="' + escapeAttr(group.player) + '"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span>' + escapeHtml((group.number ? "#" + group.number + " · " : "") + group.player) + '</span>').join("") + '</div>';
+      const legend = '<div class="legend">' + seriesModels.map(item => '<span class="legend-row" data-player-key="' + escapeAttr(item.playerKey) + '" data-line-key="' + escapeAttr(item.path) + '" title="' + escapeAttr(item.group.player) + '"><span class="swatch" style="background:' + item.color + '"></span>' + escapeHtml((item.group.number ? "#" + item.group.number + " · " : "") + item.group.player) + '</span>').join("") + '</div>';
       container.innerHTML = '<svg class="line-chart" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escapeAttr(label) + '">' +
         grid +
         '<line class="axis" x1="' + margin.left + '" y1="' + (margin.top + plotHeight) + '" x2="' + (width - margin.right) + '" y2="' + (margin.top + plotHeight) + '"></line>' +
@@ -338,11 +350,11 @@
       bindChartHighlight(container);
     }
     function bindChartHighlight(container){
-      const setHighlight = key => {
-        if(!key) return;
+      const setHighlight = (playerKey, lineKey) => {
+        if(!playerKey && !lineKey) return;
         container.classList.add("has-highlight");
         container.querySelectorAll(".series, .legend-row").forEach(element => {
-          element.classList.toggle("is-highlighted", element.dataset.playerKey === key);
+          element.classList.toggle("is-highlighted", Boolean(lineKey && element.dataset.lineKey === lineKey) || Boolean(playerKey && element.dataset.playerKey === playerKey));
         });
       };
       const clearHighlight = () => {
@@ -350,7 +362,7 @@
         container.querySelectorAll(".is-highlighted").forEach(element => element.classList.remove("is-highlighted"));
       };
       container.querySelectorAll(".legend-row, .series").forEach(element => {
-        element.addEventListener("mouseenter", () => setHighlight(element.dataset.playerKey));
+        element.addEventListener("mouseenter", () => setHighlight(element.dataset.playerKey, element.dataset.lineKey));
         element.addEventListener("mouseleave", clearHighlight);
       });
     }

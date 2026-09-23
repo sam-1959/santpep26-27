@@ -372,13 +372,14 @@
     function normalizeRecord(record, id){
       const durationTotalMinutes = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
       const rpe = numeric(record.rpe);
-      const fallbackTeam = TEAM_NAMES_BY_KEY[String(record.teamKey || "").toUpperCase()] || "Júnior B F";
+      const teamKey = String(record.teamKey || "JBF").trim().toUpperCase();
+      const team = TEAM_NAMES_BY_KEY[teamKey] || record.team || "Júnior B F";
       return {
         id,
         ...record,
-        teamKey: record.teamKey || "JBF",
-        team: record.team || fallbackTeam,
-        playerNumber: record.playerNumber || rosterNumber(record.team || fallbackTeam, record.player),
+        teamKey,
+        team,
+        playerNumber: record.playerNumber || rosterNumber(team, record.player),
         durationTotalMinutes,
         rpe,
         muscleFatigue: numeric(record.muscleFatigue),

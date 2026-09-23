@@ -123,7 +123,6 @@ jobs:
       - name: Envia correu RPE JBF
         env:
           RPE_TEAM_KEY: JBF
-          RPE_RECIPIENT: ricard.fuste@gmail.com
           RPE_EMAIL_APP_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec
         run: node scripts/send-rpe-weekly-email.js
 

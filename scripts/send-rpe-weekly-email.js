@@ -6,8 +6,8 @@ const path = require("path");
 const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 const RESPONSES_PATH = "wellnessResponses/season-26-27";
 const ROSTERS_PATH = "rpeRosters/season-26-27";
+const CONTACTS_PATH = "seasonContacts/season-26-27";
 const RPE_EMAIL_APP_SCRIPT_URL = process.env.RPE_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
-const RPE_RECIPIENT = process.env.RPE_RECIPIENT || "ricard.fuste@gmail.com";
 const TEAM_KEY = process.env.RPE_TEAM_KEY || "JBF";
 const STATUS_PATH = process.env.RPE_EMAIL_STATUS_PATH || "data/rpe-email-status.json";
 
@@ -147,6 +147,18 @@ function numberSortValue(value){
   return Number.isFinite(numericValue) ? numericValue : 9999;
 }
 
+function isValidEmail(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function uniqueEmails(emails){
+  return [...new Set(emails.map(email => String(email || "").trim()).filter(isValidEmail))];
+}
+
+function coordinatorRoleForTeam(teamKey){
+  return String(teamKey || "").toUpperCase().endsWith("F") ? "femeni" : "masculi";
+}
+
 async function readFirebase(path){
   const response = await fetch(firebaseUrl(path), { cache: "no-store" });
   if(!response.ok) throw new Error(`No s'ha pogut llegir ${path}: ${response.status}`);
@@ -165,6 +177,25 @@ async function loadRosters(){
     teamNamesByKey[normalizedKey] = name;
     if(players.length) teamRosters[name] = players;
   });
+}
+
+async function loadRecipients(){
+  const contacts = await readFirebase(CONTACTS_PATH) || {};
+  const role = coordinatorRoleForTeam(TEAM_KEY);
+  const coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
+  const coordinator = coordinators.find(contact => String(contact.role || "") === role);
+  const headCoach = contacts.headCoaches && contacts.headCoaches[TEAM_KEY];
+  const missing = [];
+  if(!isValidEmail(coordinator && coordinator.email)){
+    missing.push(`coordinador ${role}`);
+  }
+  if(!isValidEmail(headCoach && headCoach.email)){
+    missing.push(`primer entrenador ${TEAM_KEY}`);
+  }
+  if(missing.length){
+    throw new Error(`Falten destinataris del correu RPE: ${missing.join(", ")}.`);
+  }
+  return uniqueEmails([coordinator.email, headCoach.email]);
 }
 
 function normalizeRecord(record, id){
@@ -205,6 +236,7 @@ async function main(){
   }
 
   await loadRosters();
+  const recipients = await loadRecipients();
   const responses = await readFirebase(RESPONSES_PATH) || {};
   const selectedWeek = isoFromDate(mondayOf(dateInMadrid()));
   const dates = Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(dateFromISO(selectedWeek), index)));
@@ -258,7 +290,7 @@ async function main(){
 
   const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
   const payload = {
-    recipient: RPE_RECIPIENT,
+    recipient: recipients.join(","),
     testMode: true,
     automated: true,
     team,
@@ -303,7 +335,8 @@ async function main(){
     ...status[TEAM_KEY],
     lastSentDate: today,
     lastSentAt: nowIso(),
-    lastRecipient: RPE_RECIPIENT,
+    lastRecipient: recipients.join(","),
+    lastRecipients: recipients,
     lastTeam: team,
     lastWeek: selectedWeek,
     lastWeekLabel: payload.weekLabel,
@@ -312,7 +345,7 @@ async function main(){
     lastError: ""
   };
   writeStatus(status);
-  console.log(`Correu RPE demanat per ${team} (${payload.weekLabel}) a ${RPE_RECIPIENT}. Registres: ${records.length}`);
+  console.log(`Correu RPE demanat per ${team} (${payload.weekLabel}) a ${recipients.join(", ")}. Registres: ${records.length}`);
   console.log(text);
 }
 

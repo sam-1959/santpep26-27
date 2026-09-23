@@ -52,9 +52,14 @@
     .line { fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; opacity:0.9; }
     .line-hit { fill:none; stroke:transparent; stroke-width:14; stroke-linecap:round; stroke-linejoin:round; cursor:help; pointer-events:stroke; }
     .point { stroke:#fff; stroke-width:1.5; }
+    .chart-body.has-highlight .series { opacity:0.14; }
+    .chart-body.has-highlight .series.is-highlighted { opacity:1; }
+    .chart-body.has-highlight .series.is-highlighted .line { stroke-width:4; opacity:1; }
+    .chart-body.has-highlight .series.is-highlighted .point { r:5; }
     .axis-label { fill:var(--muted); font-size:11px; font-weight:800; }
     .legend { display:flex; gap:10px 14px; flex-wrap:wrap; padding:0 16px 16px; }
-    .legend-row { display:inline-flex; align-items:center; gap:6px; color:var(--ink); font-size:0.76rem; font-weight:800; }
+    .legend-row { display:inline-flex; align-items:center; gap:6px; color:var(--ink); font-size:0.76rem; font-weight:800; cursor:help; }
+    .legend-row.is-highlighted { color:var(--brand-dark); text-decoration:underline; text-underline-offset:3px; }
     .swatch { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
@@ -312,13 +317,16 @@
         }).filter(Boolean);
         if(!points.length) return "";
         const color = COLORS[groupIndex % COLORS.length];
+        const playerKey = normalizeName(group.player);
         const path = points.map((point, index) => (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1)).join(" ");
         const circles = points.map(point => '<circle class="point" cx="' + point[0].toFixed(1) + '" cy="' + point[1].toFixed(1) + '" r="4" fill="' + color + '"><title>' + escapeHtml(group.player + " · " + formatter(point[2])) + '</title></circle>').join("");
-        return '<path class="line" d="' + path + '" stroke="' + color + '"></path>' +
+        return '<g class="series" data-player-key="' + escapeAttr(playerKey) + '">' +
+          '<path class="line" d="' + path + '" stroke="' + color + '"></path>' +
           '<path class="line-hit" d="' + path + '"><title>' + escapeHtml(group.player) + '</title></path>' +
-          circles;
+          circles +
+          '</g>';
       }).join("");
-      const legend = '<div class="legend">' + groups.map((group, index) => '<span class="legend-row"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span>' + escapeHtml((group.number ? "#" + group.number + " · " : "") + group.player) + '</span>').join("") + '</div>';
+      const legend = '<div class="legend">' + groups.map((group, index) => '<span class="legend-row" data-player-key="' + escapeAttr(normalizeName(group.player)) + '" title="' + escapeAttr(group.player) + '"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span>' + escapeHtml((group.number ? "#" + group.number + " · " : "") + group.player) + '</span>').join("") + '</div>';
       container.innerHTML = '<svg class="line-chart" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escapeAttr(label) + '">' +
         grid +
         '<line class="axis" x1="' + margin.left + '" y1="' + (margin.top + plotHeight) + '" x2="' + (width - margin.right) + '" y2="' + (margin.top + plotHeight) + '"></line>' +
@@ -326,6 +334,24 @@
         xLabels +
         series +
         '</svg>' + legend;
+      bindChartHighlight(container);
+    }
+    function bindChartHighlight(container){
+      const setHighlight = key => {
+        if(!key) return;
+        container.classList.add("has-highlight");
+        container.querySelectorAll(".series, .legend-row").forEach(element => {
+          element.classList.toggle("is-highlighted", element.dataset.playerKey === key);
+        });
+      };
+      const clearHighlight = () => {
+        container.classList.remove("has-highlight");
+        container.querySelectorAll(".is-highlighted").forEach(element => element.classList.remove("is-highlighted"));
+      };
+      container.querySelectorAll(".legend-row, .series").forEach(element => {
+        element.addEventListener("mouseenter", () => setHighlight(element.dataset.playerKey));
+        element.addEventListener("mouseleave", clearHighlight);
+      });
     }
     function populateFilters(){
       const currentPlayer = playerFilter.value;

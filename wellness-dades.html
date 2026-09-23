@@ -25,7 +25,7 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
     .btn[disabled] { opacity:0.65; cursor:not-allowed; }
-    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,auto) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(210px,auto) minmax(180px,auto) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
     input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
@@ -102,6 +102,9 @@
     <section class="filters" aria-label="Filtres">
       <label>Cerca
         <input id="searchInput" type="search" placeholder="Nom de jugador/a..." />
+      </label>
+      <label>Setmana
+        <select id="weekFilter"></select>
       </label>
       <label>Jugador/a
         <select id="playerFilter"><option value="">Totes</option></select>
@@ -236,6 +239,7 @@
     const emailButton = document.getElementById("emailButton");
     const playerFilter = document.getElementById("playerFilter");
     const teamFilter = document.getElementById("teamFilter");
+    const weekFilter = document.getElementById("weekFilter");
     const searchInput = document.getElementById("searchInput");
     const weekTitle = document.getElementById("weekTitle");
     const weekSubtitle = document.getElementById("weekSubtitle");
@@ -435,7 +439,7 @@
       const query = searchInput.value.trim().toLowerCase();
       const player = playerFilter.value;
       const team = visibleTeam();
-      const previousWeek = currentWeekKey();
+      const previousWeek = weekFilter.value || currentWeekKey();
       state.baseFiltered = state.records.filter(record => {
         const name = String(record.player || "");
         const teamName = String(record.team || "");
@@ -510,6 +514,9 @@
       const selectedWeek = currentWeekKey();
       weekTitle.textContent = selectedWeek ? "Setmana " + weekRangeLabel(selectedWeek) : "Sense setmanes";
       weekSubtitle.textContent = state.weeks.length ? (state.selectedWeekIndex + 1) + " de " + state.weeks.length : "No hi ha dades";
+      weekFilter.innerHTML = state.weeks.map(week => '<option value="' + escapeAttr(week) + '">' + escapeHtml(weekRangeLabel(week)) + '</option>').join("");
+      weekFilter.value = selectedWeek;
+      weekFilter.disabled = !state.weeks.length;
       prevWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex >= state.weeks.length - 1;
       nextWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex <= 0;
     }
@@ -720,7 +727,15 @@
       populatePlayers();
       applyFilters();
     }
+    function handleWeekFilterChange(){
+      const selectedIndex = state.weeks.indexOf(weekFilter.value);
+      if(selectedIndex < 0) return;
+      state.selectedWeekIndex = selectedIndex;
+      state.playerPageIndex = 0;
+      applyWeek();
+    }
     [searchInput, playerFilter].forEach(el => el.addEventListener("input", applyFilters));
+    weekFilter.addEventListener("change", handleWeekFilterChange);
     teamFilter.addEventListener("change", handleTeamFilterChange);
     teamFilter.addEventListener("input", handleTeamFilterChange);
     prevWeekButton.addEventListener("click", () => changeWeek(1));

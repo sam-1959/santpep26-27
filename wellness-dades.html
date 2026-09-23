@@ -51,13 +51,15 @@
     .badge.yellow { background:#fff176; color:#5f4a00; border-color:#fdd835; }
     .badge.orange { background:#ffcc80; color:#7a3d00; border-color:#ff9800; }
     .badge.red { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
+    .alerts { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+    .alert { padding:13px; border-right:1px solid var(--line); }
+    .alert:last-child { border-right:0; }
+    .alert span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .alert strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1rem; line-height:1.25; }
+    .alert.warning { background:#fff8e1; }
+    .alert.danger { background:#ffebee; }
     .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
     .metrics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-    .week-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
-    .week-nav .btn { min-width:130px; }
-    .week-label { text-align:center; }
-    .week-title { color:var(--brand-dark); font-weight:900; }
-    .week-subtitle { color:var(--muted); font-size:0.78rem; font-weight:800; }
     .player-pagination { display:none; align-items:center; justify-content:flex-end; gap:10px; margin:-2px 0 14px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     .player-pagination.show { display:flex; }
     .player-pagination .status { min-width:110px; text-align:center; }
@@ -70,10 +72,10 @@
     .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--brand),#b383d3); }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
     @media (max-width:900px){
-      .filters, .summary, .metrics-grid { grid-template-columns:1fr; }
+      .filters, .summary, .alerts, .metrics-grid { grid-template-columns:1fr; }
       .toolbar { align-items:flex-start; flex-direction:column; }
-      .week-nav { align-items:stretch; flex-direction:column; }
-      .week-nav .btn { width:100%; }
+      .alert { border-right:0; border-bottom:1px solid var(--line); }
+      .alert:last-child { border-bottom:0; }
     }
   </style>
 </head>
@@ -114,15 +116,6 @@
       </label>
     </section>
 
-    <nav class="week-nav" aria-label="Navegació per setmanes">
-      <button class="btn secondary" id="prevWeekButton" type="button">← Setmana anterior</button>
-      <div class="week-label">
-        <div id="weekTitle" class="week-title">Setmana</div>
-        <div id="weekSubtitle" class="week-subtitle">—</div>
-      </div>
-      <button class="btn secondary" id="nextWeekButton" type="button">Setmana següent →</button>
-    </nav>
-
     <nav id="playerPagination" class="player-pagination" aria-label="Paginació de jugadors/es">
       <button class="btn secondary" id="prevPlayerPageButton" type="button">← Jugadores</button>
       <span id="playerPageInfo" class="status">1–12</span>
@@ -135,6 +128,12 @@
       <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
       <div class="kpi"><span>Son mitjana</span><strong id="kpiSleep">—</strong></div>
       <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
+    </section>
+
+    <section class="alerts" aria-label="Alertes">
+      <div class="alert danger"><span>RPE alt</span><strong id="alertRpe">—</strong></div>
+      <div class="alert danger"><span>Fatiga alta</span><strong id="alertFatigue">—</strong></div>
+      <div class="alert warning"><span>Son baixa</span><strong id="alertSleep">—</strong></div>
     </section>
 
     <section class="metrics-grid">
@@ -241,10 +240,6 @@
     const teamFilter = document.getElementById("teamFilter");
     const weekFilter = document.getElementById("weekFilter");
     const searchInput = document.getElementById("searchInput");
-    const weekTitle = document.getElementById("weekTitle");
-    const weekSubtitle = document.getElementById("weekSubtitle");
-    const prevWeekButton = document.getElementById("prevWeekButton");
-    const nextWeekButton = document.getElementById("nextWeekButton");
     const playerPagination = document.getElementById("playerPagination");
     const playerPageInfo = document.getElementById("playerPageInfo");
     const prevPlayerPageButton = document.getElementById("prevPlayerPageButton");
@@ -482,20 +477,15 @@
       state.playerPageIndex = 0;
       render();
     }
-    function changeWeek(delta){
-      if(!state.weeks.length) return;
-      state.selectedWeekIndex = Math.min(Math.max(state.selectedWeekIndex + delta, 0), state.weeks.length - 1);
-      state.playerPageIndex = 0;
-      applyWeek();
-    }
     function changePlayerPage(delta){
       const totalPages = Math.max(1, Math.ceil(groupedByPlayer().length / PLAYERS_PER_PAGE));
       state.playerPageIndex = Math.min(Math.max(state.playerPageIndex + delta, 0), totalPages - 1);
       render();
     }
     function render(){
-      renderWeekNav();
+      renderWeekFilter();
       renderSummary();
+      renderAlerts();
       renderMetricTables();
       updateEmailButtonState();
     }
@@ -510,15 +500,11 @@
       emailButton.disabled = !hasTableData();
       emailButton.title = emailButton.disabled ? "No hi ha dades setmanals per enviar." : "Enviar les dades RPE per correu.";
     }
-    function renderWeekNav(){
+    function renderWeekFilter(){
       const selectedWeek = currentWeekKey();
-      weekTitle.textContent = selectedWeek ? "Setmana " + weekRangeLabel(selectedWeek) : "Sense setmanes";
-      weekSubtitle.textContent = state.weeks.length ? (state.selectedWeekIndex + 1) + " de " + state.weeks.length : "No hi ha dades";
       weekFilter.innerHTML = state.weeks.map(week => '<option value="' + escapeAttr(week) + '">' + escapeHtml(weekRangeLabel(week)) + '</option>').join("");
       weekFilter.value = selectedWeek;
       weekFilter.disabled = !state.weeks.length;
-      prevWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex >= state.weeks.length - 1;
-      nextWeekButton.disabled = !state.weeks.length || state.selectedWeekIndex <= 0;
     }
     function renderSummary(){
       const records = state.filtered;
@@ -528,6 +514,18 @@
       document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "muscleFatigue"));
       document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepQuality"));
       document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
+    }
+    function renderAlerts(){
+      const groups = groupedByPlayer();
+      const rpeHigh = groups.filter(group => group.rpe !== null && group.rpe >= 7).map(group => group.player);
+      const fatigueHigh = groups.filter(group => group.fatigue !== null && group.fatigue >= 4).map(group => group.player);
+      const sleepLow = groups.filter(group => group.sleep !== null && group.sleep <= 2).map(group => group.player);
+      document.getElementById("alertRpe").textContent = alertText(rpeHigh);
+      document.getElementById("alertFatigue").textContent = alertText(fatigueHigh);
+      document.getElementById("alertSleep").textContent = alertText(sleepLow);
+    }
+    function alertText(players){
+      return players.length ? players.slice(0, 4).join(", ") + (players.length > 4 ? " +" + (players.length - 4) : "") : "Sense alertes";
     }
     function weekDates(){
       const selectedWeek = currentWeekKey();
@@ -738,8 +736,6 @@
     weekFilter.addEventListener("change", handleWeekFilterChange);
     teamFilter.addEventListener("change", handleTeamFilterChange);
     teamFilter.addEventListener("input", handleTeamFilterChange);
-    prevWeekButton.addEventListener("click", () => changeWeek(1));
-    nextWeekButton.addEventListener("click", () => changeWeek(-1));
     prevPlayerPageButton.addEventListener("click", () => changePlayerPage(-1));
     nextPlayerPageButton.addEventListener("click", () => changePlayerPage(1));
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));

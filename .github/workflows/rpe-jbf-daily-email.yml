@@ -1,9 +1,6 @@
 name: Envia resum RPE JBF
 
 on:
-  schedule:
-    # 10:17 Europe/Madrid en horari d'estiu. GitHub Actions fa servir UTC.
-    - cron: "17 8 * * *"
   workflow_dispatch:
 
 jobs:

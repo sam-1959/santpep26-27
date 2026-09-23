@@ -13,6 +13,8 @@ on:
   schedule:
     # Cada hora. GitHub cron és sempre UTC.
     - cron: "30 * * * *"
+    # 10:17 Europe/Madrid en horari d'estiu. GitHub cron és sempre UTC.
+    - cron: "17 8 * * *"
   workflow_dispatch:
     inputs:
       test_whatsapp:
@@ -36,6 +38,7 @@ concurrency:
 
 jobs:
   update:
+    if: ${{ github.event_name != 'schedule' || github.event.schedule == '30 * * * *' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -101,3 +104,22 @@ jobs:
       - id: deploy3
         if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v5
+
+  send-rpe-email:
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '17 8 * * *' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Envia correu RPE JBF
+        env:
+          RPE_TEAM_KEY: JBF
+          RPE_RECIPIENT: ricard.fuste@gmail.com
+          RPE_EMAIL_APP_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec
+        run: node scripts/send-rpe-weekly-email.js

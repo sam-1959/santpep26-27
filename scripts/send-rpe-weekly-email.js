@@ -8,7 +8,10 @@ const RESPONSES_PATH = "wellnessResponses/season-26-27";
 const ROSTERS_PATH = "rpeRosters/season-26-27";
 const CONTACTS_PATH = "seasonContacts/season-26-27";
 const RPE_EMAIL_APP_SCRIPT_URL = process.env.RPE_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
-const TEAM_KEY = process.env.RPE_TEAM_KEY || "JBF";
+// L'enviament automàtic diari de l'ERP queda limitat explícitament al JBF.
+// No acceptem altres equips per variable d'entorn per evitar enviaments
+// accidentals si es reutilitza el workflow o el script.
+const TEAM_KEY = "JBF";
 const STATUS_PATH = process.env.RPE_EMAIL_STATUS_PATH || "data/rpe-email-status.json";
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {

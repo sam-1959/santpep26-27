@@ -24,7 +24,7 @@
     .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
-    .filters, .summary, .panel { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+    .filters, .summary, .alerts, .panel { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
     .filters { display:grid; grid-template-columns:repeat(2,minmax(180px,1fr)); gap:10px; padding:12px; margin-bottom:14px; }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
@@ -33,29 +33,31 @@
     .kpi:last-child { border-right:0; }
     .kpi span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
     .kpi strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1.42rem; line-height:1; }
+    .alerts { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; }
+    .alert { padding:13px; border-right:1px solid var(--line); }
+    .alert:last-child { border-right:0; }
+    .alert span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .alert strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1rem; line-height:1.25; }
+    .alert.warning { background:#fff8e1; }
+    .alert.danger { background:#ffebee; }
     .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
     .panel { overflow:hidden; min-height:360px; }
     .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#faf8fd; }
     .panel-head h3 { margin:0; color:var(--brand-dark); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; }
     .panel-head span, .status { color:var(--muted); font-size:0.78rem; font-weight:800; }
-    .chart-body { padding:0; overflow:auto; }
-    table { width:100%; border-collapse:collapse; font-size:0.84rem; }
-    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle; white-space:nowrap; }
-    th { color:var(--brand-dark); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; background:#fff; position:sticky; top:0; z-index:1; }
-    th:first-child, td:first-child { text-align:left; min-width:180px; position:sticky; left:0; background:#fff; z-index:2; }
-    th:first-child { z-index:3; }
-    td.player { font-weight:900; color:var(--brand-dark); }
-    .player-line { display:flex; align-items:center; gap:8px; }
-    .number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 7px; border-radius:999px; background:var(--brand-dark); color:#fff; font-size:0.72rem; font-weight:900; }
-    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:34px; border-radius:999px; padding:3px 8px; font-weight:900; font-size:0.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; }
-    .badge.green-strong { background:var(--green-strong); color:#fff; border-color:var(--green-strong); }
-    .badge.green-soft { background:var(--green-soft); color:#145a18; border-color:#a5d6a7; }
-    .badge.yellow { background:var(--yellow); color:#5f4a00; border-color:#fdd835; }
-    .badge.orange { background:#ffcc80; color:#7a3d00; border-color:var(--orange); }
-    .badge.red { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
+    .chart-body { padding:14px 16px 16px; overflow:auto; }
+    .line-chart { width:100%; min-width:560px; height:285px; display:block; }
+    .axis { stroke:#d8cfe4; stroke-width:1; }
+    .grid-line { stroke:#efe9f5; stroke-width:1; }
+    .line { fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; opacity:0.82; }
+    .point { stroke:#fff; stroke-width:1.5; }
+    .axis-label { fill:var(--muted); font-size:11px; font-weight:800; }
+    .legend { display:flex; gap:10px 14px; flex-wrap:wrap; padding:0 16px 16px; }
+    .legend-row { display:inline-flex; align-items:center; gap:6px; color:var(--ink); font-size:0.76rem; font-weight:800; }
+    .swatch { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
-    @media (max-width:1000px){ .charts, .summary, .filters, .donut-wrap { grid-template-columns:1fr; } .toolbar { align-items:flex-start; flex-direction:column; } .kpi { border-right:0; border-bottom:1px solid var(--line); } .kpi:last-child { border-bottom:0; } }
+    @media (max-width:1000px){ .charts, .summary, .filters, .alerts { grid-template-columns:1fr; } .toolbar { align-items:flex-start; flex-direction:column; } .kpi, .alert { border-right:0; border-bottom:1px solid var(--line); } .kpi:last-child, .alert:last-child { border-bottom:0; } }
   </style>
 </head>
 <body>
@@ -97,30 +99,28 @@
       <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
     </section>
 
+    <section class="alerts" aria-label="Alertes">
+      <div class="alert danger"><span>RPE alt</span><strong id="alertRpe">—</strong></div>
+      <div class="alert danger"><span>Fatiga alta</span><strong id="alertFatigue">—</strong></div>
+      <div class="alert warning"><span>Son baixa</span><strong id="alertSleep">—</strong></div>
+    </section>
+
     <section class="charts">
       <article class="panel">
         <div class="panel-head"><h3>RPE</h3><span>Evolució setmanal</span></div>
-        <div class="chart-body">
-          <table><thead id="rpeHead"></thead><tbody id="rpeBody"></tbody></table>
-        </div>
+        <div id="rpeChart" class="chart-body"></div>
       </article>
       <article class="panel">
         <div class="panel-head"><h3>Fatiga</h3><span>Evolució setmanal</span></div>
-        <div class="chart-body">
-          <table><thead id="fatigueHead"></thead><tbody id="fatigueBody"></tbody></table>
-        </div>
+        <div id="fatigueChart" class="chart-body"></div>
       </article>
       <article class="panel">
         <div class="panel-head"><h3>Qualitat de la son</h3><span>Evolució setmanal</span></div>
-        <div class="chart-body">
-          <table><thead id="sleepHead"></thead><tbody id="sleepBody"></tbody></table>
-        </div>
+        <div id="sleepChart" class="chart-body"></div>
       </article>
       <article class="panel">
         <div class="panel-head"><h3>Càrrega</h3><span>Evolució setmanal</span></div>
-        <div class="chart-body">
-          <table><thead id="loadHead"></thead><tbody id="loadBody"></tbody></table>
-        </div>
+        <div id="loadChart" class="chart-body"></div>
       </article>
     </section>
   </main>
@@ -221,7 +221,8 @@
       const player = playerFilter.value;
       state.filtered = state.records.filter(record => (!week || weekKey(record.trainingDate) === week) && (!player || record.player === player));
       renderSummary();
-      renderEvolutionTables();
+      renderAlerts();
+      renderLineCharts();
     }
     function renderSummary(){
       const records = state.filtered;
@@ -235,50 +236,70 @@
       const start = dateFromISO(weekFilter.value);
       return start ? Array.from({ length:7 }, (_, index) => isoFromDate(addDays(start, index))) : [];
     }
-    function renderEvolutionTables(){
+    function renderAlerts(){
+      const groups = groupByPlayer(state.filtered);
+      const rpeHigh = groups.filter(group => average(group.records, "rpe") >= 7).map(group => group.player);
+      const fatigueHigh = groups.filter(group => average(group.records, "fatigue") >= 4).map(group => group.player);
+      const sleepLow = groups.filter(group => {
+        const value = average(group.records, "sleep");
+        return value !== null && value <= 2;
+      }).map(group => group.player);
+      document.getElementById("alertRpe").textContent = alertText(rpeHigh);
+      document.getElementById("alertFatigue").textContent = alertText(fatigueHigh);
+      document.getElementById("alertSleep").textContent = alertText(sleepLow);
+    }
+    function alertText(players){
+      return players.length ? players.slice(0, 4).join(", ") + (players.length > 4 ? " +" + (players.length - 4) : "") : "Sense alertes";
+    }
+    function renderLineCharts(){
       const dates = weekDates();
       const groups = groupByPlayer(state.filtered);
-      renderMetricTable("rpe", dates, groups, record => record.rpe, value => colorClass(value, 10), value => value ? formatNumber(value) : "—");
-      renderMetricTable("fatigue", dates, groups, record => record.fatigue, value => colorClass(value, 5), value => value ? formatNumber(value) : "—");
-      renderMetricTable("sleep", dates, groups, record => record.sleep, value => colorClass(value, 5), value => value ? formatNumber(value) : "—");
+      renderLineChart("rpeChart", dates, groups, "RPE", record => record.rpe, 10, value => formatNumber(value));
+      renderLineChart("fatigueChart", dates, groups, "Fatiga", record => record.fatigue, 5, value => formatNumber(value));
+      renderLineChart("sleepChart", dates, groups, "Son", record => record.sleep, 5, value => formatNumber(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 1);
-      renderMetricTable("load", dates, groups, record => record.load, value => colorClass(value / maxLoad * 5, 5), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
+      renderLineChart("loadChart", dates, groups, "Càrrega", record => record.load, maxLoad, value => Math.round(value).toLocaleString("ca-ES"));
     }
-    function renderMetricTable(prefix, dates, groups, valueGetter, classGetter, formatter){
-      const head = document.getElementById(prefix + "Head");
-      const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+    function renderLineChart(containerId, dates, groups, label, valueGetter, maxValue, formatter){
+      const container = document.getElementById(containerId);
       if(!groups.length || !dates.length){
-        body.innerHTML = '<tr><td colspan="' + (dates.length + 2) + '" class="empty">No hi ha dades.</td></tr>';
+        container.innerHTML = '<div class="empty">No hi ha dades.</div>';
         return;
       }
-      body.innerHTML = groups.map(group => {
-        const number = group.number || "";
+      const width = 760;
+      const height = 285;
+      const margin = { top: 18, right: 18, bottom: 34, left: 42 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const x = index => margin.left + (dates.length === 1 ? plotWidth / 2 : index / (dates.length - 1) * plotWidth);
+      const y = value => margin.top + plotHeight - Math.max(0, Math.min(1, numeric(value) / maxValue)) * plotHeight;
+      const grid = [0, 0.25, 0.5, 0.75, 1].map(step => {
+        const yy = margin.top + plotHeight - step * plotHeight;
+        const value = step * maxValue;
+        return '<line class="grid-line" x1="' + margin.left + '" y1="' + yy + '" x2="' + (width - margin.right) + '" y2="' + yy + '"></line>' +
+          '<text class="axis-label" x="' + (margin.left - 8) + '" y="' + (yy + 4) + '" text-anchor="end">' + escapeHtml(formatter(value)) + '</text>';
+      }).join("");
+      const xLabels = dates.map((date, index) => '<text class="axis-label" x="' + x(index) + '" y="' + (height - 10) + '" text-anchor="middle">' + escapeHtml(formatDate(date).slice(0, 5)) + '</text>').join("");
+      const series = groups.map((group, groupIndex) => {
         const values = dates.map(date => {
           const records = group.records.filter(record => record.trainingDate === date);
           return records.length ? records.reduce((sum, record) => sum + numeric(valueGetter(record)), 0) / records.length : null;
         });
-        const averageValues = values.filter(value => value !== null);
-        const averageValue = averageValues.length ? averageValues.reduce((sum, value) => sum + value, 0) / averageValues.length : null;
-        return '<tr><td class="player"><span class="player-line">' +
-          (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : '') +
-          '<span>' + escapeHtml(group.player) + '</span></span></td>' +
-          values.map(value => metricCell(value, classGetter, formatter)).join("") +
-          metricCell(averageValue, classGetter, formatter) +
-          '</tr>';
+        const points = values.map((value, index) => value === null ? null : [x(index), y(value), value]).filter(Boolean);
+        if(!points.length) return "";
+        const color = COLORS[groupIndex % COLORS.length];
+        const path = points.map((point, index) => (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1)).join(" ");
+        const circles = points.map(point => '<circle class="point" cx="' + point[0].toFixed(1) + '" cy="' + point[1].toFixed(1) + '" r="4" fill="' + color + '"><title>' + escapeHtml(group.player + " · " + formatter(point[2])) + '</title></circle>').join("");
+        return '<path class="line" d="' + path + '" stroke="' + color + '"><title>' + escapeHtml(group.player) + '</title></path>' + circles;
       }).join("");
-    }
-    function metricCell(value, classGetter, formatter){
-      if(value === null || value === undefined) return '<td>—</td>';
-      return '<td><span class="badge ' + classGetter(value) + '">' + escapeHtml(formatter(value)) + '</span></td>';
-    }
-    function colorClass(value, maxScale){
-      const normalized = maxScale === 5 ? numeric(value) : numeric(value) / maxScale * 5;
-      if(normalized <= 1) return "green-strong";
-      if(normalized <= 2) return "green-soft";
-      if(normalized <= 3) return "yellow";
-      if(normalized <= 4) return "orange";
-      return "red";
+      const legend = '<div class="legend">' + groups.map((group, index) => '<span class="legend-row"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span>' + escapeHtml((group.number ? "#" + group.number + " · " : "") + group.player) + '</span>').join("") + '</div>';
+      container.innerHTML = '<svg class="line-chart" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escapeAttr(label) + '">' +
+        grid +
+        '<line class="axis" x1="' + margin.left + '" y1="' + (margin.top + plotHeight) + '" x2="' + (width - margin.right) + '" y2="' + (margin.top + plotHeight) + '"></line>' +
+        '<line class="axis" x1="' + margin.left + '" y1="' + margin.top + '" x2="' + margin.left + '" y2="' + (margin.top + plotHeight) + '"></line>' +
+        xLabels +
+        series +
+        '</svg>' + legend;
     }
     function populateFilters(){
       state.weeks = [...new Set(state.records.map(record => weekKey(record.trainingDate)).filter(Boolean))].sort((a, b) => b.localeCompare(a));

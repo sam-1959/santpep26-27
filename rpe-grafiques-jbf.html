@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Gràfiques RPE JBF · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; --green-strong:#1b5e20; --green-soft:#c8e6c9; --yellow:#fff176; --orange:#ff9800; --red:#ef5350; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.35; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .club-logo { width:42px; height:42px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:9px; padding:4px; }
+    .logo-mark { display:inline-grid; place-items:center; width:40px; height:40px; flex-shrink:0; margin-left:auto; background:#fff; color:var(--brand); border-radius:9px; font-size:1.25rem; font-weight:900; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:0.98rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.66rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:1px 0 0; font-size:0.74rem; opacity:0.9; }
+    main { width:100%; max-width:none; margin:0; padding:22px 24px 44px; }
+    .toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:16px; }
+    .intro h2 { margin:0 0 5px; color:var(--brand-dark); font-size:1.22rem; }
+    .intro p { margin:0; color:var(--muted); font-size:0.86rem; }
+    .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
+    .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
+    .filters, .summary, .panel { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+    .filters { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:10px; padding:12px; margin-bottom:14px; }
+    label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
+    select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
+    .summary { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; }
+    .kpi { padding:13px; border-right:1px solid var(--line); }
+    .kpi:last-child { border-right:0; }
+    .kpi span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
+    .kpi strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1.42rem; line-height:1; }
+    .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .panel { overflow:hidden; min-height:360px; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#faf8fd; }
+    .panel-head h3 { margin:0; color:var(--brand-dark); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .panel-head span, .status { color:var(--muted); font-size:0.78rem; font-weight:800; }
+    .chart-body { padding:16px; }
+    .bar-row { display:grid; grid-template-columns:160px 1fr 48px; align-items:center; gap:10px; margin:9px 0; font-size:0.82rem; }
+    .bar-name { color:var(--ink); font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bar-track { height:12px; border-radius:999px; background:#eee8f4; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--brand),#b383d3); }
+    .bar-value { color:var(--brand-dark); font-weight:900; text-align:right; font-variant-numeric:tabular-nums; }
+    .donut-wrap { display:grid; grid-template-columns:220px 1fr; align-items:center; gap:18px; }
+    .donut { width:220px; height:220px; border-radius:50%; background:conic-gradient(var(--brand) 0 0); position:relative; margin:auto; }
+    .donut::after { content:""; position:absolute; inset:45px; border-radius:50%; background:#fff; box-shadow:inset 0 0 0 1px var(--line); }
+    .donut-label { position:absolute; inset:0; display:grid; place-items:center; text-align:center; z-index:1; color:var(--brand-dark); font-weight:900; }
+    .donut-label small { display:block; color:var(--muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .legend { display:grid; gap:8px; }
+    .legend-row { display:grid; grid-template-columns:14px 1fr auto; align-items:center; gap:8px; font-size:0.84rem; }
+    .swatch { width:14px; height:14px; border-radius:4px; }
+    .day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; align-items:end; min-height:250px; }
+    .day { display:grid; grid-template-rows:1fr auto auto; gap:6px; min-height:230px; text-align:center; }
+    .day-bar { align-self:end; min-height:4px; border-radius:10px 10px 3px 3px; background:linear-gradient(180deg,#b383d3,var(--brand)); }
+    .day strong { color:var(--brand-dark); font-size:0.88rem; }
+    .day span { color:var(--muted); font-size:0.72rem; font-weight:800; }
+    .ranges { display:grid; gap:11px; }
+    .range-row { display:grid; grid-template-columns:90px 1fr 46px; align-items:center; gap:10px; }
+    .range-name { font-size:0.82rem; font-weight:900; color:var(--brand-dark); }
+    .range-track { height:18px; border-radius:999px; overflow:hidden; background:#eee8f4; }
+    .range-fill { height:100%; border-radius:999px; }
+    .empty { padding:24px; color:var(--muted); text-align:center; font-weight:800; }
+    footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
+    @media (max-width:1000px){ .charts, .summary, .filters, .donut-wrap { grid-template-columns:1fr; } .toolbar { align-items:flex-start; flex-direction:column; } .kpi { border-right:0; border-bottom:1px solid var(--line); } .kpi:last-child { border-bottom:0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Gràfiques RPE JBF</h1>
+      <p>Visualització de prova amb les dades setmanals del Júnior B F</p>
+    </div>
+    <span class="logo-mark" aria-hidden="true">📈</span>
+  </header>
+  <main>
+    <div class="toolbar">
+      <div class="intro">
+        <h2>Gràfiques RPE · Júnior B F</h2>
+        <p>Vista de prova per representar RPE, fatiga, son i càrrega de manera visual.</p>
+      </div>
+      <div class="actions">
+        <span id="status" class="status">Carregant dades...</span>
+        <a class="btn secondary" href="wellness-dades.html?v=f26j">Seguiment JBF</a>
+        <a class="btn" href="rpe-dades-equips.html">Dades RPE</a>
+      </div>
+    </div>
+
+    <section class="filters" aria-label="Filtres">
+      <label>Setmana
+        <select id="weekFilter"></select>
+      </label>
+      <label>Jugador/a
+        <select id="playerFilter"><option value="">Totes</option></select>
+      </label>
+      <label>Mètrica principal
+        <select id="metricFilter">
+          <option value="rpe">RPE</option>
+          <option value="fatigue">Fatiga</option>
+          <option value="sleep">Qualitat de la son</option>
+          <option value="load">Càrrega</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="summary" aria-label="Resum">
+      <div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div>
+      <div class="kpi"><span>Jugadors/es</span><strong id="kpiPlayers">0</strong></div>
+      <div class="kpi"><span>RPE mitjà</span><strong id="kpiRpe">—</strong></div>
+      <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
+      <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
+    </section>
+
+    <section class="charts">
+      <article class="panel">
+        <div class="panel-head"><h3 id="playerChartTitle">RPE mitjà per jugador/a</h3><span>Mitjana setmanal</span></div>
+        <div id="playerBars" class="chart-body"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h3>Càrrega per jugador/a</h3><span>Distribució setmanal</span></div>
+        <div class="chart-body donut-wrap">
+          <div id="loadDonut" class="donut"><div class="donut-label"><div><strong id="donutTotal">0</strong><small>càrrega</small></div></div></div>
+          <div id="loadLegend" class="legend"></div>
+        </div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h3>Respostes per dia</h3><span>Volum de registres</span></div>
+        <div id="dayBars" class="chart-body day-grid"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h3>Distribució per rangs</h3><span>Segons la mètrica principal</span></div>
+        <div id="rangeBars" class="chart-body ranges"></div>
+      </article>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+
+  <script>
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const RESPONSES_PATH = "wellnessResponses/season-26-27";
+    const TEAM_KEY = "JBF";
+    const TEAM_NAME = "Júnior B F";
+    const COLORS = ["#713f97", "#b383d3", "#fcdb20", "#5a2f7d", "#ff9800", "#1b5e20", "#ef5350", "#7e57c2", "#26a69a", "#8d6e63", "#ec407a", "#42a5f5"];
+    const state = { records: [], filtered: [], weeks: [] };
+    const weekFilter = document.getElementById("weekFilter");
+    const playerFilter = document.getElementById("playerFilter");
+    const metricFilter = document.getElementById("metricFilter");
+    const statusEl = document.getElementById("status");
+
+    function firebaseUrl(path){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      return base + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json";
+    }
+    function numeric(value){
+      const num = Number(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+    function normalizeRecord(record, id){
+      const duration = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
+      const rpe = numeric(record.rpe);
+      return {
+        id,
+        ...record,
+        teamKey: String(record.teamKey || "").trim().toUpperCase() || TEAM_KEY,
+        team: record.team || TEAM_NAME,
+        player: record.player || "Sense nom",
+        playerNumber: record.playerNumber || "",
+        durationTotalMinutes: duration,
+        rpe,
+        fatigue: numeric(record.muscleFatigue),
+        sleep: numeric(record.sleepQuality),
+        load: numeric(record.load) || rpe * duration
+      };
+    }
+    function dateFromISO(value){
+      const [year, month, day] = String(value || "").split("-").map(Number);
+      return year && month && day ? new Date(year, month - 1, day) : null;
+    }
+    function isoFromDate(date){
+      const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return offsetDate.toISOString().slice(0, 10);
+    }
+    function mondayOf(date){
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const day = copy.getDay() || 7;
+      copy.setDate(copy.getDate() - day + 1);
+      return copy;
+    }
+    function addDays(date, days){
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+    function weekKey(value){
+      const date = dateFromISO(value);
+      return date ? isoFromDate(mondayOf(date)) : "";
+    }
+    function formatDate(value){
+      const [year, month, day] = String(value || "").split("-");
+      return year && month && day ? day + "/" + month + "/" + year : value;
+    }
+    function weekRangeLabel(key){
+      const start = dateFromISO(key);
+      if(!start) return "—";
+      return formatDate(isoFromDate(start)) + " – " + formatDate(isoFromDate(addDays(start, 6)));
+    }
+    function average(records, field){
+      const values = records.map(record => numeric(record[field])).filter(value => value > 0);
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    }
+    function formatNumber(value, decimals = 1){
+      return value === null || value === undefined || Number.isNaN(value) ? "—" : value.toLocaleString("ca-ES", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+    function numberSortValue(value){
+      const number = Number(String(value || "").replace(/\D/g, ""));
+      return Number.isFinite(number) ? number : 9999;
+    }
+    function metricValue(record, metric){
+      if(metric === "fatigue") return record.fatigue;
+      if(metric === "sleep") return record.sleep;
+      if(metric === "load") return record.load;
+      return record.rpe;
+    }
+    function metricLabel(metric){
+      return ({ rpe:"RPE", fatigue:"Fatiga", sleep:"Qualitat de la son", load:"Càrrega" })[metric] || "RPE";
+    }
+    function groupByPlayer(records){
+      const map = new Map();
+      records.forEach(record => {
+        const key = record.player;
+        if(!map.has(key)) map.set(key, { player: record.player, number: record.playerNumber, records: [] });
+        const group = map.get(key);
+        if(!group.number && record.playerNumber) group.number = record.playerNumber;
+        group.records.push(record);
+      });
+      return [...map.values()].sort((a, b) => numberSortValue(a.number) - numberSortValue(b.number) || a.player.localeCompare(b.player, "ca"));
+    }
+    function render(){
+      const week = weekFilter.value;
+      const player = playerFilter.value;
+      state.filtered = state.records.filter(record => (!week || weekKey(record.trainingDate) === week) && (!player || record.player === player));
+      renderSummary();
+      renderPlayerBars();
+      renderLoadDonut();
+      renderDayBars();
+      renderRanges();
+    }
+    function renderSummary(){
+      const records = state.filtered;
+      document.getElementById("kpiRecords").textContent = records.length;
+      document.getElementById("kpiPlayers").textContent = groupByPlayer(records).length;
+      document.getElementById("kpiRpe").textContent = formatNumber(average(records, "rpe"));
+      document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "fatigue"));
+      document.getElementById("kpiLoad").textContent = records.reduce((sum, record) => sum + numeric(record.load), 0).toLocaleString("ca-ES", { maximumFractionDigits:0 });
+    }
+    function renderPlayerBars(){
+      const metric = metricFilter.value;
+      const groups = groupByPlayer(state.filtered).map(group => ({
+        ...group,
+        value: average(group.records, metric === "fatigue" ? "fatigue" : metric === "sleep" ? "sleep" : metric === "load" ? "load" : "rpe")
+      })).filter(group => group.value !== null);
+      const max = Math.max(...groups.map(group => group.value), metric === "load" ? 1 : 5);
+      document.getElementById("playerChartTitle").textContent = metricLabel(metric) + " per jugador/a";
+      document.getElementById("playerBars").innerHTML = groups.length ? groups.map(group => {
+        const label = group.number ? "#" + group.number + " · " + group.player : group.player;
+        const width = Math.max(4, numeric(group.value) / max * 100);
+        return '<div class="bar-row"><div class="bar-name" title="' + escapeAttr(label) + '">' + escapeHtml(label) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div><div class="bar-value">' + escapeHtml(metric === "load" ? Math.round(group.value).toLocaleString("ca-ES") : formatNumber(group.value)) + '</div></div>';
+      }).join("") : '<div class="empty">No hi ha dades.</div>';
+    }
+    function renderLoadDonut(){
+      const groups = groupByPlayer(state.filtered).map(group => ({ ...group, load: group.records.reduce((sum, record) => sum + numeric(record.load), 0) })).filter(group => group.load > 0);
+      const total = groups.reduce((sum, group) => sum + group.load, 0);
+      document.getElementById("donutTotal").textContent = Math.round(total).toLocaleString("ca-ES");
+      let cursor = 0;
+      const gradient = groups.map((group, index) => {
+        const start = cursor;
+        const end = total ? cursor + group.load / total * 100 : cursor;
+        cursor = end;
+        return COLORS[index % COLORS.length] + " " + start + "% " + end + "%";
+      }).join(", ");
+      document.getElementById("loadDonut").style.background = gradient ? "conic-gradient(" + gradient + ")" : "#eee8f4";
+      document.getElementById("loadLegend").innerHTML = groups.length ? groups.map((group, index) => {
+        const value = Math.round(group.load).toLocaleString("ca-ES");
+        const pct = total ? Math.round(group.load / total * 100) : 0;
+        return '<div class="legend-row"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span><span>' + escapeHtml(group.player) + '</span><strong>' + value + ' · ' + pct + '%</strong></div>';
+      }).join("") : '<div class="empty">No hi ha càrrega.</div>';
+    }
+    function renderDayBars(){
+      const week = weekFilter.value;
+      const start = dateFromISO(week);
+      const dates = start ? Array.from({ length:7 }, (_, index) => isoFromDate(addDays(start, index))) : [];
+      const counts = dates.map(date => state.filtered.filter(record => record.trainingDate === date).length);
+      const max = Math.max(...counts, 1);
+      document.getElementById("dayBars").innerHTML = dates.map((date, index) => {
+        const height = Math.max(4, counts[index] / max * 190);
+        return '<div class="day"><div class="day-bar" style="height:' + height + 'px"></div><strong>' + counts[index] + '</strong><span>' + escapeHtml(formatDate(date).slice(0, 5)) + '</span></div>';
+      }).join("");
+    }
+    function renderRanges(){
+      const metric = metricFilter.value;
+      const maxScale = metric === "rpe" ? 10 : metric === "sleep" ? 7 : metric === "load" ? Math.max(...state.filtered.map(record => record.load), 1) : 5;
+      const ranges = [
+        { label:"0–1", color:"var(--green-strong)", count:0 },
+        { label:"1–2", color:"var(--green-soft)", count:0 },
+        { label:"2–3", color:"var(--yellow)", count:0 },
+        { label:"3–4", color:"var(--orange)", count:0 },
+        { label:"4–5", color:"var(--red)", count:0 }
+      ];
+      state.filtered.forEach(record => {
+        const raw = metricValue(record, metric);
+        if(!raw) return;
+        const value = metric === "load" ? raw / maxScale * 5 : metric === "rpe" ? raw / 10 * 5 : metric === "sleep" ? raw / 7 * 5 : raw;
+        const index = Math.min(4, Math.max(0, Math.ceil(value) - 1));
+        ranges[index].count += 1;
+      });
+      const total = ranges.reduce((sum, range) => sum + range.count, 0);
+      document.getElementById("rangeBars").innerHTML = ranges.map(range => {
+        const pct = total ? range.count / total * 100 : 0;
+        return '<div class="range-row"><div class="range-name">' + range.label + '</div><div class="range-track"><div class="range-fill" style="width:' + pct + '%; background:' + range.color + '"></div></div><strong class="bar-value">' + range.count + '</strong></div>';
+      }).join("");
+    }
+    function populateFilters(){
+      state.weeks = [...new Set(state.records.map(record => weekKey(record.trainingDate)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+      const currentWeek = weekKey(isoFromDate(new Date()));
+      weekFilter.innerHTML = state.weeks.map(week => '<option value="' + escapeAttr(week) + '">' + escapeHtml(weekRangeLabel(week)) + '</option>').join("");
+      weekFilter.value = state.weeks.includes(currentWeek) ? currentWeek : state.weeks[0] || "";
+      const players = groupByPlayer(state.records).map(group => group.player);
+      playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
+    }
+    async function loadData(){
+      statusEl.textContent = "Carregant dades...";
+      const response = await fetch(firebaseUrl(RESPONSES_PATH), { cache:"no-store" });
+      if(!response.ok) throw new Error("No s'han pogut carregar les dades.");
+      const data = await response.json() || {};
+      state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id)).filter(record => record.teamKey === TEAM_KEY || record.team === TEAM_NAME);
+      populateFilters();
+      render();
+      statusEl.textContent = "Dades carregades.";
+    }
+    function escapeHtml(value){
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+    }
+    function escapeAttr(value){
+      return escapeHtml(value);
+    }
+    [weekFilter, playerFilter, metricFilter].forEach(element => element.addEventListener("change", render));
+    loadData().catch(error => {
+      console.error(error);
+      statusEl.textContent = "No s'han pogut carregar les dades.";
+      document.querySelector(".charts").innerHTML = '<div class="panel"><div class="empty">No s’han pogut carregar les dades RPE.</div></div>';
+    });
+  </script>
+</body>
+</html>

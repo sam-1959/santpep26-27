@@ -42,10 +42,14 @@
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; white-space:nowrap; }
     th { color:var(--brand-dark); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; background:#fff; position:sticky; top:0; z-index:1; }
     td.player { font-weight:900; color:var(--brand-dark); }
+    td.alerts-cell { min-width:120px; }
     tr.player-alert td { background:#fff8e1; }
     .player-line { display:flex; align-items:center; gap:8px; }
     .number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 7px; border-radius:999px; background:var(--brand-dark); color:#fff; font-size:0.72rem; font-weight:900; }
+    .alert-chips { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
     .alert-chip { display:inline-flex; align-items:center; justify-content:center; height:22px; padding:0 7px; border-radius:999px; background:#b71c1c; color:#fff; font-size:0.68rem; font-weight:900; letter-spacing:0.03em; }
+    .alert-chip.fatigue { background:#d84315; }
+    .alert-chip.sleep { background:#b26a00; }
     .num { text-align:right; font-variant-numeric:tabular-nums; }
     .badge { display:inline-flex; align-items:center; justify-content:center; min-width:34px; border-radius:999px; padding:3px 8px; font-weight:900; font-size:0.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; }
     .badge.green-strong { background:#1b5e20; color:#fff; border-color:#1b5e20; }
@@ -584,9 +588,9 @@
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th><th>Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
       if(!groups.length || !dates.length){
-        body.innerHTML = '<tr><td colspan="' + (dates.length + 2) + '">No hi ha dades.</td></tr>';
+        body.innerHTML = '<tr><td colspan="' + (dates.length + 3) + '">No hi ha dades.</td></tr>';
         return;
       }
       body.innerHTML = groups.map(group => {
@@ -598,12 +602,19 @@
         const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
         const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
         const alerts = alertLabels(group);
-        const alertBadge = alerts.length ? '<span class="alert-chip" title="' + escapeAttr(alerts.join(", ")) + '">!</span>' : "";
-        return '<tr class="' + (alerts.length ? 'player-alert' : '') + '"><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span>' + alertBadge + '</span></td>' +
+        const alertBadges = alerts.length
+          ? '<span class="alert-chips">' + alerts.map(alert => '<span class="alert-chip ' + alertClass(alert) + '">' + escapeHtml(alert) + '</span>').join("") + '</span>'
+          : "—";
+        return '<tr class="' + (alerts.length ? 'player-alert' : '') + '"><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span></span></td><td class="alerts-cell">' + alertBadges + '</td>' +
           values.map(value => metricCell(value, classGetter, formatter)).join("") +
           metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
         '</tr>';
       }).join("");
+    }
+    function alertClass(alert){
+      if(alert === "Fatiga") return "fatigue";
+      if(alert === "Son") return "sleep";
+      return "rpe";
     }
     function metricCell(value, classGetter, formatter){
       if(value === null || value === undefined) return '<td>—</td>';

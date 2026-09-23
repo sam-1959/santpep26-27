@@ -571,7 +571,7 @@
       renderPlayerPagination(groups.length, start, pagedGroups.length, totalPages);
       renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
-      renderMetricTable("sleep", "Qualitat de la son", dates, pagedGroups, record => record.sleepQuality, value => colorClass(value, 7), value => value || "—");
+      renderMetricTable("sleep", "Qualitat de la son", dates, pagedGroups, record => record.sleepQuality, value => colorClass(value, 5), value => value || "—");
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
       renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
     }

@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
+const fs = require("fs");
+const path = require("path");
+
 const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 const RESPONSES_PATH = "wellnessResponses/season-26-27";
 const ROSTERS_PATH = "rpeRosters/season-26-27";
 const RPE_EMAIL_APP_SCRIPT_URL = process.env.RPE_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
 const RPE_RECIPIENT = process.env.RPE_RECIPIENT || "ricard.fuste@gmail.com";
 const TEAM_KEY = process.env.RPE_TEAM_KEY || "JBF";
+const STATUS_PATH = process.env.RPE_EMAIL_STATUS_PATH || "data/rpe-email-status.json";
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {
   CBM: "Cadet B M",
@@ -55,6 +59,23 @@ function dateInMadrid(){
   }).formatToParts(new Date());
   const value = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return new Date(Number(value.year), Number(value.month) - 1, Number(value.day));
+}
+
+function nowIso(){
+  return new Date().toISOString();
+}
+
+function readStatus(){
+  try {
+    return JSON.parse(fs.readFileSync(STATUS_PATH, "utf8"));
+  } catch(error) {
+    return {};
+  }
+}
+
+function writeStatus(status){
+  fs.mkdirSync(path.dirname(STATUS_PATH), { recursive: true });
+  fs.writeFileSync(STATUS_PATH, JSON.stringify(status, null, 2) + "\n", "utf8");
 }
 
 function isoFromDate(date){
@@ -175,6 +196,14 @@ function valuesFor(group, dates, field){
 }
 
 async function main(){
+  const today = isoFromDate(dateInMadrid());
+  const status = readStatus();
+  const teamStatus = status[TEAM_KEY] || {};
+  if(teamStatus.lastSentDate === today){
+    console.log(`Correu RPE ${TEAM_KEY} ja enviat avui (${today}) a ${teamStatus.lastRecipient || "destinatari configurat"}.`);
+    return;
+  }
+
   await loadRosters();
   const responses = await readFirebase(RESPONSES_PATH) || {};
   const selectedWeek = isoFromDate(mondayOf(dateInMadrid()));
@@ -183,6 +212,28 @@ async function main(){
   const records = Object.entries(responses)
     .map(([id, record]) => normalizeRecord(record || {}, id))
     .filter(record => record.teamKey === TEAM_KEY && dates.includes(record.trainingDate));
+
+  status[TEAM_KEY] = {
+    ...teamStatus,
+    lastAttemptDate: today,
+    lastAttemptAt: nowIso(),
+    lastStatus: "attempted",
+    lastError: ""
+  };
+  writeStatus(status);
+
+  if(!records.length){
+    status[TEAM_KEY] = {
+      ...status[TEAM_KEY],
+      lastStatus: "skipped_no_data",
+      lastError: "",
+      lastSkippedAt: nowIso(),
+      lastSkippedReason: "No hi ha dades setmanals per enviar."
+    };
+    writeStatus(status);
+    console.log(`No s'envia el correu RPE ${TEAM_KEY}: no hi ha dades setmanals.`);
+    return;
+  }
 
   const groups = new Map();
   records.forEach(record => {
@@ -248,11 +299,34 @@ async function main(){
   });
   const text = await response.text();
   if(!response.ok) throw new Error(`App Script ha retornat ${response.status}: ${text}`);
+  status[TEAM_KEY] = {
+    ...status[TEAM_KEY],
+    lastSentDate: today,
+    lastSentAt: nowIso(),
+    lastRecipient: RPE_RECIPIENT,
+    lastTeam: team,
+    lastWeek: selectedWeek,
+    lastWeekLabel: payload.weekLabel,
+    lastRecords: records.length,
+    lastStatus: "sent",
+    lastError: ""
+  };
+  writeStatus(status);
   console.log(`Correu RPE demanat per ${team} (${payload.weekLabel}) a ${RPE_RECIPIENT}. Registres: ${records.length}`);
   console.log(text);
 }
 
 main().catch(error => {
   console.error(error);
+  const today = isoFromDate(dateInMadrid());
+  const status = readStatus();
+  status[TEAM_KEY] = {
+    ...(status[TEAM_KEY] || {}),
+    lastAttemptDate: today,
+    lastAttemptAt: nowIso(),
+    lastStatus: "error",
+    lastError: String(error && error.message ? error.message : error)
+  };
+  writeStatus(status);
   process.exit(1);
 });

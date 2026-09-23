@@ -169,6 +169,9 @@
       const num = Number(value);
       return Number.isFinite(num) ? num : 0;
     }
+    function normalizeName(value){
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
     function normalizeRecord(record, id){
       const duration = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
       const rpe = numeric(record.rpe);

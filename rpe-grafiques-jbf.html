@@ -308,14 +308,13 @@
       }).join("");
       const xLabels = dates.map((date, index) => '<text class="axis-label" x="' + x(index) + '" y="' + (height - 10) + '" text-anchor="middle">' + escapeHtml(formatDate(date).slice(0, 5)) + '</text>').join("");
       const series = groups.map((group, groupIndex) => {
-        const visualOffset = (groupIndex - (groups.length - 1) / 2) * 1.6;
         const values = dates.map(date => {
           const records = group.records.filter(record => record.trainingDate === date);
           return records.length ? records.reduce((sum, record) => sum + numeric(valueGetter(record)), 0) / records.length : null;
         });
         const points = values.map((value, index) => {
           if(value === null) return null;
-          const yy = Math.max(margin.top, Math.min(margin.top + plotHeight, y(value) + visualOffset));
+          const yy = y(value);
           return [x(index), yy, value];
         }).filter(Boolean);
         if(!points.length) return "";

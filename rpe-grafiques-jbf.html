@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <title>Anàlisi RPE JBF · CB Sant Josep</title>
+  <title>Anàlisi RPE · CB Sant Josep</title>
   <style>
     :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06); --radius:16px; --green-strong:#1b5e20; --green-soft:#c8e6c9; --yellow:#fff176; --orange:#ff9800; --red:#ef5350; }
     * { box-sizing:border-box; }
@@ -25,7 +25,7 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:0.82rem; cursor:pointer; box-shadow:var(--shadow); }
     .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); }
     .filters, .summary, .alerts, .panel { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
-    .filters { display:grid; grid-template-columns:repeat(2,minmax(180px,1fr)); gap:10px; padding:12px; margin-bottom:14px; }
+    .filters { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:10px; padding:12px; margin-bottom:14px; }
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
     .summary { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; }
@@ -64,15 +64,15 @@
   <header>
     <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
     <div class="htext">
-      <h1><span class="club">CB Sant Josep de Badalona</span> Anàlisi RPE JBF</h1>
-      <p>Visualització de prova amb les dades setmanals del Júnior B F</p>
+      <h1><span class="club">CB Sant Josep de Badalona</span> Anàlisi RPE</h1>
+      <p id="headerSubtitle">Visualització de prova amb les dades setmanals del Júnior B F</p>
     </div>
     <span class="logo-mark" aria-hidden="true">📈</span>
   </header>
   <main>
     <div class="toolbar">
       <div class="intro">
-        <h2>Anàlisi RPE · Júnior B F</h2>
+        <h2 id="pageTitle">Anàlisi RPE · Júnior B F</h2>
         <p>Evolució setmanal per jugador/a de les quatre preguntes del qüestionari.</p>
       </div>
       <div class="actions">
@@ -83,6 +83,9 @@
     </div>
 
     <section class="filters" aria-label="Filtres">
+      <label>Equip
+        <select id="teamFilter"></select>
+      </label>
       <label>Setmana
         <select id="weekFilter"></select>
       </label>
@@ -129,13 +132,28 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
-    const TEAM_KEY = "JBF";
-    const TEAM_NAME = "Júnior B F";
+    const DEFAULT_TEAM_KEY = "JBF";
+    const TEAM_NAMES_BY_KEY = {
+      CBM: "Cadet B M",
+      CAM: "Cadet A M",
+      CF: "Cadet F",
+      JBM: "Júnior B M",
+      JAM: "Júnior A M",
+      JBF: "Júnior B F",
+      JAF: "Júnior A F",
+      SBM: "Sènior B M",
+      SAM: "Sènior A M",
+      SAF: "Sènior A F"
+    };
+    const TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
     const COLORS = ["#713f97", "#b383d3", "#fcdb20", "#5a2f7d", "#ff9800", "#1b5e20", "#ef5350", "#7e57c2", "#26a69a", "#8d6e63", "#ec407a", "#42a5f5"];
-    const state = { records: [], filtered: [], weeks: [] };
+    const state = { records: [], teamRecords: [], filtered: [], weeks: [] };
+    const teamFilter = document.getElementById("teamFilter");
     const weekFilter = document.getElementById("weekFilter");
     const playerFilter = document.getElementById("playerFilter");
     const statusEl = document.getElementById("status");
+    const pageTitle = document.getElementById("pageTitle");
+    const headerSubtitle = document.getElementById("headerSubtitle");
 
     function firebaseUrl(path){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -151,8 +169,8 @@
       return {
         id,
         ...record,
-        teamKey: String(record.teamKey || "").trim().toUpperCase() || TEAM_KEY,
-        team: record.team || TEAM_NAME,
+        teamKey: String(record.teamKey || "").trim().toUpperCase() || DEFAULT_TEAM_KEY,
+        team: TEAM_NAMES_BY_KEY[String(record.teamKey || "").trim().toUpperCase()] || record.team || TEAM_NAMES_BY_KEY[DEFAULT_TEAM_KEY],
         player: record.player || "Sense nom",
         playerNumber: record.playerNumber || "",
         durationTotalMinutes: duration,
@@ -219,7 +237,7 @@
     function render(){
       const week = weekFilter.value;
       const player = playerFilter.value;
-      state.filtered = state.records.filter(record => (!week || weekKey(record.trainingDate) === week) && (!player || record.player === player));
+      state.filtered = state.teamRecords.filter(record => (!week || weekKey(record.trainingDate) === week) && (!player || record.player === player));
       renderSummary();
       renderAlerts();
       renderLineCharts();
@@ -307,19 +325,35 @@
         '</svg>' + legend;
     }
     function populateFilters(){
-      state.weeks = [...new Set(state.records.map(record => weekKey(record.trainingDate)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
-      const currentWeek = weekKey(isoFromDate(new Date()));
+      const currentPlayer = playerFilter.value;
+      const selectedWeek = weekFilter.value;
+      const selectedTeamKey = teamFilter.value || DEFAULT_TEAM_KEY;
+      const selectedTeamName = TEAM_NAMES_BY_KEY[selectedTeamKey] || selectedTeamKey;
+      state.teamRecords = state.records.filter(record => record.teamKey === selectedTeamKey);
+      pageTitle.textContent = "Anàlisi RPE · " + selectedTeamName;
+      headerSubtitle.textContent = "Visualització de prova amb les dades setmanals del " + selectedTeamName;
+      document.title = "Anàlisi RPE " + selectedTeamKey + " · CB Sant Josep";
+      state.weeks = [...new Set(state.teamRecords.map(record => weekKey(record.trainingDate)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+      const calendarWeek = weekKey(isoFromDate(new Date()));
       weekFilter.innerHTML = state.weeks.map(week => '<option value="' + escapeAttr(week) + '">' + escapeHtml(weekRangeLabel(week)) + '</option>').join("");
-      weekFilter.value = state.weeks.includes(currentWeek) ? currentWeek : state.weeks[0] || "";
-      const players = groupByPlayer(state.records).map(group => group.player);
+      weekFilter.value = state.weeks.includes(selectedWeek) ? selectedWeek : state.weeks.includes(calendarWeek) ? calendarWeek : state.weeks[0] || "";
+      const players = groupByPlayer(state.teamRecords).map(group => group.player);
       playerFilter.innerHTML = '<option value="">Totes</option>' + players.map(player => '<option value="' + escapeAttr(player) + '">' + escapeHtml(player) + '</option>').join("");
+      playerFilter.value = players.includes(currentPlayer) ? currentPlayer : "";
+    }
+    function populateTeams(){
+      const availableKeys = [...new Set(state.records.map(record => record.teamKey).filter(Boolean))];
+      const keys = TEAM_ORDER.filter(key => availableKeys.includes(key));
+      teamFilter.innerHTML = keys.map(key => '<option value="' + escapeAttr(key) + '">' + escapeHtml(TEAM_NAMES_BY_KEY[key] || key) + '</option>').join("");
+      teamFilter.value = keys.includes(DEFAULT_TEAM_KEY) ? DEFAULT_TEAM_KEY : keys[0] || "";
     }
     async function loadData(){
       statusEl.textContent = "Carregant dades...";
       const response = await fetch(firebaseUrl(RESPONSES_PATH), { cache:"no-store" });
       if(!response.ok) throw new Error("No s'han pogut carregar les dades.");
       const data = await response.json() || {};
-      state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id)).filter(record => record.teamKey === TEAM_KEY || record.team === TEAM_NAME);
+      state.records = Object.entries(data).map(([id, record]) => normalizeRecord(record || {}, id));
+      populateTeams();
       populateFilters();
       render();
       statusEl.textContent = "Dades carregades.";
@@ -330,6 +364,10 @@
     function escapeAttr(value){
       return escapeHtml(value);
     }
+    teamFilter.addEventListener("change", () => {
+      populateFilters();
+      render();
+    });
     [weekFilter, playerFilter].forEach(element => element.addEventListener("change", render));
     loadData().catch(error => {
       console.error(error);

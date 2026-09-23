@@ -50,6 +50,7 @@
     .axis { stroke:#d8cfe4; stroke-width:1; }
     .grid-line { stroke:#efe9f5; stroke-width:1; }
     .line { fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; opacity:0.9; }
+    .line-hit { fill:none; stroke:transparent; stroke-width:14; stroke-linecap:round; stroke-linejoin:round; cursor:help; pointer-events:stroke; }
     .point { stroke:#fff; stroke-width:1.5; }
     .axis-label { fill:var(--muted); font-size:11px; font-weight:800; }
     .legend { display:flex; gap:10px 14px; flex-wrap:wrap; padding:0 16px 16px; }
@@ -313,7 +314,9 @@
         const color = COLORS[groupIndex % COLORS.length];
         const path = points.map((point, index) => (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1)).join(" ");
         const circles = points.map(point => '<circle class="point" cx="' + point[0].toFixed(1) + '" cy="' + point[1].toFixed(1) + '" r="4" fill="' + color + '"><title>' + escapeHtml(group.player + " · " + formatter(point[2])) + '</title></circle>').join("");
-        return '<path class="line" d="' + path + '" stroke="' + color + '"><title>' + escapeHtml(group.player) + '</title></path>' + circles;
+        return '<path class="line" d="' + path + '" stroke="' + color + '"></path>' +
+          '<path class="line-hit" d="' + path + '"><title>' + escapeHtml(group.player) + '</title></path>' +
+          circles;
       }).join("");
       const legend = '<div class="legend">' + groups.map((group, index) => '<span class="legend-row"><span class="swatch" style="background:' + COLORS[index % COLORS.length] + '"></span>' + escapeHtml((group.number ? "#" + group.number + " · " : "") + group.player) + '</span>').join("") + '</div>';
       container.innerHTML = '<svg class="line-chart" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escapeAttr(label) + '">' +

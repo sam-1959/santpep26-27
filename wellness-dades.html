@@ -42,11 +42,11 @@
     th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; white-space:nowrap; }
     th { color:var(--brand-dark); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; background:#fff; position:sticky; top:0; z-index:1; }
     td.player { font-weight:900; color:var(--brand-dark); }
-    td.alerts-cell { min-width:120px; }
+    th.alerts-head, td.alerts-cell { min-width:120px; text-align:center; }
     tr.player-alert td { background:#fff8e1; }
     .player-line { display:flex; align-items:center; gap:8px; }
     .number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 7px; border-radius:999px; background:var(--brand-dark); color:#fff; font-size:0.72rem; font-weight:900; }
-    .alert-chips { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .alert-chips { display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap; }
     .alert-chip { display:inline-flex; align-items:center; justify-content:center; height:22px; padding:0 7px; border-radius:999px; background:#fde2e2; color:#8a1f1f; border:1px solid #f5b8b8; font-size:0.68rem; font-weight:900; letter-spacing:0.03em; }
     .alert-chip.fatigue { background:#ffe8d6; color:#8a3d00; border-color:#ffc79a; }
     .alert-chip.sleep { background:#fff4c2; color:#6b5200; border-color:#f0d66a; }
@@ -632,7 +632,7 @@
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th><th>Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
       if(!groups.length || !dates.length){
         body.innerHTML = '<tr><td colspan="' + (dates.length + 3) + '">No hi ha dades.</td></tr>';
         return;

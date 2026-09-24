@@ -99,12 +99,16 @@
     .long { min-width:190px; max-width:320px; color:var(--ink); white-space:normal; }
     .guidelines { min-width:240px; max-width:360px; color:var(--brand-dark); font-weight:750; white-space:normal; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
-    .court-badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:999px; font-size:0; white-space:nowrap; border:1px solid var(--line); vertical-align:middle; }
-    .court-badge::before { content:"●"; font-size:0.9rem; line-height:1; }
-    .court-badge.pending { background:#f3f0f6; color:var(--muted); }
-    .court-badge.red { background:#fdeaea; color:#9f1d1d; border-color:#f3b5b5; }
-    .court-badge.orange { background:#fff3df; color:#8a4b00; border-color:#ffd29a; }
-    .court-badge.green { background:#e8f5e9; color:#1b5e20; border-color:#a5d6a7; }
+    .court-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:999px; font-size:0; white-space:nowrap; border:2px solid var(--line); vertical-align:middle; font-weight:900; box-shadow:0 1px 4px rgba(20,12,32,0.12); }
+    .court-badge::before { font-size:0.9rem; line-height:1; }
+    .court-badge.pending { background:#fff; color:#6f6478; border-color:#b9afc4; }
+    .court-badge.pending::before { content:"○"; }
+    .court-badge.red { background:#fff1f1; color:#b00020; border-color:#d32f2f; }
+    .court-badge.red::before { content:"×"; font-size:1.05rem; }
+    .court-badge.orange { background:#fff6e5; color:#9a5a00; border-color:#f9a825; }
+    .court-badge.orange::before { content:"!"; }
+    .court-badge.green { background:#eef8ef; color:#1b7f45; border-color:#2e7d32; }
+    .court-badge.green::before { content:"✓"; }
     .col-prepa { width:1%; white-space:nowrap; }
     .col-feedback { min-width:180px; max-width:260px; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }

@@ -67,6 +67,7 @@ function construirTextPla(team, weekLabel, summary, players) {
   players.forEach(function(player) {
     lines.push(
       (player.number ? "#" + player.number + " " : "") + valor(player.player),
+      "  Alertes: " + alertesText(player.alerts),
       "  RPE: " + valors(player.rpe).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.rpe),
       "  Fatiga: " + valors(player.fatigue).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.fatigue),
       "  Son: " + valors(player.sleep).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.sleep),
@@ -100,6 +101,8 @@ function construirHtml(team, weekLabel, summary, dates, players) {
           </tr>
         </table>
 
+        ${blocAlertes(summary.alerts)}
+
         ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
         ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
         ${taulaMetrica("Qualitat de la son", dates, players, "sleep", "sleep")}
@@ -111,6 +114,33 @@ function construirHtml(team, weekLabel, summary, dates, players) {
       </div>
     </div>
   `;
+}
+
+function blocAlertes(alerts) {
+  alerts = alerts || {};
+  return `
+    <div style="margin: 0 0 20px; padding: 14px; background: #FFFDF3; border: 1px solid #F0D66A; border-radius: 8px;">
+      <h3 style="color: #4B1D6D; margin: 0 0 10px; font-size: 16px;">Alertes</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #F5E9A8; font-weight: bold; color: #8A1F1F;">RPE alt</td>
+          <td style="padding: 8px; border-bottom: 1px solid #F5E9A8;">${escaparHtml(alertesResum(alerts.rpe))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #F5E9A8; font-weight: bold; color: #8A3D00;">Fatiga alta</td>
+          <td style="padding: 8px; border-bottom: 1px solid #F5E9A8;">${escaparHtml(alertesResum(alerts.fatigue))}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; font-weight: bold; color: #6B5200;">Son baixa</td>
+          <td style="padding: 8px;">${escaparHtml(alertesResum(alerts.sleep))}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+}
+
+function alertesResum(players) {
+  return players && players.length ? players.join(", ") : "Sense alertes";
 }
 
 function kpi(label, value) {
@@ -133,6 +163,7 @@ function taulaMetrica(title, dates, players, field, averageField) {
     return `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; font-weight: bold; color: #4B1D6D; white-space: nowrap;">${player.number ? "#" + escaparHtml(player.number) + " " : ""}${escaparHtml(valor(player.player))}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: left;">${alertesHtml(player.alerts)}</td>
         ${values}
         <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center; font-weight: bold;">${escaparHtml(valor(player.averages && player.averages[averageField]))}</td>
       </tr>
@@ -145,13 +176,32 @@ function taulaMetrica(title, dates, players, field, averageField) {
       <thead>
         <tr style="background-color: #4B1D6D; color: #FFC72C;">
           <th style="padding: 8px; text-align: left;">Jugador/a</th>
+          <th style="padding: 8px; text-align: left;">Alertes</th>
           ${headerDates}
           <th style="padding: 8px; text-align: center;">Mitjana</th>
         </tr>
       </thead>
-      <tbody>${rows || '<tr><td style="padding: 10px;" colspan="' + (dates.length + 2) + '">No hi ha dades.</td></tr>'}</tbody>
+      <tbody>${rows || '<tr><td style="padding: 10px;" colspan="' + (dates.length + 3) + '">No hi ha dades.</td></tr>'}</tbody>
     </table>
   `;
+}
+
+function alertesText(alerts) {
+  return alerts && alerts.length ? alerts.join(", ") : "Sense alertes";
+}
+
+function alertesHtml(alerts) {
+  if (!alerts || !alerts.length) {
+    return '<span style="display:inline-block; padding:3px 7px; border-radius:999px; background:#F4F4F4; color:#666; font-size:11px; font-weight:bold;">Sense alertes</span>';
+  }
+  return alerts.map(function(alerta) {
+    var colors = alerta === "Fatiga"
+      ? { bg:"#FFE8D6", fg:"#8A3D00", border:"#FFC79A" }
+      : alerta === "Son"
+        ? { bg:"#FFF4C2", fg:"#6B5200", border:"#F0D66A" }
+        : { bg:"#FDE2E2", fg:"#8A1F1F", border:"#F5B8B8" };
+    return '<span style="display:inline-block; margin:2px 3px 2px 0; padding:3px 7px; border-radius:999px; background:' + colors.bg + '; color:' + colors.fg + '; border:1px solid ' + colors.border + '; font-size:11px; font-weight:bold;">' + escaparHtml(alerta) + '</span>';
+  }).join("");
 }
 
 function valors(input) {

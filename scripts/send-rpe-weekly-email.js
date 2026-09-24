@@ -229,6 +229,14 @@ function valuesFor(group, dates, field){
   });
 }
 
+function alertLabels(group){
+  const labels = [];
+  if(group.rpe !== null && group.rpe >= 8) labels.push("RPE");
+  if(group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
+  if(group.sleep !== null && group.sleep <= 2) labels.push("Son");
+  return labels;
+}
+
 async function main(){
   const today = isoFromDate(dateInMadrid());
   const status = readStatus();
@@ -292,6 +300,9 @@ async function main(){
     });
 
   const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
+  const rpeHigh = players.filter(group => alertLabels(group).includes("RPE")).map(group => group.player);
+  const fatigueHigh = players.filter(group => alertLabels(group).includes("Fatiga")).map(group => group.player);
+  const sleepLow = players.filter(group => alertLabels(group).includes("Son")).map(group => group.player);
   const payload = {
     recipient: recipients.join(","),
     testMode: true,
@@ -304,7 +315,12 @@ async function main(){
       rpe: formatNumber(average(records, "rpe")),
       fatigue: formatNumber(average(records, "muscleFatigue")),
       sleep: formatNumber(average(records, "sleepQuality")),
-      load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—"
+      load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
+      alerts: {
+        rpe: rpeHigh,
+        fatigue: fatigueHigh,
+        sleep: sleepLow
+      }
     },
     dates: dates.map(date => ({ iso: date, label: formatDate(date).slice(0, 5) })),
     players: players.map(group => {
@@ -313,6 +329,7 @@ async function main(){
         number,
         player: group.player,
         team: group.team,
+        alerts: alertLabels(group),
         rpe: valuesFor(group, dates, record => record.rpe),
         fatigue: valuesFor(group, dates, record => record.muscleFatigue),
         sleep: valuesFor(group, dates, record => record.sleepQuality),

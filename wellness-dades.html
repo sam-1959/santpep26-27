@@ -668,6 +668,9 @@
       const recipients = recipientsForTeam(teamName);
       const records = state.filtered;
       const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
+      const rpeHigh = groups.filter(group => alertLabels(group).includes("RPE")).map(group => group.player);
+      const fatigueHigh = groups.filter(group => alertLabels(group).includes("Fatiga")).map(group => group.player);
+      const sleepLow = groups.filter(group => alertLabels(group).includes("Son")).map(group => group.player);
       return {
         recipient: recipients.emails,
         recipientNames: recipients.names,
@@ -680,7 +683,12 @@
           rpe: formatNumber(average(records, "rpe")),
           fatigue: formatNumber(average(records, "muscleFatigue")),
           sleep: formatNumber(average(records, "sleepQuality")),
-          load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—"
+          load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
+          alerts: {
+            rpe: rpeHigh,
+            fatigue: fatigueHigh,
+            sleep: sleepLow
+          }
         },
         dates: dates.map(date => ({ iso: date, label: formatDate(date).slice(0, 5) })),
         players: groups.map(group => {
@@ -695,6 +703,7 @@
             number,
             player: group.player,
             team: group.team,
+            alerts: alertLabels(group),
             rpe: valuesFor(record => record.rpe),
             fatigue: valuesFor(record => record.muscleFatigue),
             sleep: valuesFor(record => record.sleepQuality),
@@ -724,11 +733,17 @@
         "- Son mitjana: " + payload.summary.sleep,
         "- Càrrega total: " + payload.summary.load,
         "",
+        "Alertes:",
+        "- RPE alt: " + alertSummaryText(payload.summary.alerts && payload.summary.alerts.rpe),
+        "- Fatiga alta: " + alertSummaryText(payload.summary.alerts && payload.summary.alerts.fatigue),
+        "- Son baixa: " + alertSummaryText(payload.summary.alerts && payload.summary.alerts.sleep),
+        "",
         "Detall per jugador/a:"
       ];
       payload.players.forEach(player => {
         lines.push(
           (player.number ? "#" + player.number + " " : "") + player.player,
+          "  Alertes: " + (player.alerts && player.alerts.length ? player.alerts.join(", ") : "Sense alertes"),
           "  RPE: " + player.rpe.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.rpe,
           "  Fatiga: " + player.fatigue.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.fatigue,
           "  Son: " + player.sleep.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.sleep,
@@ -737,6 +752,9 @@
         );
       });
       return lines.join("\n");
+    }
+    function alertSummaryText(players){
+      return players && players.length ? players.join(", ") : "Sense alertes";
     }
     async function sendWeeklyEmail(){
       if(!hasTableData()){

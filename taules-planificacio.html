@@ -78,11 +78,11 @@
     .monthly-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px; }
     .monthly-section-head .monthly-title { margin:0; }
     .monthly-cost-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
-    .monthly-cost-table { width:100%; border-collapse:collapse; min-width:520px; font-size:0.86rem; }
+    .monthly-cost-table { width:100%; border-collapse:collapse; min-width:620px; font-size:0.86rem; }
     .monthly-cost-table th, .monthly-cost-table td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
     .monthly-cost-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
-    .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4),
-    .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4) { text-align:right; }
+    .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4), .monthly-cost-table td:nth-child(5),
+    .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4), .monthly-cost-table th:nth-child(5) { text-align:right; }
     .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
@@ -791,6 +791,19 @@
       return [...load.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
     }
 
+    function totalAssignmentCountsByPerson(){
+      const load = new Map();
+      Object.values(assignments || {}).forEach(assignment => {
+        if (!assignment) return;
+        ["table1", "table2"].forEach(slot => {
+          const person = assignment[slot];
+          if (!person) return;
+          load.set(person, (load.get(person) || 0) + 1);
+        });
+      });
+      return load;
+    }
+
     function renderMonthlyLoad(periodGames){
       const panel = document.createElement("section");
       panel.className = "monthly-panel";
@@ -805,8 +818,9 @@
       } else {
         const table = document.createElement("table");
         table.className = "monthly-cost-table";
-        table.innerHTML = "<thead><tr><th>Persona</th><th>Taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+        table.innerHTML = "<thead><tr><th>Persona</th><th>Taules del mes</th><th>Total taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
         const body = table.querySelector("tbody");
+        const totalsByPerson = totalAssignmentCountsByPerson();
         let total = 0;
         loads.forEach(item => {
           const amount = item.total * TABLE_COST;
@@ -815,12 +829,13 @@
           row.innerHTML =
             `<td>${escapeHtml(item.name)}</td>` +
             `<td>${escapeHtml(item.total)}</td>` +
+            `<td>${escapeHtml(totalsByPerson.get(item.name) || item.total)}</td>` +
             `<td>${formatCost(TABLE_COST)}</td>` +
             `<td>${formatCost(amount)}</td>`;
           body.appendChild(row);
         });
         table.querySelector("tfoot").innerHTML =
-          `<tr><td colspan="3">Total mensual</td><td>${formatCost(total)}</td></tr>`;
+          `<tr><td colspan="4">Total mensual</td><td>${formatCost(total)}</td></tr>`;
         wrap.appendChild(table);
       }
       panel.append(title, wrap);

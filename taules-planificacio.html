@@ -81,8 +81,6 @@
     .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4),
     .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4) { text-align:right; }
     .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
-    .monthly-cost-summary { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 10px; }
-    .monthly-cost-summary .cost-chip { background:#fff8d8; color:#4a3800; border-color:#f3df73; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -579,12 +577,6 @@
       const wrap = document.createElement("div");
       wrap.className = "monthly-cost-table-wrap";
       const loads = personLoadForGames(periodGames);
-      const assignmentsCount = loads.reduce((sum, item) => sum + item.total, 0);
-      const summary = document.createElement("div");
-      summary.className = "monthly-cost-summary";
-      summary.append(
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Taules assignades: ${assignmentsCount}` })
-      );
       if (!loads.length) {
         wrap.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
       } else {
@@ -608,7 +600,7 @@
           `<tr><td colspan="3">Total mensual</td><td>${formatCost(total)}</td></tr>`;
         wrap.appendChild(table);
       }
-      panel.append(title, summary, wrap);
+      panel.append(title, wrap);
       els.content.appendChild(panel);
     }
 
@@ -786,8 +778,7 @@
       const head = document.createElement("div");
       head.className = "monthly-section-head";
       head.append(
-        Object.assign(document.createElement("h2"), { className:"monthly-title", textContent:"Taules del mes" }),
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Partits amb taules: ${visible.length}` })
+        Object.assign(document.createElement("h2"), { className:"monthly-title", textContent:"Taules del mes" })
       );
       const wrap = document.createElement("div");
       wrap.className = "monthly-table-wrap";

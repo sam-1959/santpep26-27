@@ -87,10 +87,10 @@
           <input id="trainingDate" type="date" required />
         </label>
         <div class="grid-2">
-          <label>Duració - hores <span class="required">*</span>
+          <label>Temps pista + físic - hores <span class="required">*</span>
             <input id="durationHours" type="number" min="0" max="6" step="1" inputmode="numeric" required />
           </label>
-          <label>Duració - minuts <span class="required">*</span>
+          <label>Temps pista + físic - minuts <span class="required">*</span>
             <input id="durationMinutes" type="number" min="0" max="59" step="1" inputmode="numeric" required />
           </label>
         </div>
@@ -413,7 +413,7 @@
     form.addEventListener("submit", async function(event){
       event.preventDefault();
       if(!validateDuration()){
-        setStatus("err", "Indica una duració vàlida de l'entrenament.");
+        setStatus("err", "Indica un temps vàlid de pista + físic.");
         document.getElementById("durationHours").focus();
         return;
       }

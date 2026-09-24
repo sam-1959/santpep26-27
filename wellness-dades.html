@@ -323,7 +323,7 @@
       const title = hasTeamParam && requestedTeamName ? "Seguiment RPE " + requestedTeamName : "Seguiment RPE";
       pageTitle.textContent = title;
       document.title = title + " · CB Sant Josep";
-      emailButton.hidden = false;
+      emailButton.hidden = hasTeamParam;
     }
     function formatDate(value){
       if(!value) return "—";
@@ -543,6 +543,10 @@
       return state.filtered.length > 0 && groupedByPlayer().length > 0;
     }
     function updateEmailButtonState(){
+      if(hasTeamParam){
+        emailButton.disabled = true;
+        return;
+      }
       emailButton.disabled = !hasTableData();
       emailButton.title = emailButton.disabled ? "No hi ha dades setmanals per enviar." : "Enviar les dades RPE per correu.";
     }

@@ -95,14 +95,8 @@
     .col-feedback { min-width:180px; max-width:260px; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
     .prepa-badge.read { background:#e8f5e9; border-color:#a5d6a7; color:#1b5e20; }
-    .feedback-pill { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; background:#f3edf8; color:var(--brand-dark); margin-bottom:4px; }
-    .feedback-pill.revisar { background:#fff4cc; color:#6b4d00; }
-    .feedback-pill.dubte { background:#e3f2fd; color:#0d47a1; }
-    .feedback-pill.treballat { background:#e8f5e9; color:#1b5e20; }
     .feedback-preview { color:var(--muted); font-size:0.78rem; line-height:1.3; white-space:normal; }
     .action-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:3px; white-space:normal; }
-    .feedback-legend { grid-column:1 / -1; margin:-2px 0 2px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; color:var(--muted); font-size:0.82rem; }
-    .feedback-legend strong { color:var(--brand-dark); }
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
@@ -246,19 +240,6 @@
       </div>
       <form id="feedbackForm">
         <div class="form-grid">
-          <div class="field wide">
-            <label for="feedbackStatus">Estat</label>
-            <select id="feedbackStatus" name="feedbackStatus" required>
-              <option value="treballat">Treballat</option>
-              <option value="dubte">Dubte</option>
-              <option value="revisar">Revisar</option>
-            </select>
-          </div>
-          <div class="feedback-legend">
-            <strong>Treballat</strong>: el prepa ja ho ha aplicat o gestionat ·
-            <strong>Dubte</strong>: cal aclariment del fisio ·
-            <strong>Revisar</strong>: cal que el fisio ho torni a mirar
-          </div>
           <div class="field full">
             <label for="feedbackText">Feedback del preparador físic</label>
             <textarea id="feedbackText" name="feedbackText" required></textarea>
@@ -337,7 +318,6 @@
       feedbackModal: document.getElementById("feedbackModal"),
       feedbackForm: document.getElementById("feedbackForm"),
       feedbackModalTitle: document.getElementById("feedbackModalTitle"),
-      feedbackStatus: document.getElementById("feedbackStatus"),
       feedbackText: document.getElementById("feedbackText"),
       feedbackSubmit: document.getElementById("feedbackSubmitButton"),
       feedbackFormStatus: document.getElementById("feedbackFormStatus"),
@@ -500,11 +480,6 @@
       return value || "—";
     }
 
-    function feedbackStatusLabel(value){
-      const labels = { treballat:"Treballat", dubte:"Dubte", revisar:"Revisar" };
-      return labels[value] || "Feedback";
-    }
-
     function normalizeRows(data){
       if(!data || typeof data !== "object") return [];
       return Object.entries(data).map(([id, row]) => ({
@@ -600,8 +575,7 @@
             renderFilterGroup("prepa", "Prepa", [
               { value:"NO_LLEGIDES", label:"Pendents prepa" },
               { value:"LLEGIDES", label:"Llegides" },
-              { value:"AMB_FEEDBACK", label:"Amb feedback" },
-              { value:"REVISAR", label:"A revisar" }
+              { value:"AMB_FEEDBACK", label:"Amb feedback" }
             ], activePrepaFilter)
           : "") +
         renderFilterGroup("structure", "Estructura", uniqueValues("structure"), activeStructure);
@@ -668,11 +642,10 @@
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
         if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
         if(hasAccess() && activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
-        if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !(row.prepaFeedback?.status || row.prepaFeedback?.text)) return false;
-        if(hasAccess() && activePrepaFilter === "REVISAR" && row.prepaFeedback?.status !== "revisar") return false;
+        if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !row.prepaFeedback?.text) return false;
         if(!query) return true;
         const searchable = hasAccess()
-          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.status, row.prepaFeedback?.text]
+          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]
           : [row.date, row.team, teamCategory(row.team), row.structure, row.location, row.gender];
         return normalize(searchable.join(" ")).includes(query);
       });
@@ -733,15 +706,13 @@
         '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const feedback = row.prepaFeedback || {};
-          const feedbackStatus = feedback.status || "";
           const feedbackText = feedback.text || "";
           const readMeta = actorMeta(row.prepaReadByName, row.prepaReadByEmail, row.prepaReadAt);
           const feedbackMeta = actorMeta(feedback.byName, feedback.byEmail, feedback.updatedAt);
           const readByLabel = row.prepaReadByName || row.prepaReadByEmail || "";
           const readLabel = row.prepaRead ? "✓ " + (readByLabel || "Llegit") : "Pendent";
-          const feedbackHtml = feedbackStatus || feedbackText
-            ? '<span class="feedback-pill ' + escapeHtml(feedbackStatus) + '">' + escapeHtml(feedbackStatusLabel(feedbackStatus)) + '</span>' +
-              (feedbackText ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' : '') +
+          const feedbackHtml = feedbackText
+            ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' +
               (feedbackMeta ? '<div class="action-meta">' + escapeHtml(feedbackMeta) + '</div>' : '')
             : '<span class="feedback-preview">—</span>';
           return '<tr>' +
@@ -976,7 +947,6 @@
       feedbackVisitId = row.id;
       const feedback = row.prepaFeedback || {};
       els.feedbackModalTitle.textContent = "Feedback · " + (row.name || "Visita");
-      els.feedbackStatus.value = feedback.status || "treballat";
       els.feedbackText.value = feedback.text || "";
       setFeedbackFormStatus("", "");
       els.feedbackModal.classList.add("open");
@@ -1107,7 +1077,6 @@
         prepaReadByName: actor.name,
         prepaReadByEmail: actor.email,
         prepaFeedback:{
-          status: els.feedbackStatus.value,
           text: els.feedbackText.value.trim(),
           updatedAt: actor.at,
           byName: actor.name,

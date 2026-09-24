@@ -558,7 +558,7 @@
     }
 
     function uniquePlayerNames(){
-      const requestNames = dedupeNames(requestPlayerNames);
+      const requestNames = dedupeNames(requestPlayerNames.map(shortPlayerName).filter(Boolean));
       const requestShortKeys = new Set(requestNames.map(shortPlayerKey).filter(Boolean));
       const visitNames = dedupeNames(rows.map(row => shortPlayerName(row.name))
         .filter(name => name && !requestShortKeys.has(shortPlayerKey(name))));

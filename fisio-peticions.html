@@ -53,8 +53,9 @@
     td { font-size:0.88rem; }
     .col-count { width:1%; white-space:nowrap; text-align:right; color:var(--muted); font-weight:800; }
     .col-date { width:1%; white-space:nowrap; }
+    .col-request-date { width:1%; white-space:nowrap; text-align:center; }
     .col-name { width:1%; white-space:nowrap; }
-    .col-physio { width:1%; white-space:nowrap; }
+    .col-physio { width:1%; white-space:nowrap; text-align:center; }
     .col-team { width:1%; white-space:nowrap; }
     .col-court { width:1%; white-space:nowrap; text-align:center; }
     .col-phone { width:1%; white-space:nowrap; }
@@ -599,7 +600,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -627,7 +628,7 @@
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
-          '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
+          '<td class="col-request-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
           quotaCell +
           '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +

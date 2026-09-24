@@ -298,6 +298,8 @@
     const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 10;
     const PHYSIOS = ["Pol Amigó", "Eric Nicolàs", "Miquel Sánchez"];
+    const DEFAULT_STRUCTURES = ["ARTICULAR", "MUSCULAR", "RAQUIS"];
+    const DEFAULT_LOCATIONS = ["CERVICALS", "DORSAL", "ESPATLLA", "GENOLL", "ISQUIO", "LUMBAR", "PEU", "QUADRICEPS", "TURMELL"];
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
@@ -573,6 +575,11 @@
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
+    function defaultAndExistingValues(defaults, field){
+      return dedupeNames(defaults.concat(uniqueValues(field)))
+        .map(value => value.toUpperCase());
+    }
+
     function uniqueTeamCategories(){
       return [...new Set(rows.map(row => teamCategory(row.team)).filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
@@ -655,10 +662,10 @@
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
-        { el:els.structureOptions, field:"structure" },
-        { el:els.locationOptions, field:"location" }
+        { el:els.structureOptions, values:defaultAndExistingValues(DEFAULT_STRUCTURES, "structure") },
+        { el:els.locationOptions, values:defaultAndExistingValues(DEFAULT_LOCATIONS, "location") }
       ].forEach(config => {
-        const values = config.values || uniqueValues(config.field);
+        const values = config.values || [];
         config.el.innerHTML = values
           .map(value => '<option value="' + escapeHtml(value) + '"></option>')
           .join("");

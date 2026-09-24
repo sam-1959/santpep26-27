@@ -192,7 +192,7 @@
               <option value="">Sense assignar</option>
               <option value="Pol Amigó">Pol Amigó</option>
               <option value="Eric Nicolàs">Eric Nicolàs</option>
-              <option value="Miquel Saro">Miquel Saro</option>
+              <option value="Miquel Sánchez">Miquel Sánchez</option>
             </select>
           </div>
             <div class="field">
@@ -297,7 +297,7 @@
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 10;
-    const PHYSIOS = ["Pol Amigó", "Eric Nicolàs", "Miquel Saro"];
+    const PHYSIOS = ["Pol Amigó", "Eric Nicolàs", "Miquel Sánchez"];
     let rows = [];
     let activeGender = "TOTS";
     let activeTeam = "TOTS";
@@ -394,7 +394,7 @@
     }
 
     function isFisio(){
-      return currentRole === "fisio" || currentRole === "fisio_prepa";
+      return currentRole === "fisio" || currentRole === "fisio_prepa" || currentRole === "readaptador";
     }
 
     function isPrepa(){
@@ -1038,7 +1038,7 @@
     function setRoleMode(user, role){
       currentUser = user;
       currentRole = role;
-      els.authTitle.textContent = role === "fisio_prepa" ? "Vista fisio i prepa" : role === "fisio" ? "Vista fisio" : "Vista prepa";
+      els.authTitle.textContent = role === "fisio_prepa" ? "Vista fisio i prepa" : role === "readaptador" ? "Vista readaptador" : role === "fisio" ? "Vista fisio" : "Vista prepa";
       els.authText.textContent = "Sessió iniciada com " + user.email + ".";
       els.loginButton.hidden = true;
       els.logoutButton.hidden = false;

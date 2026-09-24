@@ -263,7 +263,6 @@
     };
     const SCALE_FIELDS = [
       { id:"muscleFatigue", label:"Fatiga muscular", max:5, help:"1 = Molt recuperat · 2 = Recuperat · 3 = Normal · 4 = Més fatigat del normal · 5 = Molt fatigat" },
-      { id:"sleepQuality", label:"Qualitat de la son", max:5, help:"1 = Molt relaxant · 2 = Bo · 3 = Dificultat per dormir · 4 = Son inquiet · 5 = Insomni" },
       { id:"musclePain", label:"Dolor muscular", max:5, help:"1 = Molt bones sensacions · 2 = Bones sensacions · 3 = Normal · 4 = Augment del dolor muscular · 5 = Molt adolorit" },
       { id:"mentalStress", label:"Estrès i fatiga mental", max:5, help:"1 = Molt relaxat · 2 = Relaxat · 3 = Normal · 4 = Estressat · 5 = Molt estressat" },
       { id:"mood", label:"Humor (en el dia d'avui)", max:5, help:"1 = Molt positiu · 2 = Bon humor · 3 = Normal · 4 = Mal geni · 5 = Molest" },
@@ -437,7 +436,6 @@
         durationMinutes,
         durationTotalMinutes: durationHours * 60 + durationMinutes,
         muscleFatigue: selectedScale("muscleFatigue"),
-        sleepQuality: selectedScale("sleepQuality"),
         sleepHours: inputValue("sleepHours"),
         musclePain: selectedScale("musclePain"),
         mentalStress: selectedScale("mentalStress"),

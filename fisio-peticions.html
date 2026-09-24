@@ -192,6 +192,8 @@
     let rows = [];
     let activeTeam = "TOTS";
     let activeGender = "TOTS";
+    let activePhysio = "TOTS";
+    let activeCourtStatus = "TOTS";
     let searchQuery = "";
     let currentPage = 1;
     let statusMessage = "";
@@ -298,6 +300,18 @@
       const status = ["red", "orange", "green", "pending"].includes(value) ? value : "pending";
       const label = courtStatusLabel(status);
       return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></span>';
+    }
+
+    function latestPhysioFilterValue(row){
+      const latest = latestGuidelinesFor(row.player);
+      if(!latest) return "NO_VISIT";
+      return latest.assignedPhysio || "NO_PHYSIO";
+    }
+
+    function latestCourtFilterValue(row){
+      const latest = latestGuidelinesFor(row.player);
+      if(!latest) return "NO_VISIT";
+      return ["red", "orange", "green", "pending"].includes(latest.courtStatus) ? latest.courtStatus : "pending";
     }
 
     function isSameDay(a, b){
@@ -468,10 +482,28 @@
 
     function renderFilters(){
       const teams = ["TOTS"].concat([...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
+      const physios = [...new Set(rows
+        .map(row => latestGuidelinesFor(row.player)?.assignedPhysio)
+        .filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b, "ca-ES"));
       const genders = [
         { value: "TOTS", label: "Tots" },
         { value: "M", label: "Masculins" },
         { value: "F", label: "Femenins" }
+      ];
+      const physioFilters = [
+        { value: "TOTS", label: "Tots" },
+        ...physios.map(physio => ({ value: physio, label: physio })),
+        { value: "NO_PHYSIO", label: "Sense fisio" },
+        { value: "NO_VISIT", label: "Sense visita" }
+      ];
+      const courtFilters = [
+        { value: "TOTS", label: "Tots" },
+        { value: "pending", label: "Pendent" },
+        { value: "red", label: "No pista" },
+        { value: "orange", label: "Condicionada" },
+        { value: "green", label: "Normal" },
+        { value: "NO_VISIT", label: "Sense visita" }
       ];
       genderFiltersEl.innerHTML =
         '<div class="filter-group"><div class="filter-label">Gènere</div>' +
@@ -485,7 +517,18 @@
         '<button class="chip ' + (team === activeTeam ? "active" : "") + '" type="button" data-team="' + escapeHtml(team) + '">' +
         (team === "TOTS" ? "Tots" : escapeHtml(team)) + '</button>'
       ).join("") + '</div>';
-      filtersEl.innerHTML = "";
+      filtersEl.innerHTML =
+        '<div class="filter-group"><div class="filter-label">Fisio</div>' +
+        physioFilters.map(filter =>
+          '<button class="chip ' + (filter.value === activePhysio ? "active" : "") + '" type="button" data-physio="' + escapeHtml(filter.value) + '">' +
+          escapeHtml(filter.label) + '</button>'
+        ).join("") +
+        '</div>' +
+        '<div class="filter-group"><div class="filter-label">Pista</div>' +
+        courtFilters.map(filter =>
+          '<button class="chip ' + (filter.value === activeCourtStatus ? "active" : "") + '" type="button" data-court-status="' + escapeHtml(filter.value) + '">' +
+          escapeHtml(filter.label) + '</button>'
+        ).join("") + '</div>';
       genderFiltersEl.querySelectorAll("[data-team]").forEach(button => {
         button.addEventListener("click", () => {
           activeTeam = button.dataset.team;
@@ -500,6 +543,20 @@
           render();
         });
       });
+      filtersEl.querySelectorAll("[data-physio]").forEach(button => {
+        button.addEventListener("click", () => {
+          activePhysio = button.dataset.physio;
+          currentPage = 1;
+          render();
+        });
+      });
+      filtersEl.querySelectorAll("[data-court-status]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeCourtStatus = button.dataset.courtStatus;
+          currentPage = 1;
+          render();
+        });
+      });
     }
 
     function render(){
@@ -507,6 +564,8 @@
       const visible = rows.filter(r =>
         (activeTeam === "TOTS" || r.team === activeTeam) &&
         (activeGender === "TOTS" || r.gender === activeGender) &&
+        (activePhysio === "TOTS" || latestPhysioFilterValue(r) === activePhysio) &&
+        (activeCourtStatus === "TOTS" || latestCourtFilterValue(r) === activeCourtStatus) &&
         (!searchQuery || normalizeName([
           r.createdAt,
           r.player,

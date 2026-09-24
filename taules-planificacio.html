@@ -31,7 +31,7 @@
     .toplinks { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .back { color:var(--brand); font-weight:800; text-decoration:none; font-size:0.86rem; }
     .status { color:var(--muted); font-size:0.82rem; text-align:right; min-height:1.2em; }
-    .summary { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+    .summary { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px; }
     .summary-item { background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:12px; }
     .summary-label { color:var(--muted); font-size:0.72rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; }
     .summary-value { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; font-weight:900; }
@@ -123,7 +123,7 @@
     @media (max-width:720px) {
       main { padding-top:18px; }
       .topbar { align-items:flex-start; }
-      .summary { grid-template-columns:repeat(3, 1fr); gap:8px; }
+      .summary { grid-template-columns:repeat(2, 1fr); gap:8px; }
       .summary-item { padding:10px; }
       .summary-label { font-size:0.65rem; }
       .summary-value { font-size:1.15rem; }
@@ -155,6 +155,7 @@
       <div class="summary-item"><span class="summary-label">Partits</span><span id="totalCount" class="summary-value">0</span></div>
       <div class="summary-item"><span class="summary-label">Complets</span><span id="completeCount" class="summary-value">0</span></div>
       <div class="summary-item"><span class="summary-label">Pendents</span><span id="pendingCount" class="summary-value">0</span></div>
+      <div class="summary-item"><span class="summary-label">Persones assignades</span><span id="assignedPeopleCount" class="summary-value">0</span></div>
     </section>
 
     <div class="filters" role="group" aria-label="Filtre d'estat">
@@ -217,6 +218,7 @@
       total: document.getElementById("totalCount"),
       complete: document.getElementById("completeCount"),
       pending: document.getElementById("pendingCount"),
+      assignedPeople: document.getElementById("assignedPeopleCount"),
       currentPeriod: document.getElementById("currentPeriod"),
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
@@ -528,9 +530,16 @@
     function renderSummary(){
       const periodGames = gamesForActivePeriod();
       const states = periodGames.map(game => assignmentState(assignmentFor(game.id)));
+      const assignedPeople = new Set();
+      periodGames.forEach(game => {
+        const assignment = assignmentFor(game.id);
+        if (assignment.table1) assignedPeople.add(assignment.table1);
+        if (assignment.table2) assignedPeople.add(assignment.table2);
+      });
       els.total.textContent = periodGames.length;
       els.complete.textContent = states.filter(state => state === "complete").length;
       els.pending.textContent = states.filter(state => state !== "complete").length;
+      els.assignedPeople.textContent = assignedPeople.size;
     }
 
     function gamesForActivePeriod(){

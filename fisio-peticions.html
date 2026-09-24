@@ -60,8 +60,8 @@
     .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
     .no-visit-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#fff8d6; color:#6b4d00; font-size:0.72rem; font-weight:900; }
-    .court-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; white-space:nowrap; border:1px solid var(--line); }
-    .court-badge::before { content:"●"; margin-right:5px; font-size:0.68rem; }
+    .court-badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:999px; font-size:0; white-space:nowrap; border:1px solid var(--line); vertical-align:middle; }
+    .court-badge::before { content:"●"; font-size:0.9rem; line-height:1; }
     .court-badge.pending { background:#f3f0f6; color:var(--muted); }
     .court-badge.red { background:#fdeaea; color:#9f1d1d; border-color:#f3b5b5; }
     .court-badge.orange { background:#fff3df; color:#8a4b00; border-color:#ffd29a; }
@@ -295,7 +295,8 @@
 
     function courtStatusBadge(value){
       const status = ["red", "orange", "green", "pending"].includes(value) ? value : "pending";
-      return '<span class="court-badge ' + escapeHtml(status) + '">' + escapeHtml(courtStatusLabel(status)) + '</span>';
+      const label = courtStatusLabel(status);
+      return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">●</span>';
     }
 
     function isSameDay(a, b){

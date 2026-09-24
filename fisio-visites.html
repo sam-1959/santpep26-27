@@ -77,6 +77,9 @@
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .prepa-filters { margin:-4px 0 14px; justify-content:flex-start; }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0 12px; }
+    tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
+    .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
+    .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
     .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:#fff; }
     .table-footer { display:flex; justify-content:flex-end; align-items:center; gap:16px; flex-wrap:wrap; margin-top:12px; }
     .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; color:var(--muted); font-size:0.82rem; }
@@ -295,6 +298,7 @@
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 10;
+    const REFRESH_INTERVAL_MS = 30000;
     const PHYSIOS = ["Pol Amigó", "Eric Nicolàs", "Miquel Sánchez"];
     const DEFAULT_STRUCTURES = ["ARTICULAR", "MUSCULAR", "ÒSSIA", "RAQUIS", "TENDINOSA", "ALTRES..."];
     const DEFAULT_LOCATIONS = ["ABDOMEN", "ADDUCTORS", "BESSONS", "CALCANI", "CANELL", "CERVICALS", "COLZE", "DORSAL", "ESPATLLA", "GENOLL", "ISQUIO", "LUMBAR", "MÀ", "MALUC", "PEU", "QUADRICEPS", "ROTULIÀ", "SACRE", "TURMELL"];
@@ -312,6 +316,12 @@
     let authReady = false;
     let currentUser = null;
     let currentRole = "";
+    let statusMessage = "";
+    let seenVisitIds = new Set();
+    let newVisitIds = new Set();
+    let hasInitializedSeenVisits = false;
+    let refreshTimer = null;
+    let isRefreshing = false;
 
     const els = {
       total: document.getElementById("totalVisits"),
@@ -551,6 +561,32 @@
       })).sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
     }
 
+    function visitIdentity(row){
+      return String(row.id || [
+        row.createdAt || "",
+        row.date || "",
+        row.name || "",
+        row.team || ""
+      ].join("|"));
+    }
+
+    function applyVisitMarkers(nextRows, resetSeen){
+      if(resetSeen || !hasInitializedSeenVisits){
+        seenVisitIds = new Set(nextRows.map(visitIdentity));
+        newVisitIds = new Set();
+        hasInitializedSeenVisits = true;
+      } else {
+        const currentIds = new Set(nextRows.map(visitIdentity));
+        newVisitIds = new Set([...newVisitIds].filter(id => currentIds.has(id)));
+        nextRows.forEach(row => {
+          const id = visitIdentity(row);
+          if(!seenVisitIds.has(id)) newVisitIds.add(id);
+          seenVisitIds.add(id);
+        });
+      }
+      return nextRows.map(row => ({ ...row, isNew: newVisitIds.has(visitIdentity(row)) }));
+    }
+
     function publicVisitFromVisit(visit){
       return {
         id: visit.id,
@@ -706,9 +742,9 @@
       const visible = filteredRows();
       els.openCreate.hidden = !isFisio();
       els.total.textContent = visible.length;
-      els.status.textContent = rows.length
+      els.status.textContent = statusMessage || (rows.length
         ? (hasAccess() ? "Dades carregades." : "Vista pública anonimitzada. Entra amb Google per veure la vista segons el teu rol.")
-        : "No hi ha visites registrades.";
+        : "No hi ha visites registrades.");
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
         els.pagination.innerHTML = "";
@@ -728,9 +764,9 @@
           '<th class="col-location">Localització</th>' +
           '<th class="col-prepa">Pista</th>' +
           '</tr></thead><tbody>' +
-          pageRows.map((row, index) => '<tr>' +
+          pageRows.map((row, index) => '<tr class="' + (row.isNew ? 'new-request' : '') + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
-            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
+            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
@@ -759,6 +795,7 @@
         '<th>Accions</th>' +
         '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
+          const rowClass = row.isNew ? 'new-request' : '';
           const feedback = row.prepaFeedback || {};
           const feedbackText = feedback.text || "";
           const readMeta = actorMeta(row.prepaReadByName, row.prepaReadByEmail, row.prepaReadAt);
@@ -769,9 +806,9 @@
             ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' +
               (feedbackMeta ? '<div class="action-meta">' + escapeHtml(feedbackMeta) + '</div>' : '')
             : '<span class="feedback-preview">—</span>';
-          return '<tr>' +
+          return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
-            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + '</td>' +
+            '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +
               '<option value="">Sense assignar</option>' +
@@ -824,7 +861,8 @@
         else requestPlayerNames = [];
         const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
-        rows = normalizeRows(await response.json());
+        rows = applyVisitMarkers(normalizeRows(await response.json()), true);
+        statusMessage = "";
         renderFilters();
         renderPrepaFilters();
         renderDatalistOptions();
@@ -833,6 +871,35 @@
         els.status.textContent = "No s'han pogut carregar les visites.";
         els.table.innerHTML = '<div class="error">Revisa els permisos de Firebase per a les visites de fisio.</div>';
       }
+    }
+
+    async function refreshVisits(){
+      if(isRefreshing || document.hidden) return;
+      isRefreshing = true;
+      try {
+        const token = hasAccess() ? await authToken() : "";
+        if(hasAccess()) await loadRequestPlayerNames();
+        else requestPlayerNames = [];
+        const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        rows = applyVisitMarkers(normalizeRows(await response.json()), false);
+        const newCount = newVisitIds.size;
+        statusMessage = newCount ? "Hi ha " + newCount + " visita" + (newCount === 1 ? " nova." : " noves.") : "";
+        renderFilters();
+        renderPrepaFilters();
+        renderDatalistOptions();
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut actualitzar automàticament.";
+        render();
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    function startAutoRefresh(){
+      if(refreshTimer) return;
+      refreshTimer = window.setInterval(refreshVisits, REFRESH_INTERVAL_MS);
     }
 
     async function saveVisit(visit){
@@ -1027,7 +1094,11 @@
     function setSignedOutMode(message){
       currentUser = null;
       currentRole = "";
+      statusMessage = "";
       rows = [];
+      hasInitializedSeenVisits = false;
+      seenVisitIds = new Set();
+      newVisitIds = new Set();
       requestPlayerNames = [];
       els.authTitle.textContent = "Vista pública anonimitzada";
       els.authText.textContent = message || "Inicia sessió amb un compte autoritzat per veure la vista completa.";
@@ -1110,6 +1181,8 @@
         await saveVisit(visit);
         rows = rows.filter(row => row.id !== visit.id).concat([visit])
           .sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
+        seenVisitIds.add(visitIdentity(visit));
+        newVisitIds.delete(visitIdentity(visit));
         renderFilters();
         renderDatalistOptions();
         render();
@@ -1220,6 +1293,8 @@
         try {
           await deleteVisit(row.id);
           rows = rows.filter(item => item.id !== row.id);
+          seenVisitIds.delete(visitIdentity(row));
+          newVisitIds.delete(visitIdentity(row));
           renderFilters();
           renderDatalistOptions();
           render();
@@ -1272,6 +1347,7 @@
 
     setSignedOutMode();
     configureAuth();
+    startAutoRefresh();
   </script>
 </body>
 </html>

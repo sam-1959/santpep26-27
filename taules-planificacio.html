@@ -39,6 +39,9 @@
     .filter { border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
     .filter.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
+    .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
+    .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .view-toggle { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
     .view-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
@@ -114,6 +117,14 @@
     .monthly-table tr.needs-attention td { background:#fff8e6; }
     .monthly-table .assign-cell { min-width:190px; }
     .monthly-table select { min-height:36px; font-size:0.84rem; }
+    .people-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
+    .people-panel[hidden] { display:none; }
+    .people-help { margin:0 0 10px; color:var(--muted); font-size:0.82rem; }
+    .people-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
+    .people-table { width:100%; border-collapse:collapse; min-width:760px; font-size:0.84rem; }
+    .people-table th, .people-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+    .people-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
+    .people-table input { width:100%; min-height:36px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; font:inherit; }
     label { color:var(--muted); font-size:0.74rem; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; }
     select { width:100%; min-height:42px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink);
       font:inherit; font-size:0.92rem; font-weight:750; padding:8px 10px; box-shadow:inset 0 1px 2px rgba(60,40,90,0.06); }
@@ -166,6 +177,20 @@
       <button class="filter" type="button" data-filter="review">Revisar</button>
     </div>
 
+    <div class="actions" aria-label="Accions de planificació mensual">
+      <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
+      <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
+    </div>
+
+    <section id="peoplePanel" class="people-panel" hidden>
+      <h2 class="monthly-title">Perfils del grup de taules</h2>
+      <p class="people-help">Indica els equips on juga o ajuda cada persona. Separa diversos equips amb comes. Exemple: Mini A M, Júnior B F.</p>
+      <div id="peopleProfiles"></div>
+      <div class="actions" style="margin:12px 0 0;">
+        <button id="savePeopleProfiles" class="action-button" type="button">Guardar perfils</button>
+      </div>
+    </section>
+
     <section class="period-panel" aria-label="Paginació mensual">
       <div class="period-pager">
         <button id="prevPeriod" class="period-arrow" type="button" aria-label="Període anterior">‹</button>
@@ -203,11 +228,13 @@
     };
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_PATH = "miniTablesAssignments/season-26-27";
+    const PEOPLE_FIREBASE_PATH = "miniTablesPeople/season-26-27";
 
     let games = [];
     let costGames = [];
     let assignments = {};
     let assignmentAliases = {};
+    let tablePeopleProfiles = {};
     let activeFilter = "all";
     let activeView = "month";
     let periods = [];
@@ -223,6 +250,11 @@
       currentPeriod: document.getElementById("currentPeriod"),
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
+      generateProposal: document.getElementById("generateProposal"),
+      togglePeoplePanel: document.getElementById("togglePeoplePanel"),
+      peoplePanel: document.getElementById("peoplePanel"),
+      peopleProfiles: document.getElementById("peopleProfiles"),
+      savePeopleProfiles: document.getElementById("savePeopleProfiles"),
       costPanel: document.getElementById("costPanel"),
       costSummary: document.getElementById("costSummary")
     };
@@ -233,8 +265,12 @@
     }
 
     function firebaseUrl(id){
+      return firebasePathUrl(FIREBASE_PATH, id);
+    }
+
+    function firebasePathUrl(pathName, id){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
-      const path = FIREBASE_PATH.split("/").map(encodeURIComponent).join("/");
+      const path = pathName.split("/").map(encodeURIComponent).join("/");
       return `${base}/${path}${id ? "/" + encodeURIComponent(id) : ""}.json`;
     }
 
@@ -259,6 +295,21 @@
         game.sex || "",
         game.rival || ""
       ].map(normalize).join("_");
+    }
+
+    function personKey(name){
+      return normalize(name);
+    }
+
+    function splitTeams(value){
+      return String(value || "")
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function teamLabel(game){
+      return `${game.team || ""} ${game.sex || ""}`.trim();
     }
 
     function formatDate(iso){
@@ -487,6 +538,49 @@
       });
     }
 
+    function defaultPeopleProfiles(){
+      const profiles = {};
+      PEOPLE.filter(Boolean).forEach(name => {
+        profiles[personKey(name)] = {
+          name,
+          active: true,
+          playerTeams: [],
+          assistantTeams: []
+        };
+      });
+      return profiles;
+    }
+
+    function normalizePeopleProfiles(raw){
+      const defaults = defaultPeopleProfiles();
+      Object.values(raw || {}).forEach(profile => {
+        if (!profile || !profile.name) return;
+        const key = personKey(profile.name);
+        defaults[key] = {
+          name: profile.name,
+          active: profile.active !== false,
+          playerTeams: Array.isArray(profile.playerTeams) ? profile.playerTeams : splitTeams(profile.playerTeams),
+          assistantTeams: Array.isArray(profile.assistantTeams) ? profile.assistantTeams : splitTeams(profile.assistantTeams)
+        };
+      });
+      return defaults;
+    }
+
+    async function loadPeopleProfiles(){
+      const response = await fetch(firebasePathUrl(PEOPLE_FIREBASE_PATH), { cache:"no-store" });
+      if (!response.ok) throw new Error("No s'han pogut carregar els perfils del grup de taules");
+      tablePeopleProfiles = normalizePeopleProfiles(await response.json());
+    }
+
+    async function savePeopleProfiles(){
+      const response = await fetch(firebasePathUrl(PEOPLE_FIREBASE_PATH), {
+        method: "PUT",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(tablePeopleProfiles)
+      });
+      if (!response.ok) throw new Error("No s'han pogut guardar els perfils del grup de taules");
+    }
+
     async function saveAssignment(id){
       const game = games.find(item => item.id === id);
       const assignment = assignmentFor(id);
@@ -526,6 +620,103 @@
         select.appendChild(option);
       }
       return select;
+    }
+
+    function renderPeopleProfiles(){
+      const names = PEOPLE.filter(Boolean);
+      const table = document.createElement("table");
+      table.className = "people-table";
+      table.innerHTML = "<thead><tr><th>Persona</th><th>Juga a</th><th>Ajuda a</th><th>Activa</th></tr></thead><tbody></tbody>";
+      const body = table.querySelector("tbody");
+      names.forEach(name => {
+        const key = personKey(name);
+        const profile = tablePeopleProfiles[key] || { name, active:true, playerTeams:[], assistantTeams:[] };
+        const row = document.createElement("tr");
+        row.dataset.personKey = key;
+        row.innerHTML =
+          `<td>${escapeHtml(name)}</td>` +
+          `<td><input data-field="playerTeams" value="${escapeHtml((profile.playerTeams || []).join(", "))}" placeholder="Equip on juga" /></td>` +
+          `<td><input data-field="assistantTeams" value="${escapeHtml((profile.assistantTeams || []).join(", "))}" placeholder="Equip on ajuda" /></td>` +
+          `<td><input data-field="active" type="checkbox" ${profile.active === false ? "" : "checked"} /></td>`;
+        body.appendChild(row);
+      });
+      const wrap = document.createElement("div");
+      wrap.className = "people-table-wrap";
+      wrap.appendChild(table);
+      els.peopleProfiles.innerHTML = "";
+      els.peopleProfiles.appendChild(wrap);
+    }
+
+    function collectPeopleProfiles(){
+      const profiles = {};
+      els.peopleProfiles.querySelectorAll("tbody tr").forEach(row => {
+        const key = row.dataset.personKey;
+        const name = row.children[0].textContent.trim();
+        profiles[key] = {
+          name,
+          active: row.querySelector('[data-field="active"]').checked,
+          playerTeams: splitTeams(row.querySelector('[data-field="playerTeams"]').value),
+          assistantTeams: splitTeams(row.querySelector('[data-field="assistantTeams"]').value)
+        };
+      });
+      tablePeopleProfiles = profiles;
+    }
+
+    function personCanTakeGame(profile, game){
+      if (!profile || profile.active === false) return false;
+      const currentTeam = normalize(teamLabel(game));
+      const blockedTeams = [...(profile.playerTeams || []), ...(profile.assistantTeams || [])].map(normalize);
+      return !blockedTeams.includes(currentTeam);
+    }
+
+    function monthlyAssignmentCountByPerson(periodGames){
+      const counts = new Map();
+      periodGames.forEach(game => {
+        const assignment = assignmentFor(game.id);
+        ["table1", "table2"].forEach(slot => {
+          const person = assignment[slot];
+          if (!person) return;
+          counts.set(person, (counts.get(person) || 0) + 1);
+        });
+      });
+      return counts;
+    }
+
+    async function generateMonthlyProposal(){
+      const periodGames = gamesForActivePeriod();
+      const counts = monthlyAssignmentCountByPerson(periodGames);
+      let changed = 0;
+      periodGames.forEach(game => {
+        if (isPastGame(game)) return;
+        const current = { ...assignmentFor(game.id) };
+        ["table1", "table2"].forEach(slot => {
+          if (current[slot]) return;
+          const alreadyInGame = new Set([current.table1, current.table2].filter(Boolean));
+          const candidates = PEOPLE.filter(Boolean)
+            .map(name => tablePeopleProfiles[personKey(name)] || { name, active:true, playerTeams:[], assistantTeams:[] })
+            .filter(profile => !alreadyInGame.has(profile.name) && personCanTakeGame(profile, game))
+            .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
+          const chosen = candidates[0];
+          if (!chosen) return;
+          current[slot] = chosen.name;
+          counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);
+          changed += 1;
+        });
+        if (current.table1 || current.table2) assignments[game.id] = current;
+      });
+      if (!changed) {
+        setStatus("No hi havia taules buides per proposar.");
+        render();
+        return;
+      }
+      render();
+      setStatus(`Guardant proposta (${changed} taules)...`);
+      const updates = Object.entries(assignments)
+        .filter(([id]) => periodGames.some(game => game.id === id))
+        .map(([id]) => saveAssignment(id));
+      await Promise.all(updates);
+      render();
+      setStatus(`Proposta generada i guardada (${changed} taules).`);
     }
 
     function renderSummary(){
@@ -851,6 +1042,34 @@
       render();
     });
 
+    els.togglePeoplePanel.addEventListener("click", () => {
+      els.peoplePanel.hidden = !els.peoplePanel.hidden;
+      if (!els.peoplePanel.hidden) renderPeopleProfiles();
+    });
+
+    els.savePeopleProfiles.addEventListener("click", async () => {
+      collectPeopleProfiles();
+      setStatus("Guardant perfils...");
+      try {
+        await savePeopleProfiles();
+        setStatus("Perfils guardats.");
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message, "error");
+      }
+    });
+
+    els.generateProposal.addEventListener("click", async () => {
+      collectPeopleProfiles();
+      setStatus("Generant proposta...");
+      try {
+        await generateMonthlyProposal();
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message, "error");
+      }
+    });
+
     els.content.addEventListener("change", async event => {
       if (event.target.tagName !== "SELECT") return;
       const id = event.target.dataset.gameId;
@@ -880,6 +1099,14 @@
           assignments = {};
           setStatus("Firebase no deixa carregar assignacions.", "error");
         }
+        try {
+          await loadPeopleProfiles();
+        } catch (error) {
+          console.warn(error);
+          tablePeopleProfiles = defaultPeopleProfiles();
+          setStatus("Firebase no deixa carregar perfils del grup de taules.", "error");
+        }
+        renderPeopleProfiles();
         render();
         if (els.status.textContent === "Carregant...") setStatus("");
       } catch (error) {

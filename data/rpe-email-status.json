@@ -1,1 +1,19 @@
-{}
+{
+  "JBF": {
+    "lastAttemptDate": "2026-09-24",
+    "lastAttemptAt": "2026-09-24T13:34:27.893Z",
+    "lastStatus": "sent",
+    "lastError": "",
+    "lastSentDate": "2026-09-24",
+    "lastSentAt": "2026-09-24T13:34:30.053Z",
+    "lastRecipient": "jessicagucero@gmail.com,ricard.fuste@gmail.com",
+    "lastRecipients": [
+      "jessicagucero@gmail.com",
+      "ricard.fuste@gmail.com"
+    ],
+    "lastTeam": "Júnior B F",
+    "lastWeek": "2026-09-21",
+    "lastWeekLabel": "21/09/2026 – 27/09/2026",
+    "lastRecords": 48
+  }
+}

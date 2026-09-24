@@ -110,6 +110,7 @@
     .court-badge.green { background:#eef8ef; color:#1b7f45; border-color:#2e7d32; }
     .court-badge.green::before { content:"✓"; }
     .col-prepa { width:1%; white-space:nowrap; }
+    .col-court { width:1%; white-space:nowrap; text-align:center; }
     .col-feedback { min-width:180px; max-width:260px; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
     .prepa-badge.read { background:#e8f5e9; border-color:#a5d6a7; color:#1b5e20; }
@@ -766,7 +767,7 @@
           '<th class="col-team">Equip</th>' +
           '<th class="col-structure">Estructura</th>' +
           '<th class="col-location">Localització</th>' +
-          '<th class="col-prepa">Pista</th>' +
+          '<th class="col-court">Pista</th>' +
           '</tr></thead><tbody>' +
           pageRows.map((row, index) => '<tr class="' + (row.isNew ? 'new-request' : '') + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -775,7 +776,7 @@
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
-            '<td class="col-prepa">' + courtStatusBadge(row.courtStatus) + '</td>' +
+            '<td class="col-court">' + courtStatusBadge(row.courtStatus) + '</td>' +
           '</tr>').join("") +
           '</tbody></table>';
         renderPagination(visible.length, totalPages);
@@ -793,7 +794,7 @@
         '<th>Valoració</th>' +
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
-        '<th class="col-prepa">Pista</th>' +
+        '<th class="col-court">Pista</th>' +
         '<th class="col-prepa">Prepa</th>' +
         '<th class="col-feedback">Feedback</th>' +
         '<th>Accions</th>' +
@@ -825,7 +826,7 @@
             '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
             '<td class="guidelines">' + (row.guidelines ? escapeHtml(row.guidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
-            '<td class="col-prepa">' + courtStatusBadge(row.courtStatus) + '</td>' +
+            '<td class="col-court">' + courtStatusBadge(row.courtStatus) + '</td>' +
             '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + escapeHtml(readLabel) + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(formatDateTime(row.prepaReadAt)) + '</div>' : '') + '</td>' +
             '<td class="col-feedback">' + feedbackHtml + '</td>' +
             '<td><div class="table-actions">' +

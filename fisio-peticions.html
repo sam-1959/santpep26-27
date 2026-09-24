@@ -56,6 +56,7 @@
     .col-name { width:1%; white-space:nowrap; }
     .col-physio { width:1%; white-space:nowrap; }
     .col-team { width:1%; white-space:nowrap; }
+    .col-court { width:1%; white-space:nowrap; text-align:center; }
     .col-phone { width:1%; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
     .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
@@ -598,7 +599,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th>Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -634,7 +635,7 @@
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
           '<td class="col-physio">' + latestPhysioHtml + '</td>' +
-          '<td class="col-team">' + courtStatusHtml + '</td>' +
+          '<td class="col-court">' + courtStatusHtml + '</td>' +
           '<td class="col-guidelines">' + guidelinesHtml + '</td>' +
         '</tr>';
         }).join("") +

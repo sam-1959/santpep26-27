@@ -54,6 +54,7 @@
     .col-count { width:1%; white-space:nowrap; text-align:right; color:var(--muted); font-weight:800; }
     .col-date { width:1%; white-space:nowrap; }
     .col-name { width:1%; white-space:nowrap; }
+    .col-physio { width:1%; white-space:nowrap; }
     .col-team { width:1%; white-space:nowrap; }
     .col-phone { width:1%; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
@@ -361,6 +362,7 @@
                 latest.set(key, {
                   guidelines,
                   courtStatus: visit.courtStatus || "pending",
+                  assignedPhysio: visit.assignedPhysio || "",
                   timestamp,
                   date: visit.date || "",
                   createdAt: visit.createdAt || "",
@@ -497,7 +499,8 @@
           isPrivateView ? r.phone : "",
           r.description,
           r.fullDescription,
-          latestGuidelinesFor(r.player)?.guidelines
+          latestGuidelinesFor(r.player)?.guidelines,
+          latestGuidelinesFor(r.player)?.assignedPhysio
         ].join(" ")).includes(searchQuery))
       );
       totalEl.textContent = visible.length;
@@ -516,7 +519,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th>Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -539,6 +542,9 @@
               : '<span class="no-guidelines-badge">Sense pauta</span>')
             : '<span class="no-visit-badge">Sense visita</span>';
           const courtStatusHtml = latestGuidelines ? courtStatusBadge(latestGuidelines.courtStatus) : '<span class="no-visit-badge">Sense visita</span>';
+          const latestPhysioHtml = latestGuidelines && latestGuidelines.assignedPhysio
+            ? escapeHtml(latestGuidelines.assignedPhysio)
+            : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -548,6 +554,7 @@
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
+          '<td class="col-physio">' + latestPhysioHtml + '</td>' +
           '<td class="col-team">' + courtStatusHtml + '</td>' +
           '<td class="col-guidelines">' + guidelinesHtml + '</td>' +
         '</tr>';

@@ -91,6 +91,12 @@
     .long { min-width:190px; max-width:320px; color:var(--ink); white-space:normal; }
     .guidelines { min-width:240px; max-width:360px; color:var(--brand-dark); font-weight:750; white-space:normal; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
+    .court-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; white-space:nowrap; border:1px solid var(--line); }
+    .court-badge::before { content:"●"; margin-right:5px; font-size:0.68rem; }
+    .court-badge.pending { background:#f3f0f6; color:var(--muted); }
+    .court-badge.red { background:#fdeaea; color:#9f1d1d; border-color:#f3b5b5; }
+    .court-badge.orange { background:#fff3df; color:#8a4b00; border-color:#ffd29a; }
+    .court-badge.green { background:#e8f5e9; color:#1b5e20; border-color:#a5d6a7; }
     .col-prepa { width:1%; white-space:nowrap; }
     .col-feedback { min-width:180px; max-width:260px; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
@@ -181,6 +187,15 @@
               <option value="">Sense assignar</option>
               <option value="Pol Amigó">Pol Amigó</option>
               <option value="Eric Nicolàs">Eric Nicolàs</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="courtStatus">Semàfor pista</label>
+            <select id="courtStatus" name="courtStatus" required>
+              <option value="pending">Pendent</option>
+              <option value="red">No pot fer pista</option>
+              <option value="orange">Pista condicionada</option>
+              <option value="green">Pista normal</option>
             </select>
           </div>
             <div class="field">
@@ -480,6 +495,21 @@
       return value || "—";
     }
 
+    function courtStatusLabel(value){
+      const labels = {
+        pending:"Pendent",
+        red:"No pista",
+        orange:"Condicionada",
+        green:"Normal"
+      };
+      return labels[value] || labels.pending;
+    }
+
+    function courtStatusBadge(value){
+      const status = ["red", "orange", "green", "pending"].includes(value) ? value : "pending";
+      return '<span class="court-badge ' + escapeHtml(status) + '">' + escapeHtml(courtStatusLabel(status)) + '</span>';
+    }
+
     function normalizeRows(data){
       if(!data || typeof data !== "object") return [];
       return Object.entries(data).map(([id, row]) => ({
@@ -498,6 +528,7 @@
         assessment: row.assessment || "",
         treatment: row.treatment || "",
         guidelines: row.guidelines || "",
+        courtStatus: row.courtStatus || "pending",
         prepaRead: Boolean(row.prepaRead),
         prepaReadAt: row.prepaReadAt || "",
         prepaReadByName: row.prepaReadByName || row.prepaReadBy?.name || row.prepaFeedback?.byName || "",
@@ -518,6 +549,7 @@
         structure: visit.structure || "",
         location: visit.location || "",
         assignedPhysio: visit.assignedPhysio || "",
+        courtStatus: visit.courtStatus || "pending",
         guidelines: visit.guidelines || ""
       };
     }
@@ -645,7 +677,7 @@
         if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !row.prepaFeedback?.text) return false;
         if(!query) return true;
         const searchable = hasAccess()
-          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]
+          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, courtStatusLabel(row.courtStatus), row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]
           : [row.date, row.team, teamCategory(row.team), row.structure, row.location, row.gender];
         return normalize(searchable.join(" ")).includes(query);
       });
@@ -675,6 +707,7 @@
           '<th class="col-team">Equip</th>' +
           '<th class="col-structure">Estructura</th>' +
           '<th class="col-location">Localització</th>' +
+          '<th class="col-prepa">Pista</th>' +
           '</tr></thead><tbody>' +
           pageRows.map((row, index) => '<tr>' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -683,6 +716,7 @@
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+            '<td class="col-prepa">' + courtStatusBadge(row.courtStatus) + '</td>' +
           '</tr>').join("") +
           '</tbody></table>';
         renderPagination(visible.length, totalPages);
@@ -700,6 +734,7 @@
         '<th>Valoració</th>' +
         '<th>Tractament</th>' +
         '<th>Pautes a seguir</th>' +
+        '<th class="col-prepa">Pista</th>' +
         '<th class="col-prepa">Prepa</th>' +
         '<th class="col-feedback">Feedback</th>' +
         '<th>Accions</th>' +
@@ -730,6 +765,7 @@
             '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
             '<td class="guidelines">' + (row.guidelines ? escapeHtml(row.guidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
+            '<td class="col-prepa">' + courtStatusBadge(row.courtStatus) + '</td>' +
             '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + escapeHtml(readLabel) + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(formatDateTime(row.prepaReadAt)) + '</div>' : '') + '</td>' +
             '<td class="col-feedback">' + feedbackHtml + '</td>' +
             '<td><div class="table-actions">' +
@@ -806,7 +842,7 @@
       });
       if(!response.ok) throw new Error("Firebase patch failed");
       const publicPatch = {};
-      ["date", "gender", "team", "structure", "location", "assignedPhysio", "guidelines", "updatedAt"].forEach(field => {
+      ["date", "gender", "team", "structure", "location", "assignedPhysio", "courtStatus", "guidelines", "updatedAt"].forEach(field => {
         if(Object.prototype.hasOwnProperty.call(patch, field)) publicPatch[field] = patch[field];
       });
       if(Object.keys(publicPatch).length){
@@ -867,6 +903,7 @@
         team: teamCategory(inputValue("team")),
         structure: inputValue("structure").toUpperCase(),
         location: inputValue("location").toUpperCase(),
+        courtStatus: inputValue("courtStatus") || "pending",
         assignedPhysio: inputValue("assignedPhysio"),
         mechanism: inputValue("mechanism"),
         assessment: inputValue("assessment"),
@@ -883,6 +920,7 @@
       setInputValue("team", teamCategory(row.team));
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
+      setInputValue("courtStatus", row.courtStatus || "pending");
       setInputValue("mechanism", row.mechanism);
       setInputValue("assessment", row.assessment);
       setInputValue("treatment", row.treatment);
@@ -904,10 +942,12 @@
           setInputValue("assessment", "");
           setInputValue("treatment", "");
           setInputValue("guidelines", "");
+          setInputValue("courtStatus", "pending");
         }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
+        setInputValue("courtStatus", "pending");
       }
       els.modal.classList.add("open");
       els.modal.setAttribute("aria-hidden", "false");

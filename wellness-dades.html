@@ -186,6 +186,7 @@
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const RESPONSES_PATH = "wellnessResponses/season-26-27";
     const ROSTERS_PATH = "rpeRosters/season-26-27";
+    const CONTACTS_PATH = "seasonContacts/season-26-27";
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
     const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
     const RPE_COORDINATION_EMAILS = {
@@ -231,7 +232,7 @@
       "Sènior B M": [["1","Fénix Erola"],["5","Álvaro Navarro"],["0","Deremi Tavares"],["6","Pau Laviña"],["8","Ian Soler"],["9","Biel Prats"],["17","Biel Borda"],["10","Dani Rojas"],["11","Emmanuel Efosa"],["3","Noam"],["16","Hugo Camacho"]]
     };
     const PLAYERS_PER_PAGE = 12;
-    const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0, playerPageIndex: 0 };
+    const state = { records: [], baseFiltered: [], filtered: [], weeks: [], selectedWeekIndex: 0, playerPageIndex: 0, contacts: null };
     const params = new URLSearchParams(window.location.search);
     const requestedTeamToken = String(params.get("v") || "").trim().toLowerCase();
     const requestedLegacyTeam = String(params.get("team") || "").trim().toUpperCase();
@@ -263,23 +264,66 @@
       const normalizedTeam = normalizeName(teamName);
       return Object.keys(TEAM_NAMES_BY_KEY).find(key => normalizeName(TEAM_NAMES_BY_KEY[key]) === normalizedTeam) || "";
     }
-    function coordinationEmailForTeam(teamName){
-      const key = teamKeyFromName(teamName);
-      if(!key) return [RPE_COORDINATION_EMAILS.femeni.email, RPE_COORDINATION_EMAILS.masculi.email].join(",");
-      return key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni.email : RPE_COORDINATION_EMAILS.masculi.email;
+    function isValidEmail(value){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
     }
-    function coordinationNamesForTeam(teamName){
+    function uniqueContacts(contacts){
+      const seen = new Set();
+      return contacts.filter(contact => {
+        const email = String(contact?.email || "").trim().toLowerCase();
+        if(!isValidEmail(email) || seen.has(email)) return false;
+        seen.add(email);
+        return true;
+      });
+    }
+    function fallbackCoordinatorForTeamKey(key){
+      if(!key) return [RPE_COORDINATION_EMAILS.femeni, RPE_COORDINATION_EMAILS.masculi];
+      return [key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni : RPE_COORDINATION_EMAILS.masculi];
+    }
+    function coordinatorsForTeamKey(key){
+      const coordinators = Array.isArray(state.contacts?.coordinators) ? state.contacts.coordinators : [];
+      if(!key){
+        const contacts = [
+          coordinators.find(contact => String(contact.role || "") === "femeni") || RPE_COORDINATION_EMAILS.femeni,
+          coordinators.find(contact => String(contact.role || "") === "masculi") || RPE_COORDINATION_EMAILS.masculi
+        ];
+        return uniqueContacts(contacts);
+      }
+      const role = key.endsWith("F") ? "femeni" : "masculi";
+      return uniqueContacts([coordinators.find(contact => String(contact.role || "") === role), ...fallbackCoordinatorForTeamKey(key)]);
+    }
+    function prepasForTeamKey(key){
+      if(!key) return [];
+      const coordinators = Array.isArray(state.contacts?.coordinators) ? state.contacts.coordinators : [];
+      return uniqueContacts(coordinators.filter(contact =>
+        String(contact.role || "") === "prepa" &&
+        Array.isArray(contact.teams) &&
+        contact.teams.map(team => String(team || "").trim().toUpperCase()).includes(key)
+      ));
+    }
+    function recipientsForTeam(teamName){
       const key = teamKeyFromName(teamName);
-      const contacts = !key
-        ? [RPE_COORDINATION_EMAILS.femeni, RPE_COORDINATION_EMAILS.masculi]
-        : [key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni : RPE_COORDINATION_EMAILS.masculi];
-      return contacts.map(contact => contact.name).join(", ");
+      const contacts = uniqueContacts([...coordinatorsForTeamKey(key), ...prepasForTeamKey(key)]);
+      return {
+        emails: contacts.map(contact => contact.email).join(","),
+        names: contacts.map(contact => contact.name || contact.email).join(", ")
+      };
+    }
+    async function loadContacts(){
+      try {
+        const response = await fetch(firebaseUrl(CONTACTS_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("No contacts");
+        state.contacts = await response.json();
+      } catch(error) {
+        console.warn("No s'han pogut carregar els contactes RPE. Es fan servir els coordinadors per defecte.", error);
+        state.contacts = null;
+      }
     }
     function updatePageTitle(){
       const title = hasTeamParam && requestedTeamName ? "Seguiment RPE " + requestedTeamName : "Seguiment RPE";
       pageTitle.textContent = title;
       document.title = title + " · CB Sant Josep";
-      emailButton.hidden = hasTeamParam;
+      emailButton.hidden = false;
     }
     function formatDate(value){
       if(!value) return "—";
@@ -499,10 +543,6 @@
       return state.filtered.length > 0 && groupedByPlayer().length > 0;
     }
     function updateEmailButtonState(){
-      if(hasTeamParam){
-        emailButton.disabled = true;
-        return;
-      }
       emailButton.disabled = !hasTableData();
       emailButton.title = emailButton.disabled ? "No hi ha dades setmanals per enviar." : "Enviar les dades RPE per correu.";
     }
@@ -625,13 +665,12 @@
       const dates = weekDates();
       const groups = groupedByPlayer();
       const teamName = visibleTeam() || "Tots els equips";
-      const recipient = coordinationEmailForTeam(teamName);
-      const recipientNames = coordinationNamesForTeam(teamName);
+      const recipients = recipientsForTeam(teamName);
       const records = state.filtered;
       const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
       return {
-        recipient,
-        recipientNames,
+        recipient: recipients.emails,
+        recipientNames: recipients.names,
         testMode: true,
         team: teamName,
         week: selectedWeek,
@@ -763,7 +802,7 @@
     document.getElementById("refreshButton").addEventListener("click", () => loadRecords().catch(showError));
     emailButton.addEventListener("click", sendWeeklyEmail);
     updatePageTitle();
-    loadRosters().then(() => loadRecords()).catch(showError);
+    Promise.all([loadRosters(), loadContacts()]).then(() => loadRecords()).catch(showError);
     function showError(error){
       console.error(error);
       statusEl.textContent = "No s'han pogut carregar les dades. Revisa permisos de Firebase.";

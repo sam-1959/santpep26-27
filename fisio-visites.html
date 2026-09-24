@@ -208,13 +208,11 @@
             </div>
             <div class="field">
               <label for="structure">Estructura</label>
-            <input id="structure" name="structure" type="text" list="structureOptions" placeholder="Ex. MUSCULAR" autocomplete="off" required />
-            <datalist id="structureOptions"></datalist>
+            <select id="structure" name="structure" required></select>
             </div>
             <div class="field wide">
               <label for="location">Localització</label>
-            <input id="location" name="location" type="text" list="locationOptions" placeholder="Ex. GENOLL, ISQUIO..." autocomplete="off" required />
-            <datalist id="locationOptions"></datalist>
+            <select id="location" name="location" required></select>
             </div>
           <div class="field full">
             <label for="mechanism">Mecanisme lesional</label>
@@ -336,8 +334,8 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
-      structureOptions: document.getElementById("structureOptions"),
-      locationOptions: document.getElementById("locationOptions"),
+      structureOptions: document.getElementById("structure"),
+      locationOptions: document.getElementById("location"),
       feedbackModal: document.getElementById("feedbackModal"),
       feedbackForm: document.getElementById("feedbackForm"),
       feedbackModalTitle: document.getElementById("feedbackModalTitle"),
@@ -661,9 +659,14 @@
         { el:els.locationOptions, values:DEFAULT_LOCATIONS }
       ].forEach(config => {
         const values = config.values || [];
-        config.el.innerHTML = values
-          .map(value => '<option value="' + escapeHtml(value) + '"></option>')
-          .join("");
+        if(config.el.tagName === "SELECT"){
+          config.el.innerHTML = '<option value="">Selecciona...</option>' +
+            values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join("");
+        } else {
+          config.el.innerHTML = values
+            .map(value => '<option value="' + escapeHtml(value) + '"></option>')
+            .join("");
+        }
       });
     }
 

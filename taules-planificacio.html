@@ -26,7 +26,7 @@
     .htext h1 { margin:0; font-size:1.05rem; font-weight:700; }
     .htext h1 .club { display:block; font-size:0.72rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
     .htext p { margin:2px 0 0; font-size:0.8rem; opacity:0.9; }
-    main { max-width:980px; margin:0 auto; padding:24px 14px 56px; }
+    main { width:100%; max-width:none; margin:0 auto; padding:24px 18px 56px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:16px; }
     .toplinks { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
     .back { color:var(--brand); font-weight:800; text-decoration:none; font-size:0.86rem; }
@@ -168,10 +168,6 @@
     </section>
 
     <section id="content"></section>
-    <section id="costPanel" class="cost-panel" aria-label="Costos amistosos del període">
-      <h2 class="cost-title">Costos amistosos</h2>
-      <div id="costSummary" class="cost-list"></div>
-    </section>
   </main>
 
   <script>
@@ -668,7 +664,6 @@
 
     function render(){
       renderPeriodControls();
-      renderCosts();
       renderSummary();
       const visible = filteredGames();
 
@@ -682,8 +677,8 @@
       }
 
       if (activeView === "month") {
-        renderMonthlyLoad(gamesForActivePeriod());
         renderMonthlyTable(visible);
+        renderMonthlyLoad(gamesForActivePeriod());
         return;
       }
 

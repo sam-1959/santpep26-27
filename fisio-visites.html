@@ -312,6 +312,7 @@
     let activeTeam = "TOTS";
     let activeStructure = "TOTS";
     let activePhysio = "TOTS";
+    let activeCourtStatus = "TOTS";
     let activePrepaFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
@@ -642,12 +643,19 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender) +
-        renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam);
+        renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam) +
+        renderFilterGroup("courtStatus", "Pista", [
+          { value:"pending", label:"Pendent" },
+          { value:"red", label:"No pista" },
+          { value:"orange", label:"Condicionada" },
+          { value:"green", label:"Normal" }
+        ], activeCourtStatus);
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
+          if(button.dataset.filter === "courtStatus") activeCourtStatus = button.dataset.value;
           currentPage = 1;
           renderFilters();
           render();
@@ -731,6 +739,7 @@
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
         if(hasAccess() && activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
         if(activeTeam !== "TOTS" && teamCategory(row.team) !== activeTeam) return false;
+        if(activeCourtStatus !== "TOTS" && (row.courtStatus || "pending") !== activeCourtStatus) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
         if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
         if(hasAccess() && activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;

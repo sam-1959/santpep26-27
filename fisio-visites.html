@@ -521,7 +521,7 @@
     function courtStatusBadge(value){
       const status = ["red", "orange", "green", "pending"].includes(value) ? value : "pending";
       const label = courtStatusLabel(status);
-      return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">●</span>';
+      return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></span>';
     }
 
     function normalizeRows(data){

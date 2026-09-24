@@ -77,9 +77,10 @@
     .monthly-title { margin:0 0 10px; color:var(--brand-dark); font-size:0.9rem; font-weight:900; }
     .monthly-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px; }
     .monthly-section-head .monthly-title { margin:0; }
-    .monthly-cost-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
-    .monthly-cost-table { width:100%; border-collapse:collapse; min-width:620px; font-size:0.86rem; }
-    .monthly-cost-table th, .monthly-cost-table td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    .monthly-cost-table-wrap { display:inline-block; max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:14px; }
+    .monthly-cost-table { width:auto; border-collapse:collapse; font-size:0.84rem; }
+    .monthly-cost-table th, .monthly-cost-table td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    .monthly-cost-table th:first-child, .monthly-cost-table td:first-child { min-width:180px; }
     .monthly-cost-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
     .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4), .monthly-cost-table td:nth-child(5),
     .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4), .monthly-cost-table th:nth-child(5) { text-align:right; }

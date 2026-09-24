@@ -72,10 +72,13 @@
     .monthly-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
     .monthly-title { margin:0 0 10px; color:var(--brand-dark); font-size:0.9rem; font-weight:900; }
-    .monthly-load { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px; }
-    .person-load { border:1px solid var(--line); border-radius:12px; background:#faf8fc; padding:9px 10px; }
-    .person-load strong { display:block; color:var(--brand-dark); font-size:0.86rem; }
-    .person-load span { display:block; margin-top:2px; color:var(--muted); font-size:0.76rem; font-weight:800; }
+    .monthly-cost-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
+    .monthly-cost-table { width:100%; border-collapse:collapse; min-width:520px; font-size:0.86rem; }
+    .monthly-cost-table th, .monthly-cost-table td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    .monthly-cost-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
+    .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4),
+    .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4) { text-align:right; }
+    .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -172,6 +175,7 @@
 
   <script>
     const PEOPLE = ["", "Aina Parera", "Aledis Macías", "Alex Rojas", "Clàudia Gàmiz", "Eudald Ventura", "Ferran Villarreal", "Hugo Morales", "Hugo Parvez", "Isaac Miguel", "Ivana Benito", "Jan Rodríguez", "Jana Llibre", "Joan Werner", "Joan Zanui", "Karim Garcia", "Lluc Muñoz", "Marc Sánchez", "Marc Sànchez (2012)", "Martí Ordóñez", "Martina Rubio", "Martina Rueda", "Roger Fusté", "Sílvia Muñoz", "Yago Morales"];
+    const TABLE_COST = 10;
     const TEAM_COACHES = {
       "Cadet A M": "César Saura",
       "Cadet B M": "Gerard Castro",
@@ -567,21 +571,34 @@
       panel.className = "monthly-panel";
       const title = document.createElement("h2");
       title.className = "monthly-title";
-      title.textContent = "Resum mensual per persona";
-      const grid = document.createElement("div");
-      grid.className = "monthly-load";
+      title.textContent = "Cost mensual per persona";
+      const wrap = document.createElement("div");
+      wrap.className = "monthly-cost-table-wrap";
       const loads = personLoadForGames(periodGames);
       if (!loads.length) {
-        grid.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
+        wrap.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
       } else {
+        const table = document.createElement("table");
+        table.className = "monthly-cost-table";
+        table.innerHTML = "<thead><tr><th>Persona</th><th>Taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+        const body = table.querySelector("tbody");
+        let total = 0;
         loads.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "person-load";
-          card.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${item.total} assignacions</span>`;
-          grid.appendChild(card);
+          const amount = item.total * TABLE_COST;
+          total += amount;
+          const row = document.createElement("tr");
+          row.innerHTML =
+            `<td>${escapeHtml(item.name)}</td>` +
+            `<td>${escapeHtml(item.total)}</td>` +
+            `<td>${formatCost(TABLE_COST)}</td>` +
+            `<td>${formatCost(amount)}</td>`;
+          body.appendChild(row);
         });
+        table.querySelector("tfoot").innerHTML =
+          `<tr><td colspan="3">Total mensual</td><td>${formatCost(total)}</td></tr>`;
+        wrap.appendChild(table);
       }
-      panel.append(title, grid);
+      panel.append(title, wrap);
       els.content.appendChild(panel);
     }
 

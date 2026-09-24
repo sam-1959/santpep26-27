@@ -187,6 +187,7 @@ async function loadRecipients(){
   const role = coordinatorRoleForTeam(TEAM_KEY);
   const coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
   const coordinator = coordinators.find(contact => String(contact.role || "") === role);
+  const prepaCoordinator = coordinators.find(contact => String(contact.role || "") === "coordinador_prepa");
   const headCoach = contacts.headCoaches && contacts.headCoaches[TEAM_KEY];
   const prepas = coordinators.filter(contact =>
     String(contact.role || "") === "prepa" &&
@@ -200,13 +201,16 @@ async function loadRecipients(){
   if(!isValidEmail(headCoach && headCoach.email)){
     missing.push(`primer entrenador ${TEAM_KEY}`);
   }
+  if(!isValidEmail(prepaCoordinator && prepaCoordinator.email)){
+    missing.push("coordinador prepa");
+  }
   if(!prepas.some(contact => isValidEmail(contact.email))){
     missing.push(`prepa ${TEAM_KEY}`);
   }
   if(missing.length){
     throw new Error(`Falten destinataris del correu RPE: ${missing.join(", ")}.`);
   }
-  return uniqueEmails([coordinator.email, headCoach.email, ...prepas.map(contact => contact.email)]);
+  return uniqueEmails([coordinator.email, headCoach.email, prepaCoordinator.email, ...prepas.map(contact => contact.email)]);
 }
 
 function normalizeRecord(record, id){

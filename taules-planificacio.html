@@ -303,6 +303,7 @@
         game.team,
         game.sex || "",
         game.rival || "",
+        game.home ? "home" : "away",
         game.friendly ? "friendly" : "official"
       ].map(normalize).join("_");
     }
@@ -543,11 +544,39 @@
       const currentIds = new Set(games.map(game => game.id));
       const currentByMatchKey = new Map(games.map(game => [assignmentMatchKey(game), game]));
       const staleMovedIds = [];
+      const migratedIds = [];
       Object.entries(assignments).forEach(([id, assignment]) => {
         if (!assignment || !assignment.game || currentIds.has(id)) return;
         const currentGame = currentByMatchKey.get(assignmentMatchKey(assignment.game));
-        if (currentGame && periodKey(currentGame) !== periodKey(assignment.game)) staleMovedIds.push(id);
+        if (!currentGame) return;
+        if (periodKey(currentGame) !== periodKey(assignment.game)) {
+          staleMovedIds.push(id);
+          return;
+        }
+        if (!assignments[currentGame.id]) {
+          const migrated = {
+            ...assignment,
+            game: gameSnapshot(currentGame),
+            updatedAt: new Date().toISOString()
+          };
+          assignments[currentGame.id] = migrated;
+          migratedIds.push({ oldId:id, newId:currentGame.id, body:migrated });
+        } else {
+          staleMovedIds.push(id);
+        }
       });
+      if (migratedIds.length) {
+        await Promise.all(migratedIds.flatMap(item => [
+          fetch(firebaseUrl(item.newId), {
+            method:"PUT",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(item.body)
+          }),
+          fetch(firebaseUrl(item.oldId), { method:"DELETE" })
+        ]));
+        migratedIds.forEach(item => delete assignments[item.oldId]);
+        setStatus(`Assignacions migrades a la clau nova: ${migratedIds.length}.`);
+      }
       if (staleMovedIds.length) {
         await Promise.all(staleMovedIds.map(id => fetch(firebaseUrl(id), { method:"DELETE" })));
         staleMovedIds.forEach(id => delete assignments[id]);

@@ -297,6 +297,15 @@
       ].map(normalize).join("_");
     }
 
+    function assignmentMatchKey(game){
+      return [
+        game.team,
+        game.sex || "",
+        game.rival || "",
+        game.friendly ? "friendly" : "official"
+      ].map(normalize).join("_");
+    }
+
     function personKey(name){
       return normalize(name);
     }
@@ -530,6 +539,19 @@
       Object.entries(assignments).forEach(([id, assignment]) => {
         if (assignment && assignment.game) savedByStableKey[stableGameKey(assignment.game)] = assignment;
       });
+      const currentIds = new Set(games.map(game => game.id));
+      const currentByMatchKey = new Map(games.map(game => [assignmentMatchKey(game), game]));
+      const staleMovedIds = [];
+      Object.entries(assignments).forEach(([id, assignment]) => {
+        if (!assignment || !assignment.game || currentIds.has(id)) return;
+        const currentGame = currentByMatchKey.get(assignmentMatchKey(assignment.game));
+        if (currentGame && periodKey(currentGame) !== periodKey(assignment.game)) staleMovedIds.push(id);
+      });
+      if (staleMovedIds.length) {
+        await Promise.all(staleMovedIds.map(id => fetch(firebaseUrl(id), { method:"DELETE" })));
+        staleMovedIds.forEach(id => delete assignments[id]);
+        setStatus(`Assignacions eliminades per canvi de cap de setmana: ${staleMovedIds.length}.`);
+      }
       games.forEach(game => {
         if (!assignments[game.id]) {
           const legacy = savedByStableKey[stableGameKey(game)];

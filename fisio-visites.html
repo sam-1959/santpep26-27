@@ -34,6 +34,11 @@
     .field.full { grid-column:1 / -1; }
     label { color:var(--brand-dark); font-size:0.76rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
     input, select, textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
+    select.court-select { font-weight:900; border-width:2px; transition:background-color .15s ease, border-color .15s ease, color .15s ease; }
+    select.court-select.pending { background:#f3f0f6; color:var(--muted); border-color:var(--line); }
+    select.court-select.red { background:#fdeaea; color:#9f1d1d; border-color:#f3b5b5; }
+    select.court-select.orange { background:#fff3df; color:#8a4b00; border-color:#ffd29a; }
+    select.court-select.green { background:#e8f5e9; color:#1b5e20; border-color:#a5d6a7; }
     textarea { min-height:82px; resize:vertical; }
     .actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
     .primary { border:0; border-radius:999px; padding:10px 18px; background:var(--brand); color:#fff; font-weight:900; cursor:pointer; }
@@ -190,15 +195,6 @@
               <option value="Miquel Saro">Miquel Saro</option>
             </select>
           </div>
-          <div class="field">
-            <label for="courtStatus">Semàfor pista</label>
-            <select id="courtStatus" name="courtStatus" required>
-              <option value="pending">Pendent</option>
-              <option value="red">No pot fer pista</option>
-              <option value="orange">Pista condicionada</option>
-              <option value="green">Pista normal</option>
-            </select>
-          </div>
             <div class="field">
               <label for="team">Equip</label>
             <select id="team" name="team" required>
@@ -235,6 +231,15 @@
           <div class="field full">
             <label for="guidelines">Pautes a seguir</label>
             <textarea id="guidelines" name="guidelines" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="courtStatus">Semàfor pista</label>
+            <select id="courtStatus" name="courtStatus" class="court-select pending" required>
+              <option value="pending">⚪ Pendent</option>
+              <option value="red">🔴 No pot fer pista</option>
+              <option value="orange">🟠 Pista condicionada</option>
+              <option value="green">🟢 Pista normal</option>
+            </select>
           </div>
         </div>
         <div class="actions">
@@ -430,6 +435,13 @@
     function setInputValue(id, value){
       const el = document.getElementById(id);
       if(el) el.value = value || "";
+    }
+
+    function syncCourtStatusSelect(){
+      const el = document.getElementById("courtStatus");
+      if(!el) return;
+      const status = ["red", "orange", "green", "pending"].includes(el.value) ? el.value : "pending";
+      el.className = "court-select " + status;
     }
 
     function splitPlayerName(value){
@@ -922,6 +934,7 @@
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
       setInputValue("courtStatus", row.courtStatus || "pending");
+      syncCourtStatusSelect();
       setInputValue("mechanism", row.mechanism);
       setInputValue("assessment", row.assessment);
       setInputValue("treatment", row.treatment);
@@ -944,11 +957,13 @@
           setInputValue("treatment", "");
           setInputValue("guidelines", "");
           setInputValue("courtStatus", "pending");
+          syncCourtStatusSelect();
         }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
         setInputValue("courtStatus", "pending");
+        syncCourtStatusSelect();
       }
       els.modal.classList.add("open");
       els.modal.setAttribute("aria-hidden", "false");
@@ -1211,6 +1226,7 @@
     els.openCreate.addEventListener("click", () => {
       if(isFisio()) openModal();
     });
+    document.getElementById("courtStatus").addEventListener("change", syncCourtStatusSelect);
     els.closeCreate.addEventListener("click", closeModal);
     els.cancelCreate.addEventListener("click", closeModal);
     els.closeFeedback.addEventListener("click", closeFeedbackModal);

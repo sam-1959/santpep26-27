@@ -98,6 +98,7 @@
     .badge.ok { background:#e8f6ef; color:var(--ok); }
     .badge.warn { background:#fff6df; color:var(--warn); }
     .badge.review { background:#fdecec; color:var(--danger); }
+    .badge.friendly { background:#fff8d8; color:#8a6400; border:1px solid #f3df73; }
     .title { display:flex; flex-wrap:wrap; gap:7px; align-items:baseline; font-weight:900; font-size:1rem; color:var(--ink); }
     .team, .rival { text-transform:uppercase; }
     .local-team { color:#2b97d5; }
@@ -793,7 +794,7 @@
       wrap.className = "monthly-table-wrap";
       const table = document.createElement("table");
       table.className = "monthly-table";
-      table.innerHTML = "<thead><tr><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
+      table.innerHTML = "<thead><tr><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Tipus</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
       const body = table.querySelector("tbody");
       visible.forEach(game => {
         const assignment = assignmentFor(game.id);
@@ -801,6 +802,7 @@
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
+        const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : "";
         row.innerHTML =
           `<td>${escapeHtml(formatDate(game.date))}</td>` +
           `<td>${escapeHtml(game.time || "Hora pendent")}</td>` +
@@ -808,10 +810,11 @@
           `<td>${escapeHtml(game.rival || "Rival pendent")}</td>` +
           `<td>${escapeHtml(game.loc || "Localització pendent")}</td>` +
           `<td>${stateBadge}</td>` +
+          `<td>${typeBadge}</td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
-        row.children[6].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
-        row.children[7].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
+        row.children[7].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
+        row.children[8].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
         body.appendChild(row);
       });
       wrap.appendChild(table);

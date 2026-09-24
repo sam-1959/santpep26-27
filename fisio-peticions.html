@@ -355,18 +355,35 @@
           const guidelines = String(visit.guidelines || "").trim();
           const visitDate = parseDateValue(visit.date);
           const timestamp = visitDate ? visitDate.getTime() : 0;
+          const updatedDate = parseDateValue(visit.updatedAt || visit.createdAt);
+          const updatedTimestamp = updatedDate ? updatedDate.getTime() : 0;
           playerLookupKeys(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" "))
             .forEach(key => {
               const current = latest.get(key);
-              if(!current || timestamp >= current.timestamp){
+              const candidate = {
+                guidelines,
+                courtStatus: visit.courtStatus || "pending",
+                assignedPhysio: visit.assignedPhysio || "",
+                timestamp,
+                updatedTimestamp,
+                date: visit.date || "",
+                createdAt: visit.createdAt || "",
+                updatedAt: visit.updatedAt || ""
+              };
+              if(!current || timestamp > current.timestamp){
+                latest.set(key, candidate);
+              } else if(timestamp === current.timestamp){
+                const candidateIsNewer = updatedTimestamp >= (current.updatedTimestamp || 0);
+                const primary = candidateIsNewer ? candidate : current;
+                const secondary = candidateIsNewer ? current : candidate;
                 latest.set(key, {
-                  guidelines,
-                  courtStatus: visit.courtStatus || "pending",
-                  assignedPhysio: visit.assignedPhysio || "",
-                  timestamp,
-                  date: visit.date || "",
-                  createdAt: visit.createdAt || "",
-                  updatedAt: visit.updatedAt || ""
+                  ...primary,
+                  guidelines: primary.guidelines || secondary.guidelines,
+                  courtStatus: primary.courtStatus && primary.courtStatus !== "pending" ? primary.courtStatus : secondary.courtStatus,
+                  assignedPhysio: primary.assignedPhysio || secondary.assignedPhysio,
+                  createdAt: primary.createdAt || secondary.createdAt,
+                  updatedAt: primary.updatedAt || secondary.updatedAt,
+                  updatedTimestamp: Math.max(primary.updatedTimestamp || 0, secondary.updatedTimestamp || 0)
                 });
               }
             });

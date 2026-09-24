@@ -38,10 +38,6 @@
     .filter { border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
     .filter.active { background:var(--brand); color:#fff; border-color:var(--brand); }
-    .view-toggle { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
-    .view-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand);
-      padding:8px 13px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
-    .view-button.active { background:var(--accent); color:#4a3800; border-color:#e0bd00; }
     .period-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
     .period-pager { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; }
@@ -68,13 +64,6 @@
       border-radius:999px; background:#faf8fc; color:var(--brand-dark); padding:6px 10px; font-size:0.78rem; font-weight:850; }
     .cost-chip.total { justify-self:stretch; justify-content:flex-end; width:100%; border:0; border-radius:0;
       border-top:3px solid var(--accent); background:transparent; color:#4a3800; padding:8px 10px 0 0; }
-    .monthly-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
-    .monthly-title { margin:0 0 10px; color:var(--brand-dark); font-size:0.9rem; font-weight:900; }
-    .monthly-load { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px; }
-    .person-load { border:1px solid var(--line); border-radius:12px; background:#faf8fc; padding:9px 10px; }
-    .person-load strong { display:block; color:var(--brand-dark); font-size:0.86rem; }
-    .person-load span { display:block; margin-top:2px; color:var(--muted); font-size:0.76rem; font-weight:800; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -100,13 +89,6 @@
     .cost { margin-top:4px; color:var(--brand-dark); font-size:0.82rem; font-weight:900; }
     .assign { display:grid; gap:8px; }
     .slot { display:grid; grid-template-columns:72px 1fr; gap:8px; align-items:center; }
-    .monthly-table-wrap { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:auto; }
-    .monthly-table { width:100%; border-collapse:collapse; min-width:980px; font-size:0.84rem; }
-    .monthly-table th, .monthly-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; white-space:nowrap; }
-    .monthly-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; position:sticky; top:0; z-index:1; }
-    .monthly-table tr.needs-attention td { background:#fff8e6; }
-    .monthly-table .assign-cell { min-width:190px; }
-    .monthly-table select { min-height:36px; font-size:0.84rem; }
     label { color:var(--muted); font-size:0.74rem; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; }
     select { width:100%; min-height:42px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink);
       font:inherit; font-size:0.92rem; font-weight:750; padding:8px 10px; box-shadow:inset 0 1px 2px rgba(60,40,90,0.06); }
@@ -155,11 +137,6 @@
       <button class="filter" type="button" data-filter="review">Revisar</button>
     </div>
 
-    <div class="view-toggle" role="group" aria-label="Vista de taules">
-      <button class="view-button active" type="button" data-view="week">Setmanal</button>
-      <button class="view-button" type="button" data-view="month">Mensual</button>
-    </div>
-
     <section class="period-panel" aria-label="Paginació mensual">
       <div class="period-pager">
         <button id="prevPeriod" class="period-arrow" type="button" aria-label="Període anterior">‹</button>
@@ -206,7 +183,6 @@
     let assignments = {};
     let assignmentAliases = {};
     let activeFilter = "all";
-    let activeView = "week";
     let periods = [];
     let activePeriodIndex = 0;
 
@@ -299,24 +275,6 @@
       return `${prefix}Cap de setmana ${satDay}-${sunLabel}`;
     }
 
-    function monthKey(game){
-      const [year, month] = String(game.date || "").split("-");
-      if (year === "2026" && (month === "08" || month === "09")) return "2026-08-09";
-      return year && month ? `${year}-${month}` : String(game.date || "");
-    }
-
-    function monthPeriodLabel(key){
-      if (key === "2026-08-09") return "Agost i setembre 2026";
-      const [year, month] = String(key || "").split("-");
-      if (!year || !month) return "Mes";
-      const date = new Date(Number(year), Number(month) - 1, 1);
-      return date.toLocaleDateString("ca-ES", { month:"long", year:"numeric" });
-    }
-
-    function escapeHtml(value){
-      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
-    }
-
     function costPeriodKey(game){
       const [year, month] = String(game.date || "").split("-");
       if (year === "2026" && (month === "08" || month === "09")) return "2026-08-09";
@@ -326,7 +284,6 @@
     function activeCostPeriodKey(){
       const active = periods[activePeriodIndex];
       if (!active) return "";
-      if (activeView === "month") return active.key;
       if (active.key === "2026-08-31") return "2026-08-09";
       const periodGame = [...games, ...costGames].find(game => periodKey(game) === active.key);
       return periodGame ? costPeriodKey(periodGame) : "";
@@ -334,7 +291,6 @@
 
     function costKeyForPeriod(period){
       if (!period) return "";
-      if (activeView === "month") return period.key;
       if (period.key === "2026-08-31") return "2026-08-09";
       const periodGame = [...games, ...costGames].find(game => periodKey(game) === period.key);
       return periodGame ? costPeriodKey(periodGame) : "";
@@ -359,25 +315,6 @@
         .sort((a, b) => periodSortValue(a).localeCompare(periodSortValue(b)))
         .map(key => ({ key, label: periodLabel(key) }));
       activePeriodIndex = periods.findIndex(period => period.key === currentKey);
-    }
-
-    function buildMonthPeriods(){
-      const current = new Date();
-      const currentMonth = String(current.getMonth() + 1).padStart(2, "0");
-      const currentKey = current.getFullYear() === 2026 && (currentMonth === "08" || currentMonth === "09")
-        ? "2026-08-09"
-        : `${current.getFullYear()}-${currentMonth}`;
-      periods = [...new Set([...games, ...costGames].map(monthKey).concat(currentKey))]
-        .sort((a, b) => a.localeCompare(b))
-        .map(key => ({ key, label: monthPeriodLabel(key) }));
-      activePeriodIndex = periods.findIndex(period => period.key === currentKey);
-      if (activePeriodIndex < 0) activePeriodIndex = 0;
-    }
-
-    function rebuildPeriods(){
-      if (activeView === "month") buildMonthPeriods();
-      else buildPeriods();
-      if (activePeriodIndex < 0) activePeriodIndex = 0;
     }
 
     function gameSnapshot(game){
@@ -535,7 +472,7 @@
     function gamesForActivePeriod(){
       const active = periods[activePeriodIndex];
       if (!active) return [];
-      return games.filter(game => activeView === "month" ? monthKey(game) === active.key : periodKey(game) === active.key);
+      return games.filter(game => periodKey(game) === active.key);
     }
 
     function filteredGames(){
@@ -550,45 +487,6 @@
       els.currentPeriod.textContent = active ? active.label : "Sense partits";
       els.prevPeriod.disabled = activePeriodIndex <= 0;
       els.nextPeriod.disabled = activePeriodIndex >= periods.length - 1;
-    }
-
-    function personLoadForGames(periodGames){
-      const load = new Map();
-      periodGames.forEach(game => {
-        const assignment = assignmentFor(game.id);
-        ["table1", "table2"].forEach(slot => {
-          const person = assignment[slot];
-          if (!person) return;
-          const current = load.get(person) || { name: person, total: 0, table1: 0, table2: 0 };
-          current.total += 1;
-          current[slot] += 1;
-          load.set(person, current);
-        });
-      });
-      return [...load.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
-    }
-
-    function renderMonthlyLoad(periodGames){
-      const panel = document.createElement("section");
-      panel.className = "monthly-panel";
-      const title = document.createElement("h2");
-      title.className = "monthly-title";
-      title.textContent = "Resum mensual per persona";
-      const grid = document.createElement("div");
-      grid.className = "monthly-load";
-      const loads = personLoadForGames(periodGames);
-      if (!loads.length) {
-        grid.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
-      } else {
-        loads.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "person-load";
-          card.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${item.total} assignacions · T1: ${item.table1} · T2: ${item.table2}</span>`;
-          grid.appendChild(card);
-        });
-      }
-      panel.append(title, grid);
-      els.content.appendChild(panel);
     }
 
     function renderCosts(){
@@ -682,12 +580,6 @@
         return;
       }
 
-      if (activeView === "month") {
-        renderMonthlyLoad(gamesForActivePeriod());
-        renderMonthlyTable(visible);
-        return;
-      }
-
       let currentMonth = "";
       let list = null;
       visible.forEach(game => {
@@ -760,49 +652,10 @@
       });
     }
 
-    function renderMonthlyTable(visible){
-      const wrap = document.createElement("div");
-      wrap.className = "monthly-table-wrap";
-      const table = document.createElement("table");
-      table.className = "monthly-table";
-      table.innerHTML = "<thead><tr><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
-      const body = table.querySelector("tbody");
-      visible.forEach(game => {
-        const assignment = assignmentFor(game.id);
-        const state = assignmentState(assignment);
-        const row = document.createElement("tr");
-        if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
-        const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
-        row.innerHTML =
-          `<td>${escapeHtml(formatDate(game.date))}</td>` +
-          `<td>${escapeHtml(game.time || "Hora pendent")}</td>` +
-          `<td><span class="badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}">${escapeHtml(`${game.team} ${game.sex || ""}`)}</span></td>` +
-          `<td>${escapeHtml(game.rival || "Rival pendent")}</td>` +
-          `<td>${escapeHtml(game.loc || "Localització pendent")}</td>` +
-          `<td>${stateBadge}</td>` +
-          `<td class="assign-cell"></td>` +
-          `<td class="assign-cell"></td>`;
-        row.children[6].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
-        row.children[7].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
-        body.appendChild(row);
-      });
-      wrap.appendChild(table);
-      els.content.appendChild(wrap);
-    }
-
     document.querySelectorAll(".filter").forEach(button => {
       button.addEventListener("click", () => {
         activeFilter = button.dataset.filter;
         document.querySelectorAll(".filter").forEach(item => item.classList.toggle("active", item === button));
-        render();
-      });
-    });
-
-    document.querySelectorAll(".view-button").forEach(button => {
-      button.addEventListener("click", () => {
-        activeView = button.dataset.view;
-        document.querySelectorAll(".view-button").forEach(item => item.classList.toggle("active", item === button));
-        rebuildPeriods();
         render();
       });
     });
@@ -840,7 +693,7 @@
       setStatus("Carregant...");
       try {
         await loadGames();
-        rebuildPeriods();
+        buildPeriods();
         try {
           await loadAssignments();
         } catch (error) {

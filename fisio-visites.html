@@ -757,7 +757,7 @@
           const feedback = row.prepaFeedback || {};
           const feedbackText = feedback.text || "";
           const readMeta = actorMeta(row.prepaReadByName, row.prepaReadByEmail, row.prepaReadAt);
-          const feedbackMeta = actorMeta(feedback.byName, feedback.byEmail, feedback.updatedAt);
+          const feedbackMeta = formatDateTime(feedback.updatedAt);
           const readByLabel = row.prepaReadByName || row.prepaReadByEmail || "";
           const readLabel = row.prepaRead ? "✓ " + (readByLabel || "Llegit") : "Pendent";
           const feedbackHtml = feedbackText

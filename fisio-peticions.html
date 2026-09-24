@@ -488,8 +488,8 @@
         .sort((a,b) => a.localeCompare(b, "ca-ES"));
       const genders = [
         { value: "TOTS", label: "Tots" },
-        { value: "M", label: "Masculins" },
-        { value: "F", label: "Femenins" }
+        { value: "M", label: "Masculí" },
+        { value: "F", label: "Femení" }
       ];
       const physioFilters = [
         { value: "TOTS", label: "Tots" },
@@ -758,7 +758,7 @@
         '<h3>Anàlisi de dades</h3>' +
         '<div class="analysis-grid">' +
           '<div class="analysis-card"><strong>' + rowsToAnalyze.length + '</strong><span>Peticions filtrades</span></div>' +
-          '<div class="analysis-card"><strong>' + (genderCounts.M || 0) + ' / ' + (genderCounts.F || 0) + '</strong><span>Masculins / Femenins</span></div>' +
+          '<div class="analysis-card"><strong>' + (genderCounts.M || 0) + ' / ' + (genderCounts.F || 0) + '</strong><span>Masculí / Femení</span></div>' +
           '<div class="analysis-card"><strong>' + averageDaysSinceInjury(rowsToAnalyze) + '</strong><span>Dies mitjans fins a sol·licitar</span></div>' +
           '<div class="analysis-card"><strong>' + averageRequestsPerWeek(rowsToAnalyze) + '</strong><span>Peticions per setmana</span></div>' +
           '<div class="analysis-card"><strong>Top equips</strong>' + teamList + '</div>' +

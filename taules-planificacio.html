@@ -802,7 +802,7 @@
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
-        const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : "";
+        const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =
           `<td>${escapeHtml(formatDate(game.date))}</td>` +
           `<td>${escapeHtml(game.time || "Hora pendent")}</td>` +

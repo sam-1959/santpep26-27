@@ -624,7 +624,7 @@
               { value:"AMB_FEEDBACK", label:"Amb feedback" }
             ], activePrepaFilter)
           : "") +
-        renderFilterGroup("structure", "Estructura", uniqueValues("structure"), activeStructure);
+        renderFilterGroup("structure", "Estructura", DEFAULT_STRUCTURES, activeStructure);
 
       els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
         button.addEventListener("click", () => {

@@ -575,11 +575,6 @@
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
     }
 
-    function defaultAndExistingValues(defaults, field){
-      return dedupeNames(defaults.concat(uniqueValues(field)))
-        .map(value => value.toUpperCase());
-    }
-
     function uniqueTeamCategories(){
       return [...new Set(rows.map(row => teamCategory(row.team)).filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "ca-ES"));
@@ -662,8 +657,8 @@
     function renderDatalistOptions(){
       [
         { el:els.playerOptions, values:uniquePlayerNames() },
-        { el:els.structureOptions, values:defaultAndExistingValues(DEFAULT_STRUCTURES, "structure") },
-        { el:els.locationOptions, values:defaultAndExistingValues(DEFAULT_LOCATIONS, "location") }
+        { el:els.structureOptions, values:DEFAULT_STRUCTURES },
+        { el:els.locationOptions, values:DEFAULT_LOCATIONS }
       ].forEach(config => {
         const values = config.values || [];
         config.el.innerHTML = values

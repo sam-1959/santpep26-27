@@ -72,6 +72,8 @@
     .monthly-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
     .monthly-title { margin:0 0 10px; color:var(--brand-dark); font-size:0.9rem; font-weight:900; }
+    .monthly-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 10px; }
+    .monthly-section-head .monthly-title { margin:0; }
     .monthly-cost-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
     .monthly-cost-table { width:100%; border-collapse:collapse; min-width:520px; font-size:0.86rem; }
     .monthly-cost-table th, .monthly-cost-table td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
@@ -578,12 +580,10 @@
       wrap.className = "monthly-cost-table-wrap";
       const loads = personLoadForGames(periodGames);
       const gamesCount = periodGames.length;
-      const assignmentsCount = loads.reduce((sum, item) => sum + item.total, 0);
       const summary = document.createElement("div");
       summary.className = "monthly-cost-summary";
       summary.append(
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Partits amb taules: ${gamesCount}` }),
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Persones assignades: ${assignmentsCount}` })
+        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Partits amb taules: ${gamesCount}` })
       );
       if (!loads.length) {
         wrap.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
@@ -781,6 +781,18 @@
     }
 
     function renderMonthlyTable(visible){
+      const section = document.createElement("section");
+      section.className = "monthly-panel";
+      const assignedTables = visible.reduce((total, game) => {
+        const assignment = assignmentFor(game.id);
+        return total + (assignment.table1 ? 1 : 0) + (assignment.table2 ? 1 : 0);
+      }, 0);
+      const head = document.createElement("div");
+      head.className = "monthly-section-head";
+      head.append(
+        Object.assign(document.createElement("h2"), { className:"monthly-title", textContent:"Taules del mes" }),
+        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Taules assignades: ${assignedTables}` })
+      );
       const wrap = document.createElement("div");
       wrap.className = "monthly-table-wrap";
       const table = document.createElement("table");
@@ -807,7 +819,8 @@
         body.appendChild(row);
       });
       wrap.appendChild(table);
-      els.content.appendChild(wrap);
+      section.append(head, wrap);
+      els.content.appendChild(section);
     }
 
     document.querySelectorAll(".filter").forEach(button => {

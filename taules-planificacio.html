@@ -554,9 +554,8 @@
         ["table1", "table2"].forEach(slot => {
           const person = assignment[slot];
           if (!person) return;
-          const current = load.get(person) || { name: person, total: 0, table1: 0, table2: 0 };
+          const current = load.get(person) || { name: person, total: 0 };
           current.total += 1;
-          current[slot] += 1;
           load.set(person, current);
         });
       });
@@ -578,7 +577,7 @@
         loads.forEach(item => {
           const card = document.createElement("div");
           card.className = "person-load";
-          card.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${item.total} assignacions · T1: ${item.table1} · T2: ${item.table2}</span>`;
+          card.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${item.total} assignacions</span>`;
           grid.appendChild(card);
         });
       }

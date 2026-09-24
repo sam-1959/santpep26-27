@@ -579,11 +579,11 @@
       const wrap = document.createElement("div");
       wrap.className = "monthly-cost-table-wrap";
       const loads = personLoadForGames(periodGames);
-      const gamesCount = periodGames.length;
+      const assignmentsCount = loads.reduce((sum, item) => sum + item.total, 0);
       const summary = document.createElement("div");
       summary.className = "monthly-cost-summary";
       summary.append(
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Partits amb taules: ${gamesCount}` })
+        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Taules assignades: ${assignmentsCount}` })
       );
       if (!loads.length) {
         wrap.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha cap assignació en aquest mes." }));
@@ -783,15 +783,11 @@
     function renderMonthlyTable(visible){
       const section = document.createElement("section");
       section.className = "monthly-panel";
-      const assignedTables = visible.reduce((total, game) => {
-        const assignment = assignmentFor(game.id);
-        return total + (assignment.table1 ? 1 : 0) + (assignment.table2 ? 1 : 0);
-      }, 0);
       const head = document.createElement("div");
       head.className = "monthly-section-head";
       head.append(
         Object.assign(document.createElement("h2"), { className:"monthly-title", textContent:"Taules del mes" }),
-        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Taules assignades: ${assignedTables}` })
+        Object.assign(document.createElement("span"), { className:"cost-chip", textContent:`Partits amb taules: ${visible.length}` })
       );
       const wrap = document.createElement("div");
       wrap.className = "monthly-table-wrap";

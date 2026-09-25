@@ -128,7 +128,7 @@
     .people-panel[hidden] { display:none; }
     .people-help { margin:0 0 10px; color:var(--muted); font-size:0.82rem; }
     .people-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:14px; }
-    .people-table { width:100%; border-collapse:collapse; min-width:760px; font-size:0.84rem; }
+    .people-table { width:100%; border-collapse:collapse; min-width:840px; font-size:0.84rem; }
     .people-table th, .people-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
     .people-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
     .people-table input { width:100%; min-height:36px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; font:inherit; }
@@ -676,6 +676,7 @@
         profiles[personKey(name)] = {
           name,
           active: true,
+          experienced: false,
           playerTeams: [],
           assistantTeams: []
         };
@@ -691,6 +692,7 @@
         defaults[key] = {
           name: profile.name,
           active: profile.active !== false,
+          experienced: profile.experienced === true,
           playerTeams: Array.isArray(profile.playerTeams) ? profile.playerTeams : splitTeams(profile.playerTeams),
           assistantTeams: Array.isArray(profile.assistantTeams) ? profile.assistantTeams : splitTeams(profile.assistantTeams)
         };
@@ -758,17 +760,18 @@
       const names = PEOPLE.filter(Boolean);
       const table = document.createElement("table");
       table.className = "people-table";
-      table.innerHTML = "<thead><tr><th>Persona</th><th>Juga a</th><th>Ajuda a</th><th>Activa</th></tr></thead><tbody></tbody>";
+      table.innerHTML = "<thead><tr><th>Persona</th><th>Juga a</th><th>Ajuda a</th><th>Experiència</th><th>Activa</th></tr></thead><tbody></tbody>";
       const body = table.querySelector("tbody");
       names.forEach(name => {
         const key = personKey(name);
-        const profile = tablePeopleProfiles[key] || { name, active:true, playerTeams:[], assistantTeams:[] };
+        const profile = tablePeopleProfiles[key] || { name, active:true, experienced:false, playerTeams:[], assistantTeams:[] };
         const row = document.createElement("tr");
         row.dataset.personKey = key;
         row.innerHTML =
           `<td>${escapeHtml(name)}</td>` +
           `<td><input data-field="playerTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.playerTeams || []).join(", "))}" placeholder="Equip on juga" /></td>` +
           `<td><input data-field="assistantTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.assistantTeams || []).join(", "))}" placeholder="Equip on ajuda" /></td>` +
+          `<td class="active-cell"><label class="active-toggle" title="Ja feia taula l'any passat"><input data-field="experienced" type="checkbox" ${profile.experienced === true ? "checked" : ""} /><span aria-hidden="true"></span></label></td>` +
           `<td class="active-cell"><label class="active-toggle" title="Activa per a noves assignacions"><input data-field="active" type="checkbox" ${profile.active === false ? "" : "checked"} /><span aria-hidden="true"></span></label></td>`;
         body.appendChild(row);
       });
@@ -788,6 +791,7 @@
         profiles[key] = {
           name,
           active: row.querySelector('[data-field="active"]').checked,
+          experienced: row.querySelector('[data-field="experienced"]').checked,
           playerTeams: splitTeams(row.querySelector('[data-field="playerTeams"]').value),
           assistantTeams: splitTeams(row.querySelector('[data-field="assistantTeams"]').value)
         };

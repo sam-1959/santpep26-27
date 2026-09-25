@@ -146,7 +146,7 @@ jobs:
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENTS || 'ricard.fuste@gmail.com' }}
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES || 'Ricard Fusté' }}
-          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL }}
+          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec' }}
         run: node scripts/send-physio-visits-weekly-email.js
 
       - name: Desa estat del correu de Visites Fisio

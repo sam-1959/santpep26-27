@@ -209,7 +209,6 @@
     const TEAM_COACHES = {
       "Cadet A M": "César Saura",
       "Cadet B M": "Gerard Castro",
-      "Cadet B F": "Sergi Calatayud",
       "Cadet F": "Sergi Calatayud",
       "Infantil A M": "Mario Martín",
       "Infantil B M": "Pol Torra",
@@ -241,7 +240,6 @@
       "Cadet A M",
       "Cadet B M",
       "Cadet F",
-      "Cadet B F",
       "Júnior A M",
       "Júnior B M",
       "Júnior A F",
@@ -346,6 +344,11 @@
       return `${game.team || ""} ${game.sex || ""}`.trim();
     }
 
+    function canonicalTeamName(value){
+      const text = String(value || "").trim();
+      return normalize(text) === "cadet-b-f" ? "Cadet F" : text;
+    }
+
     function teamOptions(){
       const values = [
         ...BASE_TEAM_OPTIONS,
@@ -357,7 +360,7 @@
         ])
       ];
       return [...new Map(values
-        .map(value => String(value || "").trim())
+        .map(canonicalTeamName)
         .filter(Boolean)
         .map(value => [normalize(value), value])
       ).values()].sort((a, b) => a.localeCompare(b, "ca", { sensitivity:"base" }));
@@ -768,8 +771,8 @@
 
     function personCanTakeGame(profile, game){
       if (!profile || profile.active === false) return false;
-      const currentTeam = normalize(teamLabel(game));
-      const blockedTeams = [...(profile.playerTeams || []), ...(profile.assistantTeams || [])].map(normalize);
+      const currentTeam = normalize(canonicalTeamName(teamLabel(game)));
+      const blockedTeams = [...(profile.playerTeams || []), ...(profile.assistantTeams || [])].map(canonicalTeamName).map(normalize);
       return !blockedTeams.includes(currentTeam);
     }
 

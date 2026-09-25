@@ -12,6 +12,8 @@ const STATUS_PATH = process.env.RPE_EMAIL_STATUS_PATH || "data/rpe-email-status.
 const DRY_RUN = String(process.env.RPE_EMAIL_DRY_RUN || "").toLowerCase() === "true";
 const FORCE_SEND = String(process.env.RPE_EMAIL_FORCE || "").toLowerCase() === "true";
 const WEEK_OFFSET_DAYS = Number(process.env.RPE_WEEK_OFFSET_DAYS || 7);
+const RECIPIENT_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_OVERRIDE || "").trim();
+const RECIPIENT_NAMES_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE || "").trim();
 const DEFAULT_TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {
@@ -185,6 +187,14 @@ function selectedTeamKeys(){
 }
 
 function loadRecipients(teamKey, contacts){
+  if(RECIPIENT_OVERRIDE){
+    const emails = uniqueEmails([RECIPIENT_OVERRIDE]);
+    if(!emails.length) throw new Error(`El destinatari de prova no és vàlid: ${RECIPIENT_OVERRIDE}`);
+    return {
+      emails,
+      names: [RECIPIENT_NAMES_OVERRIDE || emails[0]]
+    };
+  }
   const role = coordinatorRoleForTeam(teamKey);
   const coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
   const coordinator = coordinators.find(contact => String(contact.role || "") === role);

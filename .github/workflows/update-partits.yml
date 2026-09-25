@@ -42,6 +42,14 @@ on:
         options:
           - "false"
           - "true"
+      rpe_team_keys:
+        description: "Equips ERP a enviar (ALL o codis separats per comes)"
+        required: false
+        default: "ALL"
+      rpe_recipient_override:
+        description: "Destinatari de prova ERP (opcional)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -136,9 +144,11 @@ jobs:
 
       - name: Envia correu RPE setmanal
         env:
-          RPE_TEAM_KEYS: ALL
+          RPE_TEAM_KEYS: ${{ github.event.inputs.rpe_team_keys || 'ALL' }}
           RPE_WEEK_OFFSET_DAYS: 7
           RPE_EMAIL_DRY_RUN: ${{ github.event.inputs.rpe_dry_run }}
+          RPE_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event.inputs.rpe_recipient_override }}
+          RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.rpe_recipient_override }}
           RPE_EMAIL_APP_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec
         run: node scripts/send-rpe-weekly-email.js
 

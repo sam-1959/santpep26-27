@@ -188,7 +188,7 @@
     <div class="planning-toolbar">
       <div class="actions" aria-label="Accions de planificació mensual">
         <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
-        <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar setmana actual</button>
+        <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar període</button>
         <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
       </div>
 
@@ -845,19 +845,21 @@
     }
 
     async function clearCurrentWeekAssignments(){
-      const currentWeekGames = games.filter(isCurrentWeekGame);
-      const assignedGames = currentWeekGames.filter(game => {
+      const active = periods[activePeriodIndex];
+      const periodGames = gamesForActivePeriod();
+      const assignedGames = periodGames.filter(game => {
         const assignment = assignmentFor(game.id);
         return !!(assignment.table1 || assignment.table2);
       });
       if (!assignedGames.length) {
-        setStatus("La setmana actual no té cap taula assignada.");
+        setStatus("El període seleccionat no té cap taula assignada.");
         return;
       }
-      const message = `Vols netejar ${assignedGames.length} partit(s) amb taules assignades de la setmana actual?`;
+      const label = active ? active.label : "el període seleccionat";
+      const message = `Vols netejar ${assignedGames.length} partit(s) amb taules assignades de ${label}?`;
       if (!confirm(message)) return;
       els.clearCurrentWeek.disabled = true;
-      setStatus(`Netejant setmana actual (${assignedGames.length} partit(s))...`);
+      setStatus(`Netejant ${label} (${assignedGames.length} partit(s))...`);
       try {
         await Promise.all(assignedGames.map(game => fetch(firebaseUrl(game.id), { method:"DELETE" })));
         assignedGames.forEach(game => {
@@ -865,7 +867,7 @@
           delete assignmentAliases[game.id];
         });
         render();
-        setStatus(`Planificació de la setmana actual netejada (${assignedGames.length} partit(s)).`);
+        setStatus(`Planificació de ${label} netejada (${assignedGames.length} partit(s)).`);
       } finally {
         els.clearCurrentWeek.disabled = false;
       }

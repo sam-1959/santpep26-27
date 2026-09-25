@@ -185,7 +185,7 @@
 
     <section id="peoplePanel" class="people-panel" hidden>
       <h2 class="monthly-title">Perfils del grup de taules</h2>
-      <p class="people-help">Indica els equips on juga o ajuda cada persona. Separa diversos equips amb comes. Exemple: Mini A M, Júnior B F.</p>
+      <p class="people-help">Indica els equips on juga o ajuda cada persona. Pots seleccionar-los del desplegable i separar diversos equips amb comes. Exemple: Mini A M, Júnior B F.</p>
       <div id="peopleProfiles"></div>
       <div class="actions" style="margin:12px 0 0;">
         <button id="savePeopleProfiles" class="action-button" type="button">Guardar perfils</button>
@@ -227,6 +227,29 @@
       "Sènior A M": "Oriol Ramoneda",
       "Sènior B M": "Dídac Procas"
     };
+    const BASE_TEAM_OPTIONS = [
+      "Premini A M",
+      "Premini B M",
+      "Mini A M",
+      "Mini B M",
+      "Mini F",
+      "Infantil A M",
+      "Infantil B M",
+      "Infantil A F",
+      "Infantil B F",
+      "Infantil F",
+      "Cadet A M",
+      "Cadet B M",
+      "Cadet F",
+      "Cadet B F",
+      "Júnior A M",
+      "Júnior B M",
+      "Júnior A F",
+      "Júnior B F",
+      "Sènior A M",
+      "Sènior B M",
+      "Sènior A F"
+    ];
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_PATH = "miniTablesAssignments/season-26-27";
     const PEOPLE_FIREBASE_PATH = "miniTablesPeople/season-26-27";
@@ -321,6 +344,34 @@
 
     function teamLabel(game){
       return `${game.team || ""} ${game.sex || ""}`.trim();
+    }
+
+    function teamOptions(){
+      const values = [
+        ...BASE_TEAM_OPTIONS,
+        ...Object.keys(TEAM_COACHES),
+        ...games.map(teamLabel),
+        ...Object.values(tablePeopleProfiles).flatMap(profile => [
+          ...(profile.playerTeams || []),
+          ...(profile.assistantTeams || [])
+        ])
+      ];
+      return [...new Map(values
+        .map(value => String(value || "").trim())
+        .filter(Boolean)
+        .map(value => [normalize(value), value])
+      ).values()].sort((a, b) => a.localeCompare(b, "ca", { sensitivity:"base" }));
+    }
+
+    function renderTeamOptionsDatalist(){
+      const datalist = document.createElement("datalist");
+      datalist.id = "tableTeamOptions";
+      teamOptions().forEach(team => {
+        const option = document.createElement("option");
+        option.value = team;
+        datalist.appendChild(option);
+      });
+      return datalist;
     }
 
     function formatDate(iso){
@@ -687,8 +738,8 @@
         row.dataset.personKey = key;
         row.innerHTML =
           `<td>${escapeHtml(name)}</td>` +
-          `<td><input data-field="playerTeams" value="${escapeHtml((profile.playerTeams || []).join(", "))}" placeholder="Equip on juga" /></td>` +
-          `<td><input data-field="assistantTeams" value="${escapeHtml((profile.assistantTeams || []).join(", "))}" placeholder="Equip on ajuda" /></td>` +
+          `<td><input data-field="playerTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.playerTeams || []).join(", "))}" placeholder="Equip on juga" /></td>` +
+          `<td><input data-field="assistantTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.assistantTeams || []).join(", "))}" placeholder="Equip on ajuda" /></td>` +
           `<td><input data-field="active" type="checkbox" ${profile.active === false ? "" : "checked"} /></td>`;
         body.appendChild(row);
       });
@@ -696,6 +747,7 @@
       wrap.className = "people-table-wrap";
       wrap.appendChild(table);
       els.peopleProfiles.innerHTML = "";
+      els.peopleProfiles.appendChild(renderTeamOptionsDatalist());
       els.peopleProfiles.appendChild(wrap);
     }
 

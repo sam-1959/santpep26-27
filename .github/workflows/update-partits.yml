@@ -152,7 +152,7 @@ jobs:
       - name: Desa estat del correu de Visites Fisio
         if: ${{ always() && github.event.inputs.physio_visits_dry_run != 'true' }}
         run: |
-          if git diff --quiet -- data/physio-visits-email-status.json; then
+          if git diff --quiet -- data/physio-visits-email-status.json && [ -z "$(git ls-files --others --exclude-standard data/physio-visits-email-status.json)" ]; then
             echo "Sense canvis a l'estat del correu de Visites Fisio."
           else
             git config user.name "github-actions[bot]"

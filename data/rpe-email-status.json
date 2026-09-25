@@ -1,15 +1,17 @@
 {
   "JBF": {
-    "lastAttemptDate": "2026-09-24",
-    "lastAttemptAt": "2026-09-24T13:34:27.893Z",
+    "lastAttemptDate": "2026-09-25",
+    "lastAttemptAt": "2026-09-25T12:13:58.005Z",
     "lastStatus": "sent",
     "lastError": "",
-    "lastSentDate": "2026-09-24",
-    "lastSentAt": "2026-09-24T13:34:30.053Z",
-    "lastRecipient": "jessicagucero@gmail.com,ricard.fuste@gmail.com",
+    "lastSentDate": "2026-09-25",
+    "lastSentAt": "2026-09-25T12:13:58.005Z",
+    "lastRecipient": "jessicagucero@gmail.com,ricard.fuste@gmail.com,albgrau@gmail.com,nacho22guzman@gmail.com",
     "lastRecipients": [
       "jessicagucero@gmail.com",
-      "ricard.fuste@gmail.com"
+      "ricard.fuste@gmail.com",
+      "albgrau@gmail.com",
+      "nacho22guzman@gmail.com"
     ],
     "lastTeam": "Júnior B F",
     "lastWeek": "2026-09-21",

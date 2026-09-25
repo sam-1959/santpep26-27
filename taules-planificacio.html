@@ -35,7 +35,8 @@
     .summary-item { background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:12px; }
     .summary-label { color:var(--muted); font-size:0.72rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; }
     .summary-value { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; font-weight:900; }
-    .filters { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
+    .planning-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,520px); gap:12px; align-items:center; margin:0 0 16px; }
+    .filters { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .filter { border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
     .filter.active { background:var(--brand); color:#fff; border-color:var(--brand); }
@@ -49,13 +50,16 @@
       padding:8px 13px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
     .view-button.active { background:var(--accent); color:#4a3800; border-color:#e0bd00; }
     .period-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
+      box-shadow:var(--shadow); padding:10px; margin:0; }
     .period-pager { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; }
     .period-current { min-height:40px; display:grid; place-items:center; border-radius:999px;
       background:var(--brand); color:#fff; font-size:0.9rem; font-weight:900; text-align:center; padding:0 12px; }
     .period-arrow { display:inline-grid; place-items:center; width:40px; height:40px; border:1px solid var(--line);
       border-radius:999px; background:#fff; color:var(--brand); font-size:1.15rem; font-weight:900; cursor:pointer; }
     .period-arrow:disabled { opacity:0.42; cursor:not-allowed; }
+    @media (max-width: 900px) {
+      .planning-toolbar { grid-template-columns:1fr; }
+    }
     .cost-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:12px; margin:18px 0 0; }
     .cost-title { margin:0 0 8px; color:var(--muted); font-size:0.72rem; font-weight:900;
@@ -181,11 +185,21 @@
       <div class="summary-item"><span class="summary-label">Persones assignades</span><span id="assignedPeopleCount" class="summary-value">0</span></div>
     </section>
 
-    <div class="filters" role="group" aria-label="Filtre d'estat">
-      <button class="filter active" type="button" data-filter="all">Tots</button>
-      <button class="filter" type="button" data-filter="pending">Pendents</button>
-      <button class="filter" type="button" data-filter="complete">Complets</button>
-      <button class="filter" type="button" data-filter="review">Revisar</button>
+    <div class="planning-toolbar">
+      <div class="filters" role="group" aria-label="Filtre d'estat">
+        <button class="filter active" type="button" data-filter="all">Tots</button>
+        <button class="filter" type="button" data-filter="pending">Pendents</button>
+        <button class="filter" type="button" data-filter="complete">Complets</button>
+        <button class="filter" type="button" data-filter="review">Revisar</button>
+      </div>
+
+      <section class="period-panel" aria-label="Paginació mensual">
+        <div class="period-pager">
+          <button id="prevPeriod" class="period-arrow" type="button" aria-label="Període anterior">‹</button>
+          <div id="currentPeriod" class="period-current"></div>
+          <button id="nextPeriod" class="period-arrow" type="button" aria-label="Període següent">›</button>
+        </div>
+      </section>
     </div>
 
     <div class="actions" aria-label="Accions de planificació mensual">
@@ -200,14 +214,6 @@
       <div id="peopleProfiles"></div>
       <div class="actions" style="margin:12px 0 0;">
         <button id="savePeopleProfiles" class="action-button" type="button">Guardar perfils</button>
-      </div>
-    </section>
-
-    <section class="period-panel" aria-label="Paginació mensual">
-      <div class="period-pager">
-        <button id="prevPeriod" class="period-arrow" type="button" aria-label="Període anterior">‹</button>
-        <div id="currentPeriod" class="period-current"></div>
-        <button id="nextPeriod" class="period-arrow" type="button" aria-label="Període següent">›</button>
       </div>
     </section>
 

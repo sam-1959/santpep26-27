@@ -32,6 +32,7 @@
     .field { display:flex; flex-direction:column; gap:5px; }
     .field.wide { grid-column:span 2; }
     .field.full { grid-column:1 / -1; }
+    .field-pair { grid-column:1 / -1; display:grid; grid-template-columns:repeat(2,minmax(160px,1fr)); gap:12px; }
     label { color:var(--brand-dark); font-size:0.76rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
     input, select, textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     select.court-select { font-weight:900; border-width:2px; transition:background-color .15s ease, border-color .15s ease, color .15s ease; }
@@ -130,7 +131,7 @@
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
     @media (max-width:900px){ .form-grid { grid-template-columns:1fr 1fr; } }
-    @media (max-width:760px){ .toolbar, .form-grid { grid-template-columns:1fr; } .field.wide { grid-column:1; } .filters { justify-content:flex-start; } }
+    @media (max-width:760px){ .toolbar, .form-grid, .field-pair { grid-template-columns:1fr; } .field.wide, .field-pair { grid-column:1; } .filters { justify-content:flex-start; } }
   </style>
 </head>
 <body>
@@ -228,13 +229,15 @@
               <option value="SÉNIOR">SÉNIOR</option>
             </select>
             </div>
-            <div class="field">
-              <label for="structure">Estructura</label>
-            <select id="structure" name="structure" required></select>
-            </div>
-            <div class="field wide">
-              <label for="location">Localització</label>
-            <select id="location" name="location" required></select>
+            <div class="field-pair">
+              <div class="field">
+                <label for="structure">Estructura</label>
+                <select id="structure" name="structure" required></select>
+              </div>
+              <div class="field">
+                <label for="location">Localització</label>
+                <select id="location" name="location" required></select>
+              </div>
             </div>
           <div class="field full">
             <label for="mechanism">Mecanisme lesional</label>

@@ -1067,9 +1067,8 @@
       } else {
         const table = document.createElement("table");
         table.className = "monthly-cost-table";
-        table.innerHTML = "<thead><tr><th>#</th><th>Persona</th><th>Taules del mes</th><th>Total taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+        table.innerHTML = "<thead><tr><th>#</th><th>Persona</th><th>Taules del mes</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
         const body = table.querySelector("tbody");
-        const totalsByPerson = totalAssignmentCountsByPerson();
         let total = 0;
         loads.forEach((item, index) => {
           const amount = item.total * TABLE_COST;
@@ -1079,15 +1078,47 @@
             `<td>${escapeHtml(index + 1)}</td>` +
             `<td>${escapeHtml(item.name)}</td>` +
             `<td>${escapeHtml(item.total)}</td>` +
-            `<td>${escapeHtml(totalsByPerson.get(item.name) || item.total)}</td>` +
             `<td>${formatCost(TABLE_COST)}</td>` +
             `<td>${formatCost(amount)}</td>`;
           body.appendChild(row);
         });
         table.querySelector("tfoot").innerHTML =
-          `<tr><td colspan="5">Total mensual</td><td>${formatCost(total)}</td></tr>`;
+          `<tr><td colspan="4">Total mensual</td><td>${formatCost(total)}</td></tr>`;
         wrap.appendChild(table);
       }
+      panel.append(title, wrap);
+      els.content.appendChild(panel);
+    }
+
+    function renderTotalAssignmentLoad(){
+      const panel = document.createElement("section");
+      panel.className = "monthly-panel";
+      const title = document.createElement("h2");
+      title.className = "monthly-title";
+      title.textContent = "Taules totals assignades per persona";
+      const wrap = document.createElement("div");
+      wrap.className = "monthly-cost-table-wrap";
+      const totalsByPerson = totalAssignmentCountsByPerson();
+      const rows = activeTableProfiles()
+        .map(profile => ({ name: profile.name, total: totalsByPerson.get(profile.name) || 0 }))
+        .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
+      const table = document.createElement("table");
+      table.className = "monthly-cost-table";
+      table.innerHTML = "<thead><tr><th>#</th><th>Persona</th><th>Total taules assignades</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+      const body = table.querySelector("tbody");
+      let grandTotal = 0;
+      rows.forEach((item, index) => {
+        grandTotal += item.total;
+        const row = document.createElement("tr");
+        row.innerHTML =
+          `<td>${escapeHtml(index + 1)}</td>` +
+          `<td>${escapeHtml(item.name)}</td>` +
+          `<td>${escapeHtml(item.total)}</td>`;
+        body.appendChild(row);
+      });
+      table.querySelector("tfoot").innerHTML =
+        `<tr><td colspan="2">Total taules assignades</td><td>${escapeHtml(grandTotal)}</td></tr>`;
+      wrap.appendChild(table);
       panel.append(title, wrap);
       els.content.appendChild(panel);
     }
@@ -1215,6 +1246,7 @@
       if (activeView === "month") {
         renderMonthlyTable(visible);
         renderMonthlyLoad(gamesForActivePeriod());
+        renderTotalAssignmentLoad();
         renderProposalLog();
         return;
       }

@@ -558,6 +558,14 @@
       return assignedPhysio === "Miquel Sánchez" ? "readaptacio" : "fisio";
     }
 
+    function visitTypeForPhysio(assignedPhysio){
+      return String(assignedPhysio || "").trim() === "Miquel Sánchez" ? "readaptacio" : "fisio";
+    }
+
+    function syncVisitTypeFromPhysio(){
+      setInputValue("visitType", visitTypeForPhysio(inputValue("assignedPhysio")));
+    }
+
     function visitTypeLabel(value, assignedPhysio){
       return visitTypeValue(value, assignedPhysio) === "readaptacio" ? "Readaptació" : "Fisio";
     }
@@ -1048,7 +1056,7 @@
         location: inputValue("location").toUpperCase(),
         courtStatus: inputValue("courtStatus") || "pending",
         assignedPhysio: inputValue("assignedPhysio"),
-        visitType: inputValue("visitType") || "fisio",
+        visitType: visitTypeForPhysio(inputValue("assignedPhysio")),
         mechanism: inputValue("mechanism"),
         assessment: inputValue("assessment"),
         treatment: inputValue("treatment"),
@@ -1061,7 +1069,7 @@
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
       setInputValue("gender", row.gender);
       setInputValue("assignedPhysio", row.assignedPhysio);
-      setInputValue("visitType", visitTypeValue(row.visitType, row.assignedPhysio));
+      syncVisitTypeFromPhysio();
       setInputValue("team", teamCategory(row.team));
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
@@ -1089,14 +1097,14 @@
           setInputValue("treatment", "");
           setInputValue("guidelines", "");
           setInputValue("courtStatus", "pending");
-          setInputValue("visitType", visitTypeValue(row.visitType, row.assignedPhysio));
+          syncVisitTypeFromPhysio();
           syncCourtStatusSelect();
         }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
         setInputValue("courtStatus", "pending");
-        setInputValue("visitType", currentRole === "readaptador" ? "readaptacio" : "fisio");
+        syncVisitTypeFromPhysio();
         syncCourtStatusSelect();
       }
       els.modal.classList.add("open");
@@ -1304,6 +1312,7 @@
       select.disabled = true;
       const patch = {
         assignedPhysio: select.value.trim(),
+        visitType: visitTypeForPhysio(select.value),
         updatedAt: new Date().toISOString()
       };
       try {
@@ -1368,6 +1377,7 @@
     els.openCreate.addEventListener("click", () => {
       if(isFisio()) openModal();
     });
+    document.getElementById("assignedPhysio").addEventListener("change", syncVisitTypeFromPhysio);
     document.getElementById("courtStatus").addEventListener("change", syncCourtStatusSelect);
     els.closeCreate.addEventListener("click", closeModal);
     els.cancelCreate.addEventListener("click", closeModal);

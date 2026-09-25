@@ -269,6 +269,7 @@
     const FIREBASE_PATH = "miniTablesAssignments/season-26-27";
     const PEOPLE_FIREBASE_PATH = "miniTablesPeople/season-26-27";
 
+    let allGames = [];
     let games = [];
     let costGames = [];
     let assignments = {};
@@ -562,6 +563,12 @@
       return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
     }
 
+    function gameDayPart(game){
+      const match = String(game.time || "").match(/(\d{1,2})/);
+      if (!match) return "";
+      return Number(match[1]) < 14 ? "morning" : "afternoon";
+    }
+
     function parseLocalDate(iso){
       const [year, month, day] = String(iso || "").split("-").map(Number);
       if (!year || !month || !day) return null;
@@ -596,6 +603,7 @@
       const data = JSON.parse(raw.textContent);
       const importedGames = data.weeks.flatMap(week => week.games || [])
         .map(game => ({ ...game, id: gameId(game) }));
+      allGames = importedGames;
       games = importedGames
         .filter(game => isClubVenue(game) && (game.fam === "MINI" || game.fam === "PREMINI" || game.friendly))
         .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
@@ -791,7 +799,14 @@
       if (!profile || profile.active === false) return false;
       const currentTeam = normalize(canonicalTeamName(teamLabel(game)));
       const blockedTeams = [...(profile.playerTeams || []), ...(profile.assistantTeams || [])].map(canonicalTeamName).map(normalize);
-      return !blockedTeams.includes(currentTeam);
+      if (blockedTeams.includes(currentTeam)) return false;
+      const targetDayPart = gameDayPart(game);
+      if (!targetDayPart) return true;
+      return !allGames.some(otherGame =>
+        otherGame.date === game.date &&
+        gameDayPart(otherGame) === targetDayPart &&
+        blockedTeams.includes(normalize(canonicalTeamName(teamLabel(otherGame))))
+      );
     }
 
     function monthlyAssignmentCountByPerson(periodGames){

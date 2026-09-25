@@ -414,11 +414,11 @@
     }
 
     function isPrepa(){
-      return currentRole === "prepa" || currentRole === "fisio_prepa";
+      return currentRole === "prepa" || currentRole === "fisio_prepa" || currentRole === "readaptador";
     }
 
     function canUsePrepaActions(){
-      return currentRole === "prepa" || currentRole === "fisio_prepa";
+      return currentRole === "prepa" || currentRole === "fisio_prepa" || currentRole === "readaptador";
     }
 
     function hasAccess(){

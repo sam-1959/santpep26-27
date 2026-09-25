@@ -113,6 +113,8 @@
     .col-prepa { width:1%; white-space:nowrap; }
     .col-court, .col-type { width:1%; white-space:nowrap; text-align:center; }
     .col-feedback { min-width:180px; max-width:260px; }
+    .col-actions { width:1%; white-space:nowrap; text-align:center; }
+    .col-actions .table-actions { justify-content:center; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
     .prepa-badge.read { background:#e8f5e9; border-color:#a5d6a7; color:#1b5e20; }
     .feedback-preview { color:var(--muted); font-size:0.78rem; line-height:1.3; white-space:normal; }
@@ -885,7 +887,7 @@
         '<th class="col-court">Pista</th>' +
         '<th class="col-prepa">Prepa</th>' +
         '<th class="col-feedback">Feedback</th>' +
-        '<th>Accions</th>' +
+        '<th class="col-actions">Accions</th>' +
         '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
@@ -918,7 +920,7 @@
             '<td class="col-court">' + courtStatusBadge(row.courtStatus) + '</td>' +
             '<td class="col-prepa"><span class="prepa-badge ' + (row.prepaRead ? "read" : "pending") + '" title="' + escapeHtml(readMeta || "") + '">' + escapeHtml(readLabel) + '</span>' + (readMeta ? '<div class="action-meta">' + escapeHtml(formatDateTime(row.prepaReadAt)) + '</div>' : '') + '</td>' +
             '<td class="col-feedback">' + feedbackHtml + '</td>' +
-            '<td><div class="table-actions">' +
+            '<td class="col-actions"><div class="table-actions">' +
               (canUsePrepaActions() ? '<button class="row-action read" type="button" title="Marcar com llegit pel prepa" data-action="read" data-id="' + escapeHtml(row.id) + '">✓</button>' +
               '<button class="row-action feedback" type="button" title="Feedback prepa" data-action="feedback" data-id="' + escapeHtml(row.id) + '">💬</button>' : '') +
               (isFisio() ? '<button class="row-action" type="button" title="Editar visita" data-action="edit" data-id="' + escapeHtml(row.id) + '">✏️</button>' +

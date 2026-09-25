@@ -63,7 +63,7 @@ concurrency:
 
 jobs:
   update:
-    if: ${{ github.event_name != 'schedule' || github.event.schedule == '30 * * * *' }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '30 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe != 'true') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

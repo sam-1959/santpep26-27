@@ -135,6 +135,7 @@
     .monthly-table { width:100%; border-collapse:collapse; min-width:980px; font-size:0.84rem; }
     .monthly-table th, .monthly-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; white-space:nowrap; }
     .monthly-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; position:sticky; top:0; z-index:1; }
+    .monthly-table th:first-child, .monthly-table td:first-child { width:1%; min-width:0; text-align:right; color:var(--muted); }
     .monthly-table tr.needs-attention td { background:#fff8e6; }
     .monthly-table .assign-cell { min-width:190px; }
     .monthly-table select { min-height:36px; font-size:0.84rem; }
@@ -1362,9 +1363,9 @@
       wrap.className = "monthly-table-wrap";
       const table = document.createElement("table");
       table.className = "monthly-table";
-      table.innerHTML = "<thead><tr><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Tipus</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
+      table.innerHTML = "<thead><tr><th>#</th><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Tipus</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
       const body = table.querySelector("tbody");
-      visible.forEach(game => {
+      visible.forEach((game, index) => {
         const assignment = assignmentFor(game.id);
         const state = assignmentState(assignment);
         const row = document.createElement("tr");
@@ -1372,6 +1373,7 @@
         const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
         const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =
+          `<td>${escapeHtml(index + 1)}</td>` +
           `<td>${escapeHtml(formatDate(game.date))}</td>` +
           `<td>${escapeHtml(game.time || "Hora pendent")}</td>` +
           `<td><span class="badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}">${escapeHtml(`${game.team} ${game.sex || ""}`)}</span></td>` +
@@ -1381,8 +1383,8 @@
           `<td>${typeBadge}</td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
-        row.children[7].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
-        row.children[8].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
+        row.children[8].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
+        row.children[9].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
         body.appendChild(row);
       });
       wrap.appendChild(table);

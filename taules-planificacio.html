@@ -158,6 +158,7 @@
     label { color:var(--muted); font-size:0.74rem; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; }
     select { width:100%; min-height:42px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink);
       font:inherit; font-size:0.92rem; font-weight:750; padding:8px 10px; box-shadow:inset 0 1px 2px rgba(60,40,90,0.06); }
+    select.assignment-conflict { border-color:#f59e0b; background:#fff7ed; color:#7c2d12; box-shadow:0 0 0 2px rgba(245,158,11,0.16); }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
     select:disabled { background:#f3f0f6; color:var(--muted); opacity:1; cursor:not-allowed; }
     .empty { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -764,6 +765,39 @@
       if (!hasPeople) delete assignments[id];
     }
 
+    function assignmentConflictReasons(person, game, assignment = {}){
+      if (!person || !game) return [];
+      const reasons = [];
+      if (assignment.table1 && assignment.table2 && assignment.table1 === assignment.table2) {
+        reasons.push("La mateixa persona està assignada dues vegades al partit.");
+      }
+      const profile = tablePeopleProfiles[personKey(person)] || (PEOPLE.includes(person)
+        ? { name: person, active:true, playerTeams:[], assistantTeams:[], siblingTeams:[] }
+        : null);
+      if (!profile) return reasons;
+      if (profile.active === false) reasons.push("La persona no està activa per a noves assignacions.");
+      const currentTeam = normalize(canonicalTeamName(teamLabel(game)));
+      const blockedTeams = [...(profile.playerTeams || []), ...(profile.assistantTeams || [])]
+        .map(canonicalTeamName)
+        .map(normalize);
+      if (blockedTeams.includes(currentTeam)) {
+        reasons.push("La persona juga o ajuda en aquest mateix equip.");
+      }
+      const targetDayPart = gameDayPart(game);
+      if (targetDayPart) {
+        const conflictGame = allGames.find(otherGame =>
+          otherGame.date === game.date &&
+          gameDayPart(otherGame) === targetDayPart &&
+          blockedTeams.includes(normalize(canonicalTeamName(teamLabel(otherGame))))
+        );
+        if (conflictGame) {
+          const part = targetDayPart === "morning" ? "matí" : "tarda";
+          reasons.push(`Té partit amb ${teamLabel(conflictGame)} el mateix dia i franja de ${part}.`);
+        }
+      }
+      return reasons;
+    }
+
     function makeSelect(game, slot, value){
       const select = document.createElement("select");
       select.dataset.gameId = game.id;
@@ -783,6 +817,11 @@
         option.textContent = `${value} (històric)`;
         option.selected = true;
         select.appendChild(option);
+      }
+      const conflictReasons = assignmentConflictReasons(value, game, assignmentFor(game.id));
+      if (conflictReasons.length) {
+        select.classList.add("assignment-conflict");
+        select.title = `Assignació en conflicte: ${conflictReasons.join(" ")}`;
       }
       return select;
     }

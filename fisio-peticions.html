@@ -35,6 +35,7 @@
     .auth-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .auth-button:disabled { opacity:0.55; cursor:not-allowed; }
     .filter-toolbar { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin:0 0 12px; }
+    .filter-toolbar .pagination { margin-left:auto; }
     .filters { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin:0 0 14px; }
     .filters.inline { margin:0; }
     .search { width:min(360px,100%); border:1px solid var(--line); border-radius:999px; padding:8px 12px; font:inherit; font-size:0.84rem; background:#fff; color:var(--ink); margin:0; }
@@ -141,11 +142,9 @@
       <div class="filter-toolbar">
         <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, descripció o pautes" autocomplete="off" />
         <div class="filters inline" id="genderFilters"></div>
-      </div>
-      <div class="filters" id="filters"></div>
-      <div class="table-topbar">
         <div class="pagination" id="pagination"></div>
       </div>
+      <div class="filters" id="filters"></div>
       <div class="table-wrap" id="tableWrap"></div>
       <div class="table-meta">
         <div class="quota-status" id="quotaStatus"></div>

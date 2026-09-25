@@ -724,10 +724,10 @@
             ], activePrepaFilter)
           : "") +
         renderFilterGroup("courtStatus", "Pista", [
-          { value:"pending", label:"Pendent" },
-          { value:"red", label:"No pista" },
-          { value:"orange", label:"Condicionada" },
-          { value:"green", label:"Normal" }
+          { value:"pending", label:"○ Pendent" },
+          { value:"red", label:"× No pista" },
+          { value:"orange", label:"! Condicionada" },
+          { value:"green", label:"✓ Normal" }
         ], activeCourtStatus) +
         renderFilterGroup("structure", "Estructura", DEFAULT_STRUCTURES, activeStructure);
 

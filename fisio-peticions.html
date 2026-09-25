@@ -57,7 +57,7 @@
     .col-name { width:1%; white-space:nowrap; }
     .col-physio { width:1%; white-space:nowrap; text-align:center; }
     .col-team { width:1%; white-space:nowrap; }
-    .col-court { width:1%; white-space:nowrap; text-align:center; }
+    .col-court, .col-type { width:1%; white-space:nowrap; text-align:center; }
     .col-phone { width:1%; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
     .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
@@ -78,9 +78,9 @@
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
-    .type-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; white-space:nowrap; margin-left:4px; }
-    .type-badge.fisio { background:#f3e8ff; color:#5a2f7d; }
-    .type-badge.readaptacio { background:#e6f5ff; color:#075985; }
+    .type-icon-badge { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:999px; font-size:1rem; line-height:1; box-shadow:0 1px 4px rgba(20,12,32,0.1); }
+    .type-icon-badge.fisio { background:#f8f0ff; color:#5a2f7d; }
+    .type-icon-badge.readaptacio { background:#eef8ff; color:#075985; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
     .col-quota { width:1%; white-space:nowrap; text-align:center; }
@@ -324,7 +324,9 @@
 
     function visitTypeBadge(value, assignedPhysio){
       const type = visitTypeValue(value, assignedPhysio);
-      return '<span class="type-badge ' + escapeHtml(type) + '">' + escapeHtml(visitTypeLabel(type)) + '</span>';
+      const label = visitTypeLabel(type);
+      const icon = type === "readaptacio" ? "🏃" : "🩺";
+      return '<span class="type-icon-badge ' + escapeHtml(type) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' + icon + '</span>';
     }
 
     function latestPhysioFilterValue(row){
@@ -621,7 +623,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">Fisio última visita</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -645,8 +647,9 @@
             : '<span class="no-visit-badge">Sense visita</span>';
           const courtStatusHtml = latestGuidelines ? courtStatusBadge(latestGuidelines.courtStatus) : '<span class="no-visit-badge">Sense visita</span>';
           const latestPhysioHtml = latestGuidelines && latestGuidelines.assignedPhysio
-            ? escapeHtml(latestGuidelines.assignedPhysio) + visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio)
+            ? escapeHtml(latestGuidelines.assignedPhysio)
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
+          const visitTypeHtml = latestGuidelines ? visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio) : '<span class="no-visit-badge">Sense visita</span>';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-request-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -657,6 +660,7 @@
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
           '<td class="col-physio">' + latestPhysioHtml + '</td>' +
+          '<td class="col-type">' + visitTypeHtml + '</td>' +
           '<td class="col-court">' + courtStatusHtml + '</td>' +
           '<td class="col-guidelines">' + guidelinesHtml + '</td>' +
         '</tr>';

@@ -13,11 +13,11 @@ on:
   schedule:
     # Cada hora. GitHub cron és sempre UTC.
     - cron: "30 * * * *"
-    # 10:17 Europe/Madrid en horari d'estiu. GitHub cron és sempre UTC.
-    - cron: "17 8 * * *"
+    # 09:17 Europe/Madrid en horari d'estiu. GitHub cron és sempre UTC.
+    - cron: "17 7 * * *"
     # Reintents diaris del correu RPE per millorar fiabilitat sense duplicats.
-    - cron: "47 8 * * *"
-    - cron: "17 9 * * *"
+    - cron: "47 7 * * *"
+    - cron: "17 8 * * *"
   workflow_dispatch:
     inputs:
       test_whatsapp:
@@ -109,7 +109,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
   send-rpe-email:
-    if: ${{ github.event_name == 'schedule' && (github.event.schedule == '17 8 * * *' || github.event.schedule == '47 8 * * *' || github.event.schedule == '17 9 * * *') }}
+    if: ${{ github.event_name == 'schedule' && (github.event.schedule == '17 7 * * *' || github.event.schedule == '47 7 * * *' || github.event.schedule == '17 8 * * *') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

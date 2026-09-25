@@ -78,6 +78,9 @@
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
+    .type-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; white-space:nowrap; margin-left:4px; }
+    .type-badge.fisio { background:#f3e8ff; color:#5a2f7d; }
+    .type-badge.readaptacio { background:#e6f5ff; color:#075985; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
     .new-badge::before { content:"●"; margin-right:4px; font-size:0.62rem; }
     .col-quota { width:1%; white-space:nowrap; text-align:center; }
@@ -308,6 +311,22 @@
       return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></span>';
     }
 
+    function visitTypeValue(value, assignedPhysio){
+      const normalized = String(value || "").trim().toLowerCase();
+      if(normalized === "readaptacio" || normalized === "readaptació") return "readaptacio";
+      if(normalized === "fisio" || normalized === "fisioterapia" || normalized === "fisioteràpia") return "fisio";
+      return assignedPhysio === "Miquel Sánchez" ? "readaptacio" : "fisio";
+    }
+
+    function visitTypeLabel(value, assignedPhysio){
+      return visitTypeValue(value, assignedPhysio) === "readaptacio" ? "Readaptació" : "Fisio";
+    }
+
+    function visitTypeBadge(value, assignedPhysio){
+      const type = visitTypeValue(value, assignedPhysio);
+      return '<span class="type-badge ' + escapeHtml(type) + '">' + escapeHtml(visitTypeLabel(type)) + '</span>';
+    }
+
     function latestPhysioFilterValue(row){
       const latest = latestGuidelinesFor(row.player);
       if(!latest) return "NO_VISIT";
@@ -384,6 +403,7 @@
                 guidelines,
                 courtStatus: visit.courtStatus || "pending",
                 assignedPhysio: visit.assignedPhysio || "",
+                visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
                 timestamp,
                 updatedTimestamp,
                 date: visit.date || "",
@@ -401,6 +421,7 @@
                   guidelines: primary.guidelines || secondary.guidelines,
                   courtStatus: primary.courtStatus && primary.courtStatus !== "pending" ? primary.courtStatus : secondary.courtStatus,
                   assignedPhysio: primary.assignedPhysio || secondary.assignedPhysio,
+                  visitType: primary.visitType || secondary.visitType,
                   createdAt: primary.createdAt || secondary.createdAt,
                   updatedAt: primary.updatedAt || secondary.updatedAt,
                   updatedTimestamp: Math.max(primary.updatedTimestamp || 0, secondary.updatedTimestamp || 0)
@@ -624,7 +645,7 @@
             : '<span class="no-visit-badge">Sense visita</span>';
           const courtStatusHtml = latestGuidelines ? courtStatusBadge(latestGuidelines.courtStatus) : '<span class="no-visit-badge">Sense visita</span>';
           const latestPhysioHtml = latestGuidelines && latestGuidelines.assignedPhysio
-            ? escapeHtml(latestGuidelines.assignedPhysio)
+            ? escapeHtml(latestGuidelines.assignedPhysio) + visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio)
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +

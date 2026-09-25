@@ -119,6 +119,9 @@
     .team { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.76rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
+    .type-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; white-space:nowrap; }
+    .type-badge.fisio { background:#f3e8ff; color:#5a2f7d; }
+    .type-badge.readaptacio { background:#e6f5ff; color:#075985; }
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
@@ -201,6 +204,13 @@
               <option value="Pol Amigó">Pol Amigó</option>
               <option value="Eric Nicolàs">Eric Nicolàs</option>
               <option value="Miquel Sánchez">Miquel Sánchez</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="visitType">Tipus de visita</label>
+            <select id="visitType" name="visitType" required>
+              <option value="fisio">Fisioteràpia</option>
+              <option value="readaptacio">Readaptació</option>
             </select>
           </div>
             <div class="field">
@@ -313,6 +323,7 @@
     let activeStructure = "TOTS";
     let activePhysio = "TOTS";
     let activeCourtStatus = "TOTS";
+    let activeVisitType = "TOTS";
     let activePrepaFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
@@ -540,6 +551,22 @@
       return '<span class="court-badge ' + escapeHtml(status) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></span>';
     }
 
+    function visitTypeValue(value, assignedPhysio){
+      const normalized = String(value || "").trim().toLowerCase();
+      if(normalized === "readaptacio" || normalized === "readaptació") return "readaptacio";
+      if(normalized === "fisio" || normalized === "fisioterapia" || normalized === "fisioteràpia") return "fisio";
+      return assignedPhysio === "Miquel Sánchez" ? "readaptacio" : "fisio";
+    }
+
+    function visitTypeLabel(value, assignedPhysio){
+      return visitTypeValue(value, assignedPhysio) === "readaptacio" ? "Readaptació" : "Fisio";
+    }
+
+    function visitTypeBadge(value, assignedPhysio){
+      const type = visitTypeValue(value, assignedPhysio);
+      return '<span class="type-badge ' + escapeHtml(type) + '">' + escapeHtml(visitTypeLabel(type)) + '</span>';
+    }
+
     function normalizeRows(data){
       if(!data || typeof data !== "object") return [];
       return Object.entries(data).map(([id, row]) => ({
@@ -551,6 +578,7 @@
         name: row.name || [row.firstName, row.lastName].filter(Boolean).join(" "),
         gender: row.gender || "",
         assignedPhysio: row.assignedPhysio || row.physio || "",
+        visitType: visitTypeValue(row.visitType, row.assignedPhysio || row.physio || ""),
         team: teamCategory(row.team || ""),
         structure: row.structure || "",
         location: row.location || "",
@@ -605,6 +633,7 @@
         structure: visit.structure || "",
         location: visit.location || "",
         assignedPhysio: visit.assignedPhysio || "",
+        visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
         courtStatus: visit.courtStatus || "pending",
         guidelines: visit.guidelines || ""
       };
@@ -644,6 +673,10 @@
           { value:"F", label:"Femení" }
         ], activeGender) +
         renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam) +
+        renderFilterGroup("visitType", "Tipus", [
+          { value:"fisio", label:"Fisio" },
+          { value:"readaptacio", label:"Readaptació" }
+        ], activeVisitType) +
         renderFilterGroup("courtStatus", "Pista", [
           { value:"pending", label:"Pendent" },
           { value:"red", label:"No pista" },
@@ -655,6 +688,7 @@
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
+          if(button.dataset.filter === "visitType") activeVisitType = button.dataset.value;
           if(button.dataset.filter === "courtStatus") activeCourtStatus = button.dataset.value;
           currentPage = 1;
           renderFilters();
@@ -739,6 +773,7 @@
         if(activeGender !== "TOTS" && row.gender !== activeGender) return false;
         if(hasAccess() && activePhysio !== "TOTS" && row.assignedPhysio !== activePhysio) return false;
         if(activeTeam !== "TOTS" && teamCategory(row.team) !== activeTeam) return false;
+        if(activeVisitType !== "TOTS" && visitTypeValue(row.visitType, row.assignedPhysio) !== activeVisitType) return false;
         if(activeCourtStatus !== "TOTS" && (row.courtStatus || "pending") !== activeCourtStatus) return false;
         if(activeStructure !== "TOTS" && row.structure !== activeStructure) return false;
         if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
@@ -746,8 +781,8 @@
         if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !row.prepaFeedback?.text) return false;
         if(!query) return true;
         const searchable = hasAccess()
-          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, courtStatusLabel(row.courtStatus), row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]
-          : [row.date, row.team, teamCategory(row.team), row.structure, row.location, row.gender];
+          ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, visitTypeLabel(row.visitType, row.assignedPhysio), courtStatusLabel(row.courtStatus), row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]
+          : [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.gender, row.assignedPhysio, visitTypeLabel(row.visitType, row.assignedPhysio), row.guidelines];
         return normalize(searchable.join(" ")).includes(query);
       });
     }
@@ -776,6 +811,7 @@
           '<th class="col-team">Equip</th>' +
           '<th class="col-structure">Estructura</th>' +
           '<th class="col-location">Localització</th>' +
+          '<th>Tipus</th>' +
           '<th class="col-physio">Fisio última visita</th>' +
           '<th class="col-court">Pista</th>' +
           '<th>Pautes última visita</th>' +
@@ -787,6 +823,7 @@
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+            '<td>' + visitTypeBadge(row.visitType, row.assignedPhysio) + '</td>' +
             '<td class="col-physio">' + escapeHtml(row.assignedPhysio || "—") + '</td>' +
             '<td class="col-court">' + courtStatusBadge(row.courtStatus) + '</td>' +
             '<td class="guidelines">' + (row.guidelines ? escapeHtml(row.guidelines) : '<span class="no-guidelines-badge">Sense pauta</span>') + '</td>' +
@@ -803,6 +840,7 @@
         '<th class="col-team">Equip</th>' +
         '<th class="col-structure">Estructura</th>' +
         '<th class="col-location">Localització</th>' +
+        '<th>Tipus</th>' +
         '<th>Mecanisme lesional</th>' +
         '<th>Valoració</th>' +
         '<th>Tractament</th>' +
@@ -835,6 +873,7 @@
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +
             '<td class="col-structure">' + escapeHtml(row.structure || "—") + '</td>' +
             '<td class="col-location">' + escapeHtml(row.location || "—") + '</td>' +
+            '<td>' + visitTypeBadge(row.visitType, row.assignedPhysio) + '</td>' +
             '<td class="long">' + escapeHtml(row.mechanism || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.assessment || "—") + '</td>' +
             '<td class="long">' + escapeHtml(row.treatment || "—") + '</td>' +
@@ -946,7 +985,7 @@
       });
       if(!response.ok) throw new Error("Firebase patch failed");
       const publicPatch = {};
-      ["date", "gender", "team", "structure", "location", "assignedPhysio", "courtStatus", "guidelines", "updatedAt"].forEach(field => {
+      ["date", "gender", "team", "structure", "location", "assignedPhysio", "visitType", "courtStatus", "guidelines", "updatedAt"].forEach(field => {
         if(Object.prototype.hasOwnProperty.call(patch, field)) publicPatch[field] = patch[field];
       });
       if(Object.keys(publicPatch).length){
@@ -1009,6 +1048,7 @@
         location: inputValue("location").toUpperCase(),
         courtStatus: inputValue("courtStatus") || "pending",
         assignedPhysio: inputValue("assignedPhysio"),
+        visitType: inputValue("visitType") || "fisio",
         mechanism: inputValue("mechanism"),
         assessment: inputValue("assessment"),
         treatment: inputValue("treatment"),
@@ -1021,6 +1061,7 @@
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
       setInputValue("gender", row.gender);
       setInputValue("assignedPhysio", row.assignedPhysio);
+      setInputValue("visitType", visitTypeValue(row.visitType, row.assignedPhysio));
       setInputValue("team", teamCategory(row.team));
       setInputValue("structure", row.structure);
       setInputValue("location", row.location);
@@ -1048,12 +1089,14 @@
           setInputValue("treatment", "");
           setInputValue("guidelines", "");
           setInputValue("courtStatus", "pending");
+          setInputValue("visitType", visitTypeValue(row.visitType, row.assignedPhysio));
           syncCourtStatusSelect();
         }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
         setInputValue("courtStatus", "pending");
+        setInputValue("visitType", currentRole === "readaptador" ? "readaptacio" : "fisio");
         syncCourtStatusSelect();
       }
       els.modal.classList.add("open");

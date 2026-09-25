@@ -876,14 +876,17 @@
 
     async function generateMonthlyProposal(){
       const periodGames = gamesForActivePeriod();
-      const counts = monthlyAssignmentCountByPerson(periodGames);
+      const counts = totalAssignmentCountsByPerson();
       const activeProfiles = activeTableProfiles();
       const monthlySlots = monthlyAssignableSlotCount(periodGames);
-      const targetMax = activeProfiles.length ? Math.ceil(monthlySlots / activeProfiles.length) : 0;
+      const currentTotals = activeProfiles.map(profile => counts.get(profile.name) || 0);
+      const minTotal = currentTotals.length ? Math.min(...currentTotals) : 0;
+      const targetMax = activeProfiles.length ? minTotal + Math.ceil(monthlySlots / activeProfiles.length) : 0;
       const active = periods[activePeriodIndex];
       const proposalLog = {
         period: active ? active.label : "Període seleccionat",
         activePeople: activeProfiles.length,
+        minTotal,
         targetMax,
         slotsEvaluated: 0,
         assigned: 0,
@@ -1098,7 +1101,8 @@
         `<div class="proposal-log-grid">` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Període</span><span class="proposal-log-value">${escapeHtml(log.period)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Persones actives</span><span class="proposal-log-value">${escapeHtml(log.activePeople)}</span></div>` +
-          `<div class="proposal-log-item"><span class="proposal-log-label">Objectiu màxim</span><span class="proposal-log-value">${escapeHtml(log.targetMax || "—")}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Mínim total actual</span><span class="proposal-log-value">${escapeHtml(log.minTotal ?? "—")}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Objectiu màxim total</span><span class="proposal-log-value">${escapeHtml(log.targetMax || "—")}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Assignades</span><span class="proposal-log-value">${escapeHtml(log.assigned)} / ${escapeHtml(log.slotsEvaluated)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +

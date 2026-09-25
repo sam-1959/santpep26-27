@@ -14,7 +14,7 @@ on:
     # Cada hora. GitHub cron és sempre UTC.
     - cron: "30 * * * *"
     # Dilluns 09:17 Europe/Madrid en horari d'estiu.
-    # Envia l'ERP de la setmana anterior als equips amb dades.
+    # Envia el resum de Visites Fisio de la setmana anterior.
     - cron: "17 7 * * 1"
   workflow_dispatch:
     inputs:
@@ -26,28 +26,24 @@ on:
         options:
           - "false"
           - "true"
-      send_rpe:
-        description: "Envia ara el correu ERP"
+      send_physio_visits:
+        description: "Envia ara el correu setmanal de Visites Fisio"
         required: false
         default: "false"
         type: choice
         options:
           - "false"
           - "true"
-      rpe_dry_run:
-        description: "Valida l'ERP sense enviar correus"
+      physio_visits_dry_run:
+        description: "Valida Visites Fisio sense enviar correus"
         required: false
         default: "false"
         type: choice
         options:
           - "false"
           - "true"
-      rpe_team_keys:
-        description: "Equips ERP a enviar (ALL o codis separats per comes)"
-        required: false
-        default: "ALL"
-      rpe_recipient_override:
-        description: "Destinatari de prova ERP (opcional)"
+      physio_visits_recipient_override:
+        description: "Destinatari de prova Visites Fisio (opcional)"
         required: false
         default: ""
 
@@ -63,7 +59,7 @@ concurrency:
 
 jobs:
   update:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '30 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe != 'true') }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '30 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits != 'true') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -130,8 +126,8 @@ jobs:
         if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v5
 
-  send-rpe-email:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '17 7 * * 1') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe == 'true') }}
+  send-physio-visits-email:
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '17 7 * * 1') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -142,26 +138,27 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Envia correu RPE setmanal
+      - name: Envia correu setmanal de Visites Fisio
         env:
-          RPE_TEAM_KEYS: ${{ github.event.inputs.rpe_team_keys || 'ALL' }}
-          RPE_WEEK_OFFSET_DAYS: 7
-          RPE_EMAIL_DRY_RUN: ${{ github.event.inputs.rpe_dry_run }}
-          RPE_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event.inputs.rpe_recipient_override }}
-          RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.rpe_recipient_override }}
-          RPE_EMAIL_APP_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec
-        run: node scripts/send-rpe-weekly-email.js
+          PHYSIO_VISITS_WEEK_OFFSET_DAYS: 7
+          PHYSIO_VISITS_EMAIL_DRY_RUN: ${{ github.event.inputs.physio_visits_dry_run }}
+          PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
+          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
+          PHYSIO_VISITS_EMAIL_RECIPIENTS: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENTS || 'ricard.fuste@gmail.com' }}
+          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES || 'Ricard Fusté' }}
+          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL }}
+        run: node scripts/send-physio-visits-weekly-email.js
 
-      - name: Desa estat del correu RPE
-        if: ${{ always() && github.event.inputs.rpe_dry_run != 'true' }}
+      - name: Desa estat del correu de Visites Fisio
+        if: ${{ always() && github.event.inputs.physio_visits_dry_run != 'true' }}
         run: |
-          if git diff --quiet -- data/rpe-email-status.json; then
-            echo "Sense canvis a l'estat del correu RPE."
+          if git diff --quiet -- data/physio-visits-email-status.json; then
+            echo "Sense canvis a l'estat del correu de Visites Fisio."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/rpe-email-status.json
-            git commit -m "Actualitza estat correu RPE"
+            git add data/physio-visits-email-status.json
+            git commit -m "Actualitza estat correu Visites Fisio"
             git pull --rebase
             git push
           fi

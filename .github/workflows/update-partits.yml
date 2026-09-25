@@ -28,6 +28,14 @@ on:
         options:
           - "false"
           - "true"
+      send_rpe:
+        description: "Envia ara el correu ERP JBF"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   contents: write
@@ -109,7 +117,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
   send-rpe-email:
-    if: ${{ github.event_name == 'schedule' && (github.event.schedule == '17 7 * * *' || github.event.schedule == '47 7 * * *' || github.event.schedule == '17 8 * * *') }}
+    if: ${{ (github.event_name == 'schedule' && (github.event.schedule == '17 7 * * *' || github.event.schedule == '47 7 * * *' || github.event.schedule == '17 8 * * *')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

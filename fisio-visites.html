@@ -88,6 +88,15 @@
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
     .page-button:disabled { opacity:0.45; cursor:not-allowed; }
     .page-info { font-weight:800; color:var(--brand-dark); }
+    .analysis { margin-top:22px; padding:16px 18px 18px; border:1px solid var(--line); border-top:4px solid var(--accent); border-radius:var(--radius); background:#fffdf3; box-shadow:var(--shadow); }
+    .analysis h3 { margin:0 0 12px; color:var(--brand-dark); font-size:1rem; }
+    .analysis-grid { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; }
+    .analysis-card { border:1px solid var(--line); border-radius:14px; background:#faf8fd; padding:12px; }
+    .analysis-card strong { display:block; color:var(--brand-dark); font-size:1.25rem; line-height:1.1; }
+    .analysis-card span { display:block; margin-top:4px; color:var(--muted); font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; }
+    .analysis-list { margin:6px 0 0; padding:0; list-style:none; color:var(--ink); font-size:0.88rem; }
+    .analysis-list li { display:flex; justify-content:space-between; gap:12px; padding:3px 0; border-bottom:1px dashed #ddd4e8; }
+    .analysis-list li:last-child { border-bottom:0; }
     table { width:100%; border-collapse:collapse; min-width:1240px; background:#fff; table-layout:auto; }
     th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
@@ -175,6 +184,7 @@
         </div>
         <div class="table-wrap" id="tableWrap"></div>
         <div class="status" id="status">Carregant visites...</div>
+        <div class="analysis" id="analysis"></div>
       </section>
   </main>
   <div class="modal-backdrop" id="visitModal" aria-hidden="true">
@@ -359,6 +369,7 @@
       logoutButton: document.getElementById("logoutButton"),
       filters: document.getElementById("filters"),
       prepaFilters: document.getElementById("prepaFilters"),
+      analysis: document.getElementById("analysis"),
       search: document.getElementById("search"),
       table: document.getElementById("tableWrap"),
       pagination: document.getElementById("pagination"),
@@ -827,6 +838,51 @@
       });
     }
 
+    function countBy(rowsToAnalyze, getter){
+      return rowsToAnalyze.reduce((acc, row) => {
+        const value = typeof getter === "function" ? getter(row) : row[getter];
+        const key = String(value || "Sense informar").trim() || "Sense informar";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function topEntries(counts, limit){
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ca-ES"))
+        .slice(0, limit);
+    }
+
+    function renderAnalysis(rowsToAnalyze){
+      if(!els.analysis) return;
+      if(!rowsToAnalyze.length){
+        els.analysis.innerHTML = "";
+        return;
+      }
+      const genderCounts = countBy(rowsToAnalyze, "gender");
+      const pendingPrepa = rowsToAnalyze.filter(row => !row.prepaRead).length;
+      const typeCounts = countBy(rowsToAnalyze, row => visitTypeLabel(row.visitType, row.assignedPhysio));
+      const structureTop = topEntries(countBy(rowsToAnalyze, "structure"), 5);
+      const locationTop = topEntries(countBy(rowsToAnalyze, "location"), 5);
+      const playerTop = topEntries(countBy(rowsToAnalyze, "name"), 5);
+      const physioTop = topEntries(countBy(rowsToAnalyze, row => row.assignedPhysio || "Sense assignar"), 5);
+      const listHtml = entries => entries.length
+        ? '<ul class="analysis-list">' + entries.map(([label, count]) => '<li><span>' + escapeHtml(label) + '</span><strong>' + count + '</strong></li>').join("") + '</ul>'
+        : '<span>Sense dades</span>';
+      els.analysis.innerHTML =
+        '<h3>Anàlisi de dades</h3>' +
+        '<div class="analysis-grid">' +
+          '<div class="analysis-card"><strong>' + rowsToAnalyze.length + '</strong><span>Visites filtrades</span></div>' +
+          '<div class="analysis-card"><strong>' + (genderCounts.M || 0) + ' / ' + (genderCounts.F || 0) + '</strong><span>Masculí / Femení</span></div>' +
+          '<div class="analysis-card"><strong>' + (typeCounts.Fisio || 0) + ' / ' + (typeCounts.Readaptació || 0) + '</strong><span>Fisio / Readaptació</span></div>' +
+          '<div class="analysis-card"><strong>' + pendingPrepa + '</strong><span>Pendents prepa</span></div>' +
+          '<div class="analysis-card"><strong>Estructures</strong>' + listHtml(structureTop) + '</div>' +
+          '<div class="analysis-card"><strong>Localitzacions</strong>' + listHtml(locationTop) + '</div>' +
+          '<div class="analysis-card"><strong>Jugador/a</strong>' + listHtml(playerTop) + '</div>' +
+          '<div class="analysis-card"><strong>👤 Visita</strong>' + listHtml(physioTop) + '</div>' +
+        '</div>';
+    }
+
     function render(){
       const visible = filteredRows();
       els.openCreate.hidden = !isFisio();
@@ -837,6 +893,7 @@
       if(!visible.length){
         els.table.innerHTML = '<div class="empty">Cap visita amb aquests filtres.</div>';
         els.pagination.innerHTML = "";
+        renderAnalysis(visible);
         return;
       }
       const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
@@ -870,6 +927,7 @@
           '</tr>').join("") +
           '</tbody></table>';
         renderPagination(visible.length, totalPages);
+        renderAnalysis(visible);
         return;
       }
       els.table.innerHTML = '<table><thead><tr>' +
@@ -932,6 +990,7 @@
         }).join("") +
         '</tbody></table>';
       renderPagination(visible.length, totalPages);
+      renderAnalysis(visible);
     }
 
     function renderPagination(total, totalPages){

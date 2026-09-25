@@ -105,7 +105,6 @@ function construirHtml(weekLabel, summary, players, visits) {
         </table>
 
         ${resumPista(summary.byCourt)}
-        ${taulaPlayers(players)}
         ${taulaVisites(visits)}
       </div>
 
@@ -123,41 +122,6 @@ function resumPista(byCourt) {
       escaparHtml(label) + ': ' + escaparHtml(countBy(byCourt, label)) + '</span>';
   }).join("");
   return '<div style="margin: 0 0 18px;">' + items + '</div>';
-}
-
-function taulaPlayers(players) {
-  var rows = (players || []).map(function(player) {
-    return `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; font-weight: bold; color: #4B1D6D;">${escaparHtml(valor(player.player))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center;">${escaparHtml(valor(player.visits))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.latestDate))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.teamCategory))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.assignedPhysio))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.visitType))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.courtStatus))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5;">${escaparHtml(valor(player.guidelines))}</td>
-      </tr>
-    `;
-  }).join("");
-  return `
-    <h3 style="color: #4B1D6D; margin: 20px 0 8px; font-size: 16px;">Última visita per jugador/a</h3>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px;">
-      <thead>
-        <tr style="background-color: #4B1D6D; color: #FFC72C;">
-          <th style="padding: 8px; text-align: left;">Jugador/a</th>
-          <th style="padding: 8px; text-align: center;">Visites</th>
-          <th style="padding: 8px; text-align: left;">Última</th>
-          <th style="padding: 8px; text-align: left;">Equip</th>
-          <th style="padding: 8px; text-align: left;">Visita</th>
-          <th style="padding: 8px; text-align: left;">Tipus</th>
-          <th style="padding: 8px; text-align: left;">Pista</th>
-          <th style="padding: 8px; text-align: left;">Pautes</th>
-        </tr>
-      </thead>
-      <tbody>${rows || '<tr><td style="padding: 10px;" colspan="8">No hi ha dades.</td></tr>'}</tbody>
-    </table>
-  `;
 }
 
 function taulaVisites(visits) {

@@ -143,7 +143,7 @@ jobs:
         run: node scripts/send-rpe-weekly-email.js
 
       - name: Desa estat del correu RPE
-        if: ${{ always() }}
+        if: ${{ always() && github.event.inputs.rpe_dry_run != 'true' }}
         run: |
           if git diff --quiet -- data/rpe-email-status.json; then
             echo "Sense canvis a l'estat del correu RPE."

@@ -122,6 +122,10 @@
     .type-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:3px 8px; font-size:0.72rem; font-weight:900; white-space:nowrap; }
     .type-badge.fisio { background:#f3e8ff; color:#5a2f7d; }
     .type-badge.readaptacio { background:#e6f5ff; color:#075985; }
+    .visit-type-display { display:flex; align-items:center; gap:10px; min-height:41px; border:1px solid var(--line); border-radius:12px; padding:8px 12px; background:#faf8fd; color:var(--brand-dark); font-weight:900; }
+    .visit-type-display .type-icon { display:inline-grid; place-items:center; width:26px; height:26px; border-radius:999px; background:#fff; box-shadow:0 1px 4px rgba(20,12,32,0.1); }
+    .visit-type-display.readaptacio { background:#eef8ff; color:#075985; border-color:#bae6fd; }
+    .visit-type-display.fisio { background:#f8f0ff; color:#5a2f7d; border-color:#e9d5ff; }
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
@@ -207,11 +211,11 @@
             </select>
           </div>
           <div class="field">
-            <label for="visitType">Tipus de visita</label>
-            <select id="visitType" name="visitType" required>
-              <option value="fisio">Fisioteràpia</option>
-              <option value="readaptacio">Readaptació</option>
-            </select>
+            <label>Tipus de visita</label>
+            <div class="visit-type-display fisio" id="visitTypeDisplay" aria-live="polite">
+              <span class="type-icon" aria-hidden="true">🩺</span>
+              <span id="visitTypeText">Fisioteràpia</span>
+            </div>
           </div>
             <div class="field">
               <label for="team">Equip</label>
@@ -563,7 +567,13 @@
     }
 
     function syncVisitTypeFromPhysio(){
-      setInputValue("visitType", visitTypeForPhysio(inputValue("assignedPhysio")));
+      const type = visitTypeForPhysio(inputValue("assignedPhysio"));
+      const display = document.getElementById("visitTypeDisplay");
+      const text = document.getElementById("visitTypeText");
+      if(display) display.className = "visit-type-display " + type;
+      if(text) text.textContent = type === "readaptacio" ? "Readaptació" : "Fisioteràpia";
+      const icon = display ? display.querySelector(".type-icon") : null;
+      if(icon) icon.textContent = type === "readaptacio" ? "🏃" : "🩺";
     }
 
     function visitTypeLabel(value, assignedPhysio){

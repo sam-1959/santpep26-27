@@ -832,6 +832,18 @@
         .filter(profile => profile.active !== false);
     }
 
+    function isMiniAMGame(game){
+      return normalize(canonicalTeamName(teamLabel(game))) === "mini-a-m";
+    }
+
+    function assignmentHasExperiencedPerson(assignment){
+      return ["table1", "table2"].some(slot => {
+        const person = assignment[slot];
+        if (!person) return false;
+        return tablePeopleProfiles[personKey(person)]?.experienced === true;
+      });
+    }
+
     function monthlyAssignableSlotCount(periodGames){
       return periodGames.reduce((total, game) => {
         const assignment = assignmentFor(game.id);
@@ -858,7 +870,11 @@
             .filter(profile => !alreadyInGame.has(profile.name) && personCanTakeGame(profile, game))
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
           const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          const chosen = (balancedCandidates.length ? balancedCandidates : candidates)[0];
+          const preferredCandidates = balancedCandidates.length ? balancedCandidates : candidates;
+          const experiencedCandidates = isMiniAMGame(game) && !assignmentHasExperiencedPerson(current)
+            ? preferredCandidates.filter(profile => profile.experienced === true)
+            : [];
+          const chosen = (experiencedCandidates.length ? experiencedCandidates : preferredCandidates)[0];
           if (!chosen) return;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);

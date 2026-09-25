@@ -546,7 +546,7 @@
         (team === "TOTS" ? "Tots" : escapeHtml(team)) + '</button>'
       ).join("") + '</div>';
       filtersEl.innerHTML =
-        '<div class="filter-group"><div class="filter-label">Fisio</div>' +
+        '<div class="filter-group"><div class="filter-label">👤 ÚLTIMA VISITA</div>' +
         physioFilters.map(filter =>
           '<button class="chip ' + (filter.value === activePhysio ? "active" : "") + '" type="button" data-physio="' + escapeHtml(filter.value) + '">' +
           escapeHtml(filter.label) + '</button>'

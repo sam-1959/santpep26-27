@@ -91,6 +91,13 @@
     .monthly-cost-table td:nth-child(2), .monthly-cost-table td:nth-child(3), .monthly-cost-table td:nth-child(4), .monthly-cost-table td:nth-child(5),
     .monthly-cost-table th:nth-child(2), .monthly-cost-table th:nth-child(3), .monthly-cost-table th:nth-child(4), .monthly-cost-table th:nth-child(5) { text-align:right; }
     .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
+    .proposal-log { background:#fffdf3; border:1px solid #f1dc7a; border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:16px 0; }
+    .proposal-log h2 { margin:0 0 8px; color:#4a3800; font-size:0.9rem; font-weight:900; }
+    .proposal-log-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin:0 0 10px; }
+    .proposal-log-item { background:#fff; border:1px solid #f5e7a8; border-radius:12px; padding:8px 10px; }
+    .proposal-log-label { display:block; color:var(--muted); font-size:0.68rem; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; }
+    .proposal-log-value { display:block; color:var(--brand-dark); font-size:1rem; font-weight:900; }
+    .proposal-log ul { margin:8px 0 0; padding-left:18px; color:#5a4b2b; font-size:0.82rem; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -279,6 +286,7 @@
     let activeView = "month";
     let periods = [];
     let activePeriodIndex = 0;
+    let lastProposalLog = null;
 
     const els = {
       status: document.getElementById("status"),
@@ -872,17 +880,40 @@
       const activeProfiles = activeTableProfiles();
       const monthlySlots = monthlyAssignableSlotCount(periodGames);
       const targetMax = activeProfiles.length ? Math.ceil(monthlySlots / activeProfiles.length) : 0;
+      const active = periods[activePeriodIndex];
+      const proposalLog = {
+        period: active ? active.label : "Període seleccionat",
+        activePeople: activeProfiles.length,
+        targetMax,
+        slotsEvaluated: 0,
+        assigned: 0,
+        inactiveSkipped: PEOPLE.filter(Boolean).length - activeProfiles.length,
+        sameGameSkipped: 0,
+        conflictSkipped: 0,
+        balancedFallbacks: 0,
+        experiencedPriorities: 0,
+        siblingPriorities: 0,
+        unresolved: 0
+      };
       let changed = 0;
       periodGames.forEach(game => {
         if (isPastGame(game)) return;
         const current = { ...assignmentFor(game.id) };
         ["table1", "table2"].forEach(slot => {
           if (current[slot]) return;
+          proposalLog.slotsEvaluated += 1;
           const alreadyInGame = new Set([current.table1, current.table2].filter(Boolean));
-          const candidates = activeProfiles
-            .filter(profile => !alreadyInGame.has(profile.name) && personCanTakeGame(profile, game))
+          const withoutSameGame = activeProfiles.filter(profile => !alreadyInGame.has(profile.name));
+          proposalLog.sameGameSkipped += activeProfiles.length - withoutSameGame.length;
+          const candidates = withoutSameGame
+            .filter(profile => {
+              const allowed = personCanTakeGame(profile, game);
+              if (!allowed) proposalLog.conflictSkipped += 1;
+              return allowed;
+            })
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
           const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          if (!balancedCandidates.length && candidates.length) proposalLog.balancedFallbacks += 1;
           const preferredCandidates = balancedCandidates.length ? balancedCandidates : candidates;
           const experiencedCandidates = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current)
             ? preferredCandidates.filter(profile => profile.experienced === true)
@@ -890,13 +921,20 @@
           const candidatePool = experiencedCandidates.length ? experiencedCandidates : preferredCandidates;
           const siblingCandidates = candidatePool.filter(profile => hasSiblingInGame(profile, game));
           const chosen = (siblingCandidates.length ? siblingCandidates : candidatePool)[0];
-          if (!chosen) return;
+          if (!chosen) {
+            proposalLog.unresolved += 1;
+            return;
+          }
+          if (experiencedCandidates.length && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
+          if (siblingCandidates.length && hasSiblingInGame(chosen, game)) proposalLog.siblingPriorities += 1;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);
           changed += 1;
+          proposalLog.assigned += 1;
         });
         if (current.table1 || current.table2) assignments[game.id] = current;
       });
+      lastProposalLog = proposalLog;
       if (!changed) {
         setStatus("No hi havia taules buides per proposar.");
         render();
@@ -934,6 +972,7 @@
           delete assignments[game.id];
           delete assignmentAliases[game.id];
         });
+        lastProposalLog = null;
         render();
         setStatus(`Planificació de ${label} netejada (${assignedGames.length} partit(s)).`);
       } finally {
@@ -1042,6 +1081,35 @@
       els.content.appendChild(panel);
     }
 
+    function renderProposalLog(){
+      if (!lastProposalLog) return;
+      const log = lastProposalLog;
+      const section = document.createElement("section");
+      section.className = "proposal-log";
+      section.innerHTML =
+        `<h2>Restriccions aplicades a la proposta</h2>` +
+        `<div class="proposal-log-grid">` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Període</span><span class="proposal-log-value">${escapeHtml(log.period)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Persones actives</span><span class="proposal-log-value">${escapeHtml(log.activePeople)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Objectiu màxim</span><span class="proposal-log-value">${escapeHtml(log.targetMax || "—")}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Assignades</span><span class="proposal-log-value">${escapeHtml(log.assigned)} / ${escapeHtml(log.slotsEvaluated)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedPriorities)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Sense candidat</span><span class="proposal-log-value">${escapeHtml(log.unresolved)}</span></div>` +
+        `</div>` +
+        `<ul>` +
+          `<li>Només persones marcades com a actives. Inactives descartades: ${escapeHtml(log.inactiveSkipped)}.</li>` +
+          `<li>No es repeteix la mateixa persona al mateix partit. Descartes per duplicat al partit: ${escapeHtml(log.sameGameSkipped)}.</li>` +
+          `<li>No es recomana una persona si juga o ajuda en l’equip del partit.</li>` +
+          `<li>No es recomana una persona si el seu equip o l’equip on ajuda juga el mateix dia i en la mateixa franja ampla, matí o tarda.</li>` +
+          `<li>Es balancegen les taules del mes perquè el repartiment sigui aproximadament equivalent. Fallbacks per restriccions: ${escapeHtml(log.balancedFallbacks)}.</li>` +
+          `<li>Mini A M, Mini B M i Mini F prioritzen tenir com a mínim una taula amb experiència.</li>` +
+          `<li>Si el partit coincideix amb l’equip germà d’una persona, aquesta persona té prioritat.</li>` +
+        `</ul>`;
+      els.content.appendChild(section);
+    }
+
     function renderCosts(){
       const costKey = activeCostPeriodKey();
       const showMonthlyCosts = isLastCostPeriod();
@@ -1135,6 +1203,7 @@
       if (activeView === "month") {
         renderMonthlyTable(visible);
         renderMonthlyLoad(gamesForActivePeriod());
+        renderProposalLog();
         return;
       }
 
@@ -1208,6 +1277,7 @@
         card.append(main, assign);
         list.appendChild(card);
       });
+      renderProposalLog();
     }
 
     function renderMonthlyTable(visible){
@@ -1261,6 +1331,7 @@
     document.querySelectorAll(".view-button").forEach(button => {
       button.addEventListener("click", () => {
         activeView = button.dataset.view;
+        lastProposalLog = null;
         document.querySelectorAll(".view-button").forEach(item => item.classList.toggle("active", item === button));
         rebuildPeriods();
         render();
@@ -1270,12 +1341,14 @@
     els.prevPeriod.addEventListener("click", () => {
       if (activePeriodIndex <= 0) return;
       activePeriodIndex -= 1;
+      lastProposalLog = null;
       render();
     });
 
     els.nextPeriod.addEventListener("click", () => {
       if (activePeriodIndex >= periods.length - 1) return;
       activePeriodIndex += 1;
+      lastProposalLog = null;
       render();
     });
 

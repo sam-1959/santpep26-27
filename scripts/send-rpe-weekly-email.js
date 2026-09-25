@@ -8,16 +8,19 @@ const RESPONSES_PATH = "wellnessResponses/season-26-27";
 const ROSTERS_PATH = "rpeRosters/season-26-27";
 const CONTACTS_PATH = "seasonContacts/season-26-27";
 const RPE_EMAIL_APP_SCRIPT_URL = process.env.RPE_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
-// L'enviament automàtic diari de l'ERP queda limitat explícitament al JBF.
-// No acceptem altres equips per variable d'entorn per evitar enviaments
-// accidentals si es reutilitza el workflow o el script.
-const TEAM_KEY = "JBF";
 const STATUS_PATH = process.env.RPE_EMAIL_STATUS_PATH || "data/rpe-email-status.json";
+const DRY_RUN = String(process.env.RPE_EMAIL_DRY_RUN || "").toLowerCase() === "true";
+const FORCE_SEND = String(process.env.RPE_EMAIL_FORCE || "").toLowerCase() === "true";
+const WEEK_OFFSET_DAYS = Number(process.env.RPE_WEEK_OFFSET_DAYS || 7);
+const DEFAULT_TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {
   CBM: "Cadet B M",
   CAM: "Cadet A M",
   CF: "Cadet F",
+  IAM: "Infantil A M",
+  IBM: "Infantil B M",
+  IF: "Infantil F",
   JBM: "Júnior B M",
   JAM: "Júnior A M",
   JBF: "Júnior B F",
@@ -27,25 +30,8 @@ const DEFAULT_TEAM_NAMES_BY_KEY = {
   SAF: "Sènior A F"
 };
 
-const DEFAULT_TEAM_ROSTERS = {
-  "Júnior B F": [
-    ["1", "Martina Rubio"],
-    ["5", "Martina Guaita"],
-    ["6", "Martina Rueda"],
-    ["7", "Aina Villà"],
-    ["10", "Thaïs Sampera"],
-    ["11", "Núria Navarrete"],
-    ["13", "Carla Perramón"],
-    ["14", "Clàudia Gàmiz"],
-    ["16", "Joana Pla"],
-    ["18", "Ainhoa Espinal"],
-    ["30", "Caterina Figueras"],
-    ["77", "Noa Ambel"]
-  ]
-};
-
 const teamNamesByKey = { ...DEFAULT_TEAM_NAMES_BY_KEY };
-const teamRosters = { ...DEFAULT_TEAM_ROSTERS };
+const teamRosters = {};
 
 function firebaseUrl(path){
   const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -162,6 +148,10 @@ function coordinatorRoleForTeam(teamKey){
   return String(teamKey || "").toUpperCase().endsWith("F") ? "femeni" : "masculi";
 }
 
+function contactLabel(contact){
+  return contact && contact.name ? contact.name : contact && contact.email ? contact.email : "";
+}
+
 async function readFirebase(path){
   const response = await fetch(firebaseUrl(path), { cache: "no-store" });
   if(!response.ok) throw new Error(`No s'ha pogut llegir ${path}: ${response.status}`);
@@ -182,35 +172,39 @@ async function loadRosters(){
   });
 }
 
-async function loadRecipients(){
-  const contacts = await readFirebase(CONTACTS_PATH) || {};
-  const role = coordinatorRoleForTeam(TEAM_KEY);
+function selectedTeamKeys(){
+  const raw = String(process.env.RPE_TEAM_KEYS || "ALL").trim();
+  if(raw && raw.toUpperCase() !== "ALL"){
+    return raw.split(/[;,\s]+/).map(key => key.trim().toUpperCase()).filter(Boolean);
+  }
+  const keys = Object.keys(teamNamesByKey);
+  return [
+    ...DEFAULT_TEAM_ORDER.filter(key => keys.includes(key)),
+    ...keys.filter(key => !DEFAULT_TEAM_ORDER.includes(key)).sort((a, b) => a.localeCompare(b, "ca"))
+  ];
+}
+
+function loadRecipients(teamKey, contacts){
+  const role = coordinatorRoleForTeam(teamKey);
   const coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
   const coordinator = coordinators.find(contact => String(contact.role || "") === role);
   const prepaCoordinator = coordinators.find(contact => String(contact.role || "") === "coordinador_prepa");
-  const headCoach = contacts.headCoaches && contacts.headCoaches[TEAM_KEY];
+  const headCoach = contacts.headCoaches && contacts.headCoaches[teamKey];
   const prepas = coordinators.filter(contact =>
     String(contact.role || "") === "prepa" &&
     Array.isArray(contact.teams) &&
-    contact.teams.map(team => String(team || "").trim().toUpperCase()).includes(TEAM_KEY)
+    contact.teams.map(team => String(team || "").trim().toUpperCase()).includes(teamKey)
   );
   const missing = [];
-  if(!isValidEmail(coordinator && coordinator.email)){
-    missing.push(`coordinador ${role}`);
-  }
-  if(!isValidEmail(headCoach && headCoach.email)){
-    missing.push(`primer entrenador ${TEAM_KEY}`);
-  }
-  if(!isValidEmail(prepaCoordinator && prepaCoordinator.email)){
-    missing.push("coordinador prepa");
-  }
-  if(!prepas.some(contact => isValidEmail(contact.email))){
-    missing.push(`prepa ${TEAM_KEY}`);
-  }
-  if(missing.length){
-    throw new Error(`Falten destinataris del correu RPE: ${missing.join(", ")}.`);
-  }
-  return uniqueEmails([coordinator.email, headCoach.email, prepaCoordinator.email, ...prepas.map(contact => contact.email)]);
+  if(!isValidEmail(coordinator && coordinator.email)) missing.push(`coordinador ${role}`);
+  if(!isValidEmail(headCoach && headCoach.email)) missing.push(`primer entrenador ${teamKey}`);
+  if(!isValidEmail(prepaCoordinator && prepaCoordinator.email)) missing.push("coordinador prepa");
+  if(!prepas.some(contact => isValidEmail(contact.email))) missing.push(`prepa ${teamKey}`);
+  if(missing.length) throw new Error(`Falten destinataris del correu RPE ${teamKey}: ${missing.join(", ")}.`);
+  return {
+    emails: uniqueEmails([coordinator.email, headCoach.email, prepaCoordinator.email, ...prepas.map(contact => contact.email)]),
+    names: [...new Set([coordinator, headCoach, prepaCoordinator, ...prepas].map(contactLabel).filter(Boolean))]
+  };
 }
 
 function normalizeRecord(record, id){
@@ -249,47 +243,7 @@ function alertLabels(group){
   return labels;
 }
 
-async function main(){
-  const today = isoFromDate(dateInMadrid());
-  const status = readStatus();
-  const teamStatus = status[TEAM_KEY] || {};
-  if(teamStatus.lastSentDate === today){
-    console.log(`Correu RPE ${TEAM_KEY} ja enviat avui (${today}) a ${teamStatus.lastRecipient || "destinatari configurat"}.`);
-    return;
-  }
-
-  await loadRosters();
-  const responses = await readFirebase(RESPONSES_PATH) || {};
-  const selectedWeek = isoFromDate(mondayOf(dateInMadrid()));
-  const dates = Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(dateFromISO(selectedWeek), index)));
-  const team = teamNamesByKey[TEAM_KEY] || TEAM_KEY;
-  const records = Object.entries(responses)
-    .map(([id, record]) => normalizeRecord(record || {}, id))
-    .filter(record => record.teamKey === TEAM_KEY && dates.includes(record.trainingDate));
-
-  status[TEAM_KEY] = {
-    ...teamStatus,
-    lastAttemptDate: today,
-    lastAttemptAt: nowIso(),
-    lastStatus: "attempted",
-    lastError: ""
-  };
-  writeStatus(status);
-
-  if(!records.length){
-    status[TEAM_KEY] = {
-      ...status[TEAM_KEY],
-      lastStatus: "skipped_no_data",
-      lastError: "",
-      lastSkippedAt: nowIso(),
-      lastSkippedReason: "No hi ha dades setmanals per enviar."
-    };
-    writeStatus(status);
-    console.log(`No s'envia el correu RPE ${TEAM_KEY}: no hi ha dades setmanals.`);
-    return;
-  }
-
-  const recipients = await loadRecipients();
+function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients }){
   const groups = new Map();
   records.forEach(record => {
     const key = record.player || "Sense nom";
@@ -315,10 +269,12 @@ async function main(){
   const rpeHigh = players.filter(group => alertLabels(group).includes("RPE")).map(group => group.player);
   const fatigueHigh = players.filter(group => alertLabels(group).includes("Fatiga")).map(group => group.player);
   const sleepLow = players.filter(group => alertLabels(group).includes("Son")).map(group => group.player);
-  const payload = {
-    recipient: recipients.join(","),
+  return {
+    recipient: recipients.emails.join(","),
+    recipientNames: recipients.names.join(", "),
     testMode: true,
     automated: true,
+    teamKey,
     team,
     week: selectedWeek,
     weekLabel: weekRangeLabel(selectedWeek),
@@ -328,11 +284,7 @@ async function main(){
       fatigue: formatNumber(average(records, "muscleFatigue")),
       sleep: formatNumber(average(records, "sleepQuality")),
       load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
-      alerts: {
-        rpe: rpeHigh,
-        fatigue: fatigueHigh,
-        sleep: sleepLow
-      }
+      alerts: { rpe: rpeHigh, fatigue: fatigueHigh, sleep: sleepLow }
     },
     dates: dates.map(date => ({ iso: date, label: formatDate(date).slice(0, 5) })),
     players: players.map(group => {
@@ -355,7 +307,13 @@ async function main(){
       };
     })
   };
+}
 
+async function sendPayload(payload){
+  if(DRY_RUN){
+    console.log(`[DRY_RUN] S'enviaria RPE ${payload.teamKey} ${payload.team} (${payload.weekLabel}) a ${payload.recipientNames || payload.recipient}. Registres: ${payload.summary.records}`);
+    return "dry-run";
+  }
   const response = await fetch(RPE_EMAIL_APP_SCRIPT_URL, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -363,35 +321,101 @@ async function main(){
   });
   const text = await response.text();
   if(!response.ok) throw new Error(`App Script ha retornat ${response.status}: ${text}`);
-  status[TEAM_KEY] = {
-    ...status[TEAM_KEY],
-    lastSentDate: today,
-    lastSentAt: nowIso(),
-    lastRecipient: recipients.join(","),
-    lastRecipients: recipients,
-    lastTeam: team,
-    lastWeek: selectedWeek,
-    lastWeekLabel: payload.weekLabel,
-    lastRecords: records.length,
-    lastStatus: "sent",
+  return text;
+}
+
+async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status }){
+  const today = isoFromDate(dateInMadrid());
+  const teamStatus = status[teamKey] || {};
+  if(teamStatus.lastSentWeek === selectedWeek && !FORCE_SEND){
+    console.log(`Correu RPE ${teamKey} ja enviat per la setmana ${selectedWeek}.`);
+    return { teamKey, status: "already_sent" };
+  }
+
+  const team = teamNamesByKey[teamKey] || teamKey;
+  const records = allRecords.filter(record => record.teamKey === teamKey && dates.includes(record.trainingDate));
+  status[teamKey] = {
+    ...teamStatus,
+    lastAttemptDate: today,
+    lastAttemptAt: nowIso(),
+    lastAttemptWeek: selectedWeek,
+    lastStatus: "attempted",
     lastError: ""
   };
   writeStatus(status);
-  console.log(`Correu RPE demanat per ${team} (${payload.weekLabel}) a ${recipients.join(", ")}. Registres: ${records.length}`);
-  console.log(text);
+
+  if(!records.length){
+    status[teamKey] = {
+      ...status[teamKey],
+      lastStatus: "skipped_no_data",
+      lastError: "",
+      lastSkippedAt: nowIso(),
+      lastSkippedWeek: selectedWeek,
+      lastSkippedReason: "No hi ha dades setmanals per enviar."
+    };
+    writeStatus(status);
+    console.log(`No s'envia el correu RPE ${teamKey}: no hi ha dades de la setmana ${selectedWeek}.`);
+    return { teamKey, status: "skipped_no_data" };
+  }
+
+  try {
+    const recipients = loadRecipients(teamKey, contacts);
+    const payload = buildPayload({ teamKey, team, selectedWeek, dates, records, recipients });
+    const text = await sendPayload(payload);
+    status[teamKey] = {
+      ...status[teamKey],
+      lastSentDate: today,
+      lastSentAt: nowIso(),
+      lastSentWeek: selectedWeek,
+      lastRecipient: recipients.emails.join(","),
+      lastRecipients: recipients.emails,
+      lastRecipientNames: recipients.names,
+      lastTeam: team,
+      lastWeek: selectedWeek,
+      lastWeekLabel: payload.weekLabel,
+      lastRecords: records.length,
+      lastStatus: DRY_RUN ? "dry_run" : "sent",
+      lastError: ""
+    };
+    writeStatus(status);
+    console.log(`Correu RPE ${DRY_RUN ? "validat" : "demanat"} per ${team} (${payload.weekLabel}) a ${recipients.names.join(", ")}. Registres: ${records.length}`);
+    if(text) console.log(text);
+    return { teamKey, status: DRY_RUN ? "dry_run" : "sent", records: records.length };
+  } catch(error) {
+    status[teamKey] = {
+      ...status[teamKey],
+      lastStatus: "error",
+      lastError: String(error && error.message ? error.message : error),
+      lastErrorAt: nowIso()
+    };
+    writeStatus(status);
+    console.error(error);
+    return { teamKey, status: "error", error };
+  }
+}
+
+async function main(){
+  const status = readStatus();
+  await loadRosters();
+  const contacts = await readFirebase(CONTACTS_PATH) || {};
+  const responses = await readFirebase(RESPONSES_PATH) || {};
+  const selectedWeek = isoFromDate(mondayOf(addDays(dateInMadrid(), -WEEK_OFFSET_DAYS)));
+  const dates = Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(dateFromISO(selectedWeek), index)));
+  const allRecords = Object.entries(responses).map(([id, record]) => normalizeRecord(record || {}, id));
+  const results = [];
+
+  for(const teamKey of selectedTeamKeys()){
+    results.push(await processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status }));
+  }
+
+  const errors = results.filter(result => result.status === "error");
+  const sent = results.filter(result => result.status === "sent" || result.status === "dry_run");
+  const skipped = results.filter(result => result.status === "skipped_no_data" || result.status === "already_sent");
+  console.log(`Resum ERP: enviats=${sent.length}, saltats=${skipped.length}, errors=${errors.length}.`);
+  if(errors.length) process.exit(1);
 }
 
 main().catch(error => {
   console.error(error);
-  const today = isoFromDate(dateInMadrid());
-  const status = readStatus();
-  status[TEAM_KEY] = {
-    ...(status[TEAM_KEY] || {}),
-    lastAttemptDate: today,
-    lastAttemptAt: nowIso(),
-    lastStatus: "error",
-    lastError: String(error && error.message ? error.message : error)
-  };
-  writeStatus(status);
   process.exit(1);
 });

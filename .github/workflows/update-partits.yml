@@ -13,6 +13,9 @@ on:
   schedule:
     # Cada hora. GitHub cron és sempre UTC.
     - cron: "30 * * * *"
+    # Dilluns 09:17 Europe/Madrid en horari d'estiu.
+    # Envia l'ERP de la setmana anterior als equips amb dades.
+    - cron: "17 7 * * 1"
   workflow_dispatch:
     inputs:
       test_whatsapp:
@@ -24,7 +27,15 @@ on:
           - "false"
           - "true"
       send_rpe:
-        description: "Envia ara el correu ERP JBF"
+        description: "Envia ara el correu ERP"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      rpe_dry_run:
+        description: "Valida l'ERP sense enviar correus"
         required: false
         default: "false"
         type: choice
@@ -112,7 +123,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
   send-rpe-email:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe == 'true' }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '17 7 * * 1') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_rpe == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -123,9 +134,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Envia correu RPE JBF
+      - name: Envia correu RPE setmanal
         env:
-          RPE_TEAM_KEY: JBF
+          RPE_TEAM_KEYS: ALL
+          RPE_WEEK_OFFSET_DAYS: 7
+          RPE_EMAIL_DRY_RUN: ${{ github.event.inputs.rpe_dry_run }}
           RPE_EMAIL_APP_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec
         run: node scripts/send-rpe-weekly-email.js
 

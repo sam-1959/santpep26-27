@@ -833,8 +833,16 @@
 
     function activeTableProfiles(){
       return PEOPLE.filter(Boolean)
-        .map(name => tablePeopleProfiles[personKey(name)] || { name, active:true, playerTeams:[], assistantTeams:[] })
+        .map(name => tablePeopleProfiles[personKey(name)] || { name, active:true, playerTeams:[], assistantTeams:[], siblingTeams:[] })
         .filter(profile => profile.active !== false);
+    }
+
+    function hasSiblingInGame(profile, game){
+      const currentTeam = normalize(canonicalTeamName(teamLabel(game)));
+      return (profile.siblingTeams || [])
+        .map(canonicalTeamName)
+        .map(normalize)
+        .includes(currentTeam);
     }
 
     function needsExperiencedTable(game){
@@ -879,7 +887,9 @@
           const experiencedCandidates = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current)
             ? preferredCandidates.filter(profile => profile.experienced === true)
             : [];
-          const chosen = (experiencedCandidates.length ? experiencedCandidates : preferredCandidates)[0];
+          const candidatePool = experiencedCandidates.length ? experiencedCandidates : preferredCandidates;
+          const siblingCandidates = candidatePool.filter(profile => hasSiblingInGame(profile, game));
+          const chosen = (siblingCandidates.length ? siblingCandidates : candidatePool)[0];
           if (!chosen) return;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);

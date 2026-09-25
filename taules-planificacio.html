@@ -42,6 +42,8 @@
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
     .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
     .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
+    .action-button.danger { background:#fff; color:var(--danger); border:1px solid #f0c6c6; }
+    .action-button:disabled { opacity:0.55; cursor:not-allowed; }
     .view-toggle { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
     .view-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
@@ -188,6 +190,7 @@
 
     <div class="actions" aria-label="Accions de planificació mensual">
       <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
+      <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar setmana actual</button>
       <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
     </div>
 
@@ -281,6 +284,7 @@
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
       generateProposal: document.getElementById("generateProposal"),
+      clearCurrentWeek: document.getElementById("clearCurrentWeek"),
       togglePeoplePanel: document.getElementById("togglePeoplePanel"),
       peoplePanel: document.getElementById("peoplePanel"),
       peopleProfiles: document.getElementById("peopleProfiles"),
@@ -834,6 +838,33 @@
       setStatus(`Proposta generada i guardada (${changed} taules).`);
     }
 
+    async function clearCurrentWeekAssignments(){
+      const currentWeekGames = games.filter(isCurrentWeekGame);
+      const assignedGames = currentWeekGames.filter(game => {
+        const assignment = assignmentFor(game.id);
+        return !!(assignment.table1 || assignment.table2);
+      });
+      if (!assignedGames.length) {
+        setStatus("La setmana actual no té cap taula assignada.");
+        return;
+      }
+      const message = `Vols netejar ${assignedGames.length} partit(s) amb taules assignades de la setmana actual?`;
+      if (!confirm(message)) return;
+      els.clearCurrentWeek.disabled = true;
+      setStatus(`Netejant setmana actual (${assignedGames.length} partit(s))...`);
+      try {
+        await Promise.all(assignedGames.map(game => fetch(firebaseUrl(game.id), { method:"DELETE" })));
+        assignedGames.forEach(game => {
+          delete assignments[game.id];
+          delete assignmentAliases[game.id];
+        });
+        render();
+        setStatus(`Planificació de la setmana actual netejada (${assignedGames.length} partit(s)).`);
+      } finally {
+        els.clearCurrentWeek.disabled = false;
+      }
+    }
+
     function renderSummary(){
       const periodGames = gamesForActivePeriod();
       const states = periodGames.map(game => assignmentState(assignmentFor(game.id)));
@@ -1197,6 +1228,15 @@
       } catch (error) {
         console.error(error);
         setStatus(error.message, "error");
+      }
+    });
+
+    els.clearCurrentWeek.addEventListener("click", async () => {
+      try {
+        await clearCurrentWeekAssignments();
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || "No s'ha pogut netejar la setmana actual.", "error");
       }
     });
 

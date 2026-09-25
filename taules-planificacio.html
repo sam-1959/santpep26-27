@@ -468,6 +468,18 @@
       return date.toLocaleDateString("ca-ES", { month:"long", year:"numeric" });
     }
 
+    function periodEndDate(period){
+      if (!period) return "";
+      if (activeView === "month") {
+        if (period.key === "2026-08-09") return "2026-09-30";
+        const [year, month] = String(period.key || "").split("-");
+        if (!year || !month) return "";
+        return isoDate(new Date(Number(year), Number(month), 0));
+      }
+      const periodGames = games.filter(game => periodKey(game) === period.key);
+      return periodGames.reduce((latest, game) => !latest || game.date > latest ? game.date : latest, "");
+    }
+
     function escapeHtml(value){
       return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
     }
@@ -883,13 +895,14 @@
 
     async function generateMonthlyProposal(){
       const periodGames = gamesForActivePeriod();
-      const counts = totalAssignmentCountsByPerson();
+      const active = periods[activePeriodIndex];
+      const periodLimit = periodEndDate(active);
+      const counts = totalAssignmentCountsByPerson(periodLimit);
       const activeProfiles = activeTableProfiles();
       const monthlySlots = monthlyAssignableSlotCount(periodGames);
       const currentTotals = activeProfiles.map(profile => counts.get(profile.name) || 0);
       const minTotal = currentTotals.length ? Math.min(...currentTotals) : 0;
       const targetMax = activeProfiles.length ? minTotal + Math.ceil(monthlySlots / activeProfiles.length) : 0;
-      const active = periods[activePeriodIndex];
       const proposalLog = {
         period: active ? active.label : "Període seleccionat",
         activePeople: activeProfiles.length,
@@ -1047,10 +1060,11 @@
       return [...load.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
     }
 
-    function totalAssignmentCountsByPerson(){
+    function totalAssignmentCountsByPerson(endDate = ""){
       const load = new Map();
       Object.values(assignments || {}).forEach(assignment => {
         if (!assignment) return;
+        if (endDate && assignment.game?.date && assignment.game.date > endDate) return;
         ["table1", "table2"].forEach(slot => {
           const person = assignment[slot];
           if (!person) return;
@@ -1098,6 +1112,8 @@
     }
 
     function renderTotalAssignmentLoad(parent = els.content){
+      const active = periods[activePeriodIndex];
+      const periodLimit = periodEndDate(active);
       const panel = document.createElement("section");
       panel.className = "monthly-panel";
       const title = document.createElement("h2");
@@ -1105,7 +1121,7 @@
       title.textContent = "Taules totals assignades per persona";
       const wrap = document.createElement("div");
       wrap.className = "monthly-cost-table-wrap";
-      const totalsByPerson = totalAssignmentCountsByPerson();
+      const totalsByPerson = totalAssignmentCountsByPerson(periodLimit);
       const rows = activeTableProfiles()
         .map(profile => ({ name: profile.name, total: totalsByPerson.get(profile.name) || 0 }))
         .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));

@@ -35,12 +35,12 @@
     .summary-item { background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:12px; }
     .summary-label { color:var(--muted); font-size:0.72rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; }
     .summary-value { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; font-weight:900; }
-    .planning-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,520px); gap:12px; align-items:center; margin:0 0 16px; }
+    .planning-toolbar { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(320px,520px); gap:12px; align-items:center; margin:0 0 16px; }
     .filters { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .filter { border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--brand);
       padding:8px 13px; font-size:0.82rem; font-weight:800; cursor:pointer; box-shadow:0 1px 3px rgba(60,40,90,0.05); }
     .filter.active { background:var(--brand); color:#fff; border-color:var(--brand); }
-    .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
     .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .action-button.danger { background:#fff; color:var(--danger); border:1px solid #f0c6c6; }
@@ -186,6 +186,12 @@
     </section>
 
     <div class="planning-toolbar">
+      <div class="actions" aria-label="Accions de planificació mensual">
+        <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
+        <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar setmana actual</button>
+        <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
+      </div>
+
       <div class="filters" role="group" aria-label="Filtre d'estat">
         <button class="filter active" type="button" data-filter="all">Tots</button>
         <button class="filter" type="button" data-filter="pending">Pendents</button>
@@ -200,12 +206,6 @@
           <button id="nextPeriod" class="period-arrow" type="button" aria-label="Període següent">›</button>
         </div>
       </section>
-    </div>
-
-    <div class="actions" aria-label="Accions de planificació mensual">
-      <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
-      <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar setmana actual</button>
-      <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
     </div>
 
     <section id="peoplePanel" class="people-panel" hidden>

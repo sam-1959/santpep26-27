@@ -149,7 +149,7 @@ function taulaPlayers(players) {
           <th style="padding: 8px; text-align: center;">Visites</th>
           <th style="padding: 8px; text-align: left;">Última</th>
           <th style="padding: 8px; text-align: left;">Equip</th>
-          <th style="padding: 8px; text-align: left;">👤 Visita</th>
+          <th style="padding: 8px; text-align: left;">Visita</th>
           <th style="padding: 8px; text-align: left;">Tipus</th>
           <th style="padding: 8px; text-align: left;">Pista</th>
           <th style="padding: 8px; text-align: left;">Pautes</th>
@@ -184,7 +184,7 @@ function taulaVisites(visits) {
           <th style="padding: 8px; text-align: left;">Data</th>
           <th style="padding: 8px; text-align: left;">Jugador/a</th>
           <th style="padding: 8px; text-align: left;">Equip</th>
-          <th style="padding: 8px; text-align: left;">👤 Visita</th>
+          <th style="padding: 8px; text-align: left;">Visita</th>
           <th style="padding: 8px; text-align: left;">Tipus</th>
           <th style="padding: 8px; text-align: left;">Estructura</th>
           <th style="padding: 8px; text-align: left;">Localització</th>

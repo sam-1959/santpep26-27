@@ -13,9 +13,6 @@ on:
   schedule:
     # Cada hora. GitHub cron és sempre UTC.
     - cron: "30 * * * *"
-    # Dilluns 09:17 Europe/Madrid en horari d'estiu.
-    # Envia el resum de Visites Fisio de la setmana anterior.
-    - cron: "17 7 * * 1"
   workflow_dispatch:
     inputs:
       test_whatsapp:
@@ -135,7 +132,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
   send-physio-visits-email:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '17 7 * * 1') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits == 'true') }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

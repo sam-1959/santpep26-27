@@ -76,7 +76,8 @@
     .filter-label { color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:0 2px 0 0; }
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:7px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
-    .prepa-filters { margin:-4px 0 14px; justify-content:flex-start; }
+    .filters-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin:-4px 0 10px; }
+    .prepa-filters { margin:0; justify-content:flex-start; flex:1 1 auto; }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0 0; text-align:left; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
@@ -177,8 +178,8 @@
           <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
           <div class="filters" id="filters"></div>
         </div>
-        <div class="filters prepa-filters" id="prepaFilters"></div>
-        <div class="table-topbar">
+        <div class="filters-row">
+          <div class="filters prepa-filters" id="prepaFilters"></div>
           <button class="primary" id="openCreateButton" type="button" hidden>Crear nova visita</button>
           <div class="pagination" id="pagination"></div>
         </div>

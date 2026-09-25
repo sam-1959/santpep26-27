@@ -695,17 +695,12 @@
           { value:"M", label:"Masculí" },
           { value:"F", label:"Femení" }
         ], activeGender) +
-        renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam) +
-        renderFilterGroup("visitType", "Tipus", [
-          { value:"fisio", label:"Fisio" },
-          { value:"readaptacio", label:"Readaptació" }
-        ], activeVisitType);
+        renderFilterGroup("team", "Categoria", uniqueTeamCategories(), activeTeam);
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
-          if(button.dataset.filter === "visitType") activeVisitType = button.dataset.value;
           currentPage = 1;
           renderFilters();
           render();
@@ -729,6 +724,10 @@
           { value:"orange", label:"! Condicionada" },
           { value:"green", label:"✓ Normal" }
         ], activeCourtStatus) +
+        renderFilterGroup("visitType", "Tipus", [
+          { value:"fisio", label:"Fisio" },
+          { value:"readaptacio", label:"Readaptació" }
+        ], activeVisitType) +
         renderFilterGroup("structure", "Estructura", DEFAULT_STRUCTURES, activeStructure);
 
       els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
@@ -750,6 +749,14 @@
       els.prepaFilters.querySelectorAll("[data-filter='courtStatus']").forEach(button => {
         button.addEventListener("click", () => {
           activeCourtStatus = button.dataset.value;
+          currentPage = 1;
+          renderPrepaFilters();
+          render();
+        });
+      });
+      els.prepaFilters.querySelectorAll("[data-filter='visitType']").forEach(button => {
+        button.addEventListener("click", () => {
+          activeVisitType = button.dataset.value;
           currentPage = 1;
           renderPrepaFilters();
           render();

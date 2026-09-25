@@ -874,7 +874,7 @@
     }
 
     function needsExperiencedTable(game){
-      return true;
+      return ["mini-a-m", "mini-b-m", "mini-f"].includes(normalize(canonicalTeamName(teamLabel(game))));
     }
 
     function assignmentHasExperiencedPerson(assignment){
@@ -936,26 +936,27 @@
               return allowed;
             })
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
-          const needsExperience = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current);
-          const experiencedCandidates = needsExperience ? candidates.filter(profile => profile.experienced === true) : [];
-          const priorityBaseCandidates = experiencedCandidates.length ? experiencedCandidates : candidates;
-          const siblingCandidates = priorityBaseCandidates.filter(profile => hasSiblingInGame(profile, game));
-          const balancedCandidates = priorityBaseCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          const siblingCandidates = candidates.filter(profile => hasSiblingInGame(profile, game));
+          const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
           const balancedSiblingCandidates = siblingCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          if (!balancedCandidates.length && priorityBaseCandidates.length) proposalLog.balancedFallbacks += 1;
+          if (!balancedCandidates.length && candidates.length) proposalLog.balancedFallbacks += 1;
           const preferredCandidates = balancedSiblingCandidates.length
             ? balancedSiblingCandidates
             : balancedCandidates.length
               ? balancedCandidates
               : siblingCandidates.length
                 ? siblingCandidates
-                : priorityBaseCandidates;
-          const chosen = preferredCandidates[0];
+                : candidates;
+          const experiencedCandidates = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current)
+            ? preferredCandidates.filter(profile => profile.experienced === true)
+            : [];
+          const candidatePool = experiencedCandidates.length ? experiencedCandidates : preferredCandidates;
+          const chosen = candidatePool[0];
           if (!chosen) {
             proposalLog.unresolved += 1;
             return;
           }
-          if (needsExperience && experiencedCandidates.length && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
+          if (experiencedCandidates.length && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
           if (siblingCandidates.length && hasSiblingInGame(chosen, game)) proposalLog.siblingPriorities += 1;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);
@@ -1170,7 +1171,7 @@
           `<li>No es recomana una persona si juga o ajuda en l’equip del partit.</li>` +
           `<li>No es recomana una persona si el seu equip o l’equip on ajuda juga el mateix dia i en la mateixa franja ampla, matí o tarda.</li>` +
           `<li>Es balancegen les taules del mes perquè el repartiment sigui aproximadament equivalent. Fallbacks per restriccions: ${escapeHtml(log.balancedFallbacks)}.</li>` +
-          `<li>Tots els partits prioritzen tenir com a mínim una taula amb experiència.</li>` +
+          `<li>Mini A M, Mini B M i Mini F prioritzen tenir com a mínim una taula amb experiència.</li>` +
           `<li>Si el partit coincideix amb l’equip germà d’una persona, aquesta persona té prioritat.</li>` +
         `</ul>`;
       els.content.appendChild(section);

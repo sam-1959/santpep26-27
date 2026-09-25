@@ -42,6 +42,14 @@ on:
         options:
           - "false"
           - "true"
+      physio_visits_force:
+        description: "Força l'enviament encara que la setmana ja consti enviada"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
       physio_visits_recipient_override:
         description: "Destinatari de prova Visites Fisio (opcional)"
         required: false
@@ -142,6 +150,7 @@ jobs:
         env:
           PHYSIO_VISITS_WEEK_OFFSET_DAYS: 7
           PHYSIO_VISITS_EMAIL_DRY_RUN: ${{ github.event.inputs.physio_visits_dry_run }}
+          PHYSIO_VISITS_EMAIL_FORCE: ${{ github.event.inputs.physio_visits_force }}
           PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENTS || 'ricard.fuste@gmail.com' }}

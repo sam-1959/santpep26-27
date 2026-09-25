@@ -362,21 +362,35 @@ async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts,
     const recipients = loadRecipients(teamKey, contacts);
     const payload = buildPayload({ teamKey, team, selectedWeek, dates, records, recipients });
     const text = await sendPayload(payload);
-    status[teamKey] = {
-      ...status[teamKey],
-      lastSentDate: today,
-      lastSentAt: nowIso(),
-      lastSentWeek: selectedWeek,
-      lastRecipient: recipients.emails.join(","),
-      lastRecipients: recipients.emails,
-      lastRecipientNames: recipients.names,
-      lastTeam: team,
-      lastWeek: selectedWeek,
-      lastWeekLabel: payload.weekLabel,
-      lastRecords: records.length,
-      lastStatus: DRY_RUN ? "dry_run" : "sent",
-      lastError: ""
-    };
+    status[teamKey] = DRY_RUN
+      ? {
+        ...status[teamKey],
+        lastDryRunAt: nowIso(),
+        lastDryRunWeek: selectedWeek,
+        lastDryRunRecipients: recipients.emails,
+        lastDryRunRecipientNames: recipients.names,
+        lastTeam: team,
+        lastWeek: selectedWeek,
+        lastWeekLabel: payload.weekLabel,
+        lastRecords: records.length,
+        lastStatus: "dry_run",
+        lastError: ""
+      }
+      : {
+        ...status[teamKey],
+        lastSentDate: today,
+        lastSentAt: nowIso(),
+        lastSentWeek: selectedWeek,
+        lastRecipient: recipients.emails.join(","),
+        lastRecipients: recipients.emails,
+        lastRecipientNames: recipients.names,
+        lastTeam: team,
+        lastWeek: selectedWeek,
+        lastWeekLabel: payload.weekLabel,
+        lastRecords: records.length,
+        lastStatus: "sent",
+        lastError: ""
+      };
     writeStatus(status);
     console.log(`Correu RPE ${DRY_RUN ? "validat" : "demanat"} per ${team} (${payload.weekLabel}) a ${recipients.names.join(", ")}. Registres: ${records.length}`);
     if(text) console.log(text);

@@ -97,6 +97,7 @@
     .monthly-cost-table td:nth-child(n+3),
     .monthly-cost-table th:nth-child(n+3) { text-align:right; }
     .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
+    .monthly-cost-table tfoot .total-label, .monthly-cost-table tfoot .total-value { text-align:right; }
     .proposal-log { background:#fffdf3; border:1px solid #f1dc7a; border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:16px 0; }
     .proposal-log h2 { margin:0 0 8px; color:#4a3800; font-size:0.9rem; font-weight:900; }
     .proposal-log-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin:0 0 10px; }
@@ -1089,7 +1090,7 @@
           body.appendChild(row);
         });
         table.querySelector("tfoot").innerHTML =
-          `<tr><td colspan="4">Total mensual</td><td>${formatCost(total)}</td></tr>`;
+          `<tr><td class="total-label" colspan="4">Total mensual</td><td class="total-value">${formatCost(total)}</td></tr>`;
         wrap.appendChild(table);
       }
       panel.append(title, wrap);
@@ -1123,7 +1124,7 @@
         body.appendChild(row);
       });
       table.querySelector("tfoot").innerHTML =
-        `<tr><td colspan="2">Total taules assignades</td><td>${escapeHtml(grandTotal)}</td></tr>`;
+        `<tr><td class="total-label" colspan="2">Total taules assignades</td><td class="total-value">${escapeHtml(grandTotal)}</td></tr>`;
       wrap.appendChild(table);
       panel.append(title, wrap);
       parent.appendChild(panel);

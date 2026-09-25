@@ -699,20 +699,13 @@
         renderFilterGroup("visitType", "Tipus", [
           { value:"fisio", label:"Fisio" },
           { value:"readaptacio", label:"Readaptació" }
-        ], activeVisitType) +
-        renderFilterGroup("courtStatus", "Pista", [
-          { value:"pending", label:"Pendent" },
-          { value:"red", label:"No pista" },
-          { value:"orange", label:"Condicionada" },
-          { value:"green", label:"Normal" }
-        ], activeCourtStatus);
+        ], activeVisitType);
 
       els.filters.querySelectorAll("[data-filter]").forEach(button => {
         button.addEventListener("click", () => {
           if(button.dataset.filter === "gender") activeGender = button.dataset.value;
           if(button.dataset.filter === "team") activeTeam = button.dataset.value;
           if(button.dataset.filter === "visitType") activeVisitType = button.dataset.value;
-          if(button.dataset.filter === "courtStatus") activeCourtStatus = button.dataset.value;
           currentPage = 1;
           renderFilters();
           render();
@@ -730,6 +723,12 @@
               { value:"AMB_FEEDBACK", label:"Amb feedback" }
             ], activePrepaFilter)
           : "") +
+        renderFilterGroup("courtStatus", "Pista", [
+          { value:"pending", label:"Pendent" },
+          { value:"red", label:"No pista" },
+          { value:"orange", label:"Condicionada" },
+          { value:"green", label:"Normal" }
+        ], activeCourtStatus) +
         renderFilterGroup("structure", "Estructura", DEFAULT_STRUCTURES, activeStructure);
 
       els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
@@ -743,6 +742,14 @@
       els.prepaFilters.querySelectorAll("[data-filter='prepa']").forEach(button => {
         button.addEventListener("click", () => {
           activePrepaFilter = button.dataset.value;
+          currentPage = 1;
+          renderPrepaFilters();
+          render();
+        });
+      });
+      els.prepaFilters.querySelectorAll("[data-filter='courtStatus']").forEach(button => {
+        button.addEventListener("click", () => {
+          activeCourtStatus = button.dataset.value;
           currentPage = 1;
           renderPrepaFilters();
           render();

@@ -822,9 +822,27 @@
       return counts;
     }
 
+    function activeTableProfiles(){
+      return PEOPLE.filter(Boolean)
+        .map(name => tablePeopleProfiles[personKey(name)] || { name, active:true, playerTeams:[], assistantTeams:[] })
+        .filter(profile => profile.active !== false);
+    }
+
+    function monthlyAssignableSlotCount(periodGames){
+      return periodGames.reduce((total, game) => {
+        const assignment = assignmentFor(game.id);
+        const assigned = ["table1", "table2"].filter(slot => assignment[slot]).length;
+        const pending = isPastGame(game) ? 0 : 2 - assigned;
+        return total + assigned + pending;
+      }, 0);
+    }
+
     async function generateMonthlyProposal(){
       const periodGames = gamesForActivePeriod();
       const counts = monthlyAssignmentCountByPerson(periodGames);
+      const activeProfiles = activeTableProfiles();
+      const monthlySlots = monthlyAssignableSlotCount(periodGames);
+      const targetMax = activeProfiles.length ? Math.ceil(monthlySlots / activeProfiles.length) : 0;
       let changed = 0;
       periodGames.forEach(game => {
         if (isPastGame(game)) return;
@@ -832,11 +850,11 @@
         ["table1", "table2"].forEach(slot => {
           if (current[slot]) return;
           const alreadyInGame = new Set([current.table1, current.table2].filter(Boolean));
-          const candidates = PEOPLE.filter(Boolean)
-            .map(name => tablePeopleProfiles[personKey(name)] || { name, active:true, playerTeams:[], assistantTeams:[] })
+          const candidates = activeProfiles
             .filter(profile => !alreadyInGame.has(profile.name) && personCanTakeGame(profile, game))
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
-          const chosen = candidates[0];
+          const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          const chosen = (balancedCandidates.length ? balancedCandidates : candidates)[0];
           if (!chosen) return;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);

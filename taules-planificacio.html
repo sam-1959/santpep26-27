@@ -913,10 +913,16 @@
             })
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
           const siblingCandidates = candidates.filter(profile => hasSiblingInGame(profile, game));
-          const priorityCandidates = siblingCandidates.length ? siblingCandidates : candidates;
-          const balancedCandidates = priorityCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          if (!balancedCandidates.length && priorityCandidates.length) proposalLog.balancedFallbacks += 1;
-          const preferredCandidates = balancedCandidates.length ? balancedCandidates : priorityCandidates;
+          const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          const balancedSiblingCandidates = siblingCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          if (!balancedCandidates.length && candidates.length) proposalLog.balancedFallbacks += 1;
+          const preferredCandidates = balancedSiblingCandidates.length
+            ? balancedSiblingCandidates
+            : balancedCandidates.length
+              ? balancedCandidates
+              : siblingCandidates.length
+                ? siblingCandidates
+                : candidates;
           const experiencedCandidates = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current)
             ? preferredCandidates.filter(profile => profile.experienced === true)
             : [];

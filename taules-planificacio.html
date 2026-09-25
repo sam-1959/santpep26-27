@@ -1067,15 +1067,16 @@
       } else {
         const table = document.createElement("table");
         table.className = "monthly-cost-table";
-        table.innerHTML = "<thead><tr><th>Persona</th><th>Taules del mes</th><th>Total taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+        table.innerHTML = "<thead><tr><th>#</th><th>Persona</th><th>Taules del mes</th><th>Total taules assignades</th><th>Preu/taula</th><th>Total</th></tr></thead><tbody></tbody><tfoot></tfoot>";
         const body = table.querySelector("tbody");
         const totalsByPerson = totalAssignmentCountsByPerson();
         let total = 0;
-        loads.forEach(item => {
+        loads.forEach((item, index) => {
           const amount = item.total * TABLE_COST;
           total += amount;
           const row = document.createElement("tr");
           row.innerHTML =
+            `<td>${escapeHtml(index + 1)}</td>` +
             `<td>${escapeHtml(item.name)}</td>` +
             `<td>${escapeHtml(item.total)}</td>` +
             `<td>${escapeHtml(totalsByPerson.get(item.name) || item.total)}</td>` +
@@ -1084,7 +1085,7 @@
           body.appendChild(row);
         });
         table.querySelector("tfoot").innerHTML =
-          `<tr><td colspan="4">Total mensual</td><td>${formatCost(total)}</td></tr>`;
+          `<tr><td colspan="5">Total mensual</td><td>${formatCost(total)}</td></tr>`;
         wrap.appendChild(table);
       }
       panel.append(title, wrap);

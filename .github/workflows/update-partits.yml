@@ -23,34 +23,6 @@ on:
         options:
           - "false"
           - "true"
-      send_physio_visits:
-        description: "Envia ara el correu setmanal de Visites Fisio"
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
-      physio_visits_dry_run:
-        description: "Valida Visites Fisio sense enviar correus"
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
-      physio_visits_force:
-        description: "Força l'enviament encara que la setmana ja consti enviada"
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
-      physio_visits_recipient_override:
-        description: "Destinatari de prova Visites Fisio (opcional)"
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -64,7 +36,6 @@ concurrency:
 
 jobs:
   update:
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '30 * * * *') || (github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits != 'true') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -130,41 +101,3 @@ jobs:
       - id: deploy3
         if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v5
-
-  send-physio-visits-email:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.send_physio_visits == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-
-      - name: Envia correu setmanal de Visites Fisio
-        env:
-          PHYSIO_VISITS_WEEK_OFFSET_DAYS: 7
-          PHYSIO_VISITS_EMAIL_DRY_RUN: ${{ github.event.inputs.physio_visits_dry_run }}
-          PHYSIO_VISITS_EMAIL_FORCE: ${{ github.event.inputs.physio_visits_force }}
-          PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
-          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event.inputs.physio_visits_recipient_override }}
-          PHYSIO_VISITS_EMAIL_RECIPIENTS: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENTS || 'ricard.fuste@gmail.com' }}
-          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ${{ secrets.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES || 'Ricard Fusté' }}
-          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec' }}
-        run: node scripts/send-physio-visits-weekly-email.js
-
-      - name: Desa estat del correu de Visites Fisio
-        if: ${{ always() && github.event.inputs.physio_visits_dry_run != 'true' }}
-        run: |
-          if git diff --quiet -- data/physio-visits-email-status.json && [ -z "$(git ls-files --others --exclude-standard data/physio-visits-email-status.json)" ]; then
-            echo "Sense canvis a l'estat del correu de Visites Fisio."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/physio-visits-email-status.json
-            git commit -m "Actualitza estat correu Visites Fisio"
-            git pull --rebase
-            git push
-          fi

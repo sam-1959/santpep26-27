@@ -1,0 +1,74 @@
+name: Envia ERP setmanal
+
+on:
+  schedule:
+    # Dilluns al matí. GitHub cron és UTC.
+    - cron: "17 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validar sense enviar correus"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      force:
+        description: "Forçar encara que la setmana ja consti enviada"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      team_keys:
+        description: "Equips a enviar (ALL o llista separada per comes)"
+        required: false
+        default: "ALL"
+      recipient_override:
+        description: "Destinatari de prova (opcional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rpe-weekly-email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Envia ERP setmanal
+        env:
+          RPE_WEEK_OFFSET_DAYS: 7
+          RPE_EMAIL_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          RPE_EMAIL_FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
+          RPE_TEAM_KEYS: ${{ github.event_name == 'workflow_dispatch' && inputs.team_keys || 'ALL' }}
+          RPE_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
+          RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
+          RPE_EMAIL_APP_SCRIPT_URL: ${{ secrets.RPE_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec' }}
+        run: node scripts/send-rpe-weekly-email.js
+
+      - name: Desa estat del correu ERP
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') }}
+        run: |
+          if git diff --quiet -- data/rpe-email-status.json && [ -z "$(git ls-files --others --exclude-standard data/rpe-email-status.json)" ]; then
+            echo "Sense canvis a l'estat del correu ERP."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/rpe-email-status.json
+            git commit -m "Actualitza estat correu ERP"
+            git pull --rebase
+            git push
+          fi

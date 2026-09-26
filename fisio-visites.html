@@ -77,7 +77,8 @@
     .chip { border:1px solid var(--line); background:#fff; color:var(--brand); border-radius:999px; padding:7px 12px; font-weight:800; font-size:0.78rem; cursor:pointer; }
     .chip.active { background:var(--accent); color:#4a3800; border-color:var(--accent); }
     .filters-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin:-4px 0 10px; }
-    .prepa-filters { margin:0; justify-content:flex-start; flex:0 1 auto; }
+    .prepa-filters { margin:0; justify-content:flex-start; flex:0 1 auto; align-items:flex-end; }
+    .prepa-filters #openCreateButton { align-self:flex-end; }
     .status { color:var(--muted); font-size:0.86rem; margin:8px 0 0; text-align:left; }
     tr.new-request { background:#f1fff5; box-shadow:inset 4px 0 0 #19a653; }
     .new-badge { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; border-radius:999px; background:#19a653; color:#fff; padding:2px 7px; font-size:0.68rem; font-weight:900; text-transform:uppercase; vertical-align:middle; }
@@ -179,8 +180,9 @@
           <div class="filters" id="filters"></div>
         </div>
         <div class="filters-row">
-          <div class="filters prepa-filters" id="prepaFilters"></div>
-          <button class="primary" id="openCreateButton" type="button" hidden>Crear nova visita</button>
+          <div class="filters prepa-filters" id="prepaFilters">
+            <button class="primary" id="openCreateButton" type="button" hidden>Crear nova visita</button>
+          </div>
           <div class="pagination" id="pagination"></div>
         </div>
         <div class="table-wrap" id="tableWrap"></div>
@@ -724,6 +726,7 @@
     }
 
     function renderPrepaFilters(){
+      const createButton = els.openCreate;
       els.prepaFilters.innerHTML =
         (hasAccess()
           ? renderFilterGroup("physio", "👤 ÚLTIMA VISITA", PHYSIOS, activePhysio) +
@@ -744,6 +747,7 @@
           { value:"readaptacio", label:"Readaptació" }
         ], activeVisitType) +
         renderFilterGroup("structure", "Estructura", DEFAULT_STRUCTURES, activeStructure);
+      if(createButton) els.prepaFilters.appendChild(createButton);
 
       els.prepaFilters.querySelectorAll("[data-filter='physio']").forEach(button => {
         button.addEventListener("click", () => {

@@ -21,7 +21,7 @@
     main { width:100%; max-width:none; margin:0; padding:22px 24px 18px; }
     .stack { display:grid; gap:18px; }
     .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .head { display:flex; gap:14px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .head { display:flex; gap:14px; justify-content:space-between; align-items:center; flex-wrap:nowrap; margin-bottom:12px; }
     .head-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto; }
     .kpi { display:flex; align-items:baseline; gap:5px; min-width:auto; border:1px solid var(--line); border-radius:999px; padding:7px 11px; background:#faf8fd; }
     .kpi strong { color:var(--brand-dark); font-size:1.08rem; line-height:1; }
@@ -67,7 +67,7 @@
     .row-action.read { color:var(--ok); }
     .row-action.feedback { color:var(--brand-dark); }
     .row-action.delete { color:#b71c1c; }
-    .toolbar { display:flex; flex:1 1 720px; gap:12px; align-items:center; justify-content:flex-end; flex-wrap:nowrap; margin:0; }
+    .toolbar { display:flex; flex:1 1 auto; gap:12px; align-items:center; justify-content:flex-start; flex-wrap:nowrap; margin:0; min-width:0; }
     .search { flex:1 1 auto; min-width:260px; width:auto; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:16px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
     .filter-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -168,11 +168,11 @@
   <main>
       <section class="panel">
         <div class="head">
-          <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
           <div class="toolbar">
             <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
             <div class="filters" id="filters"></div>
           </div>
+          <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
         </div>
         <div class="filters-row">
           <div class="filters prepa-filters" id="prepaFilters">

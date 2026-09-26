@@ -21,7 +21,7 @@
     .page-nav { margin:0 0 14px; }
     .back { display:inline-flex; align-items:center; gap:6px; color:var(--brand); text-decoration:none; font-size:0.86rem; font-weight:800; }
     .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .head { display:flex; gap:14px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .head { display:flex; gap:14px; justify-content:space-between; align-items:center; flex-wrap:nowrap; margin-bottom:12px; }
     .head-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto; }
     .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
     .kpi { display:flex; align-items:baseline; gap:5px; min-width:auto; border:1px solid var(--line); border-radius:999px; padding:7px 11px; background:#faf8fd; }
@@ -34,12 +34,12 @@
     .auth-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:8px 12px; font-weight:800; font-size:0.82rem; cursor:pointer; }
     .auth-button.secondary { background:#fff; color:var(--brand); border:1px solid rgba(255,255,255,0.4); }
     .auth-button:disabled { opacity:0.55; cursor:not-allowed; }
-    .filter-toolbar { display:flex; gap:16px; align-items:center; flex:1 1 620px; flex-wrap:wrap; margin:0; justify-content:flex-end; }
+    .filter-toolbar { display:flex; gap:16px; align-items:center; flex:1 1 auto; flex-wrap:wrap; margin:0; justify-content:flex-start; min-width:0; }
     .filter-row { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin:0 0 10px; }
     .filters { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin:0 0 14px; }
     .filter-row .filters { margin:0; }
     .filters.inline { margin:0; }
-    .search { width:min(360px,100%); border:1px solid var(--line); border-radius:999px; padding:8px 12px; font:inherit; font-size:0.84rem; background:#fff; color:var(--ink); margin:0; }
+    .search { flex:1 1 420px; min-width:260px; width:auto; border:1px solid var(--line); border-radius:999px; padding:8px 12px; font:inherit; font-size:0.84rem; background:#fff; color:var(--ink); margin:0; }
     .filter-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .filter-label { width:100%; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:2px 0 -2px; }
     .filter-group .filter-label { width:auto; margin:0 2px 0 0; }
@@ -136,11 +136,11 @@
   <main>    <section class="panel">
       <div class="head">
         <p class="visually-hidden" id="privacyText">No es mostren correus ni telèfons. La descripció és una versió curta.</p>
-        <div class="kpi"><strong id="totalRequests">—</strong><span>Peticions</span></div>
         <div class="filter-toolbar">
           <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, descripció o pautes" autocomplete="off" />
           <div class="filters inline" id="genderFilters"></div>
         </div>
+        <div class="kpi"><strong id="totalRequests">—</strong><span>Peticions</span></div>
       </div>
       <div class="filter-row">
         <div class="filters" id="filters"></div>

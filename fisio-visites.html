@@ -23,7 +23,7 @@
     .back { display:inline-flex; align-items:center; gap:6px; color:var(--brand); text-decoration:none; font-size:0.86rem; font-weight:800; }
     .stack { display:grid; gap:18px; }
     .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .head { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .head { display:flex; gap:14px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
     .head-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto; }
     .kpi { display:flex; align-items:baseline; gap:5px; min-width:auto; border:1px solid var(--line); border-radius:999px; padding:7px 11px; background:#faf8fd; }
     .kpi strong { color:var(--brand-dark); font-size:1.08rem; line-height:1; }
@@ -69,8 +69,8 @@
     .row-action.read { color:var(--ok); }
     .row-action.feedback { color:var(--brand-dark); }
     .row-action.delete { color:#b71c1c; }
-    .toolbar { display:grid; grid-template-columns:minmax(260px,1fr) auto; gap:12px; align-items:start; margin:0 0 14px; }
-    .search { width:100%; border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
+    .toolbar { display:flex; flex:1 1 720px; gap:12px; align-items:center; justify-content:flex-end; flex-wrap:wrap; margin:0; }
+    .search { width:min(360px,100%); border:1px solid var(--line); border-radius:999px; padding:10px 14px; font:inherit; font-size:0.9rem; background:#fff; color:var(--ink); }
     .filters { display:flex; gap:16px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
     .filter-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .filter-label { color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; margin:0 2px 0 0; }
@@ -171,13 +171,11 @@
     <nav class="page-nav"><a class="back" href="fisio-peticions.html">← Peticions de fisio</a></nav>
       <section class="panel">
         <div class="head">
-          <div class="head-actions">
-            <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
+          <div class="kpi"><strong id="totalVisits">—</strong><span>Visites</span></div>
+          <div class="toolbar">
+            <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
+            <div class="filters" id="filters"></div>
           </div>
-        </div>
-        <div class="toolbar">
-          <input class="search" id="search" type="search" placeholder="Cerca jugador/a, equip, localització, tractament o pauta" autocomplete="off" />
-          <div class="filters" id="filters"></div>
         </div>
         <div class="filters-row">
           <div class="filters prepa-filters" id="prepaFilters">

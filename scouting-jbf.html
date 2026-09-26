@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Scouting JBF · CB Sant Josep</title>
+  <style>
+    :root {
+      --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20;
+      --bg:#f5f3f8; --card:#ffffff; --ink:#2a2233; --muted:#7a7085;
+      --line:#e6e0ee; --ok:#2e7d32; --warn:#b26a00; --err:#b71c1c;
+      --blue:#00547b; --cyan:#7fe3d3;
+      --shadow:0 1px 3px rgba(60,40,90,0.08),0 4px 16px rgba(60,40,90,0.06);
+      --radius:16px;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.45; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:14px; padding:16px 20px;
+      background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .logo-link { display:inline-flex; cursor:pointer; text-decoration:none; flex-shrink:0; }
+    .club-logo { width:48px; height:48px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:10px; padding:3px; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:1.05rem; font-weight:700; letter-spacing:-0.01em; }
+    .htext h1 .club { display:block; font-size:0.72rem; font-weight:500; opacity:0.85; letter-spacing:0.04em; text-transform:uppercase; }
+    .htext p { margin:2px 0 0; font-size:0.8rem; opacity:0.9; }
+    .page-logo { display:inline-grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#fff; color:var(--brand); font-size:1.45rem; font-weight:900; }
+    main { width:100%; max-width:none; margin:0; padding:22px 24px 36px; }
+    .topline { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+    .topline h2 { margin:0; color:var(--brand-dark); font-size:1.28rem; }
+    .topline p { margin:3px 0 0; color:var(--muted); font-size:0.88rem; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:999px; padding:5px 10px; border:1px solid var(--line); background:#fff; color:var(--brand-dark); font-size:0.75rem; font-weight:900; white-space:nowrap; }
+    .badge.warn { color:#6c4800; background:#fff8d8; border-color:#eed56c; }
+    .badge.ok { color:#1b5e20; background:#e8f5e9; border-color:#a5d6a7; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; }
+    .panel { grid-column:span 12; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+    .panel.half { grid-column:span 6; }
+    .panel.third { grid-column:span 4; }
+    .panel h3 { margin:0 0 4px; color:var(--brand-dark); font-size:1rem; }
+    .panel .sub { margin:0 0 14px; color:var(--muted); font-size:0.82rem; }
+    .hero { display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; }
+    .rival-name { margin:0; color:var(--blue); font-size:1.7rem; line-height:1.1; }
+    .rival-meta { margin:6px 0 0; color:var(--muted); font-weight:700; }
+    .kpis { display:grid; grid-template-columns:repeat(5,minmax(110px,1fr)); gap:10px; flex:1 1 620px; }
+    .kpi { border:1px solid var(--line); border-radius:14px; padding:12px; background:#faf8fd; }
+    .kpi span { display:block; color:var(--muted); font-size:0.7rem; font-weight:900; text-transform:uppercase; letter-spacing:0.06em; }
+    .kpi strong { display:block; color:var(--brand-dark); font-size:1.32rem; margin-top:2px; }
+    .kpi strong.good { color:var(--ok); }
+    .kpi strong.bad { color:var(--err); }
+    table { width:100%; border-collapse:collapse; background:#fff; }
+    th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; font-size:0.86rem; }
+    th { background:#faf8fd; color:var(--brand-dark); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; }
+    td.num, th.num { text-align:right; white-space:nowrap; }
+    tr.highlight td { background:#e9fbf6; color:#064d6f; font-weight:900; }
+    .result-win { color:var(--ok); font-weight:900; }
+    .result-loss { color:var(--err); font-weight:900; }
+    .trend { display:grid; gap:10px; }
+    .bar-row { display:grid; grid-template-columns:92px 1fr 52px; gap:10px; align-items:center; font-size:0.82rem; color:var(--muted); }
+    .bar-track { height:11px; border-radius:999px; background:#f0edf5; overflow:hidden; }
+    .bar { height:100%; border-radius:999px; background:var(--brand); }
+    .bar.cyan { background:#35b8ad; }
+    .bar.yellow { background:#f0c400; }
+    .callouts { display:grid; gap:10px; }
+    .callout { border:1px solid var(--line); border-left:5px solid var(--brand); border-radius:12px; padding:11px 12px; background:#fff; }
+    .callout strong { display:block; color:var(--brand-dark); margin-bottom:2px; }
+    .callout p { margin:0; color:var(--muted); font-size:0.84rem; }
+    .callout.warn { border-left-color:#f0a000; }
+    .callout.ok { border-left-color:#2e7d32; }
+    .notes { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .note-box { min-height:112px; border:1px dashed var(--line); border-radius:14px; padding:12px; background:#fffdf5; }
+    .note-box h4 { margin:0 0 7px; color:var(--brand-dark); font-size:0.86rem; }
+    .note-box ul { margin:0; padding-left:18px; color:var(--ink); font-size:0.86rem; }
+    .footer-note { margin:14px 0 0; color:var(--muted); font-size:0.76rem; }
+    footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
+    @media (max-width:980px){
+      .panel.half, .panel.third { grid-column:span 12; }
+      .kpis, .notes { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo-link" href="index.html" title="Tornar a l'inici"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Scouting JBF</h1>
+      <p>Anàlisi del rival · Temporada 26-27</p>
+    </div>
+    <div class="page-logo" aria-hidden="true">🔎</div>
+  </header>
+
+  <main>
+    <div class="topline">
+      <div>
+        <h2>Scouting rival · TGN Bàsquet F10A</h2>
+        <p>Dades manuals a partir de classificació i estadístiques capturades de Bàsquet Català.</p>
+      </div>
+      <span class="badge warn">Actualitzat: jornada 4</span>
+    </div>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="hero">
+          <div>
+            <h2 class="rival-name">TGN BÀSQUET F10A</h2>
+            <p class="rival-meta">C.C. Júnior Femení Preferent 1r Any · Fase prèvia · Grup 03</p>
+            <p class="footer-note">Nota: en aquesta categoria no es registren tirs fallats de 2 ni de 3. T2%, T3%, eFG% i TS% no s’utilitzen per a l’anàlisi. El TL% sí és fiable.</p>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><span>Classificació</span><strong>3r</strong></div>
+            <div class="kpi"><span>Balanç</span><strong>2-1</strong></div>
+            <div class="kpi"><span>PF/P</span><strong>70.3</strong></div>
+            <div class="kpi"><span>PC/P</span><strong>58.0</strong></div>
+            <div class="kpi"><span>DIF/P</span><strong class="good">+12.3</strong></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel half">
+        <h3>Classificació del grup</h3>
+        <p class="sub">Situació actual a la jornada 4.</p>
+        <table>
+          <thead><tr><th>#</th><th>Equip</th><th class="num">J</th><th class="num">G</th><th class="num">P</th><th class="num">PF</th><th class="num">PC</th><th class="num">Pts</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>NAYOX FORÇA LLEIDA B</td><td class="num">3</td><td class="num">3</td><td class="num">0</td><td class="num">226</td><td class="num">129</td><td class="num">6</td></tr>
+            <tr><td>2</td><td>CESET U17 VERD</td><td class="num">4</td><td class="num">2</td><td class="num">2</td><td class="num">195</td><td class="num">236</td><td class="num">6</td></tr>
+            <tr class="highlight"><td>3</td><td>TGN BÀSQUET F10A</td><td class="num">3</td><td class="num">2</td><td class="num">1</td><td class="num">211</td><td class="num">174</td><td class="num">5</td></tr>
+            <tr><td>4</td><td>CB BLANES A</td><td class="num">2</td><td class="num">2</td><td class="num">0</td><td class="num">125</td><td class="num">100</td><td class="num">4</td></tr>
+            <tr><td>5</td><td>U. B. LLEFIÀ B</td><td class="num">4</td><td class="num">0</td><td class="num">4</td><td class="num">158</td><td class="num">254</td><td class="num">4</td></tr>
+            <tr class="highlight"><td>6</td><td>MANTISE CB SANT JOSEP BADALONA - JBF</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td class="num">118</td><td class="num">112</td><td class="num">3</td></tr>
+            <tr><td>7</td><td>SESE B</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num">125</td><td class="num">153</td><td class="num">2</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="panel half">
+        <h3>Últims partits TGN</h3>
+        <p class="sub">Resultats i evolució del diferencial.</p>
+        <table>
+          <thead><tr><th>Data</th><th>J</th><th>Rival</th><th>Resultat</th><th class="num">DIF</th></tr></thead>
+          <tbody>
+            <tr><td>06/09/2026</td><td>J1 · Fora</td><td>CESET U17 VERD</td><td class="result-win">66-41</td><td class="num result-win">+25</td></tr>
+            <tr><td>12/09/2026</td><td>J2 · Casa</td><td>SESE B</td><td class="result-win">83-67</td><td class="num result-win">+16</td></tr>
+            <tr><td>19/09/2026</td><td>J3 · Fora</td><td>CB BLANES A</td><td class="result-loss">62-66</td><td class="num result-loss">-4</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="panel third">
+        <h3>Producció ofensiva</h3>
+        <p class="sub">D’on surten els punts del TGN.</p>
+        <div class="trend">
+          <div class="bar-row"><span>2P</span><div class="bar-track"><div class="bar" style="width:64.5%"></div></div><strong>64.5%</strong></div>
+          <div class="bar-row"><span>3P</span><div class="bar-track"><div class="bar cyan" style="width:14.2%"></div></div><strong>14.2%</strong></div>
+          <div class="bar-row"><span>TL</span><div class="bar-track"><div class="bar yellow" style="width:21.3%"></div></div><strong>21.3%</strong></div>
+        </div>
+      </article>
+
+      <article class="panel third">
+        <h3>Tir lliure</h3>
+        <p class="sub">Dada fiable perquè sí es registren intents.</p>
+        <div class="kpis" style="grid-template-columns:repeat(2,1fr)">
+          <div class="kpi"><span>TL</span><strong>45/77</strong></div>
+          <div class="kpi"><span>TL%</span><strong>58.4%</strong></div>
+          <div class="kpi"><span>TLI/P</span><strong>25.7</strong></div>
+          <div class="kpi"><span>TLC/P</span><strong>15.0</strong></div>
+        </div>
+      </article>
+
+      <article class="panel third">
+        <h3>Jugadores clau</h3>
+        <p class="sub">Punts per partit.</p>
+        <table>
+          <thead><tr><th>Jugadora</th><th class="num">PTS/P</th></tr></thead>
+          <tbody>
+            <tr><td>Georgina Bueso Martínez</td><td class="num">9.7</td></tr>
+            <tr><td>Marina Valls Salla</td><td class="num">9.7</td></tr>
+            <tr><td>Anna Costa Krzyzak</td><td class="num">9.7</td></tr>
+            <tr><td>Inés Carles Idjabe</td><td class="num">9.0</td></tr>
+            <tr><td>Martina Ramon Garcia</td><td class="num">8.3</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="panel half">
+        <h3>Lectura per scouting</h3>
+        <p class="sub">Conclusions útils per preparar el partit.</p>
+        <div class="callouts">
+          <div class="callout"><strong>Equip amb anotació alta i repartida</strong><p>70.3 punts per partit i cinc jugadores entre 8.3 i 9.7 punts. No depenen d’una única anotadora.</p></div>
+          <div class="callout warn"><strong>Generen molts tirs lliures</strong><p>25.7 intents de TL per partit. Cal defensar sense regalar faltes en penetracions i rebot.</p></div>
+          <div class="callout ok"><strong>Baixa eficiència al TL</strong><p>58.4%. Si arriben a la línia, no és automàtic; important controlar el rebot després del segon tir.</p></div>
+          <div class="callout"><strong>Poc volum de triple anotat</strong><p>3.3 triples convertits per partit. El focus inicial hauria de ser protegir pintura, 1c1 i situacions de contacte.</p></div>
+        </div>
+      </article>
+
+      <article class="panel half">
+        <h3>Pla de partit JBF</h3>
+        <p class="sub">Espai de treball per staff.</p>
+        <div class="notes">
+          <div class="note-box">
+            <h4>Objectius defensius</h4>
+            <ul>
+              <li>Baixar faltes innecessàries.</li>
+              <li>Tancar rebot després de TL.</li>
+              <li>Controlar penetracions centrals.</li>
+            </ul>
+          </div>
+          <div class="note-box">
+            <h4>Objectius ofensius</h4>
+            <ul>
+              <li>Atacar després de rebot defensiu.</li>
+              <li>Buscar avantatges abans que s’ordenin.</li>
+              <li>Carregar jugadores amb faltes si pressionen molt.</li>
+            </ul>
+          </div>
+          <div class="note-box">
+            <h4>Riscos</h4>
+            <ul>
+              <li>Permetre partit de molts tirs lliures.</li>
+              <li>Entrar en intercanvi de punts alt.</li>
+              <li>No identificar anotadores secundàries.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">TGN Bàsquet</title>
+  <desc id="desc">Emblema estilitzat del rival TGN Bàsquet.</desc>
+  <defs>
+    <linearGradient id="ball" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f6a33b"/>
+      <stop offset="1" stop-color="#d66c19"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="80" fill="#ffffff"/>
+  <circle cx="80" cy="80" r="70" fill="#f9fbfd" stroke="#2b6f9b" stroke-width="5"/>
+  <circle cx="80" cy="80" r="58" fill="none" stroke="#2b6f9b" stroke-width="2" opacity=".7"/>
+  <g transform="translate(20 43) rotate(-6 60 36)">
+    <text x="0" y="45" font-family="Arial Black, Impact, sans-serif" font-size="42" font-weight="900" fill="#3f3f3f" stroke="#ffffff" stroke-width="5" paint-order="stroke">TGN</text>
+    <text x="2" y="70" font-family="Arial, sans-serif" font-size="15" font-weight="900" fill="#2b6f9b" letter-spacing="1.4">BÀSQUET</text>
+  </g>
+  <g transform="translate(98 60)">
+    <circle cx="17" cy="17" r="15" fill="url(#ball)" stroke="#9c4d14" stroke-width="2"/>
+    <path d="M2 17h30M17 2c-8 8-8 22 0 30M17 2c8 8 8 22 0 30" fill="none" stroke="#8a3f12" stroke-width="2" opacity=".8"/>
+  </g>
+</svg>

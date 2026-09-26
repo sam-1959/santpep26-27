@@ -42,6 +42,8 @@
     .panel h3 { margin:0 0 4px; color:var(--brand-dark); font-size:1rem; }
     .panel .sub { margin:0 0 14px; color:var(--muted); font-size:0.82rem; }
     .hero { display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; }
+    .rival-block { display:flex; align-items:center; gap:16px; min-width:320px; flex:0 1 680px; }
+    .rival-logo { width:82px; height:82px; object-fit:contain; flex-shrink:0; border-radius:999px; background:#fff; border:1px solid var(--line); box-shadow:0 2px 10px rgba(0,84,123,0.12); padding:4px; }
     .rival-name { margin:0; color:var(--blue); font-size:1.7rem; line-height:1.1; }
     .rival-meta { margin:6px 0 0; color:var(--muted); font-weight:700; }
     .kpis { display:grid; grid-template-columns:repeat(5,minmax(110px,1fr)); gap:10px; flex:1 1 620px; }
@@ -103,10 +105,13 @@
     <section class="grid">
       <article class="panel">
         <div class="hero">
-          <div>
-            <h2 class="rival-name">TGN BÀSQUET F10A</h2>
-            <p class="rival-meta">C.C. Júnior Femení Preferent 1r Any · Fase prèvia · Grup 03</p>
-            <p class="footer-note">Nota: en aquesta categoria no es registren tirs fallats de 2 ni de 3. T2%, T3%, eFG% i TS% no s’utilitzen per a l’anàlisi. El TL% sí és fiable.</p>
+          <div class="rival-block">
+            <img class="rival-logo" src="assets/tgn-logo.svg" alt="Logo TGN Bàsquet" />
+            <div>
+              <h2 class="rival-name">TGN BÀSQUET F10A</h2>
+              <p class="rival-meta">C.C. Júnior Femení Preferent 1r Any · Fase prèvia · Grup 03</p>
+              <p class="footer-note">Nota: en aquesta categoria no es registren tirs fallats de 2 ni de 3. T2%, T3%, eFG% i TS% no s’utilitzen per a l’anàlisi. El TL% sí és fiable.</p>
+            </div>
           </div>
           <div class="kpis">
             <div class="kpi"><span>Classificació</span><strong>3r</strong></div>

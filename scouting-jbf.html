@@ -56,6 +56,8 @@
     th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; font-size:0.86rem; }
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; }
     td.num, th.num { text-align:right; white-space:nowrap; }
+    .key-players th:first-child,
+    .key-players td:first-child { width:1%; min-width:34px; padding-right:6px; text-align:center; }
     tr.highlight td { background:#e9fbf6; color:#064d6f; font-weight:900; }
     .result-win { color:var(--ok); font-weight:900; }
     .result-loss { color:var(--err); font-weight:900; }
@@ -126,7 +128,7 @@
       <article class="panel half">
         <h3>Classificació del grup</h3>
         <p class="sub">Situació actual a la jornada 4.</p>
-        <table>
+        <table class="key-players">
           <thead><tr><th>#</th><th>Equip</th><th class="num">J</th><th class="num">G</th><th class="num">P</th><th class="num">PF</th><th class="num">PC</th><th class="num">Pts</th></tr></thead>
           <tbody>
             <tr><td>1</td><td>NAYOX FORÇA LLEIDA B</td><td class="num">3</td><td class="num">3</td><td class="num">0</td><td class="num">226</td><td class="num">129</td><td class="num">6</td></tr>

@@ -52,19 +52,18 @@
     .cost-title { margin:0 0 6px; color:var(--muted); font-size:0.68rem; font-weight:900;
       letter-spacing:0.08em; text-transform:uppercase; }
     .cost-list { display:grid; gap:8px; }
-    .cost-section { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:6px; align-items:start; }
-    .cost-section-title { grid-column:1 / -1; margin:2px 0 0; color:var(--brand-dark); font-size:0.76rem; font-weight:900; }
-    .cost-group { border:1px solid var(--line); border-radius:10px; background:#faf8fc; padding:7px 8px; }
-    .cost-group-head { display:flex; justify-content:space-between; gap:8px; align-items:baseline; color:var(--brand-dark); font-size:0.82rem; font-weight:900; }
-    .cost-group-total { color:var(--ink); white-space:nowrap; }
-    .cost-coach { margin-top:1px; color:var(--muted); font-size:0.72rem; font-weight:800; }
-    .cost-detail { display:grid; gap:2px; margin-top:4px; color:var(--muted); font-size:0.72rem; font-weight:750; }
-    .cost-detail-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:6px; align-items:center; }
-    .cost-detail-rival { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .cost-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line);
-      border-radius:999px; background:#faf8fc; color:var(--brand-dark); padding:5px 8px; font-size:0.74rem; font-weight:850; }
-    .cost-chip.total { justify-self:stretch; justify-content:flex-end; width:100%; border:0; border-radius:0;
-      border-top:2px solid var(--accent); background:transparent; color:#4a3800; padding:6px 8px 0 0; }
+    .cost-section { display:grid; gap:5px; }
+    .cost-section-title { margin:2px 0 0; color:var(--brand-dark); font-size:0.76rem; font-weight:900; }
+    .cost-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:10px; }
+    .cost-table { width:100%; border-collapse:collapse; font-size:0.74rem; background:#fff; }
+    .cost-table th, .cost-table td { padding:5px 7px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    .cost-table th { background:#faf8fc; color:var(--brand-dark); font-size:0.62rem; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; }
+    .cost-table td:last-child, .cost-table th:last-child { text-align:right; white-space:nowrap; }
+    .cost-table tr:last-child td { border-bottom:0; }
+    .cost-table .cost-team { color:var(--brand-dark); font-weight:900; white-space:nowrap; }
+    .cost-table .cost-coach-cell { color:var(--muted); font-weight:800; white-space:nowrap; }
+    .cost-table .cost-games-cell { color:var(--muted); font-weight:750; }
+    .cost-table .cost-total-row td { background:#fff8d8; color:#4a3800; font-weight:900; border-top:2px solid var(--accent); }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
@@ -217,6 +216,10 @@
       return String(value || "").trim().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+
+    function escapeHtml(value){
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
     }
 
     function teamLabel(game){
@@ -592,43 +595,32 @@
         teamCosts.set(key, current);
       });
       let total = 0;
+      const wrap = document.createElement("div");
+      wrap.className = "cost-table-wrap";
+      const table = document.createElement("table");
+      table.className = "cost-table";
+      table.innerHTML = "<thead><tr><th>Equip</th><th>Coach</th><th>Partits</th><th>Cost</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+      const body = table.querySelector("tbody");
       [...teamCosts.values()]
         .sort((a, b) => a.label.localeCompare(b.label, "ca-ES"))
         .forEach(teamCost => {
           total += teamCost.total;
-          const group = document.createElement("div");
-          group.className = "cost-group";
-          const head = document.createElement("div");
-          head.className = "cost-group-head";
-          const gamesLabel = teamCost.games.length === 1 ? "1 partit" : `${teamCost.games.length} partits`;
-          head.append(
-            Object.assign(document.createElement("span"), { textContent: `${teamCost.label} · ${gamesLabel}` }),
-            Object.assign(document.createElement("span"), { className:"cost-group-total", textContent: formatCost(teamCost.total) })
-          );
-          const coach = document.createElement("div");
-          coach.className = "cost-coach";
-          coach.textContent = `Coach: ${TEAM_COACHES[teamCost.label] || "Pendent"}`;
-          const detail = document.createElement("div");
-          detail.className = "cost-detail";
-          teamCost.games
+          const gamesText = teamCost.games
             .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
-            .forEach(game => {
-              const row = document.createElement("div");
-              row.className = "cost-detail-row";
-              row.append(
-                Object.assign(document.createElement("span"), { textContent: formatDate(game.date) }),
-                Object.assign(document.createElement("span"), { className:"cost-detail-rival", textContent: game.rival || "Rival pendent" }),
-                Object.assign(document.createElement("span"), { textContent: formatCost(game.cost) })
-              );
-              detail.appendChild(row);
-            });
-          group.append(head, coach, detail);
-          section.appendChild(group);
+            .map(game => `${escapeHtml(formatDate(game.date))} · ${escapeHtml(game.rival || "Rival pendent")} · ${formatCost(game.cost)}`)
+            .join("<br>");
+          const row = document.createElement("tr");
+          row.innerHTML =
+            `<td class="cost-team">${escapeHtml(teamCost.label)}</td>` +
+            `<td class="cost-coach-cell">${escapeHtml(TEAM_COACHES[teamCost.label] || "Pendent")}</td>` +
+            `<td class="cost-games-cell">${gamesText}</td>` +
+            `<td>${formatCost(teamCost.total)}</td>`;
+          body.appendChild(row);
         });
-      const totalChip = document.createElement("span");
-      totalChip.className = "cost-chip total";
-      totalChip.textContent = `Total: ${formatCost(total)}`;
-      section.appendChild(totalChip);
+      table.querySelector("tfoot").innerHTML =
+        `<tr class="cost-total-row"><td colspan="3">Total</td><td>${formatCost(total)}</td></tr>`;
+      wrap.appendChild(table);
+      section.appendChild(wrap);
       els.costSummary.appendChild(section);
     }
 

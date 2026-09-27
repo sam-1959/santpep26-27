@@ -856,7 +856,9 @@
 
     function collectPeopleProfiles(){
       const profiles = {};
-      els.peopleProfiles.querySelectorAll("tbody tr").forEach(row => {
+      const rows = els.peopleProfiles.querySelectorAll("tbody tr");
+      if (!rows.length) return;
+      rows.forEach(row => {
         const key = row.dataset.personKey;
         const name = row.children[0].textContent.trim();
         profiles[key] = {
@@ -1045,7 +1047,10 @@
       });
       lastProposalLog = proposalLog;
       if (!changed) {
-        setStatus("No hi havia taules buides per proposar.");
+        const message = proposalLog.unresolved
+          ? `No s'ha pogut completar la proposta: ${proposalLog.unresolved} taula(es) pendent(s) sense candidat disponible.`
+          : "No hi havia taules buides per proposar.";
+        setStatus(message, proposalLog.unresolved ? "error" : "");
         render();
         return;
       }

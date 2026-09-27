@@ -5,6 +5,7 @@ const path = require("path");
 
 const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 const VISITS_PATH = "physioVisits/season-26-27";
+const CONTACTS_PATH = "seasonContacts/season-26-27";
 const STATUS_PATH = process.env.PHYSIO_VISITS_EMAIL_STATUS_PATH || "data/physio-visits-email-status.json";
 const APP_SCRIPT_URL = process.env.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec";
 const DRY_RUN = String(process.env.PHYSIO_VISITS_EMAIL_DRY_RUN || "").toLowerCase() === "true";
@@ -14,6 +15,7 @@ const RECIPIENT_OVERRIDE = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_OVER
 const RECIPIENT_NAMES_OVERRIDE = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE || "").trim();
 const DEFAULT_RECIPIENTS = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENTS || "").trim();
 const DEFAULT_RECIPIENT_NAMES = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES || "").trim();
+const FIXED_RECIPIENTS = [{ email: "dtecnic@cbsantjosep.cat", name: "Direcció tècnica" }];
 
 function firebaseUrl(pathName){
   const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -109,10 +111,8 @@ function isValidEmail(value){
 }
 
 function uniqueEmails(value){
-  return [...new Set(String(value || "")
-    .split(/[,\n;]/)
-    .map(email => email.trim())
-    .filter(isValidEmail))];
+  const values = Array.isArray(value) ? value : String(value || "").split(/[,\n;]/);
+  return [...new Set(values.map(email => String(email || "").trim()).filter(isValidEmail))];
 }
 
 function recipientNames(emails){
@@ -127,6 +127,35 @@ function recipients(){
     throw new Error("No hi ha destinataris configurats. Defineix PHYSIO_VISITS_EMAIL_RECIPIENTS o PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE.");
   }
   return { emails, names: recipientNames(emails) };
+}
+
+function contactName(contact){
+  return contact && contact.name ? contact.name : contact && contact.email ? contact.email : "";
+}
+
+function weeklyRecipientsFromContacts(contacts){
+  if(RECIPIENT_OVERRIDE) return recipients();
+  const coordinators = Array.isArray(contacts && contacts.coordinators) ? contacts.coordinators : [];
+  const includedRoles = new Set(["masculi", "femeni", "coordinador_prepa", "dt", "prepa"]);
+  const contactsRecipients = coordinators.filter(contact => includedRoles.has(String(contact.role || "").trim()));
+  const allContacts = [
+    ...contactsRecipients,
+    ...FIXED_RECIPIENTS
+  ];
+  const byEmail = new Map();
+  allContacts.forEach(contact => {
+    const email = String(contact.email || "").trim();
+    if(!isValidEmail(email)) return;
+    if(!byEmail.has(email)) byEmail.set(email, { email, name: contactName(contact) || email });
+  });
+  const recipientsList = [...byEmail.values()];
+  if(!recipientsList.length){
+    throw new Error("No hi ha destinataris vàlids per al resum setmanal de Visites Fisio.");
+  }
+  return {
+    emails: recipientsList.map(contact => contact.email),
+    names: recipientsList.map(contact => contact.name)
+  };
 }
 
 function courtStatusLabel(value){
@@ -319,6 +348,7 @@ async function main(){
   writeStatus(status);
 
   const data = await readFirebase(VISITS_PATH);
+  const contacts = await readFirebase(CONTACTS_PATH) || {};
   const records = Object.entries(data || {})
     .map(([id, row]) => normalizeVisit(row || {}, id))
     .filter(record => dates.includes(record.date))
@@ -337,7 +367,7 @@ async function main(){
     return;
   }
 
-  const recipientsData = recipients();
+  const recipientsData = weeklyRecipientsFromContacts(contacts);
   const payload = buildPayload({ selectedWeek, dates, records, recipientsData });
   const responseText = await sendPayload(payload);
 

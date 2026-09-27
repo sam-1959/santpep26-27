@@ -86,6 +86,23 @@
     .bar { height:100%; border-radius:999px; background:var(--brand); }
     .bar.cyan { background:#35b8ad; }
     .bar.yellow { background:#f0c400; }
+    .visual-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .visual-kpi { border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+    .visual-kpi .label { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:0.7rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; }
+    .visual-kpi .value { display:block; color:var(--brand-dark); font-size:1.4rem; font-weight:900; margin-top:6px; }
+    .visual-kpi .detail { display:block; color:var(--muted); font-size:0.72rem; margin-top:2px; }
+    .visual-kpi .mini-track { height:8px; border-radius:999px; background:#f0edf5; overflow:hidden; margin-top:10px; }
+    .visual-kpi .mini-bar { height:100%; border-radius:999px; background:var(--brand); }
+    .visual-kpi .mini-bar.cyan { background:#35b8ad; }
+    .visual-kpi .mini-bar.yellow { background:#f0c400; }
+    .free-throw-summary { display:grid; grid-template-columns:130px 1fr; gap:14px; align-items:center; }
+    .free-throw-ring { width:118px; height:118px; border-radius:50%; background:conic-gradient(var(--brand) 0 58.4%, #edf0f5 58.4% 100%); display:grid; place-items:center; margin:auto; }
+    .free-throw-ring span { width:78px; height:78px; border-radius:50%; background:#fff; display:grid; place-items:center; text-align:center; color:var(--brand-dark); font-weight:900; line-height:1.1; box-shadow:inset 0 0 0 1px var(--line); }
+    .free-throw-ring small { display:block; color:var(--muted); font-size:0.6rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .free-throw-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .fact { border:1px solid var(--line); border-radius:12px; padding:10px; background:#faf8fd; }
+    .fact span { display:block; color:var(--muted); font-size:0.68rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; }
+    .fact strong { display:block; color:var(--brand-dark); font-size:1.12rem; margin-top:4px; }
     .callouts { display:grid; gap:10px; }
     .callout { border:1px solid var(--line); border-left:5px solid var(--brand); border-radius:12px; padding:11px 12px; background:#fff; }
     .callout strong { display:block; color:var(--brand-dark); margin-bottom:2px; }
@@ -138,6 +155,20 @@
       .danger-badge, .type-badge { padding:2px 5px; font-size:0.5rem; }
       .bar-row { grid-template-columns:45px 1fr 36px; gap:5px; font-size:0.58rem; }
       .bar-track { height:7px; }
+      .visual-kpis { gap:5px; }
+      .visual-kpi { padding:6px; border-radius:8px; }
+      .visual-kpi .label { font-size:0.5rem; }
+      .visual-kpi .value { font-size:0.86rem; margin-top:2px; }
+      .visual-kpi .detail { font-size:0.52rem; }
+      .visual-kpi .mini-track { height:6px; margin-top:5px; }
+      .free-throw-summary { grid-template-columns:78px 1fr; gap:7px; }
+      .free-throw-ring { width:72px; height:72px; }
+      .free-throw-ring span { width:48px; height:48px; font-size:0.74rem; }
+      .free-throw-ring small { font-size:0.46rem; }
+      .free-throw-facts { gap:5px; }
+      .fact { padding:6px; border-radius:8px; }
+      .fact span { font-size:0.5rem; }
+      .fact strong { font-size:0.78rem; }
       .callouts { gap:5px; }
       .callout { padding:6px 7px; border-left-width:3px; border-radius:8px; }
       .callout p { font-size:0.6rem; }
@@ -252,24 +283,41 @@
         <p class="footer-note">Tipus inferit només amb estadística disponible: T2 anotats, T3 anotats i TL. No substitueix scouting visual.</p>
       </article>
 
-      <article class="panel third">
+      <article class="panel half">
         <h3>Producció ofensiva</h3>
-        <p class="sub">D’on surten els punts del TGN.</p>
-        <div class="trend">
-          <div class="bar-row"><span>2P</span><div class="bar-track"><div class="bar" style="width:64.5%"></div></div><strong>64.5%</strong></div>
-          <div class="bar-row"><span>3P</span><div class="bar-track"><div class="bar cyan" style="width:14.2%"></div></div><strong>14.2%</strong></div>
-          <div class="bar-row"><span>TL</span><div class="bar-track"><div class="bar yellow" style="width:21.3%"></div></div><strong>21.3%</strong></div>
+        <p class="sub">Distribució dels punts anotats pel TGN.</p>
+        <div class="visual-kpis">
+          <div class="visual-kpi">
+            <span class="label">2P <b>64.5%</b></span>
+            <strong class="value">136 pts</strong>
+            <span class="detail">68 cistelles · font principal</span>
+            <div class="mini-track"><div class="mini-bar" style="width:64.5%"></div></div>
+          </div>
+          <div class="visual-kpi">
+            <span class="label">3P <b>14.2%</b></span>
+            <strong class="value">30 pts</strong>
+            <span class="detail">10 triples · volum baix</span>
+            <div class="mini-track"><div class="mini-bar cyan" style="width:14.2%"></div></div>
+          </div>
+          <div class="visual-kpi">
+            <span class="label">TL <b>21.3%</b></span>
+            <strong class="value">45 pts</strong>
+            <span class="detail">pes alt des de la línia</span>
+            <div class="mini-track"><div class="mini-bar yellow" style="width:21.3%"></div></div>
+          </div>
         </div>
       </article>
 
-      <article class="panel third">
+      <article class="panel half">
         <h3>Tir lliure</h3>
         <p class="sub">Dada fiable perquè sí es registren intents.</p>
-        <div class="kpis" style="grid-template-columns:repeat(2,1fr)">
-          <div class="kpi"><span>TL</span><strong>45/77</strong></div>
-          <div class="kpi"><span>TL%</span><strong>58.4%</strong></div>
-          <div class="kpi"><span>TL intentats / partit</span><strong>25.7</strong></div>
-          <div class="kpi"><span>TL anotats / partit</span><strong>15.0</strong></div>
+        <div class="free-throw-summary">
+          <div class="free-throw-ring"><span>58.4%<small>TL%</small></span></div>
+          <div class="free-throw-facts">
+            <div class="fact"><span>Total</span><strong>45/77</strong></div>
+            <div class="fact"><span>Intentats / partit</span><strong>25.7</strong></div>
+            <div class="fact"><span>Anotats / partit</span><strong>15.0</strong></div>
+          </div>
         </div>
       </article>
 

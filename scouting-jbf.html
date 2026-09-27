@@ -32,6 +32,9 @@
     .topline { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
     .topline h2 { margin:0; color:var(--brand-dark); font-size:1.28rem; }
     .topline p { margin:3px 0 0; color:var(--muted); font-size:0.88rem; }
+    .top-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .print-button { border:0; border-radius:999px; padding:8px 13px; background:var(--brand); color:#fff; font:inherit; font-size:0.8rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
+    .print-button:hover { background:var(--brand-dark); }
     .badge { display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:999px; padding:5px 10px; border:1px solid var(--line); background:#fff; color:var(--brand-dark); font-size:0.75rem; font-weight:900; white-space:nowrap; }
     .badge.warn { color:#6c4800; background:#fff8d8; border-color:#eed56c; }
     .badge.ok { color:#1b5e20; background:#e8f5e9; border-color:#a5d6a7; }
@@ -99,6 +102,14 @@
       .panel.half, .panel.third { grid-column:span 12; }
       .kpis, .notes { grid-template-columns:1fr 1fr; }
     }
+    @media print {
+      body { background:#fff; color:#111; }
+      header { box-shadow:none; }
+      main { padding:14px; }
+      .top-actions .print-button { display:none; }
+      .panel { break-inside:avoid; box-shadow:none; border-color:#d8d8d8; }
+      footer { padding:10px; }
+    }
   </style>
 </head>
 <body>
@@ -117,7 +128,10 @@
         <h2>Scouting rival · TGN Bàsquet F10A</h2>
         <p>Dades manuals a partir de classificació i estadístiques capturades de Bàsquet Català.</p>
       </div>
-      <span class="badge warn">Classificació base: jornada 3</span>
+      <div class="top-actions">
+        <span class="badge warn">Classificació base: jornada 3</span>
+        <button class="print-button" type="button" onclick="window.print()">🖨️ Imprimir</button>
+      </div>
     </div>
 
     <section class="grid">

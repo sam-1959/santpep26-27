@@ -63,6 +63,10 @@
     td.num, th.num { text-align:right; white-space:nowrap; }
     .key-players th:first-child,
     .key-players td:first-child { width:1%; min-width:34px; padding-right:6px; text-align:center; }
+    .comparison-table { margin-top:14px; }
+    .comparison-table caption { caption-side:top; text-align:left; color:var(--brand-dark); font-weight:900; margin:0 0 8px; font-size:0.86rem; }
+    .comparison-table .positive { color:var(--ok); font-weight:900; }
+    .comparison-table .negative { color:var(--err); font-weight:900; }
     tr.highlight td { background:#e9fbf6; color:#064d6f; font-weight:900; }
     .result-win { color:var(--ok); font-weight:900; }
     .result-loss { color:var(--err); font-weight:900; }
@@ -143,6 +147,15 @@
             <tr><td>5</td><td>U. B. LLEFIÀ B</td><td class="num">4</td><td class="num">0</td><td class="num">4</td><td class="num">158</td><td class="num">254</td><td class="num">4</td></tr>
             <tr class="highlight"><td>6</td><td>MANTISE CB SANT JOSEP BADALONA - JBF</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td class="num">118</td><td class="num">112</td><td class="num">3</td></tr>
             <tr><td>7</td><td>SESE B</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num">125</td><td class="num">153</td><td class="num">2</td></tr>
+          </tbody>
+        </table>
+        <table class="comparison-table">
+          <caption>Comparativa directa TGN vs JBF</caption>
+          <thead><tr><th>Equip</th><th class="num">Pos.</th><th class="num">Balanç</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF/P</th></tr></thead>
+          <tbody>
+            <tr><td>TGN BÀSQUET F10A</td><td class="num">3r</td><td class="num">2-1</td><td class="num">70.3</td><td class="num">58.0</td><td class="num positive">+12.3</td></tr>
+            <tr><td>JBF</td><td class="num">6è</td><td class="num">1-1</td><td class="num">59.0</td><td class="num">56.0</td><td class="num positive">+3.0</td></tr>
+            <tr><td>Diferència TGN - JBF</td><td class="num">+3</td><td class="num">—</td><td class="num positive">+11.3</td><td class="num negative">+2.0</td><td class="num positive">+9.3</td></tr>
           </tbody>
         </table>
       </article>

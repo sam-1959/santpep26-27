@@ -35,6 +35,7 @@
       border-radius:8px; padding:9px 12px; font:inherit; font-size:0.85rem; font-weight:800;
       cursor:pointer; }
     .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+    .btn.quarter { background:#fff9c9; border-color:#ead02c; color:var(--brand-dark); min-width:42px; }
     .btn.danger { color:var(--bad); }
     .match-panel { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
       gap:10px; margin:0 0 16px; padding:12px; border:1px solid var(--line);
@@ -149,6 +150,10 @@
       font-weight:800; text-transform:uppercase; letter-spacing:0.02em; }
     .saved-summary-item strong { display:block; margin-top:1px; color:var(--ink); font-size:0.82rem;
       font-weight:900; font-variant-numeric:tabular-nums; }
+    .quarter-snapshots { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+    .quarter-chip { display:inline-flex; align-items:center; gap:4px; border:1px solid #ead02c;
+      border-radius:999px; background:#fff9c9; color:var(--brand-dark); padding:3px 7px;
+      font-size:0.68rem; font-weight:900; }
     .status-line { color:var(--muted); font-size:0.78rem; margin-top:8px; min-height:1.1em; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
     @media (max-width:780px) {
@@ -161,6 +166,7 @@
       main { padding:11px 7px 34px; }
       .toolbar { gap:8px; margin-bottom:10px; }
       .btn { padding:8px 10px; font-size:0.8rem; border-radius:8px; }
+      .btn.quarter { min-width:36px; padding:8px 9px; }
       .match-panel { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-bottom:11px; padding:9px;
         border-radius:10px; box-shadow:none; }
       .match-panel label { font-size:0.66rem; }
@@ -198,6 +204,7 @@
       .formula-grid { grid-template-columns:1fr; gap:4px; }
       .saved-summary-row { grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
       .saved-summary-row.secondary { grid-template-columns:repeat(auto-fit,minmax(70px,1fr)); }
+      .quarter-chip { font-size:0.62rem; padding:2px 6px; }
       .saved-nav .btn { width:30px; height:30px; }
     }
   </style>
@@ -215,6 +222,10 @@
     <nav class="page-nav" id="backNav" hidden><a class="back" href="equips-4factors.html">← Tornar</a></nav>
     <div class="toolbar">
       <button class="btn primary" type="button" id="saveGameBtn">Guardar</button>
+      <button class="btn quarter" type="button" data-quarter="Q1" title="Guarda el marcador de final del primer quart">Q1</button>
+      <button class="btn quarter" type="button" data-quarter="Q2" title="Guarda el marcador de mitja part">Q2</button>
+      <button class="btn quarter" type="button" data-quarter="Q3" title="Guarda el marcador de final del tercer quart">Q3</button>
+      <button class="btn quarter" type="button" data-quarter="Q4" title="Guarda el marcador de final del partit o pròrroga">Q4</button>
       <button class="btn primary" type="button" id="closeGameBtn">Tancar partit</button>
       <button class="btn danger" type="button" id="resetBtn">Reinicia</button>
       <button class="btn primary" type="button" id="exampleBtn" hidden>Exemple</button>
@@ -349,6 +360,7 @@
     const DEFAULT_MATCH_CATEGORY = TEAM.category;
     let currentGameId = null;
     let savedGamesViewIndex = 0;
+    let currentQuarterSnapshots = [];
 
     function inputId(side, key){ return side + "-" + key; }
     function n(side, key){
@@ -603,6 +615,35 @@
     function gameId(){
       return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
+    function normalizeQuarterSnapshots(quarters){
+      return Array.isArray(quarters) ? quarters.filter(Boolean) : [];
+    }
+    function quarterLabel(period, quarters){
+      if(period !== "Q4") return period;
+      const q4Count = normalizeQuarterSnapshots(quarters).filter(item => item.period === "Q4").length;
+      return q4Count === 0 ? "Q4" : "PR" + q4Count;
+    }
+    function collectQuarterSnapshot(period, quarters){
+      return {
+        period,
+        label: quarterLabel(period, quarters),
+        savedAt: new Date().toISOString(),
+        teamScore: points("team"),
+        oppScore: points("opp"),
+        teamCounters: collectCounters("team"),
+        oppCounters: collectCounters("opp")
+      };
+    }
+    function updateQuarterSnapshots(quarters, snapshot){
+      const base = normalizeQuarterSnapshots(quarters);
+      if(snapshot.period === "Q4") return [...base, snapshot];
+      const filtered = base.filter(item => item.period !== snapshot.period);
+      return [...filtered, snapshot].sort((a, b) => {
+        const order = { Q1:1, Q2:2, Q3:3, Q4:4 };
+        return (order[a.period] || 9) - (order[b.period] || 9) ||
+          String(a.savedAt || "").localeCompare(String(b.savedAt || ""));
+      });
+    }
     function readSavedGames(){
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -625,7 +666,8 @@
         teams: {
           team: { name: matchText("localName"), counters: collectCounters("team") },
           opp: { name: matchText("visitorName"), counters: collectCounters("opp") }
-        }
+        },
+        quarters: currentQuarterSnapshots
       };
     }
     function saveDraft(){
@@ -651,6 +693,7 @@
         document.getElementById("gameDate").value = draft.meta && draft.meta.date ? draft.meta.date : todayIsoDate();
         document.getElementById("localName").value = draft.teams && draft.teams.team && draft.teams.team.name ? draft.teams.team.name : "";
         document.getElementById("visitorName").value = draft.teams && draft.teams.opp && draft.teams.opp.name ? draft.teams.opp.name : "";
+        currentQuarterSnapshots = normalizeQuarterSnapshots(draft.quarters);
         setCounters("team", draft.teams && draft.teams.team ? draft.teams.team.counters : {});
         setCounters("opp", draft.teams && draft.teams.opp ? draft.teams.opp.counters : {});
         setSaveStatus("Dades recuperades del darrer guardat.");
@@ -698,6 +741,7 @@
         if(!ok) return;
       }
       currentGameId = null;
+      currentQuarterSnapshots = [];
       clearDraft();
       resetMatchDefaults();
       document.getElementById("gameDate").value = EXAMPLE_GAME.date;
@@ -805,10 +849,13 @@
         formulas: shootingFormulaValues(side, other)
       };
     }
-    function buildGamePayload(existing, games){
+    function buildGamePayload(existing, games, quartersOverride){
       const teamFactors = calc("team", "opp");
       const oppFactors = calc("opp", "team");
       const now = new Date().toISOString();
+      const quarters = quartersOverride !== undefined
+        ? normalizeQuarterSnapshots(quartersOverride)
+        : normalizeQuarterSnapshots(currentQuarterSnapshots.length ? currentQuarterSnapshots : existing && existing.quarters);
       return {
         id: existing ? existing.id : gameId(),
         teamKey: TEAM_KEY,
@@ -836,8 +883,44 @@
             formulas: shootingFormulaValues("opp", "team")
           }
         },
-        summary: summaryValues("team", "opp", teamFactors, oppFactors)
+        summary: summaryValues("team", "opp", teamFactors, oppFactors),
+        quarters
       };
+    }
+    async function saveQuarter(period){
+      if(!statsStarted()) {
+        setSaveStatus("No hi ha cap dada introduïda. No s'ha guardat cap parcial.");
+        return;
+      }
+      try {
+        const games = await readSyncedSavedGames();
+        const existingIndex = currentGameId ? games.findIndex(game => game.id === currentGameId) : -1;
+        const existing = existingIndex >= 0 ? games[existingIndex] : null;
+        const baseQuarters = currentQuarterSnapshots.length
+          ? currentQuarterSnapshots
+          : normalizeQuarterSnapshots(existing && existing.quarters);
+        const snapshot = collectQuarterSnapshot(period, baseQuarters);
+        currentQuarterSnapshots = updateQuarterSnapshots(baseQuarters, snapshot);
+        const payload = buildGamePayload(existing, games, currentQuarterSnapshots);
+        if(existingIndex >= 0) {
+          games[existingIndex] = payload;
+        } else {
+          games.unshift(payload);
+          currentGameId = payload.id;
+        }
+        savedGamesViewIndex = 0;
+        writeSavedGames(games);
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft()));
+        await renderSavedGames(games);
+        try {
+          await saveFirebaseGame(payload);
+          setSaveStatus(snapshot.label + " guardat i sincronitzat (" + snapshot.teamScore + "-" + snapshot.oppScore + ").");
+        } catch(error) {
+          setSaveStatus(snapshot.label + " guardat en aquest navegador. Firebase no permet sincronitzar.");
+        }
+      } catch(error) {
+        setSaveStatus("No s'ha pogut guardar el parcial.");
+      }
     }
     async function closeGame(){
       if(!statsStarted()) {
@@ -896,6 +979,7 @@
       document.getElementById("gameDate").value = game.meta && game.meta.date ? game.meta.date : todayIsoDate();
       document.getElementById("localName").value = game.teams && game.teams.team && game.teams.team.name ? game.teams.team.name : "";
       document.getElementById("visitorName").value = game.teams && game.teams.opp && game.teams.opp.name ? game.teams.opp.name : "";
+      currentQuarterSnapshots = normalizeQuarterSnapshots(game.quarters);
       setCounters("team", game.teams && game.teams.team ? game.teams.team.counters : {});
       setCounters("opp", game.teams && game.teams.opp ? game.teams.opp.counters : {});
       render();
@@ -975,9 +1059,17 @@
         ["% TC AST", pct(summary.formulas && summary.formulas.assistedFieldGoalPct)],
         ["% Pèrdues", pct(summary.formulas && summary.formulas.turnoverPct)]
       ];
+      const quarters = normalizeQuarterSnapshots(game.quarters);
+      const quartersHtml = quarters.length
+        ? '<div class="quarter-snapshots">' + quarters.map(quarter =>
+            '<span class="quarter-chip">' + escapeHtml(quarter.label || quarter.period || "Q") +
+            ' ' + whole(quarter.teamScore) + '-' + whole(quarter.oppScore) + '</span>'
+          ).join("") + '</div>'
+        : "";
       return '<div class="saved-summary">' +
         '<div class="saved-summary-row">' + summaryItemsHtml(primaryItems, "saved-summary-item") + '</div>' +
         '<div class="saved-summary-row secondary">' + summaryItemsHtml(secondaryItems, "saved-summary-item") + '</div>' +
+        quartersHtml +
         '</div>';
     }
     function clampSavedGamesViewIndex(total){
@@ -1084,6 +1176,9 @@
       if(status) status.textContent = message;
     }
     document.getElementById("saveGameBtn").onclick = saveDraft;
+    document.querySelectorAll("[data-quarter]").forEach(button => {
+      button.addEventListener("click", () => saveQuarter(button.dataset.quarter));
+    });
     document.getElementById("closeGameBtn").onclick = closeGame;
     document.getElementById("exampleBtn").onclick = loadExampleGame;
     document.getElementById("resetBtn").onclick = () => {
@@ -1091,6 +1186,7 @@
       const ok = window.confirm("Segur que vols reiniciar la calculadora?");
       if(!ok) return;
       currentGameId = null;
+      currentQuarterSnapshots = [];
       clearDraft();
       resetMatchDefaults();
       document.getElementById("localName").value = "";

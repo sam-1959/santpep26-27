@@ -98,7 +98,9 @@
     .monthly-cost-table th:nth-child(n+3) { text-align:right; }
     .monthly-cost-table tfoot td { border-bottom:0; background:#fff8d8; color:#4a3800; font-weight:900; }
     .monthly-cost-table tfoot .total-label, .monthly-cost-table tfoot .total-value { text-align:right; }
-    .experience-icon { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; color:#9a6b00; font-size:0.88rem; vertical-align:middle; }
+    .person-flag-icon { display:inline-flex; align-items:center; justify-content:center; margin-left:6px; font-size:0.88rem; vertical-align:middle; }
+    .experience-icon { color:#9a6b00; }
+    .sibling-icon { color:#7c3aed; }
     .proposal-log { background:#fffdf3; border:1px solid #f1dc7a; border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:16px 0; }
     .proposal-log h2 { margin:0 0 8px; color:#4a3800; font-size:0.9rem; font-weight:900; }
     .proposal-log-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin:0 0 10px; }
@@ -1315,7 +1317,13 @@
       wrap.className = "monthly-cost-table-wrap";
       const totalsByPerson = totalAssignmentCountsByPerson(periodLimit);
       const rows = activeTableProfiles()
-        .map(profile => ({ name: profile.name, experienced: profile.experienced === true, total: totalsByPerson.get(profile.name) || 0 }))
+        .map(profile => ({
+          name: profile.name,
+          experienced: profile.experienced === true,
+          hasSiblingTeam: (profile.siblingTeams || []).filter(Boolean).length > 0,
+          siblingTeams: profile.siblingTeams || [],
+          total: totalsByPerson.get(profile.name) || 0
+        }))
         .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
       const table = document.createElement("table");
       table.className = "monthly-cost-table";
@@ -1326,11 +1334,14 @@
         grandTotal += item.total;
         const row = document.createElement("tr");
         const experienceIcon = item.experienced
-          ? ` <span class="experience-icon" title="Amb experiència" aria-label="Amb experiència">★</span>`
+          ? ` <span class="person-flag-icon experience-icon" title="Amb experiència" aria-label="Amb experiència">★</span>`
+          : "";
+        const siblingIcon = item.hasSiblingTeam
+          ? ` <span class="person-flag-icon sibling-icon" title="Equip germà: ${escapeHtml(item.siblingTeams.join(", "))}" aria-label="Equip germà">👥</span>`
           : "";
         row.innerHTML =
           `<td>${escapeHtml(index + 1)}</td>` +
-          `<td>${escapeHtml(item.name)}${experienceIcon}</td>` +
+          `<td>${escapeHtml(item.name)}${experienceIcon}${siblingIcon}</td>` +
           `<td>${escapeHtml(item.total)}</td>`;
         body.appendChild(row);
       });

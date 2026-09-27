@@ -71,6 +71,9 @@
     .comparison-table caption { caption-side:top; text-align:left; color:var(--brand-dark); font-weight:900; margin:0 0 8px; font-size:0.86rem; }
     .comparison-table .positive { color:var(--ok); font-weight:900; }
     .comparison-table .negative { color:var(--err); font-weight:900; }
+    .metric-best { color:var(--ok); background:#eaf7ee; font-weight:900; border-radius:8px; }
+    .metric-worst { color:#8a2d2d; background:#fdecec; font-weight:900; border-radius:8px; }
+    .metric-note { color:var(--muted); font-size:0.74rem; margin:8px 0 0; }
     tr.highlight td { background:#e9fbf6; color:#064d6f; font-weight:900; }
     .result-win { color:var(--ok); font-weight:900; }
     .result-loss { color:var(--err); font-weight:900; }
@@ -174,11 +177,12 @@
         <table>
           <thead><tr><th>Equip</th><th class="num">Pos.</th><th class="num">Balanç</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF/P</th></tr></thead>
           <tbody>
-            <tr><td>TGN BÀSQUET F10A</td><td class="num">2n</td><td class="num">2-1</td><td class="num">70.3</td><td class="num">58.0</td><td class="num positive">+12.3</td></tr>
-            <tr><td>JBF</td><td class="num">5è</td><td class="num">1-1</td><td class="num">59.0</td><td class="num">56.0</td><td class="num positive">+3.0</td></tr>
+            <tr><td>TGN BÀSQUET F10A</td><td class="num metric-best">2n</td><td class="num metric-best">2-1</td><td class="num metric-best">70.3</td><td class="num metric-worst">58.0</td><td class="num metric-best">+12.3</td></tr>
+            <tr><td>JBF</td><td class="num metric-worst">5è</td><td class="num metric-worst">1-1</td><td class="num metric-worst">59.0</td><td class="num metric-best">56.0</td><td class="num metric-worst">+3.0</td></tr>
             <tr><td>Diferència TGN - JBF</td><td class="num">+3</td><td class="num">—</td><td class="num positive">+11.3</td><td class="num negative">+2.0</td><td class="num positive">+9.3</td></tr>
           </tbody>
         </table>
+        <p class="metric-note">Verd indica el millor valor comparatiu. A PC/P, menys punts rebuts és millor.</p>
       </article>
 
       <article class="panel half">

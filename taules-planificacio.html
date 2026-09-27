@@ -43,7 +43,6 @@
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
     .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
-    .action-button.warning { background:#fff8d8; color:#7c5600; border:1px solid #ead46d; }
     .action-button.danger { background:#fff; color:var(--danger); border:1px solid #f0c6c6; }
     .action-button:disabled { opacity:0.55; cursor:not-allowed; }
     .view-toggle { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
@@ -215,7 +214,6 @@
     <div class="planning-toolbar">
       <div class="actions" aria-label="Accions de planificació mensual">
         <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
-        <button id="validateRestrictions" class="action-button warning" type="button">Validar restriccions</button>
         <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar període</button>
         <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
       </div>
@@ -321,7 +319,6 @@
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
       generateProposal: document.getElementById("generateProposal"),
-      validateRestrictions: document.getElementById("validateRestrictions"),
       clearCurrentWeek: document.getElementById("clearCurrentWeek"),
       togglePeoplePanel: document.getElementById("togglePeoplePanel"),
       peoplePanel: document.getElementById("peoplePanel"),
@@ -1014,17 +1011,8 @@
       return issues;
     }
 
-    function validateCurrentPeriodRestrictions(){
-      collectPeopleProfiles();
-      validationIssues = computeCurrentPeriodValidationIssues();
-      render();
-      const count = Object.values(validationIssues).reduce((total, list) => total + list.length, 0);
-      const gamesCount = Object.keys(validationIssues).length;
-      if (count) {
-        setStatus(`Validació completada: ${count} incidència(es) en ${gamesCount} partit(s).`, "error");
-      } else {
-        setStatus("Validació completada: totes les assignacions del període són vàlides.");
-      }
+    function validationIssueCount(){
+      return Object.values(validationIssues).reduce((total, list) => total + list.length, 0);
     }
 
     function validateGameRestrictions(gameId){
@@ -1155,6 +1143,7 @@
         if (current.table1 || current.table2) assignments[game.id] = current;
       });
       lastProposalLog = proposalLog;
+      validationIssues = computeCurrentPeriodValidationIssues();
       if (!changed) {
         const message = proposalLog.unresolved
           ? `No s'ha pogut completar la proposta: ${proposalLog.unresolved} taula(es) pendent(s) sense candidat disponible.`
@@ -1170,7 +1159,12 @@
         .map(([id]) => saveAssignment(id));
       await Promise.all(updates);
       render();
-      setStatus(`Proposta generada i guardada (${changed} taules).`);
+      const issueCount = validationIssueCount();
+      if (issueCount) {
+        setStatus(`Proposta generada i guardada (${changed} taules). Validació: ${issueCount} incidència(es).`, "error");
+      } else {
+        setStatus(`Proposta generada i guardada (${changed} taules). Validació correcta.`);
+      }
     }
 
     async function clearCurrentWeekAssignments(){
@@ -1676,10 +1670,6 @@
         console.error(error);
         setStatus(error.message, "error");
       }
-    });
-
-    els.validateRestrictions.addEventListener("click", () => {
-      validateCurrentPeriodRestrictions();
     });
 
     els.clearCurrentWeek.addEventListener("click", async () => {

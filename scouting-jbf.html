@@ -103,12 +103,49 @@
       .kpis, .notes { grid-template-columns:1fr 1fr; }
     }
     @media print {
-      body { background:#fff; color:#111; }
-      header { box-shadow:none; }
-      main { padding:14px; }
+      @page { size:A4 landscape; margin:7mm; }
+      body { background:#fff; color:#111; font-size:10px; line-height:1.22; }
+      header { box-shadow:none; padding:8px 10px; gap:8px; }
+      .club-logo { width:34px; height:34px; border-radius:7px; }
+      .page-logo { display:none; }
+      .htext h1 { font-size:0.82rem; }
+      .htext h1 .club { font-size:0.58rem; }
+      .htext p { font-size:0.62rem; }
+      main { padding:8px 0 0; }
+      .topline { margin-bottom:7px; gap:8px; }
+      .topline h2 { font-size:0.95rem; }
+      .topline p { font-size:0.66rem; }
       .top-actions .print-button { display:none; }
-      .panel { break-inside:avoid; box-shadow:none; border-color:#d8d8d8; }
-      footer { padding:10px; }
+      .badge { padding:3px 7px; font-size:0.62rem; }
+      .grid { gap:7px; grid-template-columns:repeat(12,1fr); }
+      .panel { break-inside:avoid; box-shadow:none; border-color:#d8d8d8; border-radius:9px; padding:8px; }
+      .panel.half { grid-column:span 6; }
+      .panel.third { grid-column:span 4; }
+      .panel h3 { font-size:0.76rem; margin-bottom:1px; }
+      .panel .sub { font-size:0.6rem; margin-bottom:5px; }
+      .hero { gap:8px; flex-wrap:nowrap; }
+      .rival-block { gap:8px; min-width:0; flex:1 1 auto; }
+      .rival-logo { width:46px; height:46px; padding:2px; }
+      .rival-name { font-size:1rem; }
+      .rival-meta { font-size:0.62rem; margin-top:2px; }
+      .footer-note, .metric-note { font-size:0.58rem; margin-top:5px; }
+      .kpis { grid-template-columns:repeat(5,1fr); gap:5px; flex:0 0 470px; }
+      .kpi { padding:6px; border-radius:8px; }
+      .kpi span { font-size:0.52rem; letter-spacing:0.03em; }
+      .kpi strong { font-size:0.9rem; }
+      th, td { padding:4px 5px; font-size:0.58rem; }
+      th { font-size:0.5rem; letter-spacing:0.03em; }
+      .danger-badge, .type-badge { padding:2px 5px; font-size:0.5rem; }
+      .bar-row { grid-template-columns:45px 1fr 36px; gap:5px; font-size:0.58rem; }
+      .bar-track { height:7px; }
+      .callouts { gap:5px; }
+      .callout { padding:6px 7px; border-left-width:3px; border-radius:8px; }
+      .callout p { font-size:0.6rem; }
+      .notes { grid-template-columns:repeat(3,1fr); gap:6px; }
+      .note-box { min-height:0; padding:7px; border-radius:8px; }
+      .note-box h4 { font-size:0.62rem; margin-bottom:3px; }
+      .note-box ul { font-size:0.58rem; padding-left:13px; }
+      footer { padding:6px; font-size:0.58rem; }
     }
   </style>
 </head>

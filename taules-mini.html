@@ -602,15 +602,7 @@
       table.innerHTML = "<thead><tr><th>Equip</th><th>Coach</th><th>Partits</th><th>Cost</th></tr></thead><tbody></tbody><tfoot></tfoot>";
       const body = table.querySelector("tbody");
       [...teamCosts.values()]
-        .sort((a, b) => {
-          const firstA = a.games
-            .map(game => `${game.date} ${game.time || ""}`)
-            .sort()[0] || "";
-          const firstB = b.games
-            .map(game => `${game.date} ${game.time || ""}`)
-            .sort()[0] || "";
-          return firstA.localeCompare(firstB) || a.label.localeCompare(b.label, "ca-ES");
-        })
+        .sort((a, b) => a.label.localeCompare(b.label, "ca-ES"))
         .forEach(teamCost => {
           total += teamCost.total;
           const gamesText = teamCost.games

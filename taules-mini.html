@@ -219,6 +219,19 @@
         .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     }
 
+    function teamLabel(game){
+      return `${game.team || ""} ${game.sex || ""}`.trim();
+    }
+
+    function canonicalTeamName(value){
+      const text = String(value || "").trim();
+      return normalize(text) === "cadet-b-f" ? "Cadet F" : text;
+    }
+
+    function displayTeamLabel(game){
+      return canonicalTeamName(teamLabel(game));
+    }
+
     function gameId(game){
       return [
         game.date, game.time, game.team, game.sex, game.rival,
@@ -572,7 +585,7 @@
 
       const teamCosts = new Map();
       visibleCostGames.forEach(game => {
-        const key = `${game.team} ${game.sex}`;
+        const key = displayTeamLabel(game);
         const current = teamCosts.get(key) || { label: key, total: 0, games: [] };
         current.total += Number(game.cost) || 0;
         current.games.push(game);
@@ -673,7 +686,7 @@
         title.className = "title";
         const team = document.createElement("span");
         team.className = `team ${game.home ? "local-team" : "visitor-team"}`;
-        team.textContent = game.team || "Equip";
+        team.textContent = displayTeamLabel(game) || "Equip";
         const versus = document.createElement("span");
         versus.textContent = "vs";
         const rival = document.createElement("span");

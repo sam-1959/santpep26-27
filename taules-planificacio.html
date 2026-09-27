@@ -924,6 +924,17 @@
       });
     }
 
+    function replacementSlotForExperience(assignment){
+      const filledSlots = ["table1", "table2"].filter(slot => assignment[slot]);
+      if (!filledSlots.length) return "table1";
+      return filledSlots
+        .sort((a, b) => {
+          const loadA = totalAssignmentCountsByPerson(periodEndDate(periods[activePeriodIndex])).get(assignment[a]) || 0;
+          const loadB = totalAssignmentCountsByPerson(periodEndDate(periods[activePeriodIndex])).get(assignment[b]) || 0;
+          return loadB - loadA || b.localeCompare(a);
+        })[0];
+    }
+
     function monthlyAssignableSlotCount(periodGames){
       return periodGames.reduce((total, game) => {
         const assignment = assignmentFor(game.id);
@@ -955,6 +966,7 @@
         conflictSkipped: 0,
         balancedFallbacks: 0,
         experiencedPriorities: 0,
+        experiencedRepairs: 0,
         missingExperienced: 0,
         siblingPriorities: 0,
         unresolved: 0
@@ -963,8 +975,19 @@
       periodGames.forEach(game => {
         if (isPastGame(game)) return;
         const current = { ...assignmentFor(game.id) };
-        ["table1", "table2"].forEach(slot => {
-          if (current[slot]) return;
+        const needsExperienceRepair = needsExperiencedTable(game) &&
+          current.table1 && current.table2 &&
+          !assignmentHasExperiencedPerson(current);
+        const slotsToFill = ["table1", "table2"].filter(slot => !current[slot]);
+        const slotsToProcess = needsExperienceRepair
+          ? [replacementSlotForExperience(current)]
+          : slotsToFill;
+        slotsToProcess.forEach(slot => {
+          const replacedPerson = current[slot] || "";
+          if (replacedPerson) {
+            counts.set(replacedPerson, Math.max(0, (counts.get(replacedPerson) || 0) - 1));
+            current[slot] = "";
+          }
           proposalLog.slotsEvaluated += 1;
           const alreadyInGame = new Set([current.table1, current.table2].filter(Boolean));
           const withoutSameGame = activeProfiles.filter(profile => !alreadyInGame.has(profile.name));
@@ -992,6 +1015,10 @@
             ? preferredCandidates.filter(profile => profile.experienced === true)
             : [];
           if (needsExperienceNow && !experiencedCandidates.length) {
+            if (replacedPerson) {
+              current[slot] = replacedPerson;
+              counts.set(replacedPerson, (counts.get(replacedPerson) || 0) + 1);
+            }
             proposalLog.missingExperienced += 1;
             proposalLog.unresolved += 1;
             return;
@@ -999,10 +1026,15 @@
           const candidatePool = needsExperienceNow ? experiencedCandidates : preferredCandidates;
           const chosen = candidatePool[0];
           if (!chosen) {
+            if (replacedPerson) {
+              current[slot] = replacedPerson;
+              counts.set(replacedPerson, (counts.get(replacedPerson) || 0) + 1);
+            }
             proposalLog.unresolved += 1;
             return;
           }
           if (experiencedCandidates.length && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
+          if (replacedPerson) proposalLog.experiencedRepairs += 1;
           if (siblingCandidates.length && hasSiblingInGame(chosen, game)) proposalLog.siblingPriorities += 1;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);
@@ -1209,6 +1241,7 @@
           `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedPriorities)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Mini corregits per experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedRepairs || 0)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Sense experiència disponible</span><span class="proposal-log-value">${escapeHtml(log.missingExperienced || 0)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Sense candidat</span><span class="proposal-log-value">${escapeHtml(log.unresolved)}</span></div>` +
         `</div>` +

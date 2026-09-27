@@ -1001,22 +1001,11 @@
               return allowed;
             })
             .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"));
-          const siblingCandidates = candidates.filter(profile => hasSiblingInGame(profile, game));
-          const balancedCandidates = candidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          const balancedSiblingCandidates = siblingCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          if (!balancedCandidates.length && candidates.length) proposalLog.balancedFallbacks += 1;
-          const preferredCandidates = balancedSiblingCandidates.length
-            ? balancedSiblingCandidates
-            : balancedCandidates.length
-              ? balancedCandidates
-              : siblingCandidates.length
-                ? siblingCandidates
-                : candidates;
           const needsExperienceNow = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current);
-          const experiencedCandidates = needsExperienceNow
-            ? preferredCandidates.filter(profile => profile.experienced === true)
-            : [];
-          if (needsExperienceNow && !experiencedCandidates.length) {
+          const requiredCandidates = needsExperienceNow
+            ? candidates.filter(profile => profile.experienced === true)
+            : candidates;
+          if (needsExperienceNow && !requiredCandidates.length) {
             if (replacedPerson) {
               current[slot] = replacedPerson;
               counts.set(replacedPerson, (counts.get(replacedPerson) || 0) + 1);
@@ -1025,8 +1014,18 @@
             proposalLog.unresolved += 1;
             return;
           }
-          const candidatePool = needsExperienceNow ? experiencedCandidates : preferredCandidates;
-          const chosen = candidatePool[0];
+          const siblingCandidates = requiredCandidates.filter(profile => hasSiblingInGame(profile, game));
+          const balancedCandidates = requiredCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          const balancedSiblingCandidates = siblingCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          if (!balancedCandidates.length && requiredCandidates.length) proposalLog.balancedFallbacks += 1;
+          const preferredCandidates = balancedSiblingCandidates.length
+            ? balancedSiblingCandidates
+            : balancedCandidates.length
+              ? balancedCandidates
+              : siblingCandidates.length
+                ? siblingCandidates
+                : requiredCandidates;
+          const chosen = preferredCandidates[0];
           if (!chosen) {
             if (replacedPerson) {
               current[slot] = replacedPerson;
@@ -1035,7 +1034,7 @@
             proposalLog.unresolved += 1;
             return;
           }
-          if (experiencedCandidates.length && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
+          if (needsExperienceNow && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
           if (replacedPerson) proposalLog.experiencedRepairs += 1;
           if (siblingCandidates.length && hasSiblingInGame(chosen, game)) proposalLog.siblingPriorities += 1;
           current[slot] = chosen.name;

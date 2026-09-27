@@ -48,23 +48,23 @@
       border-radius:999px; background:#fff; color:var(--brand); font-size:1.15rem; font-weight:900; cursor:pointer; }
     .period-arrow:disabled { opacity:0.42; cursor:not-allowed; }
     .cost-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:12px; margin:18px 0 0; }
-    .cost-title { margin:0 0 8px; color:var(--muted); font-size:0.72rem; font-weight:900;
+      box-shadow:var(--shadow); padding:10px; margin:14px 0 0; }
+    .cost-title { margin:0 0 6px; color:var(--muted); font-size:0.68rem; font-weight:900;
       letter-spacing:0.08em; text-transform:uppercase; }
-    .cost-list { display:grid; gap:10px; }
-    .cost-section { display:grid; gap:10px; }
-    .cost-section-title { margin:4px 0 -2px; color:var(--brand-dark); font-size:0.82rem; font-weight:900; }
-    .cost-group { border:1px solid var(--line); border-radius:14px; background:#faf8fc; padding:10px; }
-    .cost-group-head { display:flex; justify-content:space-between; gap:10px; align-items:baseline; color:var(--brand-dark); font-weight:900; }
+    .cost-list { display:grid; gap:8px; }
+    .cost-section { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:6px; align-items:start; }
+    .cost-section-title { grid-column:1 / -1; margin:2px 0 0; color:var(--brand-dark); font-size:0.76rem; font-weight:900; }
+    .cost-group { border:1px solid var(--line); border-radius:10px; background:#faf8fc; padding:7px 8px; }
+    .cost-group-head { display:flex; justify-content:space-between; gap:8px; align-items:baseline; color:var(--brand-dark); font-size:0.82rem; font-weight:900; }
     .cost-group-total { color:var(--ink); white-space:nowrap; }
-    .cost-coach { margin-top:2px; color:var(--muted); font-size:0.78rem; font-weight:800; }
-    .cost-detail { display:grid; gap:4px; margin-top:7px; color:var(--muted); font-size:0.8rem; font-weight:750; }
-    .cost-detail-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:center; }
+    .cost-coach { margin-top:1px; color:var(--muted); font-size:0.72rem; font-weight:800; }
+    .cost-detail { display:grid; gap:2px; margin-top:4px; color:var(--muted); font-size:0.72rem; font-weight:750; }
+    .cost-detail-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:6px; align-items:center; }
     .cost-detail-rival { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .cost-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line);
-      border-radius:999px; background:#faf8fc; color:var(--brand-dark); padding:6px 10px; font-size:0.78rem; font-weight:850; }
+      border-radius:999px; background:#faf8fc; color:var(--brand-dark); padding:5px 8px; font-size:0.74rem; font-weight:850; }
     .cost-chip.total { justify-self:stretch; justify-content:flex-end; width:100%; border:0; border-radius:0;
-      border-top:3px solid var(--accent); background:transparent; color:#4a3800; padding:8px 10px 0 0; }
+      border-top:2px solid var(--accent); background:transparent; color:#4a3800; padding:6px 8px 0 0; }
     .month { margin:22px 0 10px; color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .games { display:grid; gap:12px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);

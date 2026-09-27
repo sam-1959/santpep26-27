@@ -390,6 +390,13 @@
         .filter(Boolean);
     }
 
+    function sortedPeopleOptions(){
+      return [
+        "",
+        ...PEOPLE.filter(Boolean).sort((a, b) => a.localeCompare(b, "ca", { sensitivity:"base" }))
+      ];
+    }
+
     function teamLabel(game){
       return `${game.team || ""} ${game.sex || ""}`.trim();
     }
@@ -818,7 +825,7 @@
       select.dataset.slot = slot;
       select.disabled = isPastGame(game);
       if (select.disabled) select.title = "Aquest partit ja s'ha jugat i no es pot modificar.";
-      PEOPLE.forEach(person => {
+      sortedPeopleOptions().forEach(person => {
         const option = document.createElement("option");
         option.value = person;
         option.textContent = person || "Pendent";
@@ -846,7 +853,7 @@
     }
 
     function renderPeopleProfiles(){
-      const names = PEOPLE.filter(Boolean);
+      const names = sortedPeopleOptions().filter(Boolean);
       const table = document.createElement("table");
       table.className = "people-table";
       table.innerHTML = "<thead><tr><th>Persona</th><th>Juga a</th><th>Ajuda a</th><th>Equip germà</th><th>Experiència</th><th>Activa</th></tr></thead><tbody></tbody>";

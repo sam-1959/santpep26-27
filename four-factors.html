@@ -36,6 +36,8 @@
       cursor:pointer; }
     .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
     .btn.quarter { background:#fff9c9; border-color:#ead02c; color:var(--brand-dark); min-width:42px; }
+    .btn.quarter.saved { background:#0f766e; border-color:#0f766e; color:#fff; }
+    .btn.quarter.saved::after { content:" ✓"; font-weight:900; }
     .btn.danger { color:var(--bad); }
     .match-panel { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
       gap:10px; margin:0 0 16px; padding:12px; border:1px solid var(--line);
@@ -424,6 +426,13 @@
       updateFactors("opp", opp, team);
       updateSummary("team", "opp", "teamSummary");
       updateDateEditability();
+      updateQuarterButtons();
+    }
+    function updateQuarterButtons(){
+      const savedPeriods = new Set(normalizeQuarterSnapshots(currentQuarterSnapshots).map(item => item.period));
+      document.querySelectorAll("[data-quarter]").forEach(button => {
+        button.classList.toggle("saved", savedPeriods.has(button.dataset.quarter));
+      });
     }
     function points(side){
       return n(side, "fg") * 2 + n(side, "tp") * 3 + n(side, "ft");
@@ -696,6 +705,7 @@
         currentQuarterSnapshots = normalizeQuarterSnapshots(draft.quarters);
         setCounters("team", draft.teams && draft.teams.team ? draft.teams.team.counters : {});
         setCounters("opp", draft.teams && draft.teams.opp ? draft.teams.opp.counters : {});
+        updateQuarterButtons();
         setSaveStatus("Dades recuperades del darrer guardat.");
         return true;
       } catch(error) {
@@ -901,6 +911,7 @@
           : normalizeQuarterSnapshots(existing && existing.quarters);
         const snapshot = collectQuarterSnapshot(period, baseQuarters);
         currentQuarterSnapshots = updateQuarterSnapshots(baseQuarters, snapshot);
+        updateQuarterButtons();
         const payload = buildGamePayload(existing, games, currentQuarterSnapshots);
         if(existingIndex >= 0) {
           games[existingIndex] = payload;
@@ -982,6 +993,7 @@
       currentQuarterSnapshots = normalizeQuarterSnapshots(game.quarters);
       setCounters("team", game.teams && game.teams.team ? game.teams.team.counters : {});
       setCounters("opp", game.teams && game.teams.opp ? game.teams.opp.counters : {});
+      updateQuarterButtons();
       render();
       await renderSavedGames(games);
       setSaveStatus("Partit carregat.");
@@ -1187,6 +1199,7 @@
       if(!ok) return;
       currentGameId = null;
       currentQuarterSnapshots = [];
+      updateQuarterButtons();
       clearDraft();
       resetMatchDefaults();
       document.getElementById("localName").value = "";

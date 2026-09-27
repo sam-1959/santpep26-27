@@ -955,6 +955,7 @@
         conflictSkipped: 0,
         balancedFallbacks: 0,
         experiencedPriorities: 0,
+        missingExperienced: 0,
         siblingPriorities: 0,
         unresolved: 0
       };
@@ -986,10 +987,16 @@
               : siblingCandidates.length
                 ? siblingCandidates
                 : candidates;
-          const experiencedCandidates = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current)
+          const needsExperienceNow = needsExperiencedTable(game) && !assignmentHasExperiencedPerson(current);
+          const experiencedCandidates = needsExperienceNow
             ? preferredCandidates.filter(profile => profile.experienced === true)
             : [];
-          const candidatePool = experiencedCandidates.length ? experiencedCandidates : preferredCandidates;
+          if (needsExperienceNow && !experiencedCandidates.length) {
+            proposalLog.missingExperienced += 1;
+            proposalLog.unresolved += 1;
+            return;
+          }
+          const candidatePool = needsExperienceNow ? experiencedCandidates : preferredCandidates;
           const chosen = candidatePool[0];
           if (!chosen) {
             proposalLog.unresolved += 1;
@@ -1202,6 +1209,7 @@
           `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedPriorities)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Sense experiència disponible</span><span class="proposal-log-value">${escapeHtml(log.missingExperienced || 0)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Sense candidat</span><span class="proposal-log-value">${escapeHtml(log.unresolved)}</span></div>` +
         `</div>` +
         `<ul>` +
@@ -1210,7 +1218,7 @@
           `<li>No es recomana una persona si juga o ajuda en l’equip del partit.</li>` +
           `<li>No es recomana una persona si el seu equip o l’equip on ajuda juga el mateix dia i en la mateixa franja ampla, matí o tarda.</li>` +
           `<li>Es balancegen les taules del mes perquè el repartiment sigui aproximadament equivalent. Fallbacks per restriccions: ${escapeHtml(log.balancedFallbacks)}.</li>` +
-          `<li>Mini A M, Mini B M i Mini F prioritzen tenir com a mínim una taula amb experiència.</li>` +
+          `<li>Mini A M, Mini B M i Mini F requereixen com a mínim una taula amb experiència; si no n’hi ha cap disponible, la plaça queda pendent.</li>` +
           `<li>Si el partit coincideix amb l’equip germà d’una persona, aquesta persona té prioritat.</li>` +
         `</ul>`;
       els.content.appendChild(section);

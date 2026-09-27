@@ -61,7 +61,20 @@ jobs:
           RPE_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
           RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
           RPE_EMAIL_APP_SCRIPT_URL: ${{ secrets.RPE_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec' }}
-        run: node scripts/send-rpe-weekly-email.js
+        run: |
+          for intent in 1 2 3; do
+            echo "Intent ${intent}/3 d'enviament ERP setmanal..."
+            if node scripts/send-rpe-weekly-email.js; then
+              echo "Enviament completat a l'intent ${intent}."
+              exit 0
+            fi
+            if [ "${intent}" -lt 3 ]; then
+              echo "Intent ${intent} fallit. Es torna a provar en 60 segons."
+              sleep 60
+            fi
+          done
+          echo "No s'ha pogut completar l'enviament ERP després de 3 intents."
+          exit 1
 
       - name: Desa estat del correu ERP
         if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') }}

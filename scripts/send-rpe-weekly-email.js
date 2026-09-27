@@ -187,18 +187,11 @@ function selectedTeamKeys(){
 }
 
 function loadRecipients(teamKey, contacts){
-  if(RECIPIENT_OVERRIDE){
-    const emails = uniqueEmails([RECIPIENT_OVERRIDE]);
-    if(!emails.length) throw new Error(`El destinatari de prova no és vàlid: ${RECIPIENT_OVERRIDE}`);
-    return {
-      emails,
-      names: [RECIPIENT_NAMES_OVERRIDE || emails[0]]
-    };
-  }
   const role = coordinatorRoleForTeam(teamKey);
   const coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
   const coordinator = coordinators.find(contact => String(contact.role || "") === role);
   const prepaCoordinator = coordinators.find(contact => String(contact.role || "") === "coordinador_prepa");
+  const technicalDirector = coordinators.find(contact => String(contact.role || "") === "dt");
   const headCoach = contacts.headCoaches && contacts.headCoaches[teamKey];
   const prepas = coordinators.filter(contact =>
     String(contact.role || "") === "prepa" &&
@@ -209,11 +202,14 @@ function loadRecipients(teamKey, contacts){
   if(!isValidEmail(coordinator && coordinator.email)) missing.push(`coordinador ${role}`);
   if(!isValidEmail(headCoach && headCoach.email)) missing.push(`primer entrenador ${teamKey}`);
   if(!isValidEmail(prepaCoordinator && prepaCoordinator.email)) missing.push("coordinador prepa");
+  if(!isValidEmail(technicalDirector && technicalDirector.email)) missing.push("director tècnic");
   if(!prepas.some(contact => isValidEmail(contact.email))) missing.push(`prepa ${teamKey}`);
   if(missing.length) throw new Error(`Falten destinataris del correu RPE ${teamKey}: ${missing.join(", ")}.`);
+  const contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector, ...prepas];
   return {
-    emails: uniqueEmails([coordinator.email, headCoach.email, prepaCoordinator.email, ...prepas.map(contact => contact.email)]),
-    names: [...new Set([coordinator, headCoach, prepaCoordinator, ...prepas].map(contactLabel).filter(Boolean))]
+    contacts: contactsList.filter(contact => isValidEmail(contact && contact.email)),
+    emails: uniqueEmails(contactsList.map(contact => contact && contact.email)),
+    names: [...new Set(contactsList.map(contactLabel).filter(Boolean))]
   };
 }
 
@@ -321,7 +317,13 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
 
 async function sendPayload(payload){
   if(DRY_RUN){
-    console.log(`[DRY_RUN] S'enviaria RPE ${payload.teamKey} ${payload.team} (${payload.weekLabel}) a ${payload.recipientNames || payload.recipient}. Registres: ${payload.summary.records}`);
+    const teams = Array.isArray(payload.teams) && payload.teams.length
+      ? payload.teams.map(team => `${team.teamKey} ${team.team}`).join(", ")
+      : `${payload.teamKey} ${payload.team}`;
+    const records = Array.isArray(payload.teams) && payload.teams.length
+      ? payload.teams.reduce((sum, team) => sum + Number(team.summary && team.summary.records || 0), 0)
+      : Number(payload.summary && payload.summary.records || 0);
+    console.log(`[DRY_RUN] S'enviaria RPE ${teams} (${payload.weekLabel}) a ${payload.recipientNames || payload.recipient}. Registres: ${records}`);
     return "dry-run";
   }
   const response = await fetch(RPE_EMAIL_APP_SCRIPT_URL, {
@@ -334,13 +336,31 @@ async function sendPayload(payload){
   return text;
 }
 
-async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status }){
+function recipientKey(email){
+  return String(email || "").trim().toLowerCase().replace(/[.#$\[\]/]/g, "_");
+}
+
+function addRecipientPayload(recipientMap, contact, teamPayload){
+  const email = RECIPIENT_OVERRIDE || String(contact && contact.email || "").trim();
+  if(!isValidEmail(email)) return;
+  const key = recipientKey(email);
+  if(!recipientMap.has(key)){
+    recipientMap.set(key, {
+      key,
+      email,
+      name: RECIPIENT_NAMES_OVERRIDE || contactLabel(contact) || email,
+      teams: []
+    });
+  }
+  const recipient = recipientMap.get(key);
+  if(!recipient.teams.some(team => team.teamKey === teamPayload.teamKey)){
+    recipient.teams.push(teamPayload);
+  }
+}
+
+async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status, recipientMap }){
   const today = isoFromDate(dateInMadrid());
   const teamStatus = status[teamKey] || {};
-  if(teamStatus.lastSentWeek === selectedWeek && !FORCE_SEND){
-    console.log(`Correu RPE ${teamKey} ja enviat per la setmana ${selectedWeek}.`);
-    return { teamKey, status: "already_sent" };
-  }
 
   const team = teamNamesByKey[teamKey] || teamKey;
   const records = allRecords.filter(record => record.teamKey === teamKey && dates.includes(record.trainingDate));
@@ -371,40 +391,23 @@ async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts,
   try {
     const recipients = loadRecipients(teamKey, contacts);
     const payload = buildPayload({ teamKey, team, selectedWeek, dates, records, recipients });
-    const text = await sendPayload(payload);
-    status[teamKey] = DRY_RUN
-      ? {
-        ...status[teamKey],
-        lastDryRunAt: nowIso(),
-        lastDryRunWeek: selectedWeek,
-        lastDryRunRecipients: recipients.emails,
-        lastDryRunRecipientNames: recipients.names,
-        lastTeam: team,
-        lastWeek: selectedWeek,
-        lastWeekLabel: payload.weekLabel,
-        lastRecords: records.length,
-        lastStatus: "dry_run",
-        lastError: ""
-      }
-      : {
-        ...status[teamKey],
-        lastSentDate: today,
-        lastSentAt: nowIso(),
-        lastSentWeek: selectedWeek,
-        lastRecipient: recipients.emails.join(","),
-        lastRecipients: recipients.emails,
-        lastRecipientNames: recipients.names,
-        lastTeam: team,
-        lastWeek: selectedWeek,
-        lastWeekLabel: payload.weekLabel,
-        lastRecords: records.length,
-        lastStatus: "sent",
-        lastError: ""
-      };
+    recipients.contacts.forEach(contact => addRecipientPayload(recipientMap, contact, payload));
+    status[teamKey] = {
+      ...status[teamKey],
+      lastPreparedAt: nowIso(),
+      lastPreparedWeek: selectedWeek,
+      lastRecipients: recipients.emails,
+      lastRecipientNames: recipients.names,
+      lastTeam: team,
+      lastWeek: selectedWeek,
+      lastWeekLabel: payload.weekLabel,
+      lastRecords: records.length,
+      lastStatus: "prepared",
+      lastError: ""
+    };
     writeStatus(status);
-    console.log(`Correu RPE ${DRY_RUN ? "validat" : "demanat"} per ${team} (${payload.weekLabel}) a ${recipients.names.join(", ")}. Registres: ${records.length}`);
-    if(text) console.log(text);
-    return { teamKey, status: DRY_RUN ? "dry_run" : "sent", records: records.length };
+    console.log(`ERP preparat per ${team} (${payload.weekLabel}) a ${recipients.names.join(", ")}. Registres: ${records.length}`);
+    return { teamKey, status: "prepared", records: records.length };
   } catch(error) {
     status[teamKey] = {
       ...status[teamKey],
@@ -418,6 +421,108 @@ async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts,
   }
 }
 
+async function sendGroupedRecipient({ recipient, selectedWeek, status }){
+  const today = isoFromDate(dateInMadrid());
+  const weekLabel = recipient.teams[0] && recipient.teams[0].weekLabel || weekRangeLabel(selectedWeek);
+  const recipientsStatus = status.__recipients || {};
+  const previous = recipientsStatus[recipient.key] || {};
+  if(previous.lastSentWeek === selectedWeek && !FORCE_SEND){
+    console.log(`Correu ERP ja enviat a ${recipient.name} per la setmana ${selectedWeek}.`);
+    return { recipient: recipient.email, status: "already_sent" };
+  }
+  status.__recipients = {
+    ...recipientsStatus,
+    [recipient.key]: {
+      ...previous,
+      lastAttemptDate: today,
+      lastAttemptAt: nowIso(),
+      lastAttemptWeek: selectedWeek,
+      lastStatus: "attempted",
+      lastError: ""
+    }
+  };
+  writeStatus(status);
+
+  const payload = {
+    type: "rpe_weekly_grouped",
+    recipient: RECIPIENT_OVERRIDE || recipient.email,
+    recipientNames: RECIPIENT_NAMES_OVERRIDE || recipient.name,
+    testMode: true,
+    automated: true,
+    week: selectedWeek,
+    weekLabel,
+    teams: recipient.teams
+  };
+
+  try {
+    const text = await sendPayload(payload);
+    const teamKeys = recipient.teams.map(team => team.teamKey);
+    status.__recipients[recipient.key] = DRY_RUN
+      ? {
+        ...status.__recipients[recipient.key],
+        lastDryRunAt: nowIso(),
+        lastDryRunWeek: selectedWeek,
+        lastDryRunTeams: teamKeys,
+        lastDryRunRecipient: payload.recipient,
+        lastDryRunRecipientName: payload.recipientNames,
+        lastWeekLabel: weekLabel,
+        lastStatus: "dry_run",
+        lastError: ""
+      }
+      : {
+        ...status.__recipients[recipient.key],
+        lastSentDate: today,
+        lastSentAt: nowIso(),
+        lastSentWeek: selectedWeek,
+        lastSentTeams: teamKeys,
+        lastRecipient: payload.recipient,
+        lastRecipientName: payload.recipientNames,
+        lastWeekLabel: weekLabel,
+        lastStatus: "sent",
+        lastError: ""
+      };
+    recipient.teams.forEach(team => {
+      const teamStatus = status[team.teamKey] || {};
+      status[team.teamKey] = DRY_RUN
+        ? {
+          ...teamStatus,
+          lastDryRunAt: nowIso(),
+          lastDryRunWeek: selectedWeek,
+          lastDryRunRecipientNames: [
+            ...new Set([...(teamStatus.lastDryRunRecipientNames || []), payload.recipientNames])
+          ],
+          lastStatus: "dry_run",
+          lastError: ""
+        }
+        : {
+          ...teamStatus,
+          lastSentDate: today,
+          lastSentAt: nowIso(),
+          lastSentWeek: selectedWeek,
+          lastSentRecipientNames: [
+            ...new Set([...(teamStatus.lastSentRecipientNames || []), payload.recipientNames])
+          ],
+          lastStatus: "sent",
+          lastError: ""
+        };
+    });
+    writeStatus(status);
+    console.log(`Correu ERP ${DRY_RUN ? "validat" : "demanat"} a ${payload.recipientNames}. Equips: ${teamKeys.join(", ")}.`);
+    if(text) console.log(text);
+    return { recipient: recipient.email, status: DRY_RUN ? "dry_run" : "sent", teams: teamKeys };
+  } catch(error) {
+    status.__recipients[recipient.key] = {
+      ...status.__recipients[recipient.key],
+      lastStatus: "error",
+      lastError: String(error && error.message ? error.message : error),
+      lastErrorAt: nowIso()
+    };
+    writeStatus(status);
+    console.error(error);
+    return { recipient: recipient.email, status: "error", error };
+  }
+}
+
 async function main(){
   const status = readStatus();
   await loadRosters();
@@ -427,13 +532,19 @@ async function main(){
   const dates = Array.from({ length: 7 }, (_, index) => isoFromDate(addDays(dateFromISO(selectedWeek), index)));
   const allRecords = Object.entries(responses).map(([id, record]) => normalizeRecord(record || {}, id));
   const results = [];
+  const recipientMap = new Map();
 
   for(const teamKey of selectedTeamKeys()){
-    results.push(await processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status }));
+    results.push(await processTeam({ teamKey, selectedWeek, dates, allRecords, contacts, status, recipientMap }));
   }
 
-  const errors = results.filter(result => result.status === "error");
-  const sent = results.filter(result => result.status === "sent" || result.status === "dry_run");
+  const sendResults = [];
+  for(const recipient of recipientMap.values()){
+    sendResults.push(await sendGroupedRecipient({ recipient, selectedWeek, status }));
+  }
+
+  const errors = [...results, ...sendResults].filter(result => result.status === "error");
+  const sent = sendResults.filter(result => result.status === "sent" || result.status === "dry_run");
   const skipped = results.filter(result => result.status === "skipped_no_data" || result.status === "already_sent");
   console.log(`Resum ERP: enviats=${sent.length}, saltats=${skipped.length}, errors=${errors.length}.`);
   if(errors.length) process.exit(1);

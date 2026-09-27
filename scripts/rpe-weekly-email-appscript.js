@@ -25,15 +25,19 @@ function enviarCorreuRpeSetmanal(request) {
     throw new Error("No hi ha destinatari configurat.");
   }
 
-  var team = valor(request.team);
   var weekLabel = valor(request.weekLabel);
-  var summary = request.summary || {};
-  var dates = request.dates || [];
-  var players = request.players || [];
+  var teams = normalitzarEquipsRequest(request);
+  var team = valor(request.team || (teams[0] && teams[0].team));
 
-  var assumpte = "Seguiment RPE setmanal - " + team + " - " + weekLabel;
-  var cosText = construirTextPla(team, weekLabel, summary, players);
-  var cosHTML = construirHtml(team, weekLabel, summary, dates, players);
+  var assumpte = teams.length > 1
+    ? "Seguiment RPE setmanal - " + weekLabel
+    : "Seguiment RPE setmanal - " + team + " - " + weekLabel;
+  var cosText = teams.length > 1
+    ? construirTextPlaAgrupat(weekLabel, teams)
+    : construirTextPla(team, weekLabel, teams[0].summary || {}, teams[0].players || []);
+  var cosHTML = teams.length > 1
+    ? construirHtmlAgrupat(weekLabel, teams)
+    : construirHtml(team, weekLabel, teams[0].summary || {}, teams[0].dates || [], teams[0].players || []);
 
   destinataris.forEach(function(correu) {
     GmailApp.sendEmail(correu, assumpte, cosText, {
@@ -44,6 +48,86 @@ function enviarCorreuRpeSetmanal(request) {
   });
 
   return { sentTo: destinataris };
+}
+
+function normalitzarEquipsRequest(request) {
+  var teams = request.teams && request.teams.length ? request.teams : [request];
+  return teams.map(function(team) {
+    return {
+      team: valor(team.team),
+      teamKey: valor(team.teamKey),
+      summary: team.summary || {},
+      dates: team.dates || [],
+      players: team.players || []
+    };
+  });
+}
+
+function construirTextPlaAgrupat(weekLabel, teams) {
+  var lines = [
+    "CB SANT JOSEP BADALONA",
+    "",
+    "Seguiment RPE setmanal",
+    "Setmana: " + weekLabel,
+    ""
+  ];
+  teams.forEach(function(team) {
+    lines.push(
+      "==============================",
+      team.team,
+      "==============================",
+      construirTextPla(team.team, weekLabel, team.summary || {}, team.players || []),
+      ""
+    );
+  });
+  return lines.join("\n");
+}
+
+function construirHtmlAgrupat(weekLabel, teams) {
+  return `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; max-width: 900px; margin: 0 auto; border: 1px solid #E5E5E5; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #4B1D6D; padding: 24px; text-align: center; border-bottom: 4px solid #FFC72C;">
+        <h1 style="color: #FFC72C; margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">CB Sant Josep Badalona</h1>
+        <p style="color: #FFFFFF; margin: 6px 0 0 0; font-size: 14px;">Seguiment RPE setmanal</p>
+      </div>
+
+      <div style="padding: 22px; background-color: #FFFFFF;">
+        <p style="margin: 0 0 18px; color: #666; font-weight: bold;">Setmana ${escaparHtml(weekLabel)}</p>
+        ${teams.map(function(team) {
+          return construirBlocEquipHtml(team.team, team.summary || {}, team.dates || [], team.players || []);
+        }).join("")}
+      </div>
+
+      <div style="background-color: #F4F4F4; padding: 14px; text-align: center; border-top: 1px solid #EEEEEE;">
+        <p style="font-size: 12px; color: #666666; margin: 0;"><strong>CB Sant Josep Badalona</strong> — Notificació automàtica del club.</p>
+      </div>
+    </div>
+  `;
+}
+
+function construirBlocEquipHtml(team, summary, dates, players) {
+  return `
+    <div style="margin: 0 0 28px; padding-bottom: 22px; border-bottom: 3px solid #F1E8F7;">
+      <h2 style="color: #4B1D6D; margin: 0 0 14px; font-size: 20px;">${escaparHtml(team)}</h2>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr>
+          ${kpi("Registres", summary.records)}
+          ${kpi("RPE mitjà", summary.rpe)}
+          ${kpi("Fatiga mitjana", summary.fatigue)}
+          ${kpi("Son mitjana", summary.sleep)}
+          ${kpi("Càrrega total", summary.load)}
+        </tr>
+      </table>
+
+      ${blocAlertes(summary.alerts)}
+
+      ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
+      ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
+      ${taulaMetrica("Qualitat de la son", dates, players, "sleep", "sleep")}
+      ${taulaMetrica("Càrrega", dates, players, "load", "load")}
+    </div>
+  `;
 }
 
 function construirTextPla(team, weekLabel, summary, players) {

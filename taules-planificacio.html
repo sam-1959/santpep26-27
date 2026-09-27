@@ -43,6 +43,7 @@
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
     .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
+    .action-button.warning { background:#fff8d8; color:#7c5600; border:1px solid #ead46d; }
     .action-button.danger { background:#fff; color:var(--danger); border:1px solid #f0c6c6; }
     .action-button:disabled { opacity:0.55; cursor:not-allowed; }
     .view-toggle { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
@@ -116,6 +117,7 @@
     .game.fem.needs-attention { border-left-color:#c2185b; border-right-color:#c2185b; }
     .game.experience-warning { background:#fff7ed; box-shadow:0 0 0 3px rgba(251,146,60,0.16), var(--shadow); }
     .game.experience-error { background:#fef2f2; box-shadow:0 0 0 3px rgba(239,68,68,0.14), var(--shadow); }
+    .game.validation-invalid { background:#fff1f2; box-shadow:0 0 0 3px rgba(214,69,69,0.14), var(--shadow); }
     .game-main { min-width:0; }
     .meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:7px; color:var(--muted); font-size:0.78rem; font-weight:800; }
     .badge { border-radius:999px; background:#f3eef8; color:var(--brand-dark); padding:4px 8px; }
@@ -124,6 +126,7 @@
     .badge.ok { background:#e8f6ef; color:var(--ok); }
     .badge.warn { background:#fff6df; color:var(--warn); }
     .badge.review { background:#fdecec; color:var(--danger); }
+    .badge.invalid { background:#fdecec; color:var(--danger); border:1px solid #fecaca; }
     .badge.experience-warning { background:#fff1d6; color:#9a3412; border:1px solid #fed7aa; }
     .badge.experience-error { background:#fdecec; color:var(--danger); border:1px solid #fecaca; }
     .badge.friendly { background:#fff8d8; color:#8a6400; border:1px solid #f3df73; }
@@ -143,6 +146,7 @@
     .monthly-table tr.needs-attention td { background:#fff8e6; }
     .monthly-table tr.experience-warning td { background:#fff7ed; }
     .monthly-table tr.experience-error td { background:#fef2f2; }
+    .monthly-table tr.validation-invalid td { background:#fff1f2; }
     .monthly-table .assign-cell { min-width:190px; }
     .monthly-table select { min-height:36px; font-size:0.84rem; }
     .people-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
@@ -165,6 +169,7 @@
     select { width:100%; min-height:42px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink);
       font:inherit; font-size:0.92rem; font-weight:750; padding:8px 10px; box-shadow:inset 0 1px 2px rgba(60,40,90,0.06); }
     select.assignment-conflict { border-color:#f59e0b; background:#fff7ed; color:#7c2d12; box-shadow:0 0 0 2px rgba(245,158,11,0.16); }
+    select.validation-invalid { border-color:var(--danger); background:#fff1f2; color:#7f1d1d; box-shadow:0 0 0 2px rgba(214,69,69,0.15); }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
     select:disabled { background:#f3f0f6; color:var(--muted); opacity:1; cursor:not-allowed; }
     .empty { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -210,6 +215,7 @@
     <div class="planning-toolbar">
       <div class="actions" aria-label="Accions de planificació mensual">
         <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
+        <button id="validateRestrictions" class="action-button warning" type="button">Validar restriccions</button>
         <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar període</button>
         <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
       </div>
@@ -302,6 +308,7 @@
     let periods = [];
     let activePeriodIndex = 0;
     let lastProposalLog = null;
+    let validationIssues = {};
 
     const els = {
       status: document.getElementById("status"),
@@ -314,6 +321,7 @@
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
       generateProposal: document.getElementById("generateProposal"),
+      validateRestrictions: document.getElementById("validateRestrictions"),
       clearCurrentWeek: document.getElementById("clearCurrentWeek"),
       togglePeoplePanel: document.getElementById("togglePeoplePanel"),
       peoplePanel: document.getElementById("peoplePanel"),
@@ -829,6 +837,11 @@
         select.classList.add("assignment-conflict");
         select.title = `Assignació en conflicte: ${conflictReasons.join(" ")}`;
       }
+      const validationMessages = validationMessagesForSlot(game, slot);
+      if (validationMessages.length) {
+        select.classList.add("validation-invalid");
+        select.title = validationMessages.join(" ");
+      }
       return select;
     }
 
@@ -956,6 +969,55 @@
         label: "Falta experiència",
         title: "Aquest partit mini necessita com a mínim una taula amb experiència."
       };
+    }
+
+    function slotValidationIssues(game, assignment, slot){
+      const person = assignment[slot] || "";
+      const label = slot === "table1" ? "Taula 1" : "Taula 2";
+      if (!person) return [{ slot, message:`${label}: pendent d'assignar.` }];
+      return assignmentConflictReasons(person, game, assignment)
+        .map(reason => ({ slot, message:`${label} (${person}): ${reason}` }));
+    }
+
+    function validationIssuesForGame(game){
+      const assignment = assignmentFor(game.id);
+      const issues = [
+        ...slotValidationIssues(game, assignment, "table1"),
+        ...slotValidationIssues(game, assignment, "table2")
+      ];
+      const experienceIssue = miniExperienceIssue(game, assignment);
+      if (experienceIssue) {
+        issues.push({ slot:"experience", message:experienceIssue.title });
+      }
+      return issues;
+    }
+
+    function validationMessagesForSlot(game, slot){
+      return (validationIssues[game.id] || [])
+        .filter(issue => issue.slot === slot)
+        .map(issue => issue.message);
+    }
+
+    function computeCurrentPeriodValidationIssues(){
+      const issues = {};
+      gamesForActivePeriod().forEach(game => {
+        const gameIssues = validationIssuesForGame(game);
+        if (gameIssues.length) issues[game.id] = gameIssues;
+      });
+      return issues;
+    }
+
+    function validateCurrentPeriodRestrictions(){
+      collectPeopleProfiles();
+      validationIssues = computeCurrentPeriodValidationIssues();
+      render();
+      const count = Object.values(validationIssues).reduce((total, list) => total + list.length, 0);
+      const gamesCount = Object.keys(validationIssues).length;
+      if (count) {
+        setStatus(`Validació completada: ${count} incidència(es) en ${gamesCount} partit(s).`, "error");
+      } else {
+        setStatus("Validació completada: totes les assignacions del període són vàlides.");
+      }
     }
 
     function replacementSlotForExperience(assignment){
@@ -1412,10 +1474,12 @@
         const assignment = assignmentFor(game.id);
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
+        const gameValidationIssues = validationIssues[game.id] || [];
         const card = document.createElement("article");
         card.className = `game ${game.sex === "F" ? "fem" : "masc"}`;
         if (state !== "complete" && isCurrentWeekGame(game)) card.classList.add("needs-attention");
         if (experienceIssue) card.classList.add(`experience-${experienceIssue.type}`);
+        if (gameValidationIssues.length) card.classList.add("validation-invalid");
 
         const main = document.createElement("div");
         main.className = "game-main";
@@ -1435,6 +1499,13 @@
             className:`badge experience-${experienceIssue.type}`,
             textContent:experienceIssue.label,
             title:experienceIssue.title
+          }));
+        }
+        if (gameValidationIssues.length) {
+          meta.appendChild(Object.assign(document.createElement("span"), {
+            className:"badge invalid",
+            textContent:"Restricció",
+            title:gameValidationIssues.map(issue => issue.message).join(" ")
           }));
         }
 
@@ -1494,12 +1565,17 @@
         const assignment = assignmentFor(game.id);
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
+        const gameValidationIssues = validationIssues[game.id] || [];
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         if (experienceIssue) row.classList.add(`experience-${experienceIssue.type}`);
+        if (gameValidationIssues.length) row.classList.add("validation-invalid");
         const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
         const experienceBadge = experienceIssue
           ? ` <span class="badge experience-${experienceIssue.type}" title="${escapeHtml(experienceIssue.title)}">${escapeHtml(experienceIssue.label)}</span>`
+          : "";
+        const validationBadge = gameValidationIssues.length
+          ? ` <span class="badge invalid" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" "))}">Restricció</span>`
           : "";
         const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =
@@ -1509,7 +1585,7 @@
           `<td><span class="badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}">${escapeHtml(`${game.team} ${game.sex || ""}`)}</span></td>` +
           `<td>${escapeHtml(game.rival || "Rival pendent")}</td>` +
           `<td>${escapeHtml(game.loc || "Localització pendent")}</td>` +
-          `<td>${stateBadge}${experienceBadge}</td>` +
+          `<td>${stateBadge}${experienceBadge}${validationBadge}</td>` +
           `<td>${typeBadge}</td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
@@ -1534,6 +1610,7 @@
       button.addEventListener("click", () => {
         activeView = button.dataset.view;
         lastProposalLog = null;
+        validationIssues = {};
         document.querySelectorAll(".view-button").forEach(item => item.classList.toggle("active", item === button));
         rebuildPeriods();
         render();
@@ -1544,6 +1621,7 @@
       if (activePeriodIndex <= 0) return;
       activePeriodIndex -= 1;
       lastProposalLog = null;
+      validationIssues = {};
       render();
     });
 
@@ -1551,6 +1629,7 @@
       if (activePeriodIndex >= periods.length - 1) return;
       activePeriodIndex += 1;
       lastProposalLog = null;
+      validationIssues = {};
       render();
     });
 
@@ -1573,6 +1652,7 @@
 
     els.generateProposal.addEventListener("click", async () => {
       collectPeopleProfiles();
+      validationIssues = {};
       setStatus("Generant proposta...");
       try {
         await generateMonthlyProposal();
@@ -1580,6 +1660,10 @@
         console.error(error);
         setStatus(error.message, "error");
       }
+    });
+
+    els.validateRestrictions.addEventListener("click", () => {
+      validateCurrentPeriodRestrictions();
     });
 
     els.clearCurrentWeek.addEventListener("click", async () => {
@@ -1596,6 +1680,9 @@
       const id = event.target.dataset.gameId;
       const slot = event.target.dataset.slot;
       assignments[id] = { ...assignmentFor(id), [slot]: event.target.value };
+      if (Object.keys(validationIssues).length) {
+        validationIssues = computeCurrentPeriodValidationIssues();
+      }
       render();
       setStatus("Guardant...");
       try {

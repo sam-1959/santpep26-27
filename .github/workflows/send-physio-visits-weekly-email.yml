@@ -54,7 +54,20 @@ jobs:
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ""
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ""
           PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec' }}
-        run: node scripts/send-physio-visits-weekly-email.js
+        run: |
+          for intent in 1 2 3; do
+            echo "Intent ${intent}/3 d'enviament del resum setmanal de Visites Fisio..."
+            if node scripts/send-physio-visits-weekly-email.js; then
+              echo "Enviament completat a l'intent ${intent}."
+              exit 0
+            fi
+            if [ "${intent}" -lt 3 ]; then
+              echo "Intent ${intent} fallit. Es torna a provar en 60 segons."
+              sleep 60
+            fi
+          done
+          echo "No s'ha pogut completar l'enviament després de 3 intents."
+          exit 1
 
       - name: Desa estat del correu de Visites Fisio
         if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') }}

@@ -1020,6 +1020,15 @@
       }
     }
 
+    function validateGameRestrictions(gameId){
+      const game = games.find(item => item.id === gameId);
+      if (!game) return [];
+      const issues = validationIssuesForGame(game);
+      if (issues.length) validationIssues[gameId] = issues;
+      else delete validationIssues[gameId];
+      return issues;
+    }
+
     function replacementSlotForExperience(assignment){
       const filledSlots = ["table1", "table2"].filter(slot => assignment[slot]);
       if (!filledSlots.length) return "table1";
@@ -1680,15 +1689,17 @@
       const id = event.target.dataset.gameId;
       const slot = event.target.dataset.slot;
       assignments[id] = { ...assignmentFor(id), [slot]: event.target.value };
-      if (Object.keys(validationIssues).length) {
-        validationIssues = computeCurrentPeriodValidationIssues();
-      }
+      const issues = validateGameRestrictions(id);
       render();
       setStatus("Guardant...");
       try {
         await saveAssignment(id);
         render();
-        setStatus("Assignació guardada.");
+        if (issues.length) {
+          setStatus(`Assignació guardada. Validació: ${issues.length} incidència(es) en aquest partit.`, "error");
+        } else {
+          setStatus("Assignació guardada. Validació correcta.");
+        }
       } catch (error) {
         console.error(error);
         setStatus(error.message, "error");

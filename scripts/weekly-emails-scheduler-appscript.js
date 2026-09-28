@@ -63,6 +63,46 @@ function doGet() {
   });
 }
 
+function doPost(e) {
+  try {
+    var request = JSON.parse((e.postData && e.postData.contents) || "{}");
+    if (request.type === "physio_visits_weekly") {
+      return jsonResponse(enviarCorreuVisitesFisioPayload(request));
+    }
+    if (request.type === "rpe_weekly_grouped" || request.teams) {
+      return jsonResponse(enviarCorreuRpePayload(request));
+    }
+    throw new Error("Tipus de petició no suportat: " + valor(request.type));
+  } catch (error) {
+    Logger.log("Error doPost avisos setmanals: " + error);
+    return jsonResponse({ ok: false, error: String(error) });
+  }
+}
+
+function enviarCorreuVisitesFisioPayload(payload) {
+  var recipients = normalitzarCorreus(payload.recipient || "");
+  if (!recipients.length) throw new Error("No hi ha destinataris configurats.");
+  sendEmailToRecipients(
+    recipients,
+    "Resum setmanal de visites de fisioteràpia - " + valor(payload.weekLabel),
+    buildPhysioVisitsText(payload),
+    buildPhysioVisitsHtml(payload)
+  );
+  return { ok: true, sentTo: recipients, sentCount: recipients.length };
+}
+
+function enviarCorreuRpePayload(payload) {
+  var recipients = normalitzarCorreus(payload.recipient || "");
+  if (!recipients.length) throw new Error("No hi ha destinataris configurats.");
+  sendEmailToRecipients(
+    recipients,
+    "Seguiment RPE setmanal - " + valor(payload.weekLabel),
+    buildRpeGroupedText(payload),
+    buildRpeGroupedHtml(payload)
+  );
+  return { ok: true, sentTo: recipients, sentCount: recipients.length };
+}
+
 function crearTriggersSetmanals() {
   eliminarTriggersSetmanals();
 

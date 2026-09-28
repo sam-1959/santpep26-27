@@ -319,10 +319,14 @@ async function sendPayload(payload){
   });
   const text = await response.text();
   if(!response.ok) throw new Error(`App Script ha retornat ${response.status}: ${text}`);
+  if(/Script function not found|<html|<!DOCTYPE html/i.test(text)){
+    throw new Error(`App Script no ha retornat JSON vàlid: ${text.slice(0, 300)}`);
+  }
   const parsed = (() => {
     try { return JSON.parse(text); } catch(error) { return null; }
   })();
-  if(parsed && parsed.ok === false) throw new Error(`App Script ha retornat error: ${parsed.error || text}`);
+  if(!parsed) throw new Error(`App Script no ha retornat JSON: ${text.slice(0, 300)}`);
+  if(parsed.ok === false) throw new Error(`App Script ha retornat error: ${parsed.error || text}`);
   return text;
 }
 

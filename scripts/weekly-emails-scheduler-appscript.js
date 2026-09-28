@@ -47,6 +47,22 @@ var DEFAULT_TEAM_NAMES_BY_KEY = {
   SAF: "Sènior A F"
 };
 
+function doGet() {
+  return jsonResponse({
+    ok: true,
+    service: "Sant Pep weekly emails",
+    firebase: FIREBASE_DB_URL,
+    handlers: [
+      "crearTriggersSetmanals",
+      "enviarSetmanalRpe",
+      "enviarSetmanalVisitesFisio",
+      "provarSetmanalRpeDryRun",
+      "provarSetmanalVisitesFisioDryRun"
+    ],
+    checkedAt: nowIso()
+  });
+}
+
 function crearTriggersSetmanals() {
   eliminarTriggersSetmanals();
 
@@ -902,4 +918,10 @@ function emailShell(subtitle, content) {
       '<p style="font-size:12px;color:#666666;margin:0;"><strong>CB Sant Josep Badalona</strong> — Notificació automàtica del club.</p>' +
     '</div>' +
   '</div>';
+}
+
+function jsonResponse(payload) {
+  return ContentService
+    .createTextOutput(JSON.stringify(payload, null, 2))
+    .setMimeType(ContentService.MimeType.JSON);
 }

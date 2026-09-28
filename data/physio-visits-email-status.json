@@ -17,11 +17,11 @@
     "lastPlayers": 6
   },
   "2026-09-21": {
-    "lastAttemptAt": "2026-09-28T12:16:36.681Z",
+    "lastAttemptAt": "2026-09-28T12:30:54.885Z",
     "lastAttemptWeek": "2026-09-21",
     "lastStatus": "sent",
     "lastError": "",
-    "lastSentAt": "2026-09-28T12:16:38.496Z",
+    "lastSentAt": "2026-09-28T12:30:57.784Z",
     "lastSentWeek": "2026-09-21",
     "lastRecipients": [
       "ricard.fuste@gmail.com"
@@ -31,6 +31,7 @@
     ],
     "lastWeekLabel": "21/09/2026 – 27/09/2026",
     "lastRecords": 7,
-    "lastPlayers": 7
+    "lastPlayers": 7,
+    "lastErrorAt": "2026-09-28T12:29:54.853Z"
   }
 }

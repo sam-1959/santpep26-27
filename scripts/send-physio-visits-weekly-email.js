@@ -7,7 +7,7 @@ const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebased
 const VISITS_PATH = "physioVisits/season-26-27";
 const CONTACTS_PATH = "seasonContacts/season-26-27";
 const STATUS_PATH = process.env.PHYSIO_VISITS_EMAIL_STATUS_PATH || "data/physio-visits-email-status.json";
-const APP_SCRIPT_URL = process.env.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec";
+const APP_SCRIPT_URL = process.env.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbzScJtQ9R5NMFw2ZAUAnZyWq52OL6Ds1waJ_4XYRTzL36x354opt6Kdh1IojkmdordO/exec";
 const DRY_RUN = String(process.env.PHYSIO_VISITS_EMAIL_DRY_RUN || "").toLowerCase() === "true";
 const FORCE_SEND = String(process.env.PHYSIO_VISITS_EMAIL_FORCE || "").toLowerCase() === "true";
 const WEEK_OFFSET_DAYS = Number(process.env.PHYSIO_VISITS_WEEK_OFFSET_DAYS || 7);

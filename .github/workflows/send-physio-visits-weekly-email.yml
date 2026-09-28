@@ -50,7 +50,7 @@ jobs:
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || 'Direcció tècnica' }}
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ""
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ""
-          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec' }}
+          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzScJtQ9R5NMFw2ZAUAnZyWq52OL6Ds1waJ_4XYRTzL36x354opt6Kdh1IojkmdordO/exec"
         run: |
           for intent in 1 2 3; do
             echo "Intent ${intent}/3 d'enviament del resum setmanal de Visites Fisio..."

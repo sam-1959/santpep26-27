@@ -1,14 +1,6 @@
 name: Envia resum setmanal Visites Fisio
 
 on:
-  schedule:
-    # Dilluns al matí. GitHub cron és UTC.
-    - cron: "27 8 * * 1"
-    # Passades de seguretat: no dupliquen correus perquè l'script guarda
-    # l'estat per setmana i només envia els pendents.
-    - cron: "57 8 * * 1"
-    - cron: "27 9 * * 1"
-    - cron: "57 9 * * 1"
   workflow_dispatch:
     inputs:
       dry_run:

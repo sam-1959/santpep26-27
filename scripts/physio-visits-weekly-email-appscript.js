@@ -129,15 +129,15 @@ function taulaVisites(visits) {
     var visitType = shortVisitTypeLabel(visit.visitType, visit.assignedPhysio);
     return `
       <tr>
-        ${emailCell(visit.date, "6%", false, true)}
-        ${emailCell(visit.player, "16%", true, true)}
-        ${emailCell(visit.teamCategory, "7%", false, true)}
-        ${emailCell(visit.assignedPhysio, "13%", false, true)}
-        ${emailCell(visitType, "9%", false, true)}
-        ${emailCell(visit.structure, "10%", false, false)}
-        ${emailCell(visit.location, "9%", false, false)}
-        ${emailCell(visit.courtStatus, "7%", false, false)}
-        ${emailCell(visit.guidelines, "23%", false, false)}
+        ${emailCell(visit.date, "6%", false, true, false)}
+        ${emailCell(visit.player, "16%", true, true, true)}
+        ${emailCell(visit.teamCategory, "7%", false, true, true)}
+        ${emailCell(visit.assignedPhysio, "13%", false, true, true)}
+        ${emailCell(visitType, "9%", false, true, true)}
+        ${emailCell(visit.structure, "10%", false, false, true)}
+        ${emailCell(visit.location, "9%", false, false, true)}
+        ${emailCell(visit.courtStatus, "7%", false, false, true)}
+        ${emailCell(visit.guidelines, "23%", false, false, true)}
       </tr>
     `;
   }).join("");
@@ -157,15 +157,15 @@ function taulaVisites(visits) {
       </colgroup>
       <thead>
         <tr style="background-color: #4B1D6D; color: #FFC72C;">
-          ${emailHead("Data")}
-          ${emailHead("Jugador/a")}
-          ${emailHead("Equip")}
-          ${emailHead("Visita")}
-          ${emailHead("Tipus")}
-          ${emailHead("Estructura")}
-          ${emailHead("Localització")}
-          ${emailHead("Pista")}
-          ${emailHead("Pautes")}
+          ${emailHead("Data", false)}
+          ${emailHead("Jugador/a", true)}
+          ${emailHead("Equip", true)}
+          ${emailHead("Visita", true)}
+          ${emailHead("Tipus", true)}
+          ${emailHead("Estructura", true)}
+          ${emailHead("Localització", true)}
+          ${emailHead("Pista", true)}
+          ${emailHead("Pautes", true)}
         </tr>
       </thead>
       <tbody>${rows || '<tr><td style="padding: 10px;" colspan="9">No hi ha dades.</td></tr>'}</tbody>
@@ -189,13 +189,16 @@ function shortVisitTypeLabel(value, assignedPhysio) {
   return "Fisio";
 }
 
-function emailHead(value) {
-  return '<th style="padding: 7px 8px; text-align: left; white-space: normal; line-height: 1.15; word-break: normal; overflow-wrap: normal;">' + escaparHtml(value) + '</th>';
+function emailHead(value, separated) {
+  return '<th style="padding: 7px 9px; text-align: left; white-space: normal; line-height: 1.15; word-break: normal; overflow-wrap: normal;' +
+    (separated ? ' border-left: 1px solid rgba(255,255,255,0.24);' : '') +
+    '">' + escaparHtml(value) + '</th>';
 }
 
-function emailCell(value, width, strong, nowrap) {
-  return '<td style="width: ' + width + '; padding: 8px; border-bottom: 1px solid #E5E5E5; vertical-align: top; line-height: 1.2; word-break: normal; overflow-wrap: break-word;' +
+function emailCell(value, width, strong, nowrap, separated) {
+  return '<td style="width: ' + width + '; padding: 8px 9px; border-bottom: 1px solid #E5E5E5; vertical-align: top; line-height: 1.2; word-break: normal; overflow-wrap: break-word;' +
     (nowrap ? ' white-space: nowrap;' : '') +
+    (separated ? ' border-left: 1px solid #EFEFEF;' : '') +
     (strong ? ' font-weight: bold; color: #4B1D6D;' : '') +
     '">' + escaparHtml(valor(value)) + '</td>';
 }

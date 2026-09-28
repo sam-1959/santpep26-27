@@ -483,6 +483,27 @@
       if(el) el.value = value || "";
     }
 
+    function defaultVisitOwner(){
+      const email = normalize(currentUser?.email || "");
+      const name = normalize(currentUser?.displayName || "");
+      const ownersByEmail = {
+        "polammu@gmail.com": "Pol Amigó",
+        "er25nicsab@gmail.com": "Eric Nicolàs",
+        "miquelsaro@gmail.com": "Miquel Sánchez"
+      };
+      if(ownersByEmail[email]) return ownersByEmail[email];
+      if(name.includes("pol") && name.includes("amigo")) return "Pol Amigó";
+      if(name.includes("eric") && name.includes("nicolas")) return "Eric Nicolàs";
+      if(name.includes("miquel") && name.includes("sanchez")) return "Miquel Sánchez";
+      return "";
+    }
+
+    function setDefaultVisitOwner(){
+      const owner = defaultVisitOwner();
+      if(owner) setInputValue("assignedPhysio", owner);
+      syncVisitTypeFromPhysio();
+    }
+
     function syncCourtStatusSelect(){
       const el = document.getElementById("courtStatus");
       if(!el) return;
@@ -1185,19 +1206,19 @@
         if(copyMode){
           editingId = null;
           document.getElementById("date").value = todayIso();
+          setDefaultVisitOwner();
           setInputValue("mechanism", "");
           setInputValue("assessment", "");
           setInputValue("treatment", "");
           setInputValue("guidelines", "");
           setInputValue("courtStatus", "pending");
-          syncVisitTypeFromPhysio();
           syncCourtStatusSelect();
         }
       } else {
         els.form.reset();
         document.getElementById("date").value = todayIso();
+        setDefaultVisitOwner();
         setInputValue("courtStatus", "pending");
-        syncVisitTypeFromPhysio();
         syncCourtStatusSelect();
       }
       els.modal.classList.add("open");

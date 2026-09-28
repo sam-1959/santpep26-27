@@ -331,6 +331,11 @@ function formatDate(value) {
   return parts[0] && parts[1] && parts[2] ? parts[2] + "/" + parts[1] + "/" + parts[0] : value || "—";
 }
 
+function formatShortDate(value) {
+  var parts = String(value || "").split("-");
+  return parts[1] && parts[2] ? parts[2] + "/" + parts[1] : value || "—";
+}
+
 function formatDateTime(value) {
   if (!value) return "—";
   var date = new Date(value);
@@ -556,7 +561,7 @@ function buildPhysioVisitsPayload(selectedWeek, dates, records) {
     },
     visits: records.map(function(record) {
       return {
-        date: formatDate(record.date),
+        date: formatShortDate(record.date),
         player: record.name || "—",
         teamCategory: record.teamCategory || "—",
         assignedPhysio: record.assignedPhysio || "—",
@@ -643,8 +648,8 @@ function physioCourtSummary(byCourt) {
 function physioVisitsTable(visits) {
   var rows = visits.map(function(visit) {
     return '<tr>' +
-      emailCell(visit.date, "6%", false, true, false) +
-      emailCell(visit.player, "16%", true, true, true) +
+      emailCell(visit.date, "5%", false, true, false) +
+      emailCell(visit.player, "17%", true, true, true) +
       emailCell(visit.teamCategory, "7%", false, true, true) +
       emailCell(visit.assignedPhysio, "13%", false, true, true) +
       emailCell(visit.visitType, "9%", false, true, true) +
@@ -656,7 +661,7 @@ function physioVisitsTable(visits) {
   }).join("");
   return '<h3 style="color:#4B1D6D;margin:20px 0 8px;font-size:16px;">Visites de la setmana</h3>' +
     '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px;table-layout:fixed;">' +
-    '<colgroup><col style="width:6%;"><col style="width:16%;"><col style="width:7%;"><col style="width:13%;"><col style="width:9%;"><col style="width:10%;"><col style="width:9%;"><col style="width:7%;"><col style="width:23%;"></colgroup>' +
+    '<colgroup><col style="width:5%;"><col style="width:17%;"><col style="width:7%;"><col style="width:13%;"><col style="width:9%;"><col style="width:10%;"><col style="width:9%;"><col style="width:7%;"><col style="width:23%;"></colgroup>' +
     '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
     emailHead("Data", false) + emailHead("Jugador/a", true) + emailHead("Equip", true) + emailHead("Visita", true) + emailHead("Tipus", true) + emailHead("Estructura", true) + emailHead("Localització", true) + emailHead("Pista", true) + emailHead("Pautes", true) +
     '</tr></thead><tbody>' + (rows || '<tr><td style="padding:10px;" colspan="9">No hi ha dades.</td></tr>') + '</tbody></table>';

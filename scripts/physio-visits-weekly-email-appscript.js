@@ -129,8 +129,8 @@ function taulaVisites(visits) {
     var visitType = shortVisitTypeLabel(visit.visitType, visit.assignedPhysio);
     return `
       <tr>
-        ${emailCell(visit.date, "6%", false, true, false)}
-        ${emailCell(visit.player, "16%", true, true, true)}
+        ${emailCell(shortDate(visit.date), "5%", false, true, false)}
+        ${emailCell(visit.player, "17%", true, true, true)}
         ${emailCell(visit.teamCategory, "7%", false, true, true)}
         ${emailCell(visit.assignedPhysio, "13%", false, true, true)}
         ${emailCell(visitType, "9%", false, true, true)}
@@ -145,8 +145,8 @@ function taulaVisites(visits) {
     <h3 style="color: #4B1D6D; margin: 20px 0 8px; font-size: 16px;">Visites de la setmana</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; table-layout: fixed;">
       <colgroup>
-        <col style="width: 6%;">
-        <col style="width: 16%;">
+        <col style="width: 5%;">
+        <col style="width: 17%;">
         <col style="width: 7%;">
         <col style="width: 13%;">
         <col style="width: 9%;">
@@ -187,6 +187,11 @@ function shortVisitTypeLabel(value, assignedPhysio) {
   if (raw === "readaptacio" || raw === "readaptació") return "Readap.";
   if (String(assignedPhysio || "").trim() === "Miquel Sánchez") return "Readap.";
   return "Fisio";
+}
+
+function shortDate(value) {
+  var parts = String(value || "").split("/");
+  return parts.length === 3 ? parts[0] + "/" + parts[1] : valor(value);
 }
 
 function emailHead(value, separated) {

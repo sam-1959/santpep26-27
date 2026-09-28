@@ -721,7 +721,7 @@ function normalizeRpeRecord(record, id, rosterInfo) {
     durationTotalMinutes: durationTotalMinutes,
     rpe: rpe,
     muscleFatigue: numeric(record.muscleFatigue),
-    sleepQuality: numeric(record.sleepQuality),
+    sleepHours: numeric(record.sleepHours),
     load: numeric(record.load) || rpe * durationTotalMinutes
   };
 }
@@ -778,7 +778,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
     var group = groups[key];
     var rpeAvg = average(group.records, "rpe");
     var fatigueAvg = average(group.records, "muscleFatigue");
-    var sleepAvg = average(group.records, "sleepQuality");
+    var sleepAvg = average(group.records, "sleepHours");
     var loadTotal = group.records.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
     var numberedRecord = group.records.filter(function(record) { return record.playerNumber; })[0];
     var number = rosterNumber(rosterInfo, team, group.player) || (numberedRecord ? numberedRecord.playerNumber : "") || "";
@@ -808,7 +808,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
       records: records.length,
       rpe: formatNumber(average(records, "rpe")),
       fatigue: formatNumber(average(records, "muscleFatigue")),
-      sleep: formatNumber(average(records, "sleepQuality")),
+      sleep: formatNumber(average(records, "sleepHours")),
       load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
       alerts: { rpe: rpeHigh, fatigue: fatigueHigh, sleep: sleepLow }
     },
@@ -820,7 +820,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
         alerts: alertLabels(group),
         rpe: valuesFor(group, dates, function(record) { return record.rpe; }),
         fatigue: valuesFor(group, dates, function(record) { return record.muscleFatigue; }),
-        sleep: valuesFor(group, dates, function(record) { return record.sleepQuality; }),
+        sleep: valuesFor(group, dates, function(record) { return record.sleepHours; }),
         load: valuesFor(group, dates, function(record) { return record.load; }).map(function(value) { return value === "" ? "" : Math.round(value); }),
         averages: {
           rpe: formatNumber(group.rpe),
@@ -846,7 +846,7 @@ function alertLabels(group) {
   var labels = [];
   if (group.rpe !== null && group.rpe >= 8) labels.push("RPE");
   if (group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
-  if (group.sleep !== null && group.sleep <= 2) labels.push("Son");
+  if (group.sleep !== null && group.sleep <= 6) labels.push("Son");
   return labels;
 }
 
@@ -857,7 +857,7 @@ function buildRpeGroupedText(payload) {
     lines.push("Registres: " + team.summary.records);
     lines.push("RPE mitjà: " + team.summary.rpe);
     lines.push("Fatiga mitjana: " + team.summary.fatigue);
-    lines.push("Son mitjana: " + team.summary.sleep);
+    lines.push("Hores de son mitjana: " + team.summary.sleep);
     lines.push("Càrrega total: " + team.summary.load);
     lines.push("Alertes RPE: " + alertesResum(team.summary.alerts.rpe));
     lines.push("Alertes Fatiga: " + alertesResum(team.summary.alerts.fatigue));
@@ -878,13 +878,13 @@ function buildRpeGroupedHtml(payload) {
           kpi("Registres", team.summary.records) +
           kpi("RPE mitjà", team.summary.rpe) +
           kpi("Fatiga mitjana", team.summary.fatigue) +
-          kpi("Son mitjana", team.summary.sleep) +
+          kpi("Hores de son mitjana", team.summary.sleep) +
           kpi("Càrrega total", team.summary.load) +
         '</tr></table>' +
         rpeAlertsBlock(team.summary.alerts) +
         rpeMetricTable("RPE", team.dates, team.players, "rpe", "rpe") +
         rpeMetricTable("Fatiga", team.dates, team.players, "fatigue", "fatigue") +
-        rpeMetricTable("Qualitat de la son", team.dates, team.players, "sleep", "sleep") +
+        rpeMetricTable("Hores de son", team.dates, team.players, "sleep", "sleep") +
         rpeMetricTable("Càrrega", team.dates, team.players, "load", "load") +
       '</div>';
     }).join("")

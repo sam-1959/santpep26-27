@@ -126,7 +126,7 @@
       <div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div>
       <div class="kpi"><span>RPE mitjà</span><strong id="kpiRpe">—</strong></div>
       <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
-      <div class="kpi"><span>Son mitjana</span><strong id="kpiSleep">—</strong></div>
+      <div class="kpi"><span>Hores de son mitjana</span><strong id="kpiSleep">—</strong></div>
       <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
     </section>
 
@@ -162,7 +162,7 @@
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Qualitat de la son</h3></div>
+        <div class="panel-head"><h3>Hores de son</h3></div>
         <div class="table-wrap">
           <table class="metric-table">
             <thead id="sleepHead"></thead>
@@ -432,7 +432,7 @@
         durationTotalMinutes,
         rpe,
         muscleFatigue: numeric(record.muscleFatigue),
-        sleepQuality: numeric(record.sleepQuality),
+        sleepHours: numeric(record.sleepHours),
         load: numeric(record.load) || rpe * durationTotalMinutes
       };
     }
@@ -562,7 +562,7 @@
       document.getElementById("kpiRecords").textContent = records.length;
       document.getElementById("kpiRpe").textContent = formatNumber(average(records, "rpe"));
       document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "muscleFatigue"));
-      document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepQuality"));
+      document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepHours"));
       document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
     }
     function renderAlerts(){
@@ -578,7 +578,7 @@
       const labels = [];
       if(group.rpe !== null && group.rpe >= 7) labels.push("RPE");
       if(group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
-      if(group.sleep !== null && group.sleep <= 2) labels.push("Son");
+      if(group.sleep !== null && group.sleep <= 6) labels.push("Son");
       return labels;
     }
     function alertText(players){
@@ -602,7 +602,7 @@
         load: group.records.reduce((sum, record) => sum + numeric(record.load), 0),
         rpe: average(group.records, "rpe"),
         fatigue: average(group.records, "muscleFatigue"),
-        sleep: average(group.records, "sleepQuality")
+        sleep: average(group.records, "sleepHours")
       })).sort((a, b) => a.team.localeCompare(b.team, "ca") || numberSortValue(a.records.find(record => record.playerNumber)?.playerNumber) - numberSortValue(b.records.find(record => record.playerNumber)?.playerNumber) || a.player.localeCompare(b.player, "ca"));
     }
     function renderMetricTables(){
@@ -615,7 +615,7 @@
       renderPlayerPagination(groups.length, start, pagedGroups.length, totalPages);
       renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, value => colorClass(value, 10), value => value || "—");
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
-      renderMetricTable("sleep", "Qualitat de la son", dates, pagedGroups, record => record.sleepQuality, value => colorClass(value, 5), value => value || "—");
+      renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => value || "—");
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
       renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
     }
@@ -686,7 +686,7 @@
           records: records.length,
           rpe: formatNumber(average(records, "rpe")),
           fatigue: formatNumber(average(records, "muscleFatigue")),
-          sleep: formatNumber(average(records, "sleepQuality")),
+          sleep: formatNumber(average(records, "sleepHours")),
           load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
           alerts: {
             rpe: rpeHigh,
@@ -710,7 +710,7 @@
             alerts: alertLabels(group),
             rpe: valuesFor(record => record.rpe),
             fatigue: valuesFor(record => record.muscleFatigue),
-            sleep: valuesFor(record => record.sleepQuality),
+            sleep: valuesFor(record => record.sleepHours),
             load: valuesFor(record => record.load).map(value => value === "" ? "" : Math.round(value)),
             averages: {
               rpe: formatNumber(group.rpe),
@@ -734,7 +734,7 @@
         "- Registres: " + payload.summary.records,
         "- RPE mitjà: " + payload.summary.rpe,
         "- Fatiga mitjana: " + payload.summary.fatigue,
-        "- Son mitjana: " + payload.summary.sleep,
+        "- Hores de son mitjana: " + payload.summary.sleep,
         "- Càrrega total: " + payload.summary.load,
         "",
         "Alertes:",
@@ -750,7 +750,7 @@
           "  Alertes: " + (player.alerts && player.alerts.length ? player.alerts.join(", ") : "Sense alertes"),
           "  RPE: " + player.rpe.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.rpe,
           "  Fatiga: " + player.fatigue.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.fatigue,
-          "  Son: " + player.sleep.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.sleep,
+          "  Hores de son: " + player.sleep.map(value => value || "—").join(" | ") + " · Mitjana: " + player.averages.sleep,
           "  Càrrega: " + player.load.map(value => value || "—").join(" | ") + " · Total: " + player.averages.load,
           ""
         );

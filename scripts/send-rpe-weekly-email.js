@@ -227,7 +227,7 @@ function normalizeRecord(record, id){
     durationTotalMinutes,
     rpe,
     muscleFatigue: numeric(record.muscleFatigue),
-    sleepQuality: numeric(record.sleepQuality),
+    sleepHours: numeric(record.sleepHours),
     load: numeric(record.load) || rpe * durationTotalMinutes
   };
 }
@@ -245,7 +245,7 @@ function alertLabels(group){
   const labels = [];
   if(group.rpe !== null && group.rpe >= 8) labels.push("RPE");
   if(group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
-  if(group.sleep !== null && group.sleep <= 2) labels.push("Son");
+  if(group.sleep !== null && group.sleep <= 6) labels.push("Son");
   return labels;
 }
 
@@ -263,7 +263,7 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
       load: group.records.reduce((sum, record) => sum + numeric(record.load), 0),
       rpe: average(group.records, "rpe"),
       fatigue: average(group.records, "muscleFatigue"),
-      sleep: average(group.records, "sleepQuality")
+      sleep: average(group.records, "sleepHours")
     }))
     .sort((a, b) => {
       const aNumber = rosterNumber(team, a.player) || a.records.find(record => record.playerNumber)?.playerNumber;
@@ -288,7 +288,7 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
       records: records.length,
       rpe: formatNumber(average(records, "rpe")),
       fatigue: formatNumber(average(records, "muscleFatigue")),
-      sleep: formatNumber(average(records, "sleepQuality")),
+      sleep: formatNumber(average(records, "sleepHours")),
       load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
       alerts: { rpe: rpeHigh, fatigue: fatigueHigh, sleep: sleepLow }
     },
@@ -302,7 +302,7 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
         alerts: alertLabels(group),
         rpe: valuesFor(group, dates, record => record.rpe),
         fatigue: valuesFor(group, dates, record => record.muscleFatigue),
-        sleep: valuesFor(group, dates, record => record.sleepQuality),
+        sleep: valuesFor(group, dates, record => record.sleepHours),
         load: valuesFor(group, dates, record => record.load).map(value => value === "" ? "" : Math.round(value)),
         averages: {
           rpe: formatNumber(group.rpe),

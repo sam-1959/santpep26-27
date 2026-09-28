@@ -115,7 +115,7 @@ function construirBlocEquipHtml(team, summary, dates, players) {
           ${kpi("Registres", summary.records)}
           ${kpi("RPE mitjà", summary.rpe)}
           ${kpi("Fatiga mitjana", summary.fatigue)}
-          ${kpi("Son mitjana", summary.sleep)}
+          ${kpi("Hores de son mitjana", summary.sleep)}
           ${kpi("Càrrega total", summary.load)}
         </tr>
       </table>
@@ -124,7 +124,7 @@ function construirBlocEquipHtml(team, summary, dates, players) {
 
       ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
       ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
-      ${taulaMetrica("Qualitat de la son", dates, players, "sleep", "sleep")}
+      ${taulaMetrica("Hores de son", dates, players, "sleep", "sleep")}
       ${taulaMetrica("Càrrega", dates, players, "load", "load")}
     </div>
   `;
@@ -142,7 +142,7 @@ function construirTextPla(team, weekLabel, summary, players) {
     "- Registres: " + valor(summary.records),
     "- RPE mitjà: " + valor(summary.rpe),
     "- Fatiga mitjana: " + valor(summary.fatigue),
-    "- Son mitjana: " + valor(summary.sleep),
+    "- Hores de son mitjana: " + valor(summary.sleep),
     "- Càrrega total: " + valor(summary.load),
     "",
     "Detall per jugador/a:"
@@ -154,7 +154,7 @@ function construirTextPla(team, weekLabel, summary, players) {
       "  Alertes: " + alertesText(player.alerts),
       "  RPE: " + valors(player.rpe).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.rpe),
       "  Fatiga: " + valors(player.fatigue).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.fatigue),
-      "  Son: " + valors(player.sleep).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.sleep),
+      "  Hores de son: " + valors(player.sleep).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.sleep),
       "  Càrrega: " + valors(player.load).join(" | ") + " · Total: " + valor(player.averages && player.averages.load),
       ""
     );
@@ -180,7 +180,7 @@ function construirHtml(team, weekLabel, summary, dates, players) {
             ${kpi("Registres", summary.records)}
             ${kpi("RPE mitjà", summary.rpe)}
             ${kpi("Fatiga mitjana", summary.fatigue)}
-            ${kpi("Son mitjana", summary.sleep)}
+            ${kpi("Hores de son mitjana", summary.sleep)}
             ${kpi("Càrrega total", summary.load)}
           </tr>
         </table>
@@ -189,7 +189,7 @@ function construirHtml(team, weekLabel, summary, dates, players) {
 
         ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
         ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
-        ${taulaMetrica("Qualitat de la son", dates, players, "sleep", "sleep")}
+        ${taulaMetrica("Hores de son", dates, players, "sleep", "sleep")}
         ${taulaMetrica("Càrrega", dates, players, "load", "load")}
       </div>
 

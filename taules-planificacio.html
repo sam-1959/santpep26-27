@@ -1120,8 +1120,15 @@
             return;
           }
           const siblingCandidates = requiredCandidates.filter(profile => hasSiblingInGame(profile, game));
-          const balancedCandidates = requiredCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
-          const balancedSiblingCandidates = siblingCandidates.filter(profile => !targetMax || (counts.get(profile.name) || 0) < targetMax);
+          const requiredCounts = requiredCandidates.map(profile => counts.get(profile.name) || 0);
+          const requiredMinCount = requiredCounts.length ? Math.min(...requiredCounts) : 0;
+          const experienceBalanceLimit = needsExperienceNow ? requiredMinCount + 1 : targetMax;
+          const balancedCandidates = requiredCandidates.filter(profile =>
+            !experienceBalanceLimit || (counts.get(profile.name) || 0) < experienceBalanceLimit
+          );
+          const balancedSiblingCandidates = siblingCandidates.filter(profile =>
+            !experienceBalanceLimit || (counts.get(profile.name) || 0) < experienceBalanceLimit
+          );
           if (!balancedCandidates.length && requiredCandidates.length) proposalLog.balancedFallbacks += 1;
           const preferredCandidates = balancedSiblingCandidates.length
             ? balancedSiblingCandidates

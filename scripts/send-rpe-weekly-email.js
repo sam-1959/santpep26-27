@@ -114,6 +114,14 @@ function numeric(value){
   return Number.isFinite(num) ? num : 0;
 }
 
+function sleepHoursValue(value){
+  const text = String(value || "").toLowerCase().replace(",", ".");
+  const nums = (text.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(Number.isFinite);
+  if(!nums.length) return 0;
+  if(nums.length >= 2 && /\bde\b|\ba\b|-/.test(text)) return (nums[0] + nums[1]) / 2;
+  return nums[0];
+}
+
 function average(records, field){
   const values = records.map(item => numeric(item[field])).filter(value => value > 0);
   if(!values.length) return null;
@@ -227,7 +235,7 @@ function normalizeRecord(record, id){
     durationTotalMinutes,
     rpe,
     muscleFatigue: numeric(record.muscleFatigue),
-    sleepHours: numeric(record.sleepHours),
+    sleepHours: sleepHoursValue(record.sleepHours),
     load: numeric(record.load) || rpe * durationTotalMinutes
   };
 }

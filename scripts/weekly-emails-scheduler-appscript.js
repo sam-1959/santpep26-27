@@ -425,6 +425,15 @@ function numeric(value) {
   return isFinite(num) ? num : 0;
 }
 
+function sleepHoursValue(value) {
+  var text = String(value || "").toLowerCase().replace(",", ".");
+  var matches = text.match(/\d+(?:\.\d+)?/g) || [];
+  var nums = matches.map(function(item) { return Number(item); }).filter(function(item) { return isFinite(item); });
+  if (!nums.length) return 0;
+  if (nums.length >= 2 && /\bde\b|\ba\b|-/.test(text)) return (nums[0] + nums[1]) / 2;
+  return nums[0];
+}
+
 function average(records, field) {
   var values = records.map(function(item) { return numeric(item[field]); }).filter(function(value) { return value > 0; });
   if (!values.length) return null;
@@ -721,7 +730,7 @@ function normalizeRpeRecord(record, id, rosterInfo) {
     durationTotalMinutes: durationTotalMinutes,
     rpe: rpe,
     muscleFatigue: numeric(record.muscleFatigue),
-    sleepHours: numeric(record.sleepHours),
+    sleepHours: sleepHoursValue(record.sleepHours),
     load: numeric(record.load) || rpe * durationTotalMinutes
   };
 }

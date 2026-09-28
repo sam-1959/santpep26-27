@@ -20,7 +20,7 @@ on:
           - "false"
           - "true"
       recipient_override:
-        description: "Destinatari de prova (opcional)"
+        description: "Destinatari de prova"
         required: false
         default: ""
 
@@ -46,8 +46,8 @@ jobs:
           PHYSIO_VISITS_WEEK_OFFSET_DAYS: 7
           PHYSIO_VISITS_EMAIL_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
           PHYSIO_VISITS_EMAIL_FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || 'false' }}
-          PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
-          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || '' }}
+          PHYSIO_VISITS_EMAIL_RECIPIENT_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || 'dtecnic@cbsantjosep.cat' }}
+          PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || 'Direcció tècnica' }}
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ""
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ""
           PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: ${{ secrets.PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec' }}

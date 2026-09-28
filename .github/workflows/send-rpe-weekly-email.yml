@@ -5,9 +5,11 @@ on:
     # Dilluns al matí. GitHub cron és UTC.
     # 07:17 UTC equival a 09:17 a Catalunya en horari d'estiu.
     - cron: "17 7 * * 1"
-    # Segona passada de seguretat: no duplica correus perquè l'script guarda
-    # l'estat per equip i setmana, i només envia els pendents.
+    # Passades de seguretat: no dupliquen correus perquè l'script guarda
+    # l'estat per destinatari i setmana, i només envia els pendents.
     - cron: "47 7 * * 1"
+    - cron: "17 8 * * 1"
+    - cron: "47 8 * * 1"
   workflow_dispatch:
     inputs:
       dry_run:

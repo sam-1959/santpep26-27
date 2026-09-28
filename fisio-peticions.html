@@ -95,6 +95,9 @@
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
     .whatsapp-link.empty { background:#f1eef5; color:var(--muted); pointer-events:none; }
+    .edit-button { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font-size:0.92rem; cursor:pointer; }
+    .edit-button:hover { background:#faf8fd; border-color:var(--brand); }
+    .col-actions { width:1%; white-space:nowrap; text-align:center; }
     .desc { color:var(--muted); min-width:420px; }
     .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; color:var(--muted); font-size:0.82rem; }
     .page-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font-weight:900; cursor:pointer; }
@@ -111,6 +114,25 @@
     .analysis-list li:last-child { border-bottom:0; }
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
+    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(21,12,32,0.48); z-index:50; }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(760px, 100%); max-height:90vh; overflow:auto; background:#fff; border-radius:18px; box-shadow:0 18px 60px rgba(20,12,32,0.28); border:1px solid var(--line); }
+    .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:18px 20px; border-bottom:1px solid var(--line); background:#faf8fd; }
+    .modal-head h2 { margin:0; color:var(--brand-dark); font-size:1rem; }
+    .modal-head p { margin:3px 0 0; color:var(--muted); font-size:0.8rem; }
+    .modal-close { border:0; background:#fff; color:var(--brand); border-radius:999px; width:32px; height:32px; font-size:1.2rem; cursor:pointer; }
+    .edit-form { padding:18px 20px 20px; display:grid; gap:12px; }
+    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .form-field { display:grid; gap:5px; }
+    .form-field.full { grid-column:1 / -1; }
+    .form-field label { color:var(--brand-dark); font-size:0.74rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; }
+    .form-field input, .form-field select, .form-field textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:9px 11px; font:inherit; color:var(--ink); background:#fff; }
+    .form-field textarea { min-height:90px; resize:vertical; }
+    .modal-actions { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:4px; }
+    .modal-button { border:0; border-radius:999px; padding:9px 14px; font-weight:900; cursor:pointer; }
+    .modal-button.primary { background:var(--brand); color:#fff; }
+    .modal-button.secondary { background:#f1eef5; color:var(--brand); }
+    .modal-button:disabled { opacity:0.55; cursor:not-allowed; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
   </style>
 </head>
@@ -154,6 +176,64 @@
       <div class="analysis" id="analysis"></div>
     </section>
   </main>
+  <div class="modal-backdrop" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 id="editTitle">Editar petició de fisioteràpia</h2>
+          <p>Els canvis s’actualitzen a la vista privada i a la vista pública resumida.</p>
+        </div>
+        <button class="modal-close" id="editClose" type="button" aria-label="Tancar">×</button>
+      </div>
+      <form class="edit-form" id="editForm">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="editPlayer">Jugador/a</label>
+            <input id="editPlayer" name="player" required />
+          </div>
+          <div class="form-field">
+            <label for="editTeam">Equip</label>
+            <input id="editTeam" name="team" required />
+          </div>
+          <div class="form-field">
+            <label for="editGender">Gènere</label>
+            <select id="editGender" name="gender" required>
+              <option value="M">Masculí</option>
+              <option value="F">Femení</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="editInjuryDate">Data lesió</label>
+            <input id="editInjuryDate" name="injuryDate" type="date" required />
+          </div>
+          <div class="form-field">
+            <label for="editGuardianName">Pare/mare</label>
+            <input id="editGuardianName" name="guardianName" />
+          </div>
+          <div class="form-field">
+            <label for="editPhone">Telèfon</label>
+            <input id="editPhone" name="phone" />
+          </div>
+          <div class="form-field full">
+            <label for="editEmail">Email</label>
+            <input id="editEmail" name="email" type="email" />
+          </div>
+          <div class="form-field full">
+            <label for="editDescription">Descripció resumida</label>
+            <textarea id="editDescription" name="description" required></textarea>
+          </div>
+          <div class="form-field full">
+            <label for="editFullDescription">Descripció completa</label>
+            <textarea id="editFullDescription" name="fullDescription"></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-button secondary" id="editCancel" type="button">Cancel·lar</button>
+          <button class="modal-button primary" id="editSave" type="submit">Guardar canvis</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -185,6 +265,11 @@
     const authText = document.getElementById("authText");
     const loginButton = document.getElementById("loginButton");
     const logoutButton = document.getElementById("logoutButton");
+    const editModal = document.getElementById("editModal");
+    const editForm = document.getElementById("editForm");
+    const editClose = document.getElementById("editClose");
+    const editCancel = document.getElementById("editCancel");
+    const editSave = document.getElementById("editSave");
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU",
       authDomain: "coord-fa09e.firebaseapp.com",
@@ -223,6 +308,11 @@
     let paidPlayersLoaded = false;
     let quotaImportedAt = null;
     let latestGuidelinesByPlayer = new Map();
+    let editingRequestId = "";
+
+    function canEditRequests(){
+      return isPrivateView && currentUser && String(currentUser.email || "").toLowerCase() === "ricard.fuste@gmail.com";
+    }
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -249,6 +339,14 @@
       const opts = { day:"2-digit", month:"2-digit", year:"numeric" };
       if(withTime){ opts.hour = "2-digit"; opts.minute = "2-digit"; }
       return new Intl.DateTimeFormat("ca-ES", opts).format(date);
+    }
+
+    function inputDateValue(date){
+      if(!date) return "";
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
 
     function escapeHtml(value){
@@ -471,6 +569,82 @@
       });
     }
 
+    function openEditModal(rowId){
+      const row = rows.find(item => item.id === rowId);
+      if(!row || !canEditRequests()) return;
+      editingRequestId = row.id;
+      editForm.player.value = row.player || "";
+      editForm.team.value = row.team || "";
+      editForm.gender.value = row.gender || "M";
+      editForm.injuryDate.value = inputDateValue(row.injuryDate);
+      editForm.guardianName.value = row.guardianName || "";
+      editForm.phone.value = row.phone || "";
+      editForm.email.value = row.email || "";
+      editForm.description.value = row.description || "";
+      editForm.fullDescription.value = row.fullDescription || row.description || "";
+      editModal.classList.add("open");
+      window.setTimeout(() => editForm.player.focus(), 0);
+    }
+
+    function closeEditModal(){
+      editModal.classList.remove("open");
+      editingRequestId = "";
+      editForm.reset();
+    }
+
+    async function patchFirebase(path, id, body, token){
+      const response = await fetch(firebaseUrl(path + "/" + id, token), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if(!response.ok) throw new Error("Firebase write failed");
+      return response.json();
+    }
+
+    async function saveEditedRequest(event){
+      event.preventDefault();
+      if(!editingRequestId || !canEditRequests() || !currentUser) return;
+      editSave.disabled = true;
+      statusMessage = "Guardant canvis de la petició...";
+      render();
+      try {
+        const token = await currentUser.getIdToken();
+        const privatePatch = {
+          player: editForm.player.value.trim(),
+          team: editForm.team.value.trim(),
+          gender: editForm.gender.value,
+          injuryDate: editForm.injuryDate.value,
+          guardianName: editForm.guardianName.value.trim(),
+          phone: editForm.phone.value.trim(),
+          email: editForm.email.value.trim(),
+          description: editForm.description.value.trim(),
+          fullDescription: editForm.fullDescription.value.trim(),
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUser.email || ""
+        };
+        const publicPatch = {
+          player: privatePatch.player,
+          team: privatePatch.team,
+          gender: privatePatch.gender,
+          injuryDate: privatePatch.injuryDate,
+          description: privatePatch.description,
+          updatedAt: privatePatch.updatedAt
+        };
+        await patchFirebase(PRIVATE_REQUESTS_PATH, editingRequestId, privatePatch, token);
+        await patchFirebase(PUBLIC_REQUESTS_PATH, editingRequestId, publicPatch);
+        closeEditModal();
+        await loadPrivateRequests(currentUser);
+        statusMessage = "Petició actualitzada.";
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut guardar la petició. Revisa permisos de Firebase.";
+        render();
+      } finally {
+        editSave.disabled = false;
+      }
+    }
+
     function requestIdentity(row){
       return String(row.id || [
         row.createdAt ? row.createdAt.getTime() : "",
@@ -627,7 +801,8 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th></tr></thead><tbody>' +
+      const actionsHead = canEditRequests() ? '<th class="col-actions">Accions</th>' : '';
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -654,6 +829,9 @@
             ? escapeHtml(latestGuidelines.assignedPhysio)
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           const visitTypeHtml = latestGuidelines ? visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio) : '<span class="no-visit-badge">Sense visita</span>';
+          const actionsCell = canEditRequests()
+            ? '<td class="col-actions"><button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button></td>'
+            : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-request-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -667,12 +845,23 @@
           '<td class="col-type">' + visitTypeHtml + '</td>' +
           '<td class="col-court">' + courtStatusHtml + '</td>' +
           '<td class="col-guidelines">' + guidelinesHtml + '</td>' +
+          actionsCell +
         '</tr>';
         }).join("") +
         '</tbody></table>';
+      tableWrap.querySelectorAll("[data-edit-id]").forEach(button => {
+        button.addEventListener("click", () => openEditModal(button.dataset.editId));
+      });
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);
     }
+
+    editForm.addEventListener("submit", saveEditedRequest);
+    editClose.addEventListener("click", closeEditModal);
+    editCancel.addEventListener("click", closeEditModal);
+    editModal.addEventListener("click", event => {
+      if(event.target === editModal) closeEditModal();
+    });
 
     searchEl.addEventListener("input", () => {
       currentPage = 1;

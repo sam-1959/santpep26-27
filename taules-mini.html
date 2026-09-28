@@ -179,6 +179,7 @@
     };
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_PATH = "miniTablesAssignments/season-26-27";
+    const CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
 
     let games = [];
     let costGames = [];
@@ -210,6 +211,30 @@
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
       const path = FIREBASE_PATH.split("/").map(encodeURIComponent).join("/");
       return `${base}/${path}${id ? "/" + encodeURIComponent(id) : ""}.json`;
+    }
+    function firebasePathUrl(pathName){
+      const base = FIREBASE_DB_URL.replace(/\/$/, "");
+      const path = pathName.split("/").map(encodeURIComponent).join("/");
+      return `${base}/${path}.json`;
+    }
+
+    async function loadCalendarData(){
+      try{
+        const response = await fetch(firebasePathUrl(CALENDAR_FIREBASE_PATH), { cache:"no-store" });
+        if(response.ok){
+          const data = await response.json();
+          if(data && Array.isArray(data.weeks) && data.weeks.length) return data;
+        }
+      }catch(err){
+        console.warn("No s'han pogut carregar els calendaris de Firebase; s'utilitza partits.html.", err);
+      }
+      const response = await fetch("partits.html", { cache:"no-store" });
+      if (!response.ok) throw new Error("No s'ha pogut carregar partits.html");
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const raw = doc.getElementById("partitsData");
+      if (!raw) throw new Error("No s'han trobat les dades de partits");
+      return JSON.parse(raw.textContent);
     }
 
     function normalize(value){
@@ -415,13 +440,7 @@
     }
 
     async function loadGames(){
-      const response = await fetch("partits.html", { cache:"no-store" });
-      if (!response.ok) throw new Error("No s'ha pogut carregar partits.html");
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const raw = doc.getElementById("partitsData");
-      if (!raw) throw new Error("No s'han trobat les dades de partits");
-      const data = JSON.parse(raw.textContent);
+      const data = await loadCalendarData();
       const importedGames = data.weeks.flatMap(week => week.games || [])
         .map(game => ({ ...game, id: gameId(game) }));
       games = importedGames

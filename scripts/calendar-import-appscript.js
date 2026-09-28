@@ -51,6 +51,7 @@ var VENUE_OVERRIDES = {
   "2026-09-13|IF": { loc: "Pavelló de Montigalà", home: true },
   "2026-09-13|IBM": { loc: "Pavelló de Montigalà", home: true },
   "2026-09-13|IAM": { loc: "Pavelló de Montigalà", home: true },
+  "2026-10-04|JAF": { loc: "Pavelló Bufalà", home: true },
 };
 
 var ROW_ORDER = {

@@ -10,9 +10,6 @@ name: Actualitza partits
 # tenir l'actualització 100% automàtica, publiquem des d'aquest mateix job.
 
 on:
-  schedule:
-    # Cada hora. GitHub cron és sempre UTC.
-    - cron: "30 * * * *"
   workflow_dispatch:
     inputs:
       test_whatsapp:

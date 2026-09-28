@@ -648,20 +648,20 @@ function physioCourtSummary(byCourt) {
 function physioVisitsTable(visits) {
   var rows = visits.map(function(visit) {
     return '<tr>' +
-      emailCell(visit.date, "5%", false, true, false) +
-      emailCell(visit.player, "17%", true, true, true) +
+      emailCell(shortDate(visit.date), "9%", false, true, false) +
+      emailCell(visit.player, "15%", true, true, true) +
       emailCell(visit.teamCategory, "7%", false, true, true) +
       emailCell(visit.assignedPhysio, "13%", false, true, true) +
       emailCell(visit.visitType, "9%", false, true, true) +
       emailCell(visit.structure, "10%", false, false, true) +
       emailCell(visit.location, "9%", false, false, true) +
       emailCell(visit.courtStatus, "7%", false, false, true) +
-      emailCell(visit.guidelines, "23%", false, false, true) +
+      emailCell(visit.guidelines, "21%", false, false, true) +
       '</tr>';
   }).join("");
   return '<h3 style="color:#4B1D6D;margin:20px 0 8px;font-size:16px;">Visites de la setmana</h3>' +
     '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px;table-layout:fixed;">' +
-    '<colgroup><col style="width:5%;"><col style="width:17%;"><col style="width:7%;"><col style="width:13%;"><col style="width:9%;"><col style="width:10%;"><col style="width:9%;"><col style="width:7%;"><col style="width:23%;"></colgroup>' +
+    '<colgroup><col style="width:9%;"><col style="width:15%;"><col style="width:7%;"><col style="width:13%;"><col style="width:9%;"><col style="width:10%;"><col style="width:9%;"><col style="width:7%;"><col style="width:21%;"></colgroup>' +
     '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
     emailHead("Data", false) + emailHead("Jugador/a", true) + emailHead("Equip", true) + emailHead("Visita", true) + emailHead("Tipus", true) + emailHead("Estructura", true) + emailHead("Localització", true) + emailHead("Pista", true) + emailHead("Pautes", true) +
     '</tr></thead><tbody>' + (rows || '<tr><td style="padding:10px;" colspan="9">No hi ha dades.</td></tr>') + '</tbody></table>';
@@ -955,6 +955,11 @@ function head(value) {
 
 function cell(value, strong) {
   return '<td style="padding:8px;border-bottom:1px solid #E5E5E5;' + (strong ? 'font-weight:bold;color:#4B1D6D;' : '') + '">' + escaparHtml(value) + '</td>';
+}
+
+function shortDate(value) {
+  var parts = String(value || "").split("/");
+  return parts.length === 3 ? parts[0] + "/" + parts[1] : valor(value);
 }
 
 function emailHead(value, separated) {

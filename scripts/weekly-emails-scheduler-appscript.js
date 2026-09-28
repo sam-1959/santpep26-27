@@ -599,21 +599,22 @@ function physioCourtSummary(byCourt) {
 function physioVisitsTable(visits) {
   var rows = visits.map(function(visit) {
     return '<tr>' +
-      cell(visit.date) +
-      cell(visit.player, true) +
-      cell(visit.teamCategory) +
-      cell(visit.assignedPhysio) +
-      cell(visit.visitType) +
-      cell(visit.structure) +
-      cell(visit.location) +
-      cell(visit.courtStatus) +
-      cell(visit.guidelines) +
+      emailCell(visit.date, "7%", false, true) +
+      emailCell(visit.player, "13%", true, false) +
+      emailCell(visit.teamCategory, "8%", false, true) +
+      emailCell(visit.assignedPhysio, "11%", false, false) +
+      emailCell(visit.visitType, "10%", false, false) +
+      emailCell(visit.structure, "11%", false, false) +
+      emailCell(visit.location, "10%", false, false) +
+      emailCell(visit.courtStatus, "8%", false, false) +
+      emailCell(visit.guidelines, "22%", false, false) +
       '</tr>';
   }).join("");
   return '<h3 style="color:#4B1D6D;margin:20px 0 8px;font-size:16px;">Visites de la setmana</h3>' +
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;">' +
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px;table-layout:fixed;">' +
+    '<colgroup><col style="width:7%;"><col style="width:13%;"><col style="width:8%;"><col style="width:11%;"><col style="width:10%;"><col style="width:11%;"><col style="width:10%;"><col style="width:8%;"><col style="width:22%;"></colgroup>' +
     '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
-    head("Data") + head("Jugador/a") + head("Equip") + head("Visita") + head("Tipus") + head("Estructura") + head("Localització") + head("Pista") + head("Pautes") +
+    emailHead("Data") + emailHead("Jugador/a") + emailHead("Equip") + emailHead("Visita") + emailHead("Tipus") + emailHead("Estructura") + emailHead("Localització") + emailHead("Pista") + emailHead("Pautes") +
     '</tr></thead><tbody>' + (rows || '<tr><td style="padding:10px;" colspan="9">No hi ha dades.</td></tr>') + '</tbody></table>';
 }
 
@@ -905,6 +906,17 @@ function head(value) {
 
 function cell(value, strong) {
   return '<td style="padding:8px;border-bottom:1px solid #E5E5E5;' + (strong ? 'font-weight:bold;color:#4B1D6D;' : '') + '">' + escaparHtml(value) + '</td>';
+}
+
+function emailHead(value) {
+  return '<th style="padding:7px 8px;text-align:left;white-space:normal;line-height:1.15;word-break:normal;overflow-wrap:normal;">' + escaparHtml(value) + '</th>';
+}
+
+function emailCell(value, width, strong, nowrap) {
+  return '<td style="width:' + width + ';padding:8px;border-bottom:1px solid #E5E5E5;vertical-align:top;line-height:1.2;word-break:normal;overflow-wrap:break-word;' +
+    (nowrap ? 'white-space:nowrap;' : '') +
+    (strong ? 'font-weight:bold;color:#4B1D6D;' : '') +
+    '">' + escaparHtml(value) + '</td>';
 }
 
 function emailShell(subtitle, content) {

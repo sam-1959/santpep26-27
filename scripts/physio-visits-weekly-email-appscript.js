@@ -126,33 +126,34 @@ function resumPista(byCourt) {
 
 function taulaVisites(visits) {
   var rows = (visits || []).map(function(visit) {
+    var visitType = shortVisitTypeLabel(visit.visitType, visit.assignedPhysio);
     return `
       <tr>
-        ${emailCell(visit.date, "7%", false, true)}
-        ${emailCell(visit.player, "13%", true, false)}
-        ${emailCell(visit.teamCategory, "8%", false, true)}
-        ${emailCell(visit.assignedPhysio, "11%", false, false)}
-        ${emailCell(visit.visitType, "10%", false, false)}
-        ${emailCell(visit.structure, "11%", false, false)}
-        ${emailCell(visit.location, "10%", false, false)}
-        ${emailCell(visit.courtStatus, "8%", false, false)}
-        ${emailCell(visit.guidelines, "22%", false, false)}
+        ${emailCell(visit.date, "6%", false, true)}
+        ${emailCell(visit.player, "16%", true, true)}
+        ${emailCell(visit.teamCategory, "7%", false, true)}
+        ${emailCell(visit.assignedPhysio, "13%", false, true)}
+        ${emailCell(visitType, "9%", false, true)}
+        ${emailCell(visit.structure, "10%", false, false)}
+        ${emailCell(visit.location, "9%", false, false)}
+        ${emailCell(visit.courtStatus, "7%", false, false)}
+        ${emailCell(visit.guidelines, "23%", false, false)}
       </tr>
     `;
   }).join("");
   return `
     <h3 style="color: #4B1D6D; margin: 20px 0 8px; font-size: 16px;">Visites de la setmana</h3>
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; table-layout: fixed;">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; table-layout: fixed;">
       <colgroup>
+        <col style="width: 6%;">
+        <col style="width: 16%;">
         <col style="width: 7%;">
         <col style="width: 13%;">
-        <col style="width: 8%;">
-        <col style="width: 11%;">
+        <col style="width: 9%;">
         <col style="width: 10%;">
-        <col style="width: 11%;">
-        <col style="width: 10%;">
-        <col style="width: 8%;">
-        <col style="width: 22%;">
+        <col style="width: 9%;">
+        <col style="width: 7%;">
+        <col style="width: 23%;">
       </colgroup>
       <thead>
         <tr style="background-color: #4B1D6D; color: #FFC72C;">
@@ -179,6 +180,13 @@ function kpi(label, value) {
       <div style="font-size: 20px; color: #4B1D6D; font-weight: bold; margin-top: 4px;">${escaparHtml(valor(value))}</div>
     </td>
   `;
+}
+
+function shortVisitTypeLabel(value, assignedPhysio) {
+  var raw = String(value || "").trim().toLowerCase();
+  if (raw === "readaptacio" || raw === "readaptació") return "Readap.";
+  if (String(assignedPhysio || "").trim() === "Miquel Sánchez") return "Readap.";
+  return "Fisio";
 }
 
 function emailHead(value) {

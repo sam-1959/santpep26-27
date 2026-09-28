@@ -311,7 +311,7 @@
     let editingRequestId = "";
 
     function canEditRequests(){
-      return isPrivateView && currentUser && String(currentUser.email || "").toLowerCase() === "ricard.fuste@gmail.com";
+      return isPrivateView && !!currentUser;
     }
 
     function parseDateValue(value){

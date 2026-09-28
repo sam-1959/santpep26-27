@@ -15,5 +15,40 @@
     "lastWeekLabel": "14/09/2026 – 20/09/2026",
     "lastRecords": 6,
     "lastPlayers": 6
+  },
+  "2026-09-21": {
+    "lastAttemptAt": "2026-09-28T10:33:38.196Z",
+    "lastAttemptWeek": "2026-09-21",
+    "lastStatus": "sent",
+    "lastError": "",
+    "lastSentAt": "2026-09-28T10:33:52.517Z",
+    "lastSentWeek": "2026-09-21",
+    "lastRecipients": [
+      "albgrau@gmail.com",
+      "victorfurones@gmail.com",
+      "jessicagucero@gmail.com",
+      "xavirieracoach@gmail.com",
+      "curagustin@gmail.com",
+      "j.costabarriga@gmail.com",
+      "miquelsaro@gmail.com",
+      "nacho22guzman@gmail.com",
+      "er25nicsab@gmail.com",
+      "dtecnic@cbsantjosep.cat"
+    ],
+    "lastRecipientNames": [
+      "Albert Grau",
+      "Víctor Furones",
+      "Jessica García",
+      "Xavi Riera",
+      "Jesús Agustín",
+      "Jordi Costa",
+      "Miquel Sánchez",
+      "Juan Guzmán",
+      "Éric Nicolás",
+      "Direcció tècnica"
+    ],
+    "lastWeekLabel": "21/09/2026 – 27/09/2026",
+    "lastRecords": 7,
+    "lastPlayers": 7
   }
 }

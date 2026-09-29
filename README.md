@@ -35,10 +35,8 @@ Prova manual:
 
 ## Avís email de noves peticions de fisio amb Apps Script
 
-Per fer una prova gratuïta d'avís per correu, el formulari pot cridar un Web
-App d'Apps Script després de guardar la petició a Firebase. El script manté el
-disseny Sant Pep de l'antic avís del Google Form i ara està configurat en mode
-prova amb destinatari `ricard.fuste@gmail.com`.
+El formulari pot cridar un Web App d'Apps Script després de guardar la petició
+a Firebase. El script manté el disseny Sant Pep de l'antic avís del Google Form.
 
 1. Crea un projecte a https://script.google.com/.
 2. Enganxa el contingut de `scripts/fisio-email-appscript.js`.
@@ -49,5 +47,12 @@ prova amb destinatari `ricard.fuste@gmail.com`.
 5. Copia la URL `/exec` del desplegament.
 6. Posa aquesta URL a `APP_SCRIPT_NOTIFY_URL` dins `fisio.html` i publica.
 
+Quan s'actualitzi el fitxer del repositori, cal enganxar-ne també la nova versió
+al projecte d'Apps Script ja desplegat i crear-ne un desplegament nou perquè el
+canvi tingui efecte.
+
 El formulari guarda primer la petició a Firebase. Després crida Apps Script per
-enviar l'email. Si l'avís per email falla, la petició continua quedant guardada.
+enviar l'email. A més dels destinataris fixos, l'script afegeix automàticament
+el primer entrenador de l'equip seleccionat, llegint-lo de
+`seasonContacts/season-26-27/headCoaches` a Firebase. Si l'avís per email
+falla, la petició continua quedant guardada.

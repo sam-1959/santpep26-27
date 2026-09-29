@@ -8,10 +8,33 @@
 // 5. Autoritza GmailApp.
 // 6. Copia la URL /exec i posa-la a APP_SCRIPT_NOTIFY_URL dins fisio.html.
 
+var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27/headCoaches";
+var TEAM_KEYS_BY_NAME = {
+  "Premini A M": "PAM",
+  "Premini B M": "PBM",
+  "Mini A M": "MAM",
+  "Mini B M": "MBM",
+  "Mini F": "MF",
+  "Infantil A M": "IAM",
+  "Infantil B M": "IBM",
+  "Infantil F": "IF",
+  "Cadet A M": "CAM",
+  "Cadet B M": "CBM",
+  "Cadet F": "CF",
+  "Júnior A M": "JAM",
+  "Júnior B M": "JBM",
+  "Júnior A F": "JAF",
+  "Júnior B F": "JBF",
+  "Sènior A M": "SAM",
+  "Sènior B M": "SBM",
+  "Sènior A F": "SAF"
+};
+
 function doPost(e) {
   try {
     var request = JSON.parse((e.postData && e.postData.contents) || "{}");
-    var resultat = enviarCorreuAAdrecesFixes(adaptarPeticioANamedValues(request));
+    var resultat = enviarCorreuAAdrecesFixes(adaptarPeticioANamedValues(request), request.team);
     return respostaJson({ ok: true, sentTo: resultat.sentTo, sentCount: resultat.sentTo.length });
   } catch (error) {
     Logger.log("Error enviant correu de fisio: " + error);
@@ -28,13 +51,14 @@ function adaptarPeticioANamedValues(request) {
       "Nom i cognoms jugador/a": [valor(request.player)],
       "Telèfon de contacte": [valor(request.phone)],
       "Data de la lesió": [formatarData(request.injuryDate)],
-      "Equip": [valor(request.team) + (request.gender ? " " + request.gender : "")],
+      "Equip": [valor(request.team)],
+      "Gènere": [valor(request.gender)],
       "Petita descripció del per què es demana atendre al servei de fisioteràpia": [valor(request.description)]
     }
   };
 }
 
-function enviarCorreuAAdrecesFixes(e) {
+function enviarCorreuAAdrecesFixes(e, teamName) {
   if (!e || !e.namedValues) {
     Logger.log("Aquesta funció s'ha d'executar mitjançant un Trigger d'enviament de formulari o doPost.");
     return;
@@ -49,6 +73,8 @@ function enviarCorreuAAdrecesFixes(e) {
     "xavirieracoach@gmail.com",
     "albgrau@gmail.com"
   ];
+  var correuEntrenador = correuEntrenadorEquip(teamName);
+  if (correuEntrenador) llistaCorreus.push(correuEntrenador);
   var destinataris = normalitzarCorreus(llistaCorreus);
 
   if (!destinataris.length) {
@@ -124,6 +150,29 @@ function enviarCorreuAAdrecesFixes(e) {
 
   Logger.log("Correus enviats amb disseny Sant Pep a: " + destinataris.join(", "));
   return { sentTo: destinataris };
+}
+
+function correuEntrenadorEquip(teamName) {
+  var teamKey = TEAM_KEYS_BY_NAME[valor(teamName)];
+  if (!teamKey) {
+    Logger.log("No s'ha trobat cap clau d'equip per a la petició de fisio: " + valor(teamName));
+    return "";
+  }
+
+  try {
+    var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_PATH + "/" + encodeURIComponent(teamKey) + ".json";
+    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) {
+      Logger.log("No s'ha pogut consultar l'entrenador de l'equip " + teamKey + ".");
+      return "";
+    }
+    var coach = JSON.parse(response.getContentText() || "null");
+    var email = valor(coach && coach.email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
+  } catch (error) {
+    Logger.log("Error consultant l'entrenador de l'equip " + teamKey + ": " + error);
+    return "";
+  }
 }
 
 function normalitzarCorreus(llistaCorreus) {

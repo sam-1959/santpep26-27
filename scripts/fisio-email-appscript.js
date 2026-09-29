@@ -97,8 +97,8 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
 
     filesResumHTML += `
       <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #E5E5E5; font-weight: bold; background-color: #F9F6FC; color: #4B1D6D;">${escaparHtml(pregunta)}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #E5E5E5; color: #333333;">${escaparHtml(resposta)}</td>
+        <td style="width: 35%; padding: 10px; border-bottom: 1px solid #E5E5E5; font-weight: bold; background-color: #F9F6FC; color: #4B1D6D;">${escaparHtml(pregunta)}</td>
+        <td style="width: 65%; padding: 10px; border-bottom: 1px solid #E5E5E5; color: #333333;">${escaparHtml(resposta)}</td>
       </tr>
     `;
 
@@ -120,11 +120,11 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
       <div style="padding: 25px; background-color: #FFFFFF;">
         <h3 style="color: #4B1D6D; margin-top: 0; font-size: 18px;">Resum de la petició enviada:</h3>
 
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+        <table style="width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
           <thead>
             <tr style="background-color: #4B1D6D; color: #FFC72C;">
-              <th style="padding: 10px; text-align: left; font-size: 14px;">Camp / Pregunta</th>
-              <th style="padding: 10px; text-align: left; font-size: 14px;">Detall</th>
+              <th style="width: 35%; padding: 10px; text-align: left; font-size: 14px;">Camp / Pregunta</th>
+              <th style="width: 65%; padding: 10px; text-align: left; font-size: 14px;">Detall</th>
             </tr>
           </thead>
           <tbody>

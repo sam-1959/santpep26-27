@@ -236,29 +236,6 @@
         </div>
       </article>
 
-      <article class="panel">
-        <h3>Vídeo i observacions del rival</h3>
-        <p class="sub">Afegeix el vídeo del partit i les conclusions de scouting. Es desen al navegador des d’on s’editen.</p>
-        <form class="scouting-form" id="scoutingResourcesForm">
-          <div class="scouting-fields">
-            <div class="scouting-field">
-              <label for="opponentVideoUrl">Vídeo de YouTube</label>
-              <input id="opponentVideoUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?..." />
-            </div>
-            <div class="scouting-field">
-              <label for="opponentNotes">Comentaris sobre el rival</label>
-              <textarea id="opponentNotes" placeholder="Fortaleses, patrons ofensius, defensa, jugadores clau, ajustos..." ></textarea>
-            </div>
-          </div>
-          <div class="scouting-actions">
-            <button class="scouting-button" type="submit">Guardar observacions</button>
-            <button class="scouting-button secondary" id="clearScoutingResources" type="button">Netejar</button>
-            <a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a>
-            <span class="scouting-status" id="scoutingResourcesStatus" aria-live="polite"></span>
-          </div>
-        </form>
-      </article>
-
       <article class="panel half">
         <h3>Classificació del grup</h3>
         <p class="sub">Situació de referència a la jornada 3, abans del partit jugat ahir.</p>
@@ -397,6 +374,29 @@
             </ul>
           </div>
         </div>
+      </article>
+
+      <article class="panel">
+        <h3>Vídeo i observacions del rival</h3>
+        <p class="sub">Afegeix el vídeo del partit i les conclusions de scouting. Es desen al navegador des d’on s’editen.</p>
+        <form class="scouting-form" id="scoutingResourcesForm">
+          <div class="scouting-fields">
+            <div class="scouting-field">
+              <label for="opponentVideoUrl">Vídeo de YouTube</label>
+              <input id="opponentVideoUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?..." />
+            </div>
+            <div class="scouting-field">
+              <label for="opponentNotes">Comentaris sobre el rival</label>
+              <textarea id="opponentNotes" placeholder="Fortaleses, patrons ofensius, defensa, jugadores clau, ajustos..." ></textarea>
+            </div>
+          </div>
+          <div class="scouting-actions">
+            <button class="scouting-button" type="submit">Guardar observacions</button>
+            <button class="scouting-button secondary" id="clearScoutingResources" type="button">Netejar</button>
+            <a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a>
+            <span class="scouting-status" id="scoutingResourcesStatus" aria-live="polite"></span>
+          </div>
+        </form>
       </article>
     </section>
   </main>

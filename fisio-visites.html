@@ -993,7 +993,7 @@
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +
               '<option value="">Sense assignar</option>' +
-              PHYSIOS.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
+              PHYSIOS.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(shortPersonName(name)) + '</option>').join("") +
             '</select></td>' +
             '<td class="col-type">' + visitTypeBadge(row.visitType, row.assignedPhysio) + '</td>' +
             '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(row.team)) + '</span></td>' +

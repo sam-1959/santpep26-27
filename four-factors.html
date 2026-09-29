@@ -342,6 +342,7 @@
     const DEFAULT_TEAM_KEY = "lgf1vqte4cb7";
     const params = new URLSearchParams(window.location.search);
     const TEAM_KEY = TEAMS[params.get("t")] ? params.get("t") : DEFAULT_TEAM_KEY;
+    const LINKED_GAME_ID = params.get("g") || "";
     const TEAM = TEAMS[TEAM_KEY];
     document.getElementById("backNav").hidden = TEAM.teamName !== "JBF";
     const STORAGE_KEY = "santpep.fourFactors.games." + TEAM_KEY + ".v1";
@@ -362,6 +363,7 @@
     const DEFAULT_MATCH_CATEGORY = TEAM.category;
     let currentGameId = null;
     let savedGamesViewIndex = 0;
+    let linkedGameSelected = false;
     let currentQuarterSnapshots = [];
 
     function inputId(side, key){ return side + "-" + key; }
@@ -942,6 +944,8 @@
         const games = await readSyncedSavedGames();
         const existingIndex = currentGameId ? games.findIndex(game => game.id === currentGameId) : -1;
         const payload = buildGamePayload(existingIndex >= 0 ? games[existingIndex] : null, games);
+        payload.status = "closed";
+        payload.closedAt = new Date().toISOString();
         if(existingIndex >= 0) {
           games[existingIndex] = payload;
         } else {
@@ -1124,6 +1128,13 @@
       const count = document.getElementById("savedGamesCount");
       const sourceGames = gamesOverride || await readSyncedSavedGames();
       const games = sourceGames.sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+      if(!linkedGameSelected && LINKED_GAME_ID) {
+        const linkedIndex = games.findIndex(game => game.id === LINKED_GAME_ID);
+        if(linkedIndex >= 0) {
+          savedGamesViewIndex = linkedIndex;
+          linkedGameSelected = true;
+        }
+      }
       clampSavedGamesViewIndex(games.length);
       updateMatchNumber(games);
       count.textContent = games.length === 1 ? "1 partit" : games.length + " partits";

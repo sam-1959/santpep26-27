@@ -122,8 +122,8 @@
     .scouting-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .scouting-button { border:0; border-radius:999px; padding:8px 13px; background:var(--brand); color:#fff; font:inherit; font-size:0.8rem; font-weight:900; cursor:pointer; }
     .scouting-button.secondary { border:1px solid var(--line); background:#fff; color:var(--brand); }
-    .video-link { color:var(--brand); font-size:0.82rem; font-weight:900; text-decoration:none; }
-    .video-link:hover { text-decoration:underline; }
+    .video-link, .four-factors-link { color:var(--brand); font-size:0.82rem; font-weight:900; text-decoration:none; }
+    .video-link:hover, .four-factors-link:hover { text-decoration:underline; }
     .scouting-status { color:var(--muted); font-size:0.76rem; }
     .footer-note { margin:14px 0 0; color:var(--muted); font-size:0.76rem; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
@@ -394,6 +394,7 @@
             <button class="scouting-button" type="submit">Guardar observacions</button>
             <button class="scouting-button secondary" id="clearScoutingResources" type="button">Netejar</button>
             <a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a>
+            <a class="four-factors-link" id="openFourFactorsGame" href="#" hidden>📊 Veure 4 Factors del partit</a>
             <span class="scouting-status" id="scoutingResourcesStatus" aria-live="polite"></span>
           </div>
         </form>
@@ -405,14 +406,47 @@
   <script>
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const SCOUTING_RESOURCES_PATH = "scoutingResources/season-26-27/jbf/tgn-basquet-f10a";
+    const FOUR_FACTORS_GAMES_PATH = "fourFactorsGames/jbf-1er-any-pref";
+    const JBF_TEAM_KEY = "lgf1vqte4cb7";
+    const SCOUTING_GAME_DATE = "2026-09-27";
+    const SCOUTING_OPPONENT = "TGN";
     const scoutingResourcesForm = document.getElementById("scoutingResourcesForm");
     const opponentVideoUrl = document.getElementById("opponentVideoUrl");
     const opponentNotes = document.getElementById("opponentNotes");
     const openOpponentVideo = document.getElementById("openOpponentVideo");
+    const openFourFactorsGame = document.getElementById("openFourFactorsGame");
     const scoutingResourcesStatus = document.getElementById("scoutingResourcesStatus");
 
     function scoutingResourcesUrl(){
       return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + SCOUTING_RESOURCES_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+    }
+
+    function fourFactorsGamesUrl(){
+      return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + FOUR_FACTORS_GAMES_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+    }
+
+    function normalizedText(value){
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    }
+
+    function isClosedGame(game){
+      return game && (game.status === "closed" || (Array.isArray(game.quarters) && game.quarters.some(quarter => quarter && quarter.period === "Q4")));
+    }
+
+    async function loadFourFactorsGameLink(){
+      try {
+        const response = await fetch(fourFactorsGamesUrl(), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        const games = Object.values(await response.json() || {});
+        const game = games.find(item => item && item.teamKey === JBF_TEAM_KEY && isClosedGame(item) &&
+          item.meta && item.meta.date === SCOUTING_GAME_DATE &&
+          normalizedText(item.teams && item.teams.opp && item.teams.opp.name).includes(SCOUTING_OPPONENT));
+        if(!game || !game.id) return;
+        openFourFactorsGame.href = "four-factors.html?t=" + encodeURIComponent(JBF_TEAM_KEY) + "&g=" + encodeURIComponent(game.id);
+        openFourFactorsGame.hidden = false;
+      } catch (error) {
+        console.warn("No s'ha pogut carregar l'enllaç als 4 Factors.", error);
+      }
     }
 
     function updateOpponentVideoLink(){
@@ -480,6 +514,7 @@
       }
     });
     loadScoutingResources();
+    loadFourFactorsGameLink();
   </script>
 </body>
 </html>

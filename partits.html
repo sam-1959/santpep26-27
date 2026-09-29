@@ -232,11 +232,13 @@
     const activeFilters=new Set(); // categories
     const activeSex=new Set();     // gèneres
     let activeFriendly=false;      // només amistosos
+    let showAway=false;            // per defecte, només partits a casa
     function passes(g){
       const okFam = activeFilters.size===0 || activeFilters.has(g.fam);
       const okSex = activeSex.size===0 || activeSex.has(g.sex);
       const okFriendly = !activeFriendly || !!g.friendly;
-      return okFam && okSex && okFriendly;
+      const okVenue = g.home || showAway;
+      return okFam && okSex && okFriendly && okVenue;
     }
 
     function changedGameKey(g){
@@ -735,7 +737,15 @@
       friendly.onclick=function(){ activeFriendly=!activeFriendly; sync(); renderContent(); };
       typeGroup.appendChild(friendly);
 
-      // Grup 2: categoria
+      // Grup 2: ubicació
+      const venueGroup=group('Partits');
+      const away=document.createElement('button');
+      away.className='chip away-filter';
+      away.textContent='Mostrar fora';
+      away.onclick=function(){ showAway=!showAway; sync(); renderContent(); };
+      venueGroup.appendChild(away);
+
+      // Grup 3: categoria
       const famGroup=group('Categoria');
       const allF=document.createElement('button'); allF.className='chip chip-all fam-all active'; allF.textContent='Totes';
       allF.onclick=function(){ activeFilters.clear(); sync(); renderContent(); }; famGroup.appendChild(allF);
@@ -752,6 +762,8 @@
         Array.prototype.forEach.call(el.querySelectorAll('.chip[data-sex]'), function(c){ c.classList.toggle('active',activeSex.has(c.dataset.sex)); });
         const friendly=el.querySelector('.friendly-filter');
         if(friendly) friendly.classList.toggle('active',activeFriendly);
+        const away=el.querySelector('.away-filter');
+        if(away) away.classList.toggle('active',showAway);
         Array.prototype.forEach.call(el.querySelectorAll('.chip[data-fam]'), function(c){ c.classList.toggle('active',activeFilters.has(c.dataset.fam)); });
       }
     }

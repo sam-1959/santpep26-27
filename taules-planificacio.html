@@ -604,6 +604,14 @@
         .map(key => ({ key, label: monthPeriodLabel(key) }));
       activePeriodIndex = periods.findIndex(period => period.key === currentKey);
       if (activePeriodIndex < 0) activePeriodIndex = 0;
+      selectFirstMonthWithActiveTables();
+    }
+
+    function selectFirstMonthWithActiveTables(){
+      const firstActiveIndex = periods.findIndex((period, index) =>
+        index >= activePeriodIndex && games.some(game => monthKey(game) === period.key && !isPastGame(game))
+      );
+      if (firstActiveIndex >= 0) activePeriodIndex = firstActiveIndex;
     }
 
     function rebuildPeriods(){

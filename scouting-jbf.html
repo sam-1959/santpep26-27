@@ -119,6 +119,7 @@
     .scouting-field label { color:var(--brand-dark); font-size:0.74rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; }
     .scouting-field input, .scouting-field textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font:inherit; font-size:0.88rem; color:var(--ink); background:#fff; }
     .scouting-field textarea { min-height:96px; resize:vertical; }
+    .scouting-resource-links { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
     .scouting-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .scouting-button { border:0; border-radius:999px; padding:8px 13px; background:var(--brand); color:#fff; font:inherit; font-size:0.8rem; font-weight:900; cursor:pointer; }
     .scouting-button.secondary { border:1px solid var(--line); background:#fff; color:var(--brand); }
@@ -384,6 +385,10 @@
             <div class="scouting-field">
               <label for="opponentVideoUrl">Vídeo de YouTube</label>
               <input id="opponentVideoUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?..." />
+              <div class="scouting-resource-links">
+                <a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a>
+                <a class="four-factors-link" id="openFourFactorsGame" href="#" hidden>📊 Veure 4 Factors del partit</a>
+              </div>
             </div>
             <div class="scouting-field">
               <label for="opponentNotes">Comentaris sobre el rival</label>
@@ -393,8 +398,6 @@
           <div class="scouting-actions">
             <button class="scouting-button" type="submit">Guardar observacions</button>
             <button class="scouting-button secondary" id="clearScoutingResources" type="button">Netejar</button>
-            <a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a>
-            <a class="four-factors-link" id="openFourFactorsGame" href="#" hidden>📊 Veure 4 Factors del partit</a>
             <span class="scouting-status" id="scoutingResourcesStatus" aria-live="polite"></span>
           </div>
         </form>

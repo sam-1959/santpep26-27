@@ -59,6 +59,12 @@
     .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px; }
     .modal-head h2 { margin:0 0 4px; color:var(--brand-dark); font-size:1.18rem; }
     .modal-head p { margin:0; color:var(--muted); font-size:0.86rem; }
+    #visitForm { display:grid; gap:14px; }
+    #visitForm .form-section { border:1px solid var(--line); border-radius:14px; padding:13px; }
+    #visitForm .patient-section { background:#faf8fd; border-color:#ded1eb; }
+    #visitForm .clinical-section { background:#fff; }
+    #visitForm .form-section-title { margin:0 0 10px; color:var(--brand-dark); font-size:0.82rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
+    #visitForm .actions { margin-top:0; }
     .icon-button { display:inline-grid; place-items:center; width:36px; height:36px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); cursor:pointer; font-size:1.2rem; font-weight:900; }
     .table-actions { display:flex; gap:6px; justify-content:flex-end; align-items:center; white-space:nowrap; }
     .row-action { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; cursor:pointer; font-size:0.92rem; }
@@ -195,7 +201,9 @@
         <button class="icon-button" id="closeCreateButton" type="button" aria-label="Tancar">×</button>
       </div>
       <form id="visitForm">
-        <div class="form-grid">
+        <section class="form-section patient-section" aria-labelledby="patientSectionTitle">
+          <h3 class="form-section-title" id="patientSectionTitle">Dades del pacient i de la visita</h3>
+          <div class="form-grid">
           <div class="field">
             <label for="date">Data</label>
             <input id="date" name="date" type="date" required />
@@ -250,6 +258,11 @@
                 <select id="location" name="location" required></select>
               </div>
             </div>
+          </div>
+        </section>
+        <section class="form-section clinical-section" aria-labelledby="clinicalSectionTitle">
+          <h3 class="form-section-title" id="clinicalSectionTitle">Seguiment clínic</h3>
+          <div class="form-grid">
           <div class="field full">
             <label for="mechanism">Mecanisme lesional</label>
             <textarea id="mechanism" name="mechanism" required></textarea>
@@ -275,7 +288,8 @@
               <option value="green">✓ Pista normal</option>
             </select>
           </div>
-        </div>
+          </div>
+        </section>
         <div class="actions">
           <button class="primary" id="submitButton" type="submit">Guardar visita</button>
           <button class="secondary" id="cancelCreateButton" type="button">Cancel·lar</button>

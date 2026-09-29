@@ -217,9 +217,9 @@
             <label for="assignedPhysio">👤 VISITA</label>
             <select id="assignedPhysio" name="assignedPhysio">
               <option value="">Sense assignar</option>
-              <option value="Pol Amigó">Pol Amigó</option>
-              <option value="Eric Nicolàs">Eric Nicolàs</option>
-              <option value="Miquel Sánchez">Miquel Sánchez</option>
+              <option value="Pol Amigó">Pol</option>
+              <option value="Eric Nicolàs">Eric</option>
+              <option value="Miquel Sánchez">Miquel</option>
             </select>
           </div>
           <div class="field">
@@ -415,6 +415,10 @@
       const actor = name || email || "";
       const when = formatDateTime(at);
       return [actor, when].filter(Boolean).join(" · ");
+    }
+
+    function shortPersonName(value){
+      return String(value || "").trim().split(/\s+/).slice(0, 2).join(" ");
     }
 
     function normalize(value){
@@ -975,9 +979,9 @@
           const rowClass = row.isNew ? 'new-request' : '';
           const feedback = row.prepaFeedback || {};
           const feedbackText = feedback.text || "";
-          const readMeta = actorMeta(row.prepaReadByName, row.prepaReadByEmail, row.prepaReadAt);
+          const readByLabel = shortPersonName(row.prepaReadByName) || row.prepaReadByEmail || "";
+          const readMeta = actorMeta(readByLabel, row.prepaReadByEmail, row.prepaReadAt);
           const feedbackMeta = formatDateTime(feedback.updatedAt);
-          const readByLabel = row.prepaReadByName || row.prepaReadByEmail || "";
           const readLabel = row.prepaRead ? "✓ " + (readByLabel || "Llegit") : "Pendent";
           const feedbackHtml = feedbackText
             ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' +

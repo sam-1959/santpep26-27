@@ -978,7 +978,7 @@
       });
       enforceAttemptMinimums(side);
     }
-    async function loadGame(id){
+    async function loadGame(id, skipConfirmation){
       const games = await readSyncedSavedGames();
       const game = games.find(item => item.id === id);
       if(!game) {
@@ -986,8 +986,10 @@
         await renderSavedGames(games);
         return;
       }
-      const ok = window.confirm("Carregar aquest partit substituirà les dades actuals de la calculadora. Vols continuar?");
-      if(!ok) return;
+      if(!skipConfirmation) {
+        const ok = window.confirm("Carregar aquest partit substituirà les dades actuals de la calculadora. Vols continuar?");
+        if(!ok) return;
+      }
       currentGameId = game.id;
       clearDraft();
       resetMatchDefaults();
@@ -1223,14 +1225,18 @@
       renderSavedGames();
       setSaveStatus("");
     };
-    document.getElementById("exampleBtn").hidden = TEAM_KEY !== PCM_TEAM_KEY;
-    document.title = "Calculadora 4 Factors · " + TEAM.teamName + " · CB Sant Josep";
-    resetMatchDefaults();
-    buildInputs();
-    document.getElementById("formulasSummary").innerHTML = formulasSummaryHtml();
-    restoreDraft();
-    render();
-    renderSavedGames();
+    async function init(){
+      document.getElementById("exampleBtn").hidden = TEAM_KEY !== PCM_TEAM_KEY;
+      document.title = "Calculadora 4 Factors · " + TEAM.teamName + " · CB Sant Josep";
+      resetMatchDefaults();
+      buildInputs();
+      document.getElementById("formulasSummary").innerHTML = formulasSummaryHtml();
+      restoreDraft();
+      render();
+      await renderSavedGames();
+      if(LINKED_GAME_ID) await loadGame(LINKED_GAME_ID, true);
+    }
+    init();
   </script>
 </body>
 </html>

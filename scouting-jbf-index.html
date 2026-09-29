@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Scouting JBF · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,.08),0 4px 16px rgba(60,40,90,.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .logo-link { display:inline-flex; flex-shrink:0; text-decoration:none; }
+    .club-logo { width:48px; height:48px; padding:3px; border-radius:10px; background:#fff; object-fit:contain; }
+    .htext { flex:1; min-width:0; }
+    .htext h1 { margin:0; font-size:1.05rem; font-weight:700; letter-spacing:-.01em; }
+    .htext h1 .club { display:block; font-size:.72rem; font-weight:500; opacity:.85; letter-spacing:.04em; text-transform:uppercase; }
+    .htext p { margin:2px 0 0; font-size:.8rem; opacity:.9; }
+    .page-logo { display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#fff; color:var(--brand); font-size:1.45rem; }
+    main { width:min(100% - 40px, 980px); margin:0 auto; padding:30px 0 52px; }
+    .back { display:inline-flex; margin-bottom:18px; color:var(--brand); font-size:.84rem; font-weight:800; text-decoration:none; }
+    .intro { margin-bottom:22px; }
+    .intro h2 { margin:0 0 5px; color:var(--brand-dark); font-size:1.55rem; }
+    .intro p { margin:0; color:var(--muted); }
+    .season { display:inline-flex; margin-top:12px; padding:5px 10px; border:1px solid #efd96f; border-radius:999px; background:#fff8cc; color:#5f4a00; font-size:.75rem; font-weight:900; }
+    .list { display:grid; gap:12px; }
+    .scouting-link { display:flex; align-items:center; gap:16px; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); color:inherit; text-decoration:none; transition:transform .15s, border-color .15s, box-shadow .15s; }
+    .scouting-link:hover { transform:translateY(-2px); border-color:var(--brand); box-shadow:0 6px 24px rgba(60,40,90,.14); }
+    .matchday { display:grid; place-items:center; min-width:62px; min-height:62px; padding:8px; border-radius:12px; background:#f4ecfa; color:var(--brand-dark); font-size:.73rem; font-weight:900; line-height:1.15; text-align:center; text-transform:uppercase; }
+    .matchday strong { display:block; font-size:1.35rem; }
+    .scouting-link h3 { margin:0; color:var(--brand-dark); font-size:1.05rem; }
+    .scouting-link p { margin:3px 0 0; color:var(--muted); font-size:.84rem; }
+    .go { margin-left:auto; color:var(--brand); font-size:.86rem; font-weight:900; white-space:nowrap; }
+    .empty { padding:18px; border:1px dashed #cfc4da; border-radius:var(--radius); color:var(--muted); background:rgba(255,255,255,.55); font-size:.87rem; }
+    footer { padding:20px; color:var(--muted); font-size:.75rem; text-align:center; }
+    @media (max-width:560px) { main { width:min(100% - 28px, 980px); padding-top:22px; } .scouting-link { align-items:flex-start; gap:12px; } .go { align-self:center; font-size:0; } .go::after { content:"→"; font-size:1.3rem; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo-link" href="index.html" title="Tornar a l'inici"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
+    <div class="htext">
+      <h1><span class="club">CB Sant Josep de Badalona</span> Scouting JBF</h1>
+      <p>Júnior B F · Anàlisi per jornada</p>
+    </div>
+    <div class="page-logo" aria-hidden="true">🔎</div>
+  </header>
+  <main>
+    <a class="back" href="index.html">← Tornar a la pàgina principal</a>
+    <section class="intro" aria-labelledby="page-title">
+      <h2 id="page-title">Scouting del rival</h2>
+      <p>Consulta les anàlisis preparades per a cada jornada del Júnior B F.</p>
+      <span class="season">Temporada 2026-27</span>
+    </section>
+    <section class="list" aria-label="Scouting per jornada">
+      <a class="scouting-link" href="scouting-jbf.html">
+        <span class="matchday">Jornada<strong>4</strong></span>
+        <span>
+          <h3>TGN Bàsquet F10A</h3>
+          <p>Classificació, estadístiques, vídeo i observacions del rival.</p>
+        </span>
+        <span class="go">Obrir →</span>
+      </a>
+      <div class="empty">Els pròxims scoutings s’afegiran aquí a mesura que es preparin.</div>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+</body>
+</html>

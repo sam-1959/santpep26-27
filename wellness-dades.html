@@ -36,6 +36,7 @@
     .panel { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
     .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#faf8fd; }
     .panel-head h3 { margin:0; color:var(--brand-dark); font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; }
+    .panel-head .formula { color:var(--muted); font-size:0.76rem; font-weight:800; }
     .status { color:var(--muted); font-size:0.78rem; font-weight:800; }
     .table-wrap { overflow:auto; }
     table { width:100%; border-collapse:collapse; font-size:0.86rem; }
@@ -171,7 +172,7 @@
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Càrrega</h3></div>
+        <div class="panel-head"><h3>Càrrega</h3><span class="formula">RPE × minuts</span></div>
         <div class="table-wrap">
           <table class="metric-table">
             <thead id="loadHead"></thead>

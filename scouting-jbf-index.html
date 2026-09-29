@@ -32,6 +32,11 @@
     .scouting-link h3 { margin:0; color:var(--brand-dark); font-size:1.05rem; }
     .scouting-link p { margin:3px 0 0; color:var(--muted); font-size:.84rem; }
     .opponent-logo { width:58px; height:58px; flex:0 0 58px; padding:4px; border:1px solid var(--line); border-radius:50%; background:#fff; object-fit:contain; }
+    .result { display:inline-flex; margin-top:7px; padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:.74rem; font-weight:900; }
+    .result.win { color:#1b5e20; background:#e8f5e9; border-color:#a5d6a7; }
+    .result.loss { color:#8b1d1d; background:#fdeaea; border-color:#efbbbb; }
+    .result.draw { color:#6c4800; background:#fff8d8; border-color:#eed56c; }
+    .result.pending { color:var(--muted); background:#faf8fd; }
     .go { margin-left:auto; color:var(--brand); font-size:.86rem; font-weight:900; white-space:nowrap; }
     .empty { padding:18px; border:1px dashed #cfc4da; border-radius:var(--radius); color:var(--muted); background:rgba(255,255,255,.55); font-size:.87rem; }
     footer { padding:20px; color:var(--muted); font-size:.75rem; text-align:center; }
@@ -55,12 +60,13 @@
       <span class="season">Temporada 2026-27</span>
     </section>
     <section class="list" aria-label="Scouting per jornada">
-      <a class="scouting-link" href="scouting-jbf.html">
+      <a class="scouting-link" href="scouting-jbf.html" data-scouting-opponent="TGN" data-scouting-date="2026-09-27">
         <span class="matchday">Jornada<strong>4</strong></span>
         <img class="opponent-logo" src="assets/tgn-logo.svg" alt="Logo TGN Bàsquet" />
         <span>
           <h3>TGN Bàsquet F10A</h3>
           <p>Classificació, estadístiques, vídeo i observacions del rival.</p>
+          <span class="result pending" data-result>Resultat pendent</span>
         </span>
         <span class="go">Obrir →</span>
       </a>
@@ -68,5 +74,53 @@
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const JBF_GAMES_PATH = "fourFactorsGames/jbf-1er-any-pref";
+    const JBF_TEAM_KEY = "lgf1vqte4cb7";
+
+    function normalizedText(value){
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    }
+
+    function setResult(card, game){
+      const result = card.querySelector("[data-result]");
+      if(!result || !game) return;
+      const team = game.teams && game.teams.team || {};
+      const opponent = game.teams && game.teams.opp || {};
+      const teamScore = Number(team.score);
+      const opponentScore = Number(opponent.score);
+      if(!Number.isFinite(teamScore) || !Number.isFinite(opponentScore)) return;
+      const opponentName = opponent.name || card.dataset.scoutingOpponent;
+      const status = teamScore > opponentScore ? "Victòria" : teamScore < opponentScore ? "Derrota" : "Empat";
+      const state = teamScore > opponentScore ? "win" : teamScore < opponentScore ? "loss" : "draw";
+      result.className = "result " + state;
+      result.textContent = opponentName + " " + opponentScore + " – " + teamScore + " JBF · " + status;
+    }
+
+    async function loadScoutingResults(){
+      const cards = Array.from(document.querySelectorAll("[data-scouting-opponent]"));
+      if(!cards.length) return;
+      try {
+        const response = await fetch(FIREBASE_DB_URL + "/" + JBF_GAMES_PATH + ".json", { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        const games = Object.values(await response.json() || {}).filter(game => game && game.teamKey === JBF_TEAM_KEY);
+        cards.forEach(card => {
+          const opponent = normalizedText(card.dataset.scoutingOpponent);
+          const date = card.dataset.scoutingDate || "";
+          const matches = games.filter(game => {
+            const rival = normalizedText(game.teams && game.teams.opp && game.teams.opp.name);
+            const gameDate = game.meta && game.meta.date || "";
+            return rival.includes(opponent) && (!date || gameDate === date);
+          }).sort((a, b) => String(b.updatedAt || b.savedAt || "").localeCompare(String(a.updatedAt || a.savedAt || "")));
+          setResult(card, matches[0]);
+        });
+      } catch(error) {
+        console.warn("No s'han pogut carregar els resultats de la Calculadora JBF.", error);
+      }
+    }
+
+    loadScoutingResults();
+  </script>
 </body>
 </html>

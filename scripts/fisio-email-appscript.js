@@ -10,6 +10,8 @@
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27/headCoaches";
+var NOTIFIED_REQUEST_IDS_KEY = "fisioNotifiedRequestIds";
+var MAX_NOTIFIED_REQUEST_IDS = 500;
 var TEAM_KEYS_BY_NAME = {
   "Premini A M": "PAM",
   "Premini B M": "PBM",
@@ -34,7 +36,12 @@ var TEAM_KEYS_BY_NAME = {
 function doPost(e) {
   try {
     var request = JSON.parse((e.postData && e.postData.contents) || "{}");
+    if (peticioJaNotificada(request.id)) {
+      Logger.log("Avís de fisio ja enviat per a la petició " + valor(request.id));
+      return respostaJson({ ok: true, duplicate: true, sentTo: [], sentCount: 0 });
+    }
     var resultat = enviarCorreuAAdrecesFixes(adaptarPeticioANamedValues(request), request.team);
+    marcaPeticioNotificada(request.id);
     return respostaJson({ ok: true, sentTo: resultat.sentTo, sentCount: resultat.sentTo.length });
   } catch (error) {
     Logger.log("Error enviant correu de fisio: " + error);
@@ -175,7 +182,36 @@ function correuEntrenadorEquip(teamName) {
   }
 }
 
+function peticioJaNotificada(requestId) {
+  var id = valor(requestId);
+  if (!id) return false;
+  var ids = obtenirPeticionsNotificades();
+  return ids.indexOf(id) !== -1;
+}
+
+function marcaPeticioNotificada(requestId) {
+  var id = valor(requestId);
+  if (!id) return;
+  var properties = PropertiesService.getScriptProperties();
+  var ids = obtenirPeticionsNotificades();
+  if (ids.indexOf(id) !== -1) return;
+  ids.push(id);
+  properties.setProperty(NOTIFIED_REQUEST_IDS_KEY, JSON.stringify(ids.slice(-MAX_NOTIFIED_REQUEST_IDS)));
+}
+
+function obtenirPeticionsNotificades() {
+  var raw = PropertiesService.getScriptProperties().getProperty(NOTIFIED_REQUEST_IDS_KEY);
+  try {
+    var ids = JSON.parse(raw || "[]");
+    return Array.isArray(ids) ? ids.map(function(id) { return valor(id); }).filter(Boolean) : [];
+  } catch (error) {
+    Logger.log("No s'ha pogut llegir l'historial d'avisos de fisio: " + error);
+    return [];
+  }
+}
+
 function normalitzarCorreus(llistaCorreus) {
+  var vistos = {};
   return llistaCorreus
     .join(",")
     .split(/[,\n;]/)
@@ -183,7 +219,11 @@ function normalitzarCorreus(llistaCorreus) {
       return String(correu || "").trim();
     })
     .filter(function(correu) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correu);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correu)) return false;
+      var key = correu.toLowerCase();
+      if (vistos[key]) return false;
+      vistos[key] = true;
+      return true;
     });
 }
 

@@ -55,4 +55,6 @@ El formulari guarda primer la petició a Firebase. Després crida Apps Script pe
 enviar l'email. A més dels destinataris fixos, l'script afegeix automàticament
 el primer entrenador de l'equip seleccionat, llegint-lo de
 `seasonContacts/season-26-27/headCoaches` a Firebase. Si l'avís per email
-falla, la petició continua quedant guardada.
+falla, la petició continua quedant guardada. L'script elimina adreces
+duplicades i recorda els últims 500 identificadors de petició per no reenviar
+el mateix avís si la notificació es repeteix.

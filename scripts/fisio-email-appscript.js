@@ -12,6 +12,7 @@ var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedat
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27/headCoaches";
 var NOTIFIED_REQUEST_IDS_KEY = "fisioNotifiedRequestIds";
 var MAX_NOTIFIED_REQUEST_IDS = 500;
+var FIXED_RECIPIENT_COVERED_TEAM_KEYS = { "JBF": true };
 var TEAM_KEYS_BY_NAME = {
   "Premini A M": "PAM",
   "Premini B M": "PBM",
@@ -163,6 +164,10 @@ function correuEntrenadorEquip(teamName) {
   var teamKey = TEAM_KEYS_BY_NAME[valor(teamName)];
   if (!teamKey) {
     Logger.log("No s'ha trobat cap clau d'equip per a la petició de fisio: " + valor(teamName));
+    return "";
+  }
+  if (FIXED_RECIPIENT_COVERED_TEAM_KEYS[teamKey]) {
+    Logger.log("L'avís de fisio de " + teamKey + " ja queda cobert per un destinatari fix.");
     return "";
   }
 

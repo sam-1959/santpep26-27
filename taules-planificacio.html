@@ -417,6 +417,24 @@
       ];
     }
 
+    function personHasExperience(name){
+      return tablePeopleProfiles[personKey(name)]?.experienced === true;
+    }
+
+    function appendPeopleGroup(select, label, people, selectedValue){
+      if (!people.length) return;
+      const group = document.createElement("optgroup");
+      group.label = label;
+      people.forEach(person => {
+        const option = document.createElement("option");
+        option.value = person;
+        option.textContent = person;
+        option.selected = person === selectedValue;
+        group.appendChild(option);
+      });
+      select.appendChild(group);
+    }
+
     function teamLabel(game){
       return `${game.team || ""} ${game.sex || ""}`.trim();
     }
@@ -843,13 +861,16 @@
       select.dataset.slot = slot;
       select.disabled = isPastGame(game);
       if (select.disabled) select.title = "Aquest partit ja s'ha jugat i no es pot modificar.";
-      sortedPeopleOptions().forEach(person => {
-        const option = document.createElement("option");
-        option.value = person;
-        option.textContent = person || "Pendent";
-        option.selected = person === value;
-        select.appendChild(option);
-      });
+      const pendingOption = document.createElement("option");
+      pendingOption.value = "";
+      pendingOption.textContent = "Pendent";
+      pendingOption.selected = !value;
+      select.appendChild(pendingOption);
+
+      const people = sortedPeopleOptions().filter(Boolean);
+      appendPeopleGroup(select, "Amb experiència", people.filter(personHasExperience), value);
+      appendPeopleGroup(select, "Sense experiència", people.filter(person => !personHasExperience(person)), value);
+
       if (value && !PEOPLE.includes(value)) {
         const option = document.createElement("option");
         option.value = value;

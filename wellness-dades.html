@@ -631,7 +631,7 @@
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
       renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => sleepHoursLabel(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
-      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—");
+      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—", loadTooltip);
     }
     function renderPlayerPagination(totalGroups, start, pageSize, totalPages){
       const shouldPaginate = totalGroups > PLAYERS_PER_PAGE;
@@ -643,7 +643,7 @@
       prevPlayerPageButton.disabled = state.playerPageIndex <= 0;
       nextPlayerPageButton.disabled = state.playerPageIndex >= totalPages - 1;
     }
-    function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter){
+    function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter, tooltipGetter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
       head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
@@ -652,11 +652,12 @@
         return;
       }
       body.innerHTML = groups.map(group => {
-        const values = dates.map(date => {
+        const dayGroups = dates.map(date => {
           const dayRecords = group.records.filter(record => record.trainingDate === date);
           const value = dayRecords.length ? dayRecords.reduce((sum, record) => sum + numeric(valueGetter(record)), 0) / dayRecords.length : null;
-          return value;
+          return { value, records: dayRecords };
         });
+        const values = dayGroups.map(day => day.value);
         const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
         const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
         const alerts = alertLabels(group);
@@ -664,8 +665,8 @@
           ? '<span class="alert-chips">' + alerts.map(alert => '<span class="alert-chip ' + alertClass(alert) + '">' + escapeHtml(alert) + '</span>').join("") + '</span>'
           : "—";
         return '<tr class="' + (alerts.length ? 'player-alert' : '') + '"><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span></span></td><td class="alerts-cell">' + alertBadges + '</td>' +
-          values.map(value => metricCell(value, classGetter, formatter)).join("") +
-          metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter) +
+          dayGroups.map(day => metricCell(day.value, classGetter, formatter, tooltipGetter ? tooltipGetter(day.records, day.value, false) : "")).join("") +
+          metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter, tooltipGetter ? tooltipGetter(group.records, avg, true) : "") +
         '</tr>';
       }).join("");
     }
@@ -674,9 +675,23 @@
       if(alert === "Son") return "sleep";
       return "rpe";
     }
-    function metricCell(value, classGetter, formatter){
+    function metricCell(value, classGetter, formatter, tooltip){
       if(value === null || value === undefined) return '<td>—</td>';
-      return '<td><span class="badge ' + classGetter(value) + '">' + escapeHtml(formatter(value)) + '</span></td>';
+      return '<td><span class="badge ' + classGetter(value) + '"' + (tooltip ? ' title="' + escapeHtml(tooltip) + '"' : "") + '>' + escapeHtml(formatter(value)) + '</span></td>';
+    }
+    function loadTooltip(records, value, isSummary){
+      const valid = (records || []).filter(record => numeric(record.durationTotalMinutes) > 0 && numeric(record.rpe) > 0);
+      if(!valid.length) return "";
+      if(isSummary){
+        const total = valid.reduce((sum, record) => sum + numeric(record.durationTotalMinutes) * numeric(record.rpe), 0);
+        const details = valid.map(record => numeric(record.rpe) + " × " + numeric(record.durationTotalMinutes)).join(" + ");
+        return "Càrrega setmanal: " + details + " = " + Math.round(total);
+      }
+      const record = valid[0];
+      const rpe = numeric(record.rpe);
+      const minutes = numeric(record.durationTotalMinutes);
+      const load = Math.round(rpe * minutes);
+      return "Càrrega = RPE " + rpe + " × " + minutes + " min = " + load;
     }
     function buildWeeklyEmailPayload(){
       const selectedWeek = currentWeekKey();

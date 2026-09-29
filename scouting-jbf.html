@@ -378,7 +378,7 @@
 
       <article class="panel">
         <h3>Vídeo i observacions del rival</h3>
-        <p class="sub">Afegeix el vídeo del partit i les conclusions de scouting. Es desen al navegador des d’on s’editen.</p>
+        <p class="sub">Afegeix el vídeo del partit i les conclusions de scouting. Es comparteixen amb tot l’staff.</p>
         <form class="scouting-form" id="scoutingResourcesForm">
           <div class="scouting-fields">
             <div class="scouting-field">
@@ -403,12 +403,17 @@
 
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>
-    const SCOUTING_RESOURCES_KEY = "scouting-jbf-tgn-resources-v1";
+    const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const SCOUTING_RESOURCES_PATH = "scoutingResources/season-26-27/jbf/tgn-basquet-f10a";
     const scoutingResourcesForm = document.getElementById("scoutingResourcesForm");
     const opponentVideoUrl = document.getElementById("opponentVideoUrl");
     const opponentNotes = document.getElementById("opponentNotes");
     const openOpponentVideo = document.getElementById("openOpponentVideo");
     const scoutingResourcesStatus = document.getElementById("scoutingResourcesStatus");
+
+    function scoutingResourcesUrl(){
+      return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + SCOUTING_RESOURCES_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+    }
 
     function updateOpponentVideoLink(){
       const value = opponentVideoUrl.value.trim();
@@ -422,32 +427,59 @@
       }
     }
 
-    try {
-      const saved = JSON.parse(localStorage.getItem(SCOUTING_RESOURCES_KEY) || "{}");
-      opponentVideoUrl.value = saved.videoUrl || "";
-      opponentNotes.value = saved.notes || "";
-      updateOpponentVideoLink();
-    } catch (error) {
-      console.warn("No s'han pogut carregar les observacions de scouting.", error);
+    async function loadScoutingResources(){
+      scoutingResourcesStatus.textContent = "Carregant observacions compartides…";
+      try {
+        const response = await fetch(scoutingResourcesUrl(), { cache:"no-store" });
+        if(!response.ok) throw new Error("Firebase read failed");
+        const saved = await response.json() || {};
+        opponentVideoUrl.value = saved.videoUrl || "";
+        opponentNotes.value = saved.notes || "";
+        updateOpponentVideoLink();
+        scoutingResourcesStatus.textContent = saved.updatedAt ? "Observacions compartides actualitzades." : "Encara no hi ha observacions compartides.";
+      } catch (error) {
+        console.warn("No s'han pogut carregar les observacions de scouting.", error);
+        scoutingResourcesStatus.textContent = "No s'han pogut carregar les observacions compartides.";
+      }
     }
 
     opponentVideoUrl.addEventListener("input", updateOpponentVideoLink);
-    scoutingResourcesForm.addEventListener("submit", event => {
+    scoutingResourcesForm.addEventListener("submit", async event => {
       event.preventDefault();
-      localStorage.setItem(SCOUTING_RESOURCES_KEY, JSON.stringify({
-        videoUrl: opponentVideoUrl.value.trim(),
-        notes: opponentNotes.value.trim()
-      }));
-      updateOpponentVideoLink();
-      scoutingResourcesStatus.textContent = "Observacions guardades en aquest navegador.";
+      scoutingResourcesStatus.textContent = "Guardant observacions compartides…";
+      try {
+        const response = await fetch(scoutingResourcesUrl(), {
+          method:"PUT",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({
+            videoUrl: opponentVideoUrl.value.trim(),
+            notes: opponentNotes.value.trim(),
+            updatedAt:new Date().toISOString()
+          })
+        });
+        if(!response.ok) throw new Error("Firebase write failed");
+        updateOpponentVideoLink();
+        scoutingResourcesStatus.textContent = "Observacions guardades i compartides amb l’staff.";
+      } catch (error) {
+        console.warn("No s'han pogut desar les observacions de scouting.", error);
+        scoutingResourcesStatus.textContent = "No s'han pogut guardar les observacions compartides.";
+      }
     });
-    document.getElementById("clearScoutingResources").addEventListener("click", () => {
-      localStorage.removeItem(SCOUTING_RESOURCES_KEY);
-      opponentVideoUrl.value = "";
-      opponentNotes.value = "";
-      updateOpponentVideoLink();
-      scoutingResourcesStatus.textContent = "Observacions eliminades d'aquest navegador.";
+    document.getElementById("clearScoutingResources").addEventListener("click", async () => {
+      scoutingResourcesStatus.textContent = "Eliminant observacions compartides…";
+      try {
+        const response = await fetch(scoutingResourcesUrl(), { method:"DELETE" });
+        if(!response.ok) throw new Error("Firebase delete failed");
+        opponentVideoUrl.value = "";
+        opponentNotes.value = "";
+        updateOpponentVideoLink();
+        scoutingResourcesStatus.textContent = "Observacions compartides eliminades.";
+      } catch (error) {
+        console.warn("No s'han pogut eliminar les observacions de scouting.", error);
+        scoutingResourcesStatus.textContent = "No s'han pogut eliminar les observacions compartides.";
+      }
     });
+    loadScoutingResources();
   </script>
 </body>
 </html>

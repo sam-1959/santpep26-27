@@ -545,7 +545,9 @@
       const where=g.home?'casa':'fora';
       const loc=g.loc ? ' · ' + shortLocation(g.loc) : '';
       const fr=g.friendly ? ' · amistós' : '';
-      return fmtDateNumeric(g.date) + ' ' + g.time + ' · ' + g.team + ' ' + sex + ' vs ' + g.rival + ' · ' + where + loc + fr;
+      const ourTeam=g.team + ' ' + sex;
+      const matchup=g.home ? ourTeam + ' vs ' + g.rival : g.rival + ' vs ' + ourTeam;
+      return fmtDateNumeric(g.date) + ' ' + g.time + ' · ' + matchup + ' · ' + where + loc + fr;
     }
 
     function changeIcon(name){

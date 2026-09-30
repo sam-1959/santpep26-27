@@ -500,8 +500,9 @@
       let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p><div class="calendar-week">';
       days.forEach(function(d){
         const gs=all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+        if(!gs.length) return;
         html+='<section class="calendar-day"><div class="calendar-day-head">'+d.name+'<span class="calendar-day-date">'+fmtDate(addDays(wk.monday,d.off))+'</span></div><div class="calendar-day-games">';
-        html+=gs.length ? gs.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('') : '<div class="agenda-empty">Sense partits</div>';
+        html+=gs.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('');
         html+='</div></section>';
       });
       return html+'</div>';

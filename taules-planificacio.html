@@ -943,8 +943,9 @@
         button.dataset.rejectGameId = game.id;
         button.dataset.rejectSlot = slot;
         button.dataset.rejectPerson = value;
-        button.textContent = "Rebutja";
-        button.title = "Marca que aquesta persona ha rebutjat aquesta taula i cerca una substitució.";
+        button.textContent = "✕";
+        button.title = "Rebutja";
+        button.setAttribute("aria-label", "Rebutja");
         wrap.appendChild(button);
       }
       return wrap;

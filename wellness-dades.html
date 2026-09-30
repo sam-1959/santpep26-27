@@ -650,7 +650,7 @@
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter, tooltipGetter, variationGetter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th>' + (variationGetter ? '<th>Variació %</th>' : '') + '</tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th>' + (variationGetter ? '<th>Tendència</th>' : '') + '</tr>';
       if(!groups.length || !dates.length){
         body.innerHTML = '<tr><td colspan="' + (dates.length + 3 + (variationGetter ? 1 : 0)) + '">No hi ha dades.</td></tr>';
         return;

@@ -330,17 +330,16 @@
 
     const conflictKeys=new Set();
     const gamesByPlaceTime=new Map();
-    DATA.weeks.forEach(function(wk){
-      wk.games.forEach(function(g){
-        const key=placeTimeKey(g);
-        if(!key) return;
+    function rebuildConflicts(){
+      conflictKeys.clear(); gamesByPlaceTime.clear();
+      DATA.weeks.forEach(function(wk){ wk.games.forEach(function(g){
+        const key=placeTimeKey(g); if(!key) return;
         if(!gamesByPlaceTime.has(key)) gamesByPlaceTime.set(key,[]);
         gamesByPlaceTime.get(key).push(g);
-      });
-    });
-    gamesByPlaceTime.forEach(function(games,key){
-      if(games.length>1 && !isAllowedMiniSaturdayAfternoon(games)) conflictKeys.add(key);
-    });
+      }); });
+      gamesByPlaceTime.forEach(function(games,key){ if(games.length>1 && !isAllowedMiniSaturdayAfternoon(games)) conflictKeys.add(key); });
+    }
+    rebuildConflicts();
 
     function isAllowedMiniSaturdayAfternoon(games){
       return games.length<=3 && games.every(function(g){
@@ -776,6 +775,7 @@
     async function init(){
       await loadRemoteCalendarData();
       rebuildChangedGames();
+      rebuildConflicts();
       rebuildMonths();
       buildFilters();
       // Obre el mes i la setmana on estiguem (o el/la m\u00e9s proper/a)

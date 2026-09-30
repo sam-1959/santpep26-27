@@ -11,6 +11,8 @@ header .icon { font-weight:900; }
 .grid > article:nth-child(7) { order:30; }
 .grid > article:nth-child(8) { order:31; }
 .grid > article:nth-child(11) { order:32; }
+/* La taula de jugadores tanca les dades; així no comparteix fila amb la lectura. */
+.grid > article:nth-child(10) { grid-column:span 12; }
 .crest {
   background:#fff url('sese-logo.svg') center/contain no-repeat !important;
   color:transparent !important;

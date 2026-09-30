@@ -80,7 +80,7 @@
       border-top:3px solid var(--accent); background:transparent; color:#4a3800; padding:8px 10px 0 0; }
     .monthly-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
-    .monthly-summary-grid { display:grid; grid-template-columns:repeat(2, max-content); gap:16px; align-items:start; margin:0 0 16px; }
+    .monthly-summary-grid { display:grid; grid-template-columns:repeat(3, max-content); gap:16px; align-items:start; margin:0 0 16px; }
     .monthly-summary-grid .monthly-panel { margin:0; }
     @media (max-width: 900px) {
       .monthly-summary-grid { grid-template-columns:1fr; }
@@ -1376,6 +1376,19 @@
       return load;
     }
 
+    function totalRejectedCountsByPerson(endDate = ""){
+      const counts = new Map();
+      Object.values(assignments || {}).forEach(assignment => {
+        if (!assignment) return;
+        if (endDate && assignment.game?.date && assignment.game.date > endDate) return;
+        Object.keys(assignment.rejectedPeople || {}).forEach(person => {
+          if (!person) return;
+          counts.set(person, (counts.get(person) || 0) + 1);
+        });
+      });
+      return counts;
+    }
+
     function renderMonthlyLoad(periodGames, parent = els.content){
       const panel = document.createElement("section");
       panel.className = "monthly-panel";
@@ -1456,6 +1469,42 @@
       table.querySelector("tfoot").innerHTML =
         `<tr><td class="total-label" colspan="2">Total taules assignades</td><td class="total-value">${escapeHtml(grandTotal)}</td></tr>`;
       wrap.appendChild(table);
+      panel.append(title, wrap);
+      parent.appendChild(panel);
+    }
+
+    function renderRejectedAssignmentLoad(parent = els.content){
+      const active = periods[activePeriodIndex];
+      const periodLimit = periodEndDate(active);
+      const panel = document.createElement("section");
+      panel.className = "monthly-panel";
+      const title = document.createElement("h2");
+      title.className = "monthly-title";
+      title.textContent = "Taules rebutjades per persona";
+      const wrap = document.createElement("div");
+      wrap.className = "monthly-cost-table-wrap";
+      const totalsByPerson = totalRejectedCountsByPerson(periodLimit);
+      const rows = [...totalsByPerson.entries()]
+        .map(([name, total]) => ({ name, total }))
+        .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ca"));
+      if (!rows.length) {
+        wrap.appendChild(Object.assign(document.createElement("div"), { className:"empty", textContent:"Encara no hi ha taules rebutjades." }));
+      } else {
+        const table = document.createElement("table");
+        table.className = "monthly-cost-table";
+        table.innerHTML = "<thead><tr><th>#</th><th>Persona</th><th>Taules rebutjades</th></tr></thead><tbody></tbody><tfoot></tfoot>";
+        const body = table.querySelector("tbody");
+        let grandTotal = 0;
+        rows.forEach((item, index) => {
+          grandTotal += item.total;
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${escapeHtml(index + 1)}</td><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.total)}</td>`;
+          body.appendChild(row);
+        });
+        table.querySelector("tfoot").innerHTML =
+          `<tr><td class="total-label" colspan="2">Total taules rebutjades</td><td class="total-value">${escapeHtml(grandTotal)}</td></tr>`;
+        wrap.appendChild(table);
+      }
       panel.append(title, wrap);
       parent.appendChild(panel);
     }
@@ -1590,6 +1639,7 @@
         summaryGrid.className = "monthly-summary-grid";
         renderMonthlyLoad(gamesForActivePeriod(), summaryGrid);
         renderTotalAssignmentLoad(summaryGrid);
+        renderRejectedAssignmentLoad(summaryGrid);
         els.content.appendChild(summaryGrid);
         renderProposalLog();
         return;

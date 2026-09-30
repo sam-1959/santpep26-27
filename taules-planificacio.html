@@ -42,6 +42,7 @@
     .filter.active { background:var(--brand); color:#fff; border-color:var(--brand); }
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
     .action-button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 14px; font-size:0.82rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); }
+    .proposal-button-icon { color:#c7e58c; font-size:1rem; line-height:0; margin-right:5px; vertical-align:-1px; }
     .action-button.secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .action-button.danger { background:#fff; color:var(--danger); border:1px solid #f0c6c6; }
     .action-button:disabled { opacity:0.55; cursor:not-allowed; }
@@ -224,7 +225,7 @@
 
     <div class="planning-toolbar">
       <div class="actions" aria-label="Accions de planificació mensual">
-        <button id="generateProposal" class="action-button" type="button">Generar proposta</button>
+        <button id="generateProposal" class="action-button" type="button"><span class="proposal-button-icon" aria-hidden="true">♻</span>Generar proposta</button>
         <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar període</button>
         <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
       </div>

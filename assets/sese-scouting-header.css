@@ -13,6 +13,10 @@ header .icon { font-weight:900; }
 .grid > article:nth-child(11) { order:32; }
 /* La taula de jugadores tanca les dades; així no comparteix fila amb la lectura. */
 .grid > article:nth-child(10) { grid-column:span 12; }
+/* Dades del partit a l'esquerra i resum de tirs lliures a la dreta. */
+.grid > article:nth-child(9) { grid-column:span 6; order:5; }
+.grid > article:nth-child(6) { order:6; }
+.grid > article:nth-child(10) { order:8; }
 .crest {
   background:#fff url('sese-logo.svg') center/contain no-repeat !important;
   color:transparent !important;

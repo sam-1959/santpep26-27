@@ -650,7 +650,7 @@
     function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter, tooltipGetter, variationGetter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th>' + (variationGetter ? '<th>Variació</th>' : '') + '</tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th>' + (variationGetter ? '<th>Variació %</th>' : '') + '</tr>';
       if(!groups.length || !dates.length){
         body.innerHTML = '<tr><td colspan="' + (dates.length + 3 + (variationGetter ? 1 : 0)) + '">No hi ha dades.</td></tr>';
         return;
@@ -690,15 +690,16 @@
       const weeklyAverages = weekKeys.map(key => weeklyLoadAverage(playerRecords.filter(record => weekKey(record.trainingDate) === key))).filter(value => value !== null);
       if(!weeklyAverages.length) return null;
       const seasonAverage = weeklyAverages.reduce((sum, value) => sum + value, 0) / weeklyAverages.length;
-      return { value:selectedWeekAverage - seasonAverage, seasonAverage };
+      if(!seasonAverage) return null;
+      return { value:(selectedWeekAverage - seasonAverage) / seasonAverage * 100, seasonAverage };
     }
     function variationCell(variation){
       if(!variation) return '<td>—</td>';
       const rounded = Math.round(variation.value);
       const className = rounded > 0 ? "variation-up" : rounded < 0 ? "variation-down" : "variation-even";
       const sign = rounded > 0 ? "+" : "";
-      const title = "Diferència respecte a la mitjana de totes les setmanes (" + Math.round(variation.seasonAverage).toLocaleString("ca-ES") + ").";
-      return '<td><span class="badge ' + className + '" title="' + escapeHtml(title) + '">' + sign + rounded.toLocaleString("ca-ES") + '</span></td>';
+      const title = "Variació percentual respecte a la mitjana de totes les setmanes (" + Math.round(variation.seasonAverage).toLocaleString("ca-ES") + ").";
+      return '<td><span class="badge ' + className + '" title="' + escapeHtml(title) + '">' + sign + rounded.toLocaleString("ca-ES") + '%</span></td>';
     }
     function alertClass(alert){
       if(alert === "Fatiga") return "fatigue";

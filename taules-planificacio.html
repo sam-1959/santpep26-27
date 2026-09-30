@@ -1680,7 +1680,6 @@
           row.append(label, makeAssignmentControl(game, slot, assignment[slot] || ""));
           assign.appendChild(row);
         });
-        assign.appendChild(rejectionList(game));
         card.append(main, assign);
         list.appendChild(card);
       });
@@ -1730,7 +1729,7 @@
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
         row.children[8].appendChild(makeAssignmentControl(game, "table1", assignment.table1 || ""));
-        row.children[9].append(makeAssignmentControl(game, "table2", assignment.table2 || ""), rejectionList(game));
+        row.children[9].appendChild(makeAssignmentControl(game, "table2", assignment.table2 || ""));
         body.appendChild(row);
       });
       wrap.appendChild(table);

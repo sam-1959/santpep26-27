@@ -75,6 +75,19 @@
     .dayblock-date { font-size:0.82rem; font-weight:500; opacity:0.85; }
     .daygroup { margin:0 0 10px; padding-left:8px; border-left:3px solid var(--line); }
     .daygroup:last-child { margin-bottom:0; }
+    /* Vista d'agenda setmanal: un dia per columna, com Google Calendar. */
+    .calendar-week { display:grid; grid-template-columns:repeat(7,minmax(155px,1fr)); gap:8px; overflow-x:auto; padding-bottom:8px; }
+    .calendar-day { min-height:210px; background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+    .calendar-day-head { padding:8px 10px; background:var(--brand); color:#fff; font-size:.78rem; font-weight:800; }
+    .calendar-day-date { display:block; opacity:.82; font-size:.68rem; font-weight:600; }
+    .calendar-day-games { display:flex; flex-direction:column; gap:6px; padding:7px; }
+    .agenda-game { padding:7px; border-left:4px solid var(--brand); border-radius:7px; background:#fff; box-shadow:0 1px 2px rgba(60,40,90,.08); font-size:.74rem; }
+    .agenda-game.home { border-left-color:#2e7d32; background:var(--home); }
+    .agenda-game.away { border-left-color:#e57d00; background:var(--away); }
+    .agenda-time { display:block; color:var(--brand-dark); font-weight:900; }
+    .agenda-team { display:block; font-weight:800; }
+    .agenda-rival { display:block; color:var(--muted); }
+    .agenda-empty { padding:12px 8px; color:var(--muted); font-size:.73rem; font-style:italic; }
 
     .daygroup-head { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin:0 0 6px; }
     .slotgroup { margin:0 0 8px; }
@@ -482,57 +495,16 @@
     }
 
     function renderWeek(wk){
-      const days=[
-        {dow:1,name:'Dilluns',off:0},
-        {dow:2,name:'Dimarts',off:1},
-        {dow:3,name:'Dimecres',off:2},
-        {dow:4,name:'Dijous',off:3},
-        {dow:5,name:'Divendres',off:4},
-        {dow:6,name:'Dissabte',off:5},
-        {dow:0,name:'Diumenge',off:6}
-      ];
-      const secs=[{home:true,name:'A casa'},{home:false,name:'A fora'}];
-      let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div>' +
-        '<p class="section-sub">Partits de la setmana</p>';
-      let any=false;
-      secs.forEach(function(sec){
-        const secGames=wk.games.filter(function(g){ return g.home===sec.home && passes(g); });
-        if(!secGames.length) return;
-        any=true;
-        const n=secGames.length;
-        const cntLbl=n + (n===1 ? ' partit' : ' partits');
-        html += '<div class="dayblock"><h3 class="dayblock-head">' + sec.name +
-          '<span class="count">' + cntLbl + '</span></h3>';
-        let daysHtml='';
-        days.forEach(function(d){
-          const gs=secGames.filter(function(g){ return g.dow===d.dow; })
-            .sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:a.time<b.time?-1:a.time>b.time?1:0; });
-          if(!gs.length) return;
-          let inner='';
-          if(sec.home){
-            // Casa: graella horitzontal (files=pavelló, columnes=franja fixa)
-            inner = homeGrid(gs);
-          } else {
-            // Fora: blocs per franja horària en fila, d'esquerra a dreta (per hora)
-            const slots=[]; const bySlot={};
-            gs.forEach(function(g){ if(!(g.time in bySlot)){ bySlot[g.time]=[]; slots.push(g.time); } bySlot[g.time].push(g); });
-            slots.sort();
-            inner += '<div class="slotrow">';
-            slots.forEach(function(t){
-              inner += '<div class="slotgroup"><div class="slot-head">' + t + '</div><div class="games">' +
-                bySlot[t].map(gameCard).join('') + '</div></div>';
-            });
-            inner += '</div>';
-          }
-          daysHtml += '<div class="daygroup"><div class="daygroup-head">' + d.name +
-            ' · ' + fmtDate(addDays(wk.monday,d.off)) + '</div>' + inner + '</div>';
-        });
-        // Els dies amb partits es mostren en ordre de setmana; dins de cada dia,
-        // els partits van d'esquerra a dreta per hora.
-        html += daysHtml;
-        html += '</div>';
+      const days=[{dow:1,name:'Dilluns',off:0},{dow:2,name:'Dimarts',off:1},{dow:3,name:'Dimecres',off:2},{dow:4,name:'Dijous',off:3},{dow:5,name:'Divendres',off:4},{dow:6,name:'Dissabte',off:5},{dow:0,name:'Diumenge',off:6}];
+      const all=wk.games.filter(passes); if(!all.length) return '';
+      let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p><div class="calendar-week">';
+      days.forEach(function(d){
+        const gs=all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+        html+='<section class="calendar-day"><div class="calendar-day-head">'+d.name+'<span class="calendar-day-date">'+fmtDate(addDays(wk.monday,d.off))+'</span></div><div class="calendar-day-games">';
+        html+=gs.length ? gs.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('') : '<div class="agenda-empty">Sense partits</div>';
+        html+='</div></section>';
       });
-      return any ? html : '';
+      return html+'</div>';
     }
 
     function changeTypeLabel(t){

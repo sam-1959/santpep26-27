@@ -505,7 +505,12 @@
         if(!gs.length) return;
         html+='<section class="calendar-day"><div class="calendar-day-head">'+d.name+'<span class="calendar-day-date">'+fmtDate(addDays(wk.monday,d.off))+'</span></div><div class="calendar-day-games">';
         const morning=gs.filter(function(g){return g.time<'14:00';}), afternoon=gs.filter(function(g){return g.time>='14:00';});
-        function cards(list){return list.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('');}
+        function cards(list){return list.map(function(g){
+          const fr=g.friendly?' <span class="friendly" title="Partit amistós">🤝</span>':'';
+          const mini=miniMark(g), ch=changeMark(g), cf=conflictMark(g);
+          const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
+          return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+fr+mini+ch+cf+'</span><span class="agenda-rival">vs '+g.rival+'</span>'+loc+'</div>';
+        }).join('');}
         html+=(morning.length?'<div class="agenda-period">Matí</div>'+cards(morning):'')+(afternoon.length?'<div class="agenda-period">Tarda</div>'+cards(afternoon):'');
         html+='</div></section>';
       });

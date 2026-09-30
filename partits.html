@@ -104,6 +104,7 @@
     .agenda-legend i { width:12px; height:12px; border-radius:3px; border-left:4px solid; background:#fff; }
     .agenda-legend .home { border-color:#2e7d32; background:var(--home); }
     .agenda-legend .away { border-color:#e57d00; background:var(--away); }
+    .agenda-summary { margin-left:auto; }
 
     .daygroup-head { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin:0 0 6px; }
     .slotgroup { margin:0 0 8px; }
@@ -531,7 +532,7 @@
         html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';
       });
-      return html+'</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p>';
+      return html+'</div>';
     }
 
     function changeTypeLabel(t){
@@ -656,7 +657,8 @@
       const html=renderWeek(DATA.weeks[currentIdx]);
       const weekHtml = html.trim() ? html : '<p class="empty-filter">Cap partit per als filtres seleccionats.</p>';
       const conflicts=renderConflicts();
-      const venueLegend='<div class="agenda-legend"><span><i class="home"></i>Casa</span><span><i class="away"></i>Fora</span></div>';
+      const agendaCount=DATA.weeks[currentIdx].games.filter(passes).length;
+      const venueLegend='<div class="agenda-legend"><span><i class="home"></i>Casa</span><span><i class="away"></i>Fora</span><span class="agenda-summary">Agenda setmanal · '+agendaCount+' partits</span></div>';
       content.innerHTML = '<div class="agenda-layout"><div>' + weekHtml + venueLegend + iconLegend() + '</div><aside class="agenda-side">' + conflicts + renderLatestChanges() + '</aside></div>';
       bindChangesNav();
     }

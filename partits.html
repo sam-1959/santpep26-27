@@ -82,7 +82,7 @@
     /* Vista d'agenda setmanal: un dia per columna, com Google Calendar. */
     .calendar-week { display:grid; grid-template-columns:repeat(auto-fit,minmax(0,1fr)); gap:8px; padding-bottom:8px; }
     .agenda-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:start; }
-    .agenda-side { display:flex; flex-direction:column; gap:14px; padding-top:69px; }
+    .agenda-side { display:flex; flex-direction:column; gap:14px; padding-top:50px; }
     .agenda-layout .changes { margin-top:0; }
     @media (max-width:900px){ .agenda-layout { grid-template-columns:1fr; } .agenda-side { padding-top:0; } }
     .calendar-day { min-height:210px; background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
@@ -513,7 +513,7 @@
     function renderWeek(wk){
       const days=[{dow:1,name:'Dilluns',off:0},{dow:2,name:'Dimarts',off:1},{dow:3,name:'Dimecres',off:2},{dow:4,name:'Dijous',off:3},{dow:5,name:'Divendres',off:4},{dow:6,name:'Dissabte',off:5},{dow:0,name:'Diumenge',off:6}];
       const all=wk.games.filter(passes); if(!all.length) return '';
-      let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p><div class="calendar-week">';
+      let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div><div class="calendar-week">';
       days.forEach(function(d){
         const gs=all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
         if(!gs.length) return;
@@ -528,7 +528,7 @@
         html+=(morning.length?'<div class="agenda-period">Matí</div>'+cards(morning):'')+(afternoon.length?'<div class="agenda-period">Tarda</div>'+cards(afternoon):'');
         html+='</div></section>';
       });
-      return html+'</div>';
+      return html+'</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p>';
     }
 
     function changeTypeLabel(t){

@@ -44,6 +44,9 @@
       border-radius:999px; background:var(--card); color:var(--brand); cursor:pointer; }
     .nav-arrow svg { width:16px; height:16px; stroke:currentColor; }
     .nav-arrow:disabled { opacity:0.42; cursor:not-allowed; }
+    .month-pager { grid-template-columns:40px minmax(0,1fr) 40px; }
+    .month-pager .month-current { min-height:40px; }
+    .month-pager .nav-arrow { width:40px; height:40px; }
     @media (max-width:640px){ .nav-panel { grid-template-columns:1fr; } }
     @media (max-width:900px){ .control-bar { flex-direction:column; } .control-bar .nav-panel { grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr); } }
     .tabs { display:flex; gap:6px; margin-bottom:0; flex-wrap:wrap; }

@@ -17,8 +17,13 @@ header .icon { font-weight:900; }
 .grid > article:nth-child(9) { grid-column:span 6; order:5; }
 .grid > article:nth-child(6) { order:6; }
 .grid > article:nth-child(10) { order:8; }
-/* Els comentaris necessiten l'amplada completa de la secció. */
-.fields .field:last-child { grid-column:1 / -1; }
+/* Comentaris a la dreta, ocupant tota l'alçada de vídeo i accions. */
+.form { grid-template-columns:minmax(260px,.8fr) minmax(320px,1.2fr) !important; grid-template-rows:auto auto; }
+.form .fields { display:contents; }
+.form .field:first-child { grid-column:1; grid-row:1; }
+.form .field:last-child { grid-column:2; grid-row:1 / span 2; }
+.form .field:last-child textarea { flex:1; min-height:180px !important; }
+.form .save { grid-column:1; grid-row:2; }
 .crest {
   background:#fff url('sese-logo.svg') center/contain no-repeat !important;
   color:transparent !important;

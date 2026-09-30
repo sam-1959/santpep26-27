@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150" role="img" aria-labelledby="title desc">
+  <title id="title">Escut del SESE</title><desc id="desc">Escut blau del Secció Esportiva Santa Eulàlia</desc>
+  <g fill="none" stroke="#075aa5" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="5" d="M75 8 142 30v57c-17 28-40 43-67 55C48 130 25 115 8 87V30Z"/>
+    <path stroke-width="3" d="M15 42c19-11 39-12 60-4 21-8 41-7 60 4M24 69h102M32 94h86M75 45v77"/>
+    <path stroke-width="3" d="m34 63 19-14m-1 0-19 14m65-14 19 14m-1-14-19 14M51 73l24-15 24 15M42 102l33 17 33-17"/>
+    <path stroke-width="2.5" d="M45 82c11-8 23-11 30-11s19 3 30 11M57 92c6-5 12-7 18-7s12 2 18 7"/>
+  </g>
+  <text x="75" y="38" fill="#075aa5" font-family="Arial, sans-serif" font-size="29" font-style="italic" font-weight="700" letter-spacing="2" text-anchor="middle">SESE</text>
+</svg>

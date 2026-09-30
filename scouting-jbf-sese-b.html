@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Scouting SESE B · JBF · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,.08),0 4px 16px rgba(60,40,90,.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.45; }
+    header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .logo-link { display:inline-flex; flex-shrink:0; text-decoration:none; }
+    .club-logo { width:48px; height:48px; padding:3px; border-radius:10px; background:#fff; object-fit:contain; }
+    .htext { flex:1; min-width:0; }.htext h1 { margin:0; font-size:1.05rem; }.htext h1 .club { display:block; font-size:.72rem; font-weight:500; opacity:.85; letter-spacing:.04em; text-transform:uppercase; }.htext p { margin:2px 0 0; font-size:.8rem; opacity:.9; }
+    .page-logo { display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#fff; color:var(--brand); font-size:1.45rem; }
+    main { width:min(100% - 40px,1180px); margin:0 auto; padding:22px 0 40px; }.back { display:inline-flex; margin-bottom:16px; color:var(--brand); font-size:.84rem; font-weight:800; text-decoration:none; }
+    .topline { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-bottom:16px; }.topline h2 { margin:0; color:var(--brand-dark); font-size:1.4rem; }.topline p { margin:4px 0 0; color:var(--muted); }.badge { display:inline-flex; padding:6px 10px; border:1px solid #efd96f; border-radius:999px; background:#fff8cc; color:#5f4a00; font-size:.78rem; font-weight:900; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; }.panel { grid-column:span 12; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }.panel.half { grid-column:span 6; }.panel h3 { margin:0 0 5px; color:var(--brand-dark); font-size:1rem; }.sub { margin:0 0 14px; color:var(--muted); font-size:.84rem; }
+    .match { display:flex; align-items:center; justify-content:center; gap:18px; text-align:center; flex-wrap:wrap; }.team { display:grid; justify-items:center; gap:7px; min-width:160px; font-weight:900; color:var(--brand-dark); }.team-logo { display:grid; place-items:center; width:74px; height:74px; border:1px solid var(--line); border-radius:50%; background:#fff; color:#075a9a; font-size:1rem; font-weight:900; }.team-logo.home { padding:4px; object-fit:contain; }.versus { color:var(--muted); font-size:.85rem; font-weight:900; }.match-info { color:var(--muted); font-size:.82rem; }
+    .checklist { display:grid; gap:8px; margin:0; padding:0; list-style:none; }.checklist li { padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#faf8fd; font-size:.88rem; }.checklist li::before { content:"•"; color:var(--brand); font-weight:900; margin-right:8px; }
+    .scouting-form { display:grid; gap:12px; }.scouting-fields { display:grid; grid-template-columns:minmax(260px,.8fr) minmax(320px,1.2fr); gap:12px; }.scouting-field { display:flex; flex-direction:column; gap:5px; }.scouting-field label { color:var(--brand-dark); font-size:.74rem; font-weight:900; text-transform:uppercase; letter-spacing:.05em; }.scouting-field input,.scouting-field textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); font:inherit; font-size:.88rem; }.scouting-field textarea { min-height:112px; resize:vertical; }.scouting-resource-links { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }.video-link,.four-factors-link { color:var(--brand); font-size:.82rem; font-weight:900; text-decoration:none; }.video-link:hover,.four-factors-link:hover { text-decoration:underline; }.scouting-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }.scouting-button { border:0; border-radius:999px; padding:8px 13px; background:var(--brand); color:#fff; font:inherit; font-size:.8rem; font-weight:900; cursor:pointer; }.scouting-button.secondary { border:1px solid var(--line); background:#fff; color:var(--brand); }.scouting-status { color:var(--muted); font-size:.76rem; }
+    footer { padding:20px; color:var(--muted); font-size:.75rem; text-align:center; } @media (max-width:760px){ main { width:min(100% - 28px,1180px); }.panel.half { grid-column:span 12; }.scouting-fields { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo-link" href="scouting-jbf-index.html" title="Tornar als scoutings JBF"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
+    <div class="htext"><h1><span class="club">CB Sant Josep de Badalona</span> Scouting JBF</h1><p>Júnior B F · Anàlisi per jornada</p></div>
+    <div class="page-logo" aria-hidden="true">🔎</div>
+  </header>
+  <main>
+    <a class="back" href="scouting-jbf-index.html">← Tornar als scoutings JBF</a>
+    <div class="topline"><div><h2>Scouting rival · SESE B</h2><p>Jornada 5 · Preparació de partit</p></div><span class="badge">Dg. 04/10/2026 · 12:30 · La Colina</span></div>
+    <section class="grid">
+      <article class="panel"><div class="match"><div class="team"><img class="team-logo home" src="assets/santpep-logo.png" alt="Escut CB Sant Josep" /><span>MANTISE CB SANT JOSEP · JBF</span></div><span class="versus">vs</span><div class="team"><span class="team-logo" aria-label="SESE B">SESE<br>B</span><span>SESE B</span></div></div><p class="match-info">Partit a casa · Pavelló de La Colina</p></article>
+      <article class="panel half"><h3>Anàlisi del rival</h3><p class="sub">Espai per completar amb les dades, vídeo i observacions disponibles abans del partit.</p><ul class="checklist"><li>Identificar ritme de joc, transicions i emparellaments.</li><li>Revisar les situacions ofensives i defensives repetides.</li><li>Definir prioritats de pla de partit per al JBF.</li></ul></article>
+      <article class="panel half"><h3>Claus de preparació JBF</h3><p class="sub">Punts de treball a concretar amb l’staff.</p><ul class="checklist"><li>Preparar les normes defensives i el rebot.</li><li>Acordar els avantatges ofensius que es volen buscar.</li><li>Deixar anotats els ajustos i les jugadores a seguir.</li></ul></article>
+      <article class="panel"><h3>Vídeo i observacions del rival</h3><p class="sub">Afegeix el vídeo del partit i les conclusions de scouting. Es comparteixen amb tot l’staff.</p><form class="scouting-form" id="scoutingResourcesForm"><div class="scouting-fields"><div class="scouting-field"><label for="opponentVideoUrl">Vídeo de YouTube</label><input id="opponentVideoUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?..." /><div class="scouting-resource-links"><a class="video-link" id="openOpponentVideo" href="#" target="_blank" rel="noopener" hidden>▶ Obrir vídeo</a><a class="four-factors-link" id="openFourFactorsGame" href="#" hidden>📊 Veure 4 Factors del partit</a></div></div><div class="scouting-field"><label for="opponentNotes">Comentaris sobre el rival</label><textarea id="opponentNotes" placeholder="Fortaleses, patrons ofensius, defensa, jugadores clau, ajustos..."></textarea></div></div><div class="scouting-actions"><button class="scouting-button" type="submit">Guardar observacions</button><button class="scouting-button secondary" id="clearScoutingResources" type="button">Netejar</button><span class="scouting-status" id="scoutingResourcesStatus" aria-live="polite"></span></div></form></article>
+    </section>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const FIREBASE_DB_URL="https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const SCOUTING_RESOURCES_PATH="scoutingResources/season-26-27/jbf/sese-b";
+    const FOUR_FACTORS_GAMES_PATH="fourFactorsGames/jbf-1er-any-pref";
+    const JBF_TEAM_KEY="lgf1vqte4cb7", SCOUTING_GAME_DATE="2026-10-04", SCOUTING_OPPONENT="SESE";
+    const form=document.getElementById("scoutingResourcesForm"), video=document.getElementById("opponentVideoUrl"), notes=document.getElementById("opponentNotes"), openVideo=document.getElementById("openOpponentVideo"), openFourFactors=document.getElementById("openFourFactorsGame"), status=document.getElementById("scoutingResourcesStatus");
+    function firebaseUrl(path){ return FIREBASE_DB_URL.replace(/\/$/,"")+"/"+path.split("/").map(encodeURIComponent).join("/")+".json"; }
+    function normalizedText(value){ return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase(); }
+    function updateVideoLink(){ try { const url=new URL(video.value.trim()); const valid=url.protocol==="https:"||url.protocol==="http:"; openVideo.hidden=!valid; if(valid) openVideo.href=url.href; } catch(error) { openVideo.hidden=true; } }
+    function isClosedGame(game){ return game && (game.status==="closed" || (Array.isArray(game.quarters) && game.quarters.some(quarter=>quarter&&quarter.period==="Q4"))); }
+    async function loadResources(){ status.textContent="Carregant observacions compartides…"; try { const response=await fetch(firebaseUrl(SCOUTING_RESOURCES_PATH),{cache:"no-store"}); if(!response.ok) throw new Error("Firebase read failed"); const saved=await response.json()||{}; video.value=saved.videoUrl||""; notes.value=saved.notes||""; updateVideoLink(); status.textContent=saved.updatedAt?"Observacions compartides actualitzades.":"Encara no hi ha observacions compartides."; } catch(error) { status.textContent="No s'han pogut carregar les observacions compartides."; } }
+    async function loadFourFactorsLink(){ try { const response=await fetch(firebaseUrl(FOUR_FACTORS_GAMES_PATH),{cache:"no-store"}); if(!response.ok) throw new Error("Firebase read failed"); const game=Object.values(await response.json()||{}).find(item=>item&&item.teamKey===JBF_TEAM_KEY&&isClosedGame(item)&&item.meta&&item.meta.date===SCOUTING_GAME_DATE&&normalizedText(item.teams&&item.teams.opp&&item.teams.opp.name).includes(SCOUTING_OPPONENT)); if(!game||!game.id) return; openFourFactors.href="four-factors.html?t="+encodeURIComponent(JBF_TEAM_KEY)+"&g="+encodeURIComponent(game.id); openFourFactors.hidden=false; } catch(error) { console.warn("No s'ha pogut carregar l'enllaç als 4 Factors.",error); } }
+    video.addEventListener("input",updateVideoLink);
+    form.addEventListener("submit",async event=>{ event.preventDefault(); status.textContent="Guardant observacions compartides…"; try { const response=await fetch(firebaseUrl(SCOUTING_RESOURCES_PATH),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({videoUrl:video.value.trim(),notes:notes.value.trim(),updatedAt:new Date().toISOString()})}); if(!response.ok) throw new Error("Firebase write failed"); updateVideoLink(); status.textContent="Observacions guardades i compartides amb l’staff."; } catch(error) { status.textContent="No s'han pogut guardar les observacions compartides."; } });
+    document.getElementById("clearScoutingResources").addEventListener("click",async()=>{ status.textContent="Eliminant observacions compartides…"; try { const response=await fetch(firebaseUrl(SCOUTING_RESOURCES_PATH),{method:"DELETE"}); if(!response.ok) throw new Error("Firebase delete failed"); video.value=""; notes.value=""; updateVideoLink(); status.textContent="Observacions compartides eliminades."; } catch(error) { status.textContent="No s'han pogut eliminar les observacions compartides."; } });
+    loadResources(); loadFourFactorsLink();
+  </script>
+</body>
+</html>

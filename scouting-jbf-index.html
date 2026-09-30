@@ -32,6 +32,7 @@
     .scouting-link h3 { margin:0; color:var(--brand-dark); font-size:1.05rem; }
     .scouting-link p { margin:3px 0 0; color:var(--muted); font-size:.84rem; }
     .opponent-logo { width:58px; height:58px; flex:0 0 58px; padding:4px; border:1px solid var(--line); border-radius:50%; background:#fff; object-fit:contain; }
+    .opponent-initials { display:grid; place-items:center; width:58px; height:58px; flex:0 0 58px; border:1px solid var(--line); border-radius:50%; background:#fff; color:#075a9a; font-size:.78rem; font-weight:900; line-height:1.05; text-align:center; }
     .result { display:inline-flex; margin-top:7px; padding:4px 8px; border:1px solid var(--line); border-radius:999px; font-size:.74rem; font-weight:900; }
     .result.win { color:#1b5e20; background:#e8f5e9; border-color:#a5d6a7; }
     .result.loss { color:#8b1d1d; background:#fdeaea; border-color:#efbbbb; }
@@ -66,6 +67,16 @@
         <span>
           <h3>TGN Bàsquet F10A</h3>
           <p>Classificació, estadístiques, vídeo i observacions del rival.</p>
+          <span class="result pending" data-result>Resultat pendent</span>
+        </span>
+        <span class="go">Obrir →</span>
+      </a>
+      <a class="scouting-link" href="scouting-jbf-sese-b.html" data-scouting-opponent="SESE" data-scouting-date="2026-10-04">
+        <span class="matchday">Jornada<strong>5</strong></span>
+        <span class="opponent-initials" aria-label="SESE B">SESE<br>B</span>
+        <span>
+          <h3>SESE B</h3>
+          <p>Diumenge 4 d’octubre · 12:30 · Partit a casa.</p>
           <span class="result pending" data-result>Resultat pendent</span>
         </span>
         <span class="go">Obrir →</span>

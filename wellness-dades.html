@@ -58,6 +58,9 @@
     .badge.yellow { background:#fff176; color:#5f4a00; border-color:#fdd835; }
     .badge.orange { background:#ffcc80; color:#7a3d00; border-color:#ff9800; }
     .badge.red { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
+    .badge.variation-up { background:#c8e6c9; color:#145a18; border-color:#a5d6a7; }
+    .badge.variation-down { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
+    .badge.variation-even { background:#f4eef9; color:var(--brand-dark); border-color:#dccce9; }
     .alerts { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     .alert { padding:13px; border-right:1px solid var(--line); }
     .alert:last-child { border-right:0; }
@@ -632,7 +635,7 @@
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—");
       renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => sleepHoursLabel(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
-      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—", loadTooltip);
+      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—", loadTooltip, loadVariation);
     }
     function renderPlayerPagination(totalGroups, start, pageSize, totalPages){
       const shouldPaginate = totalGroups > PLAYERS_PER_PAGE;
@@ -644,12 +647,12 @@
       prevPlayerPageButton.disabled = state.playerPageIndex <= 0;
       nextPlayerPageButton.disabled = state.playerPageIndex >= totalPages - 1;
     }
-    function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter, tooltipGetter){
+    function renderMetricTable(prefix, label, dates, groups, valueGetter, classGetter, formatter, tooltipGetter, variationGetter){
       const head = document.getElementById(prefix + "Head");
       const body = document.getElementById(prefix + "Body");
-      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th></tr>';
+      head.innerHTML = '<tr><th>Jugador/a</th><th class="alerts-head">Alertes</th>' + dates.map(date => '<th>' + escapeHtml(formatDate(date).slice(0, 5)) + '</th>').join("") + '<th>Mitjana</th>' + (variationGetter ? '<th>Variació</th>' : '') + '</tr>';
       if(!groups.length || !dates.length){
-        body.innerHTML = '<tr><td colspan="' + (dates.length + 3) + '">No hi ha dades.</td></tr>';
+        body.innerHTML = '<tr><td colspan="' + (dates.length + 3 + (variationGetter ? 1 : 0)) + '">No hi ha dades.</td></tr>';
         return;
       }
       body.innerHTML = groups.map(group => {
@@ -668,8 +671,34 @@
         return '<tr class="' + (alerts.length ? 'player-alert' : '') + '"><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span></span></td><td class="alerts-cell">' + alertBadges + '</td>' +
           dayGroups.map(day => metricCell(day.value, classGetter, formatter, tooltipGetter ? tooltipGetter(day.records, day.value, false) : "")).join("") +
           metricCell(values.some(value => value !== null) ? avg : null, classGetter, formatter, tooltipGetter ? tooltipGetter(group.records, avg, true) : "") +
+          (variationGetter ? variationCell(variationGetter(group, avg)) : "") +
         '</tr>';
       }).join("");
+    }
+    function weeklyLoadAverage(records){
+      const dates = [...new Set(records.map(record => record.trainingDate).filter(Boolean))];
+      const dailyAverages = dates.map(date => {
+        const dayRecords = records.filter(record => record.trainingDate === date);
+        return dayRecords.reduce((sum, record) => sum + numeric(record.load), 0) / Math.max(dayRecords.length, 1);
+      });
+      return dailyAverages.length ? dailyAverages.reduce((sum, value) => sum + value, 0) / dailyAverages.length : null;
+    }
+    function loadVariation(group, selectedWeekAverage){
+      if(selectedWeekAverage === null || selectedWeekAverage === undefined) return null;
+      const playerRecords = state.baseFiltered.filter(record => record.team === group.team && normalizeName(record.player) === normalizeName(group.player));
+      const weekKeys = [...new Set(playerRecords.map(record => weekKey(record.trainingDate)).filter(Boolean))];
+      const weeklyAverages = weekKeys.map(key => weeklyLoadAverage(playerRecords.filter(record => weekKey(record.trainingDate) === key))).filter(value => value !== null);
+      if(!weeklyAverages.length) return null;
+      const seasonAverage = weeklyAverages.reduce((sum, value) => sum + value, 0) / weeklyAverages.length;
+      return { value:selectedWeekAverage - seasonAverage, seasonAverage };
+    }
+    function variationCell(variation){
+      if(!variation) return '<td>—</td>';
+      const rounded = Math.round(variation.value);
+      const className = rounded > 0 ? "variation-up" : rounded < 0 ? "variation-down" : "variation-even";
+      const sign = rounded > 0 ? "+" : "";
+      const title = "Diferència respecte a la mitjana de totes les setmanes (" + Math.round(variation.seasonAverage).toLocaleString("ca-ES") + ").";
+      return '<td><span class="badge ' + className + '" title="' + escapeHtml(title) + '">' + sign + rounded.toLocaleString("ca-ES") + '</span></td>';
     }
     function alertClass(alert){
       if(alert === "Fatiga") return "fatigue";

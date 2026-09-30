@@ -113,14 +113,16 @@
     .note-box { min-height:112px; border:1px dashed var(--line); border-radius:14px; padding:12px; background:#fffdf5; }
     .note-box h4 { margin:0 0 7px; color:var(--brand-dark); font-size:0.86rem; }
     .note-box ul { margin:0; padding-left:18px; color:var(--ink); font-size:0.86rem; }
-    .scouting-form { display:grid; gap:12px; }
-    .scouting-fields { display:grid; grid-template-columns:minmax(260px,0.8fr) minmax(320px,1.2fr); gap:12px; }
+    .scouting-form { display:grid; grid-template-columns:minmax(260px,0.8fr) minmax(320px,1.2fr); grid-template-rows:auto auto; gap:12px; }
+    .scouting-fields { display:contents; }
     .scouting-field { display:flex; flex-direction:column; gap:5px; }
+    .scouting-field:first-child { grid-column:1; grid-row:1; }
+    .scouting-field:last-child { grid-column:2; grid-row:1 / span 2; }
     .scouting-field label { color:var(--brand-dark); font-size:0.74rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; }
     .scouting-field input, .scouting-field textarea { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font:inherit; font-size:0.88rem; color:var(--ink); background:#fff; }
-    .scouting-field textarea { min-height:96px; resize:vertical; }
+    .scouting-field textarea { flex:1; min-height:180px; resize:vertical; }
     .scouting-resource-links { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
-    .scouting-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .scouting-actions { grid-column:1; grid-row:2; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .scouting-button { border:0; border-radius:999px; padding:8px 13px; background:var(--brand); color:#fff; font:inherit; font-size:0.8rem; font-weight:900; cursor:pointer; }
     .scouting-button.secondary { border:1px solid var(--line); background:#fff; color:var(--brand); }
     .video-link, .four-factors-link { color:var(--brand); font-size:0.82rem; font-weight:900; text-decoration:none; }
@@ -191,7 +193,12 @@
       .note-box ul { font-size:0.58rem; padding-left:13px; }
       footer { padding:6px; font-size:0.58rem; }
     }
-    @media (max-width:700px){ .scouting-fields { grid-template-columns:1fr; } }
+    @media (max-width:700px){
+      .scouting-form { grid-template-columns:1fr; grid-template-rows:auto; }
+      .scouting-fields { display:grid; grid-template-columns:1fr; gap:12px; }
+      .scouting-field:first-child, .scouting-field:last-child, .scouting-actions { grid-column:auto; grid-row:auto; }
+      .scouting-field textarea { min-height:140px; }
+    }
   </style>
 </head>
 <body>

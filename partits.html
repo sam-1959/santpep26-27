@@ -30,6 +30,9 @@
     .nav-panel { display:grid; grid-template-columns:minmax(180px,0.8fr) minmax(220px,1.2fr); gap:6px; margin-bottom:8px; padding:8px;
       background:rgba(255,255,255,0.72); border:1px solid var(--line);
       border-radius:var(--radius); box-shadow:0 1px 2px rgba(60,40,90,0.04); }
+    .control-bar { display:flex; align-items:stretch; gap:8px; margin-bottom:12px; }
+    .control-bar .nav-panel { margin:0; flex:0 0 auto; grid-template-columns:180px 220px; }
+    .control-bar .filters { flex:1; margin:0; }
     .nav-group { min-width:0; }
     .nav-label { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;
       color:var(--muted); font-weight:800; margin:0 0 3px; }
@@ -42,6 +45,7 @@
     .nav-arrow svg { width:16px; height:16px; stroke:currentColor; }
     .nav-arrow:disabled { opacity:0.42; cursor:not-allowed; }
     @media (max-width:640px){ .nav-panel { grid-template-columns:1fr; } }
+    @media (max-width:900px){ .control-bar { flex-direction:column; } .control-bar .nav-panel { grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr); } }
     .tabs { display:flex; gap:6px; margin-bottom:0; flex-wrap:wrap; }
     .subtabs .tab { font-size:0.78rem; padding:6px 11px; }
     .tab { border:1px solid var(--line); background:var(--card); color:var(--brand);
@@ -198,7 +202,7 @@
   </header>
   <main>
     <nav class="page-nav"><a class="back" href="index.html">← Tornar</a></nav>
-    <section class="nav-panel" aria-label="Navegació del calendari">
+    <div class="control-bar"><section class="nav-panel" aria-label="Navegació del calendari">
       <div class="nav-group">
         <span class="nav-label">Mes</span>
         <div class="month-pager">
@@ -215,8 +219,7 @@
           <button class="nav-arrow" id="nextWeek" type="button" title="Setmana següent" aria-label="Setmana següent"></button>
         </div>
       </div>
-    </section>
-    <div class="filters" id="filters"></div>
+    </section><div class="filters" id="filters"></div></div>
     <div id="content"></div>
   </main>
   <footer>Font: calendari Partits SamPep Masc · CB Sant Josep de Badalona</footer>

@@ -91,6 +91,7 @@
     .calendar-day-games { display:flex; flex-direction:column; gap:6px; padding:7px; }
     .agenda-period { margin:3px 0 0; padding-top:7px; border-top:1px solid var(--line); color:var(--muted); font-size:.64rem; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
     .agenda-period:first-child { margin-top:0; padding-top:0; border-top:0; }
+    .agenda-session.morning { min-height:calc(var(--morning-games) * 76px + 22px); }
     .agenda-game { padding:7px; border-left:4px solid var(--brand); border-radius:7px; background:#fff; box-shadow:0 1px 2px rgba(60,40,90,.08); font-size:.74rem; }
     .agenda-game.home { border-left-color:#2e7d32; background:var(--home); }
     .agenda-game.away { border-left-color:#e57d00; background:var(--away); }
@@ -513,6 +514,8 @@
     function renderWeek(wk){
       const days=[{dow:1,name:'Dilluns',off:0},{dow:2,name:'Dimarts',off:1},{dow:3,name:'Dimecres',off:2},{dow:4,name:'Dijous',off:3},{dow:5,name:'Divendres',off:4},{dow:6,name:'Dissabte',off:5},{dow:0,name:'Diumenge',off:6}];
       const all=wk.games.filter(passes); if(!all.length) return '';
+      const visibleDays=days.map(function(d){ return all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);}); }).filter(function(gs){return gs.length;});
+      const maxMorning=Math.max.apply(null,visibleDays.map(function(gs){return gs.filter(function(g){return g.time<'14:00';}).length;}));
       let html='<div class="section-title">Setmana ' + fullWeekLabel(wk.monday) + '</div><div class="calendar-week">';
       days.forEach(function(d){
         const gs=all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
@@ -525,7 +528,7 @@
           const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
           return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+fr+mini+ch+cf+'</span><span class="agenda-rival">vs '+g.rival+'</span>'+loc+'</div>';
         }).join('');}
-        html+=(morning.length?'<div class="agenda-period">Matí</div>'+cards(morning):'')+(afternoon.length?'<div class="agenda-period">Tarda</div>'+cards(afternoon):'');
+        html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';
       });
       return html+'</div><p class="section-sub">Agenda setmanal · ' + all.length + ' partits</p>';

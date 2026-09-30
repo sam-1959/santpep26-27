@@ -152,6 +152,18 @@
     .monthly-table tr.validation-invalid td { background:#fff1f2; }
     .monthly-table .assign-cell { min-width:190px; }
     .monthly-table select { min-height:36px; font-size:0.84rem; }
+    .rejections-info-button { display:inline-grid; place-items:center; width:28px; height:28px; border:1px solid #b8d8eb; border-radius:50%; background:#e8f5fd; color:#17658d; font:900 1rem/1 Arial,sans-serif; cursor:pointer; }
+    .rejections-info-button:hover:not(:disabled) { background:#d4edfa; }
+    .rejections-info-button:disabled { border-color:var(--line); background:#f5f2f7; color:#b8b0bf; cursor:not-allowed; }
+    .rejections-dialog { width:min(420px, calc(100vw - 32px)); border:0; border-radius:16px; padding:0; color:var(--ink); box-shadow:0 18px 55px rgba(40,25,55,0.3); }
+    .rejections-dialog::backdrop { background:rgba(38,24,50,0.42); }
+    .rejections-dialog-content { padding:18px; }
+    .rejections-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .rejections-dialog h2 { margin:0; color:var(--brand-dark); font-size:1rem; }
+    .rejections-dialog-close { border:0; border-radius:50%; width:30px; height:30px; background:#f3eef8; color:var(--brand-dark); cursor:pointer; font-size:1.2rem; }
+    .rejections-dialog p { margin:10px 0 8px; color:var(--muted); font-size:0.84rem; font-weight:700; }
+    .rejections-dialog ul { margin:0; padding-left:20px; }
+    .rejections-dialog li { margin:5px 0; font-weight:800; }
     .people-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; margin:0 0 16px; }
     .people-panel[hidden] { display:none; }
     .people-help { margin:0 0 10px; color:var(--muted); font-size:0.82rem; }
@@ -258,6 +270,17 @@
     <section id="content"></section>
   </main>
 
+  <dialog id="rejectionsDialog" class="rejections-dialog" aria-labelledby="rejectionsDialogTitle">
+    <div class="rejections-dialog-content">
+      <div class="rejections-dialog-head">
+        <h2 id="rejectionsDialogTitle">Taules rebutjades</h2>
+        <form method="dialog"><button class="rejections-dialog-close" type="submit" aria-label="Tancar">×</button></form>
+      </div>
+      <p id="rejectionsDialogGame"></p>
+      <ul id="rejectionsDialogList"></ul>
+    </div>
+  </dialog>
+
   <script>
     const PEOPLE = ["", "Aledis Macías", "Alex Rojas", "Clàudia Gàmiz", "Eudald Ventura", "Ferran Villarreal", "Hugo Morales", "Hugo Parvez", "Isaac Miguel", "Ivana Benito", "Jan Rodríguez", "Jana Llibre", "Joan Torrent", "Joan Zanui", "Lluc Muñoz", "Marc Sánchez", "Marc Sànchez (2012)", "Martí Ordóñez", "Martina Rubio", "Pol Simón", "Martina Rueda", "Roger Fusté", "Sílvia Muñoz", "Thaïs Sampera", "Yago Morales"];
     const TABLE_COST = 10;
@@ -337,6 +360,9 @@
       peoplePanel: document.getElementById("peoplePanel"),
       peopleProfiles: document.getElementById("peopleProfiles"),
       savePeopleProfiles: document.getElementById("savePeopleProfiles"),
+      rejectionsDialog: document.getElementById("rejectionsDialog"),
+      rejectionsDialogGame: document.getElementById("rejectionsDialogGame"),
+      rejectionsDialogList: document.getElementById("rejectionsDialogList"),
       costPanel: document.getElementById("costPanel"),
       costSummary: document.getElementById("costSummary")
     };
@@ -914,6 +940,15 @@
 
     function isRejectedForGame(person, game, assignment = assignmentFor(game.id)){
       return rejectedPeopleFor(game, assignment).includes(person);
+    }
+
+    function openRejectionsDialog(game){
+      const people = rejectedPeopleFor(game);
+      if (!people.length) return;
+      els.rejectionsDialogGame.textContent = `${formatDate(game.date)} · ${displayTeamLabel(game)} vs ${game.rival || "Rival pendent"}`;
+      els.rejectionsDialogList.innerHTML = "";
+      people.forEach(person => els.rejectionsDialogList.appendChild(Object.assign(document.createElement("li"), { textContent:person })));
+      els.rejectionsDialog.showModal();
     }
 
     function rejectionList(game){
@@ -1750,7 +1785,7 @@
       wrap.className = "monthly-table-wrap";
       const table = document.createElement("table");
       table.className = "monthly-table";
-      table.innerHTML = "<thead><tr><th>#</th><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Tipus</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
+      table.innerHTML = "<thead><tr><th>#</th><th>Data</th><th>Hora</th><th>Equip</th><th>Rival</th><th>Lloc</th><th>Estat</th><th>Tipus</th><th aria-label=\"Informació de rebutjos\">ⓘ</th><th>Taula 1</th><th>Taula 2</th></tr></thead><tbody></tbody>";
       const body = table.querySelector("tbody");
       visible.forEach((game, index) => {
         const assignment = assignmentFor(game.id);
@@ -1778,10 +1813,21 @@
           `<td>${escapeHtml(game.loc || "Localització pendent")}</td>` +
           `<td>${stateBadge}${experienceBadge}${validationBadge}</td>` +
           `<td>${typeBadge}</td>` +
+          `<td class="info-cell"></td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
-        row.children[8].appendChild(makeAssignmentControl(game, "table1", assignment.table1 || ""));
-        row.children[9].appendChild(makeAssignmentControl(game, "table2", assignment.table2 || ""));
+        const rejectedPeople = rejectedPeopleFor(game, assignment);
+        const infoButton = document.createElement("button");
+        infoButton.type = "button";
+        infoButton.className = "rejections-info-button";
+        infoButton.dataset.rejectionsInfoGameId = game.id;
+        infoButton.textContent = "ⓘ";
+        infoButton.disabled = !rejectedPeople.length;
+        infoButton.title = rejectedPeople.length ? "Veure taules rebutjades" : "No hi ha taules rebutjades";
+        infoButton.setAttribute("aria-label", infoButton.title);
+        row.children[8].appendChild(infoButton);
+        row.children[9].appendChild(makeAssignmentControl(game, "table1", assignment.table1 || ""));
+        row.children[10].appendChild(makeAssignmentControl(game, "table2", assignment.table2 || ""));
         body.appendChild(row);
       });
       wrap.appendChild(table);
@@ -1863,6 +1909,12 @@
     });
 
     els.content.addEventListener("click", async event => {
+      const infoButton = event.target.closest("[data-rejections-info-game-id]");
+      if (infoButton) {
+        const game = games.find(item => item.id === infoButton.dataset.rejectionsInfoGameId);
+        if (game) openRejectionsDialog(game);
+        return;
+      }
       const rejectButton = event.target.closest("[data-reject-game-id]");
       const undoButton = event.target.closest("[data-unreject-game-id]");
       if (!rejectButton && !undoButton) return;

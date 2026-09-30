@@ -573,7 +573,10 @@
     }
 
     function orderedLatestChanges(latest){
-      const changes=(latest && latest.changes) || [];
+      const lastImport=latest && latest.importedAt;
+      const changes=((latest && latest.changes) || []).filter(function(change){
+        return lastImport && changeImportDate(change, lastImport) === lastImport;
+      });
       const fallback=latest && latest.importedAt;
       return changes.map(function(change,index){
         return {change:change,index:index};
@@ -589,9 +592,10 @@
 
     function renderLatestChanges(){
       const latest=DATA.latestChanges;
-      if(!latest || !latest.changes || !latest.changes.length) return '';
+      if(!latest) return '';
       const changes=orderedLatestChanges(latest);
       const total=changes.length;
+      if(!total) return '<section class="changes"><div class="changes-head"><div><h3>Últims canvis</h3></div></div></section>';
       const pages=Math.max(1, Math.ceil(total / CHANGES_PER_PAGE));
       changesPage=Math.max(0, Math.min(changesPage, pages - 1));
       const start=changesPage * CHANGES_PER_PAGE;

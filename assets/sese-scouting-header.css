@@ -1,6 +1,12 @@
 /* Mateixa proporció de capçalera que l'scouting del TGN. */
 .rival { flex:0 1 680px; }
 .kpis { flex:1 1 620px; }
+/* Igualem també la capçalera global amb la del TGN. */
+header > a { display:inline-flex; flex-shrink:0; text-decoration:none; }
+header .logo { display:block; flex-shrink:0; }
+header .h { min-width:0; }
+header .h h1 { font-weight:700; letter-spacing:-.01em; }
+header .icon { font-weight:900; }
 .crest {
   background:#fff url('sese-logo.svg') center/contain no-repeat !important;
   color:transparent !important;

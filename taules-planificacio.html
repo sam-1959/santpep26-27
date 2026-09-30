@@ -172,6 +172,12 @@
       font:inherit; font-size:0.92rem; font-weight:750; padding:8px 10px; box-shadow:inset 0 1px 2px rgba(60,40,90,0.06); }
     select.assignment-conflict { border-color:#f59e0b; background:#fff7ed; color:#7c2d12; box-shadow:0 0 0 2px rgba(245,158,11,0.16); }
     select.validation-invalid { border-color:var(--danger); background:#fff1f2; color:#7f1d1d; box-shadow:0 0 0 2px rgba(214,69,69,0.15); }
+    .assign-control { display:flex; align-items:center; gap:6px; }
+    .assign-control select { min-width:0; }
+    .reject-assignment, .undo-rejection { border:1px solid #f3b4b4; border-radius:9px; background:#fff1f2; color:#9f1d1d; font:inherit; font-size:0.72rem; font-weight:850; cursor:pointer; padding:7px 8px; white-space:nowrap; }
+    .reject-assignment:hover, .undo-rejection:hover { background:#ffe2e2; }
+    .rejection-list { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:7px; color:#9f1d1d; font-size:0.7rem; font-weight:800; }
+    .undo-rejection { padding:3px 6px; font-size:0.68rem; }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
     select:disabled { background:#f3f0f6; color:var(--muted); opacity:1; cursor:not-allowed; }
     .empty { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -820,7 +826,7 @@
         game: game ? gameSnapshot(game) : null,
         updatedAt: new Date().toISOString()
       };
-      const hasPeople = !!(body.table1 || body.table2);
+      const hasPeople = !!(body.table1 || body.table2 || Object.keys(body.rejectedPeople || {}).length);
       const response = await fetch(firebaseUrl(id), {
         method: hasPeople ? "PUT" : "DELETE",
         headers: hasPeople ? { "Content-Type":"application/json" } : undefined,
@@ -897,6 +903,51 @@
         select.title = validationMessages.join(" ");
       }
       return select;
+    }
+
+    function rejectedPeopleFor(game, assignment = assignmentFor(game.id)){
+      return Object.keys(assignment.rejectedPeople || {}).filter(Boolean);
+    }
+
+    function isRejectedForGame(person, game, assignment = assignmentFor(game.id)){
+      return rejectedPeopleFor(game, assignment).includes(person);
+    }
+
+    function rejectionList(game){
+      const people = rejectedPeopleFor(game);
+      if (!people.length) return document.createDocumentFragment();
+      const wrap = document.createElement("div");
+      wrap.className = "rejection-list";
+      wrap.appendChild(Object.assign(document.createElement("span"), { textContent:"Rebutjat:" }));
+      people.forEach(person => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "undo-rejection";
+        button.dataset.unrejectGameId = game.id;
+        button.dataset.unrejectPerson = person;
+        button.textContent = "↩ " + person;
+        button.title = "Permetre que aquesta persona torni a sortir a la proposta d'aquest partit.";
+        wrap.appendChild(button);
+      });
+      return wrap;
+    }
+
+    function makeAssignmentControl(game, slot, value){
+      const wrap = document.createElement("div");
+      wrap.className = "assign-control";
+      wrap.appendChild(makeSelect(game, slot, value));
+      if (value && !isPastGame(game)) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "reject-assignment";
+        button.dataset.rejectGameId = game.id;
+        button.dataset.rejectSlot = slot;
+        button.dataset.rejectPerson = value;
+        button.textContent = "Rebutja";
+        button.title = "Marca que aquesta persona ha rebutjat aquesta taula i cerca una substitució.";
+        wrap.appendChild(button);
+      }
+      return wrap;
     }
 
     function renderPeopleProfiles(){
@@ -1004,6 +1055,7 @@
       return activeTableProfiles().filter(profile =>
         profile.experienced === true &&
         !alreadyInGame.has(profile.name) &&
+        !isRejectedForGame(profile.name, game, assignment) &&
         personCanTakeGame(profile, game)
       );
     }
@@ -1119,6 +1171,7 @@
         experiencedRepairs: 0,
         missingExperienced: 0,
         siblingPriorities: 0,
+        rejectedSkipped: 0,
         unresolved: 0
       };
       let changed = 0;
@@ -1144,6 +1197,10 @@
           proposalLog.sameGameSkipped += activeProfiles.length - withoutSameGame.length;
           const candidates = withoutSameGame
             .filter(profile => {
+              if (isRejectedForGame(profile.name, game, current)) {
+                proposalLog.rejectedSkipped += 1;
+                return false;
+              }
               const allowed = personCanTakeGame(profile, game);
               if (!allowed) proposalLog.conflictSkipped += 1;
               return allowed;
@@ -1241,11 +1298,12 @@
       els.clearCurrentWeek.disabled = true;
       setStatus(`Netejant ${label} (${assignedGames.length} partit(s))...`);
       try {
-        await Promise.all(assignedGames.map(game => fetch(firebaseUrl(game.id), { method:"DELETE" })));
-        assignedGames.forEach(game => {
-          delete assignments[game.id];
+        await Promise.all(assignedGames.map(async game => {
+          const assignment = { ...assignmentFor(game.id), table1:"", table2:"" };
+          assignments[game.id] = assignment;
           delete assignmentAliases[game.id];
-        });
+          await saveAssignment(game.id);
+        }));
         lastProposalLog = null;
         render();
         setStatus(`Planificació de ${label} netejada (${assignedGames.length} partit(s)).`);
@@ -1416,6 +1474,7 @@
           `<div class="proposal-log-item"><span class="proposal-log-label">Objectiu màxim total</span><span class="proposal-log-value">${escapeHtml(log.targetMax || "—")}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Assignades</span><span class="proposal-log-value">${escapeHtml(log.assigned)} / ${escapeHtml(log.slotsEvaluated)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
+          `<div class="proposal-log-item"><span class="proposal-log-label">Rebuigs respectats</span><span class="proposal-log-value">${escapeHtml(log.rejectedSkipped || 0)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Mini corregits per experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedRepairs || 0)}</span></div>` +
@@ -1427,6 +1486,7 @@
           `<li>No es repeteix la mateixa persona al mateix partit. Descartes per duplicat al partit: ${escapeHtml(log.sameGameSkipped)}.</li>` +
           `<li>No es recomana una persona si juga o ajuda en l’equip del partit.</li>` +
           `<li>No es recomana una persona si el seu equip o l’equip on ajuda juga el mateix dia i en la mateixa franja ampla, matí o tarda.</li>` +
+          `<li>Les persones que han rebutjat un partit no tornen a sortir a la proposta d’aquella mateixa taula.</li>` +
           `<li>Es balancegen les taules del mes perquè el repartiment sigui aproximadament equivalent. Fallbacks per restriccions: ${escapeHtml(log.balancedFallbacks)}.</li>` +
           `<li>Mini A M, Mini B M i Mini F requereixen com a mínim una taula amb experiència; si no n’hi ha cap disponible, la plaça queda pendent.</li>` +
           `<li>Si el partit coincideix amb l’equip germà d’una persona, aquesta persona té prioritat.</li>` +
@@ -1617,9 +1677,10 @@
           row.className = "slot";
           const label = document.createElement("label");
           label.textContent = `Taula ${idx + 1}`;
-          row.append(label, makeSelect(game, slot, assignment[slot] || ""));
+          row.append(label, makeAssignmentControl(game, slot, assignment[slot] || ""));
           assign.appendChild(row);
         });
+        assign.appendChild(rejectionList(game));
         card.append(main, assign);
         list.appendChild(card);
       });
@@ -1668,8 +1729,8 @@
           `<td>${typeBadge}</td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
-        row.children[8].appendChild(makeSelect(game, "table1", assignment.table1 || ""));
-        row.children[9].appendChild(makeSelect(game, "table2", assignment.table2 || ""));
+        row.children[8].appendChild(makeAssignmentControl(game, "table1", assignment.table1 || ""));
+        row.children[9].append(makeAssignmentControl(game, "table2", assignment.table2 || ""), rejectionList(game));
         body.appendChild(row);
       });
       wrap.appendChild(table);
@@ -1747,6 +1808,49 @@
       } catch (error) {
         console.error(error);
         setStatus(error.message || "No s'ha pogut netejar la setmana actual.", "error");
+      }
+    });
+
+    els.content.addEventListener("click", async event => {
+      const rejectButton = event.target.closest("[data-reject-game-id]");
+      const undoButton = event.target.closest("[data-unreject-game-id]");
+      if (!rejectButton && !undoButton) return;
+      const id = (rejectButton || undoButton).dataset.rejectGameId || (rejectButton || undoButton).dataset.unrejectGameId;
+      const game = games.find(item => item.id === id);
+      if (!game) return;
+      const person = rejectButton ? rejectButton.dataset.rejectPerson : undoButton.dataset.unrejectPerson;
+      const assignment = { ...assignmentFor(id), rejectedPeople:{ ...(assignmentFor(id).rejectedPeople || {}) } };
+      if (rejectButton) {
+        const slot = rejectButton.dataset.rejectSlot;
+        if (!person || !slot || isPastGame(game)) return;
+        if (!confirm(`${person} ha rebutjat la taula d'aquest partit. Vols excloure-la de les pròximes propostes i buscar una substitució?`)) return;
+        assignment.rejectedPeople[person] = { rejectedAt:new Date().toISOString() };
+        assignment[slot] = "";
+        assignments[id] = assignment;
+        validateGameRestrictions(id);
+        render();
+        setStatus(`Guardant el rebuig de ${person}...`);
+        try {
+          await saveAssignment(id);
+          setStatus("Cercant una substitució segons les restriccions...");
+          await generateMonthlyProposal();
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || "No s'ha pogut guardar el rebuig.", "error");
+        }
+      } else {
+        delete assignment.rejectedPeople[person];
+        if (!Object.keys(assignment.rejectedPeople).length) delete assignment.rejectedPeople;
+        assignments[id] = assignment;
+        render();
+        setStatus(`Tornant a permetre ${person} en aquest partit...`);
+        try {
+          await saveAssignment(id);
+          setStatus(`${person} pot tornar a sortir a les propostes d'aquest partit.`);
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || "No s'ha pogut desfer el rebuig.", "error");
+        }
       }
     });
 

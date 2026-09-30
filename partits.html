@@ -77,6 +77,9 @@
     .daygroup:last-child { margin-bottom:0; }
     /* Vista d'agenda setmanal: un dia per columna, com Google Calendar. */
     .calendar-week { display:grid; grid-template-columns:repeat(7,minmax(155px,1fr)); gap:8px; overflow-x:auto; padding-bottom:8px; }
+    .agenda-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(230px,300px); gap:14px; align-items:start; }
+    .agenda-layout .changes { margin-top:16px; }
+    @media (max-width:900px){ .agenda-layout { grid-template-columns:1fr; } }
     .calendar-day { min-height:210px; background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
     .calendar-day-head { padding:8px 10px; background:var(--brand); color:#fff; font-size:.78rem; font-weight:800; }
     .calendar-day-date { display:block; opacity:.82; font-size:.68rem; font-weight:600; }
@@ -632,7 +635,8 @@
     function renderContent(){
       const html=renderWeek(DATA.weeks[currentIdx]);
       const weekHtml = html.trim() ? html : '<p class="empty-filter">Cap partit per als filtres seleccionats.</p>';
-      content.innerHTML = weekHtml + iconLegend() + renderConflicts() + renderLatestChanges();
+      const conflicts=renderConflicts();
+      content.innerHTML = '<div class="agenda-layout"><div>' + weekHtml + iconLegend() + '</div>' + (conflicts ? '<aside>'+conflicts+'</aside>' : '') + '</div>' + renderLatestChanges();
       bindChangesNav();
     }
 

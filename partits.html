@@ -343,7 +343,10 @@
 
     function isAllowedMiniSaturdayAfternoon(games){
       return games.length<=3 && games.every(function(g){
-        return g.dow===6 && g.time==='16:00' && g.fam==='MINI';
+        const smallBasket=g.fam==='MINI';
+        const saturdayAfternoon=g.dow===6 && g.time==='16:00';
+        const sundayMorning=g.dow===0 && g.time==='09:00';
+        return smallBasket && (saturdayAfternoon || sundayMorning);
       });
     }
 

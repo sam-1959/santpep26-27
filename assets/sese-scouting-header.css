@@ -2,8 +2,8 @@
 .rival { flex:0 1 680px; }
 .kpis { flex:1 1 620px; }
 .crest {
-  background:#fff url('sese-logo.svg') center/contain no-repeat;
-  color:transparent;
+  background:#fff url('sese-logo.svg') center/contain no-repeat !important;
+  color:transparent !important;
   box-shadow:0 2px 10px rgba(0,84,123,.12);
   padding:4px;
 }

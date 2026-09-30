@@ -527,7 +527,7 @@
           const fr=g.friendly?' <span class="friendly" title="Partit amistós">🤝</span>':'';
           const mini=miniMark(g), ch=changeMark(g), cf=conflictMark(g);
           const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
-          return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+fr+mini+ch+cf+'</span><span class="agenda-rival">vs '+g.rival+'</span>'+loc+'</div>';
+          return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+cf+'</span>'+loc+'</div>';
         }).join('');}
         html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';

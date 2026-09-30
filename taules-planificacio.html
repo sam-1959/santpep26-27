@@ -174,8 +174,10 @@
     select.validation-invalid { border-color:var(--danger); background:#fff1f2; color:#7f1d1d; box-shadow:0 0 0 2px rgba(214,69,69,0.15); }
     .assign-control { display:flex; align-items:center; gap:6px; }
     .assign-control select { min-width:0; }
-    .reject-assignment, .undo-rejection { border:1px solid #f3b4b4; border-radius:9px; background:#fff1f2; color:#9f1d1d; font:inherit; font-size:0.72rem; font-weight:850; cursor:pointer; padding:7px 8px; white-space:nowrap; }
-    .reject-assignment:hover, .undo-rejection:hover { background:#ffe2e2; }
+    .reject-assignment { display:inline-grid; place-items:center; width:28px; height:28px; flex:0 0 28px; border:0; border-radius:50%; background:#ff1e4b; color:#fff; font:900 1.5rem/1 Arial,sans-serif; cursor:pointer; padding:0; box-shadow:0 1px 2px rgba(159,29,29,0.25); }
+    .reject-assignment:hover { background:#dc1237; transform:scale(1.06); }
+    .undo-rejection { border:1px solid #f3b4b4; border-radius:9px; background:#fff1f2; color:#9f1d1d; font:inherit; font-size:0.72rem; font-weight:850; cursor:pointer; padding:7px 8px; white-space:nowrap; }
+    .undo-rejection:hover { background:#ffe2e2; }
     .rejection-list { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:7px; color:#9f1d1d; font-size:0.7rem; font-weight:800; }
     .undo-rejection { padding:3px 6px; font-size:0.68rem; }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
@@ -943,7 +945,7 @@
         button.dataset.rejectGameId = game.id;
         button.dataset.rejectSlot = slot;
         button.dataset.rejectPerson = value;
-        button.textContent = "✕";
+        button.textContent = "×";
         button.title = "Rebutja";
         button.setAttribute("aria-label", "Rebutja");
         wrap.appendChild(button);

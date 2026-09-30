@@ -81,6 +81,8 @@
     .calendar-day-head { padding:8px 10px; background:var(--brand); color:#fff; font-size:.78rem; font-weight:800; }
     .calendar-day-date { display:block; opacity:.82; font-size:.68rem; font-weight:600; }
     .calendar-day-games { display:flex; flex-direction:column; gap:6px; padding:7px; }
+    .agenda-period { margin:3px 0 0; padding-top:7px; border-top:1px solid var(--line); color:var(--muted); font-size:.64rem; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+    .agenda-period:first-child { margin-top:0; padding-top:0; border-top:0; }
     .agenda-game { padding:7px; border-left:4px solid var(--brand); border-radius:7px; background:#fff; box-shadow:0 1px 2px rgba(60,40,90,.08); font-size:.74rem; }
     .agenda-game.home { border-left-color:#2e7d32; background:var(--home); }
     .agenda-game.away { border-left-color:#e57d00; background:var(--away); }
@@ -502,7 +504,9 @@
         const gs=all.filter(function(g){return g.dow===d.dow;}).sort(function(a,b){return a.time.localeCompare(b.time);});
         if(!gs.length) return;
         html+='<section class="calendar-day"><div class="calendar-day-head">'+d.name+'<span class="calendar-day-date">'+fmtDate(addDays(wk.monday,d.off))+'</span></div><div class="calendar-day-games">';
-        html+=gs.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('');
+        const morning=gs.filter(function(g){return g.time<'14:00';}), afternoon=gs.filter(function(g){return g.time>='14:00';});
+        function cards(list){return list.map(function(g){return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+' · '+(g.home?'Casa':'Fora')+'</span><span class="agenda-team">'+g.team+'</span><span class="agenda-rival">vs '+g.rival+'</span></div>';}).join('');}
+        html+=(morning.length?'<div class="agenda-period">Matí</div>'+cards(morning):'')+(afternoon.length?'<div class="agenda-period">Tarda</div>'+cards(afternoon):'');
         html+='</div></section>';
       });
       return html+'</div>';

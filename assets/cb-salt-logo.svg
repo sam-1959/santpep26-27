@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="CB Salt">
+  <circle cx="80" cy="80" r="76" fill="#0c0f0d"/>
+  <circle cx="80" cy="80" r="70" fill="#178a3a"/>
+  <path d="M17 78c32-14 91-13 126 6M28 39c27 14 74 55 96 98M113 22c-2 39-29 78-73 112" fill="none" stroke="#080b09" stroke-width="8"/>
+  <path d="M80 10a70 70 0 0 1 0 140" fill="none" stroke="#bde38a" stroke-width="4" opacity=".8"/>
+  <rect x="12" y="58" width="136" height="45" rx="6" fill="#111"/>
+  <text x="80" y="91" fill="#fff" font-family="Arial,sans-serif" font-size="34" font-weight="900" text-anchor="middle">CB SALT</text>
+</svg>

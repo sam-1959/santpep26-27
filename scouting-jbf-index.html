@@ -25,6 +25,9 @@
     .intro p { margin:0; color:var(--muted); }
     .season { display:inline-flex; margin-top:12px; padding:5px 10px; border:1px solid #efd96f; border-radius:999px; background:#fff8cc; color:#5f4a00; font-size:.75rem; font-weight:900; }
     .list { display:grid; gap:12px; }
+    .team-section + .team-section { margin-top:34px; padding-top:30px; border-top:2px solid var(--accent); }
+    .team-section-title { margin:0 0 4px; color:var(--brand-dark); font-size:1.1rem; }
+    .team-section-sub { margin:0 0 12px; color:var(--muted); font-size:.84rem; }
     .scouting-link { display:flex; align-items:center; gap:16px; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); color:inherit; text-decoration:none; transition:transform .15s, border-color .15s, box-shadow .15s; }
     .scouting-link:hover { transform:translateY(-2px); border-color:var(--brand); box-shadow:0 6px 24px rgba(60,40,90,.14); }
     .matchday { display:grid; place-items:center; min-width:62px; min-height:62px; padding:8px; border-radius:12px; background:#f4ecfa; color:var(--brand-dark); font-size:.73rem; font-weight:900; line-height:1.15; text-align:center; text-transform:uppercase; }
@@ -48,8 +51,8 @@
   <header>
     <a class="logo-link" href="index.html" title="Tornar a l'inici"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
     <div class="htext">
-      <h1><span class="club">CB Sant Josep de Badalona</span> Scouting JBF</h1>
-      <p>Júnior B F · Anàlisi per jornada</p>
+      <h1><span class="club">CB Sant Josep de Badalona</span> Scouting equips</h1>
+      <p>Anàlisi del rival per equip i jornada</p>
     </div>
     <div class="page-logo" aria-hidden="true">🔎</div>
   </header>
@@ -57,10 +60,13 @@
     <a class="back" href="index.html">← Tornar a la pàgina principal</a>
     <section class="intro" aria-labelledby="page-title">
       <h2 id="page-title">Scouting del rival</h2>
-      <p>Consulta les anàlisis preparades per a cada jornada del Júnior B F.</p>
+      <p>Consulta les anàlisis preparades per a cada equip i jornada.</p>
       <span class="season">Temporada 2026-27</span>
     </section>
-    <section class="list" aria-label="Scouting per jornada">
+    <section class="team-section" aria-labelledby="jbf-title">
+      <h3 id="jbf-title" class="team-section-title">Júnior B F</h3>
+      <p class="team-section-sub">Anàlisi per jornada del JBF.</p>
+      <div class="list" aria-label="Scouting Júnior B F">
       <a class="scouting-link" href="scouting-jbf.html" data-scouting-opponent="TGN" data-scouting-date="2026-09-27">
         <span class="matchday">Jornada<strong>4</strong></span>
         <img class="opponent-logo" src="assets/tgn-logo.svg" alt="Logo TGN Bàsquet" />
@@ -82,6 +88,23 @@
         <span class="go">Obrir →</span>
       </a>
       <div class="empty">Els pròxims scoutings s’afegiran aquí a mesura que es preparin.</div>
+      </div>
+    </section>
+    <section class="team-section" aria-labelledby="jam-title">
+      <h3 id="jam-title" class="team-section-title">Júnior A M</h3>
+      <p class="team-section-sub">Anàlisi per jornada del JAM.</p>
+      <div class="list" aria-label="Scouting Júnior A M">
+        <a class="scouting-link" href="scouting-jam-ab-premia.html">
+          <span class="matchday">Proper<br><strong>rival</strong></span>
+          <span class="opponent-initials" aria-label="AB Premià">AB<br>PREMIÀ</span>
+          <span>
+            <h3>AB Premià</h3>
+            <p>Scouting pendent de completar amb les dades del partit.</p>
+            <span class="result pending">Partit pendent</span>
+          </span>
+          <span class="go">Obrir →</span>
+        </a>
+      </div>
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>

@@ -604,11 +604,24 @@ function escapeAlertHtml(value) {
   });
 }
 
+function formatRestrictionIssueHtml(text) {
+  var value = String(text || "");
+  var separator = value.lastIndexOf(": ");
+  if (separator === -1) return '<strong style="color:#4B1D6D;">' + escapeAlertHtml(value) + '</strong>';
+  var game = value.slice(0, separator);
+  var reason = value.slice(separator + 2);
+  return '<div style="font-weight:700;color:#4B1D6D;font-size:15px;line-height:1.35;margin-bottom:7px;">' + escapeAlertHtml(game) + '</div>' +
+    '<div style="color:#333;line-height:1.45;">' +
+      '<span style="display:inline-block;margin:0 6px 3px 0;padding:2px 6px;border-radius:4px;background-color:#F9F6FC;color:#4B1D6D;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">Restricció</span>' +
+      escapeAlertHtml(reason) +
+    '</div>';
+}
+
 function restrictionAlertEmailHtml(issues, forceCheck, changeCount) {
   var tableRows = issues.map(function(issue, index) {
     return '<tr>' +
-      '<td style="width:12%;padding:10px;border-bottom:1px solid #E5E5E5;font-weight:bold;background-color:#F9F6FC;color:#4B1D6D;vertical-align:top;">' + (index + 1) + '</td>' +
-      '<td style="width:88%;padding:10px;border-bottom:1px solid #E5E5E5;color:#333333;line-height:1.45;">' + escapeAlertHtml(issue.text) + '</td>' +
+      '<td style="width:12%;padding:12px 10px;border-bottom:1px solid #E5E5E5;font-weight:bold;background-color:#F9F6FC;color:#4B1D6D;vertical-align:top;">' + (index + 1) + '</td>' +
+      '<td style="width:88%;padding:12px 10px;border-bottom:1px solid #E5E5E5;color:#333333;vertical-align:top;">' + formatRestrictionIssueHtml(issue.text) + '</td>' +
       '</tr>';
   }).join("");
   var introduction = forceCheck

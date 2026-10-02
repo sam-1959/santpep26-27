@@ -598,8 +598,8 @@ function restrictionAlertSignature(issues) {
   return issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");
 }
 
-function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt) {
-  if (!latestChanges || !latestChanges.length) return { checked: false, issues: 0, emailed: false };
+function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt, forceCheck) {
+  if ((!latestChanges || !latestChanges.length) && !forceCheck) return { checked: false, issues: 0, emailed: false };
   var assignments = readFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {};
   var profiles = readFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {};
   var alertStatus = readFirebase(TABLE_RESTRICTIONS_ALERT_PATH) || {};
@@ -627,7 +627,9 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt)
 
   var subject = "Alerta: restriccions de taules després d'actualitzar calendaris";
   var body = [
-    "S'han detectat " + latestChanges.length + " canvi(s) al calendari.",
+    forceCheck
+      ? "S'ha executat una verificació manual de les restriccions de taules."
+      : "S'han detectat " + latestChanges.length + " canvi(s) al calendari.",
     "La verificació de Planificació de taules ha trobat " + issues.length + " incidència(es):",
     ""
   ].concat(issues.map(function(issue) { return "- " + issue.text; })).concat([
@@ -638,6 +640,13 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt)
   status.lastAlertAt = checkedAt;
   writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
   return { checked: true, issues: issues.length, emailed: true };
+}
+
+// Executa-la manualment després d'actualitzar el codi si cal recuperar una
+// alerta que no s'havia pogut enviar. Respecta la mateixa protecció antirepetició.
+function verificarRestriccionsTaulesAra() {
+  var calendarData = readFirebase(CALENDAR_FIREBASE_PATH);
+  return verifyTableRestrictionsAndAlert(calendarData, [], new Date().toISOString(), true);
 }
 
 function importarCalendarisPartits() {

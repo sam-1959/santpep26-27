@@ -28,7 +28,7 @@
     <section class="summary" aria-label="Resum"><div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div><div class="kpi"><span>RPE pista mitjà</span><strong id="kpiCourtRpe">—</strong></div><div class="kpi"><span>RPE físic mitjà</span><strong id="kpiPhysicalRpe">—</strong></div><div class="kpi"><span>Minuts de pista</span><strong id="kpiCourtMinutes">—</strong></div><div class="kpi"><span>Minuts de físic</span><strong id="kpiPhysicalMinutes">—</strong></div></section>
     <p class="notice">Dades de prova guardades només en aquest navegador. No s’envien a Firebase ni apareixen als informes RPE reals.</p>
     <section class="panel"><div class="panel-head"><h3>Respostes</h3><span id="status" class="status">0 respostes</span></div><div id="content"></div></section>
-    <section class="panel load-panel"><div class="panel-head"><h3>Càrrega</h3><span class="status">RPE × minuts de pista + RPE × minuts de físic</span></div><div id="loadContent"></div></section>
+    <section class="panel load-panel"><div class="panel-head"><h3>Càrrega</h3><span class="status">Mitjana entre RPE × minuts de pista i RPE × minuts de físic</span></div><div id="loadContent"></div></section>
   </main>
   <footer>CB Sant Josep de Badalona · RPE de proves · Temporada 26-27</footer>
   <script>
@@ -40,7 +40,7 @@
     function average(items, key){ const values = items.map(item => Number(item[key])).filter(Number.isFinite); return values.length ? (values.reduce((sum,value) => sum + value, 0) / values.length).toFixed(1) : "—"; }
     function minutes(items, key){ return items.reduce((sum,item) => sum + (Number(item[key]) || 0), 0); }
     function populate(select, values, label){ const current = select.value; select.innerHTML = '<option value="">' + label + '</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join(""); select.value = current; }
-    function loadOf(record){ return (Number(record.courtRpe) || 0) * (Number(record.courtTotalMinutes) || 0) + (Number(record.physicalRpe) || 0) * (Number(record.physicalTotalMinutes) || 0); }
+    function loadOf(record){ const courtLoad = (Number(record.courtRpe) || 0) * (Number(record.courtTotalMinutes) || 0); const physicalLoad = (Number(record.physicalRpe) || 0) * (Number(record.physicalTotalMinutes) || 0); return (courtLoad + physicalLoad) / 2; }
     function weekKey(dateValue){ const date = new Date(dateValue + "T12:00:00"); if(Number.isNaN(date.getTime())) return ""; const day = (date.getDay() + 6) % 7; date.setDate(date.getDate() - day); return date.toISOString().slice(0,10); }
     function variationClass(value){ return value > 10 ? "variation-high" : value >= 1 ? "variation-caution" : value <= -1 ? "variation-low" : ""; }
     function weeklyAverage(records){ const grouped = {}; records.forEach(record => { const key = weekKey(record.trainingDate); if(!key) return; (grouped[key] ||= []).push(loadOf(record)); }); const values = Object.values(grouped).map(values => values.reduce((sum,value) => sum + value, 0) / values.length); return values.length ? values.reduce((sum,value) => sum + value, 0) / values.length : null; }

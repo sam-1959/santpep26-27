@@ -3,69 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <title>Respostes RPE de proves · CB Sant Josep</title>
+  <title>Dades RPE de proves · CB Sant Josep</title>
   <style>
-    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --danger:#b71c1c; --shadow:0 1px 3px rgba(60,40,90,.08),0 4px 16px rgba(60,40,90,.06); --radius:16px; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; }
-    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
-    .logo { width:42px; height:42px; object-fit:contain; background:#fff; border-radius:9px; padding:4px; }
-    .logo-link { display:inline-flex; }
-    .head { flex:1; min-width:0; }
-    h1 { margin:0; font-size:1rem; } h1 span { display:block; font-size:.66rem; font-weight:500; opacity:.85; letter-spacing:.04em; text-transform:uppercase; }
-    header p { margin:1px 0 0; font-size:.74rem; opacity:.9; }
-    .mark { display:grid; place-items:center; width:40px; height:40px; border-radius:9px; background:#fff; color:var(--brand); font-size:1.25rem; }
-    main { max-width:1220px; margin:0 auto; padding:24px 16px 48px; }
-    .back { display:inline-flex; margin-bottom:16px; padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand-dark); text-decoration:none; font-size:.82rem; font-weight:800; box-shadow:var(--shadow); }
-    .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .head-row { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:16px; }
-    h2 { margin:0 0 5px; color:var(--brand-dark); font-size:1.2rem; } .intro { margin:0; color:var(--muted); font-size:.85rem; }
-    .count { display:inline-flex; white-space:nowrap; border-radius:999px; background:#fff8cc; border:1px solid #efd96f; color:#5f4a00; padding:5px 9px; font-size:.75rem; font-weight:900; }
-    .notice { margin:0 0 16px; padding:10px 12px; border-radius:10px; border:1px solid #dccce9; background:#f9f6fc; color:var(--brand-dark); font-size:.8rem; }
-    .table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:10px; }
-    table { width:100%; min-width:920px; border-collapse:collapse; font-size:.8rem; }
-    th { padding:10px; background:var(--brand); color:#fff; text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
-    td { padding:10px; border-bottom:1px solid var(--line); vertical-align:top; } tr:last-child td { border-bottom:0; }
-    .muted { color:var(--muted); font-size:.74rem; } .score { font-weight:900; color:var(--brand-dark); }
-    .empty { padding:36px 12px; text-align:center; color:var(--muted); font-style:italic; }
-    .actions { display:flex; justify-content:flex-end; margin-top:14px; }
-    button { border:1px solid #e8b6b6; border-radius:999px; background:#fff; color:var(--danger); padding:8px 12px; font-weight:800; cursor:pointer; }
-    footer { text-align:center; color:var(--muted); font-size:.72rem; padding:16px; }
-    @media (max-width:640px){ .head-row { flex-direction:column; } }
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --err:#b71c1c; --shadow:0 1px 3px rgba(60,40,90,.08),0 4px 16px rgba(60,40,90,.06); }
+    * { box-sizing:border-box; } body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.35; -webkit-font-smoothing:antialiased; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--brand); color:#fff; box-shadow:var(--shadow); } .club-logo { width:42px; height:42px; object-fit:contain; flex-shrink:0; background:#fff; border-radius:9px; padding:4px; } .logo-link { display:inline-flex; flex-shrink:0; } .logo-mark { display:inline-grid; place-items:center; width:40px; height:40px; margin-left:auto; background:#fff; color:var(--brand); border-radius:9px; font-size:1.25rem; }
+    .htext { flex:1; min-width:0; } .htext h1 { margin:0; font-size:.98rem; } .htext h1 .club { display:block; font-size:.66rem; font-weight:500; opacity:.85; letter-spacing:.04em; text-transform:uppercase; } .htext p { margin:1px 0 0; font-size:.74rem; opacity:.9; }
+    main { width:100%; padding:22px 24px 44px; } .toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:16px; } .intro h2 { margin:0 0 5px; color:var(--brand-dark); font-size:1.22rem; } .intro p { margin:0; color:var(--muted); font-size:.86rem; } .actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; padding:8px 13px; font-weight:900; font-size:.82rem; cursor:pointer; box-shadow:var(--shadow); } .btn.secondary { background:#fff; color:var(--brand-dark); border:1px solid var(--line); } .btn.danger { color:var(--err); border-color:#e8b6b6; }
+    .filters { display:grid; grid-template-columns:minmax(220px,1fr) minmax(200px,1fr) minmax(180px,auto); gap:10px; margin-bottom:14px; padding:12px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); } label { display:grid; gap:4px; color:var(--brand-dark); font-size:.68rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; } input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:.86rem; padding:8px 10px; outline:none; } input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,.12); }
+    .summary { display:grid; grid-template-columns:repeat(5,minmax(140px,1fr)); gap:12px; margin-bottom:14px; } .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:13px; } .kpi span { display:block; color:var(--muted); font-size:.72rem; font-weight:900; text-transform:uppercase; letter-spacing:.04em; } .kpi strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1.45rem; line-height:1; }
+    .notice { margin:0 0 14px; padding:10px 12px; border:1px solid #dccce9; border-radius:12px; background:#f9f6fc; color:var(--brand-dark); font-size:.8rem; } .panel { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; } .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#faf8fd; } .panel-head h3 { margin:0; color:var(--brand-dark); font-size:.95rem; text-transform:uppercase; letter-spacing:.04em; } .status { color:var(--muted); font-size:.78rem; font-weight:800; }
+    .table-wrap { overflow:auto; } table { width:100%; min-width:900px; border-collapse:collapse; font-size:.86rem; } th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } th { color:var(--brand-dark); font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; background:#fff; } tr:last-child td { border-bottom:0; } td.player { font-weight:900; color:var(--brand-dark); } .muted { color:var(--muted); font-size:.76rem; } .badge { display:inline-flex; min-width:34px; justify-content:center; border-radius:999px; padding:3px 8px; font-weight:900; font-size:.76rem; background:#f4eef9; color:var(--brand-dark); border:1px solid #dccce9; } .badge.high { background:#ffcdd2; color:var(--err); border-color:#ef9a9a; } .empty { padding:28px; color:var(--muted); text-align:center; font-weight:800; } footer { text-align:center; color:var(--muted); font-size:.72rem; padding:16px; }
+    @media (max-width:900px) { main { padding:18px 14px 36px; } .toolbar { align-items:flex-start; flex-direction:column; } .filters, .summary { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <header>
-    <a class="logo-link" href="rpe-equips.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
-    <div class="head"><h1><span>CB Sant Josep de Badalona</span> Respostes RPE de proves</h1><p>Consulta local de les respostes de prova</p></div>
-    <span class="mark" aria-hidden="true">🧪</span>
-  </header>
+  <header><a class="logo-link" href="rpe-equips.html"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a><div class="htext"><h1><span class="club">CB Sant Josep de Badalona</span> Dades RPE</h1><p>Entorn de proves</p></div><span class="logo-mark" aria-hidden="true">📊</span></header>
   <main>
-    <a class="back" href="rpe-equips.html">← Formularis RPE</a>
-    <section class="panel">
-      <div class="head-row"><div><h2>Respostes de proves</h2><p class="intro">Temps i percepció d’esforç separats entre pista i físic.</p></div><span id="count" class="count">0 respostes</span></div>
-      <p class="notice">Aquestes dades viuen només en aquest navegador. No s’envien a Firebase ni apareixen als informes RPE reals.</p>
-      <div id="content"></div>
-      <div class="actions"><button id="clear" type="button">Esborrar proves d’aquest navegador</button></div>
-    </section>
+    <div class="toolbar"><div class="intro"><h2>Dades RPE de proves</h2><p>Seguiment de les respostes locals, amb pista i físic separats.</p></div><div class="actions"><a class="btn secondary" href="rpe-equips.html">← Formularis RPE</a><button class="btn secondary danger" id="clear" type="button">Esborrar proves</button></div></div>
+    <section class="filters" aria-label="Filtres"><label>Cerca<input id="search" type="search" placeholder="Nom de jugador/a..." /></label><label>Equip<select id="team"><option value="">Tots els equips</option></select></label><label>Data<select id="date"><option value="">Totes les dates</option></select></label></section>
+    <section class="summary" aria-label="Resum"><div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div><div class="kpi"><span>RPE pista mitjà</span><strong id="kpiCourtRpe">—</strong></div><div class="kpi"><span>RPE físic mitjà</span><strong id="kpiPhysicalRpe">—</strong></div><div class="kpi"><span>Minuts de pista</span><strong id="kpiCourtMinutes">—</strong></div><div class="kpi"><span>Minuts de físic</span><strong id="kpiPhysicalMinutes">—</strong></div></section>
+    <p class="notice">Dades de prova guardades només en aquest navegador. No s’envien a Firebase ni apareixen als informes RPE reals.</p>
+    <section class="panel"><div class="panel-head"><h3>Respostes</h3><span id="status" class="status">0 respostes</span></div><div id="content"></div></section>
   </main>
   <footer>CB Sant Josep de Badalona · RPE de proves · Temporada 26-27</footer>
   <script>
     const TEST_STORAGE_KEY = "santpep-rpe-proves-season-26-27";
-    const content = document.getElementById("content");
-    const count = document.getElementById("count");
-    function escapeHtml(value){ return String(value == null ? "—" : value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char])); }
-    function formatDate(value){ const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("ca-ES", { dateStyle:"short", timeStyle:"short" }); }
-    function duration(hours, minutes){ return String(hours || 0) + " h " + String(minutes || 0) + " min"; }
+    const $ = id => document.getElementById(id);
+    const escapeHtml = value => String(value == null ? "—" : value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
+    const duration = (hours, minutes) => String(hours || 0) + " h " + String(minutes || 0) + " min";
     function records(){ try { return Object.values(JSON.parse(localStorage.getItem(TEST_STORAGE_KEY) || "{}") || {}).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))); } catch(error) { return []; } }
+    function average(items, key){ const values = items.map(item => Number(item[key])).filter(Number.isFinite); return values.length ? (values.reduce((sum,value) => sum + value, 0) / values.length).toFixed(1) : "—"; }
+    function minutes(items, key){ return items.reduce((sum,item) => sum + (Number(item[key]) || 0), 0); }
+    function populate(select, values, label){ const current = select.value; select.innerHTML = '<option value="">' + label + '</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join(""); select.value = current; }
     function render(){
-      const items = records();
-      count.textContent = items.length + (items.length === 1 ? " resposta" : " respostes");
-      if(!items.length){ content.innerHTML = '<div class="empty">Encara no hi ha respostes de prova en aquest navegador.</div>'; return; }
-      content.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Enviada</th><th>Equip / jugador/a</th><th>Entrenament</th><th>Pista</th><th>RPE pista</th><th>Físic</th><th>RPE físic</th><th>Benestar</th></tr></thead><tbody>' + items.map(item => '<tr><td>' + escapeHtml(formatDate(item.createdAt)) + '</td><td><strong>' + escapeHtml(item.team) + '</strong><br><span class="muted">' + escapeHtml(item.player) + '</span></td><td>' + escapeHtml(item.trainingDate) + '</td><td>' + escapeHtml(duration(item.courtHours, item.courtMinutes)) + '</td><td class="score">' + escapeHtml(item.courtRpe) + ' / 10</td><td>' + escapeHtml(duration(item.physicalHours, item.physicalMinutes)) + '</td><td class="score">' + escapeHtml(item.physicalRpe) + ' / 10</td><td><span class="muted">Fatiga: ' + escapeHtml(item.muscleFatigue) + ' · Dolor: ' + escapeHtml(item.musclePain) + '<br>Estrès: ' + escapeHtml(item.mentalStress) + ' · Humor: ' + escapeHtml(item.mood) + '<br>Son: ' + escapeHtml(item.sleepHours) + '</span></td></tr>').join("") + '</tbody></table></div>';
+      const all = records(); populate($("team"), [...new Set(all.map(item => item.team).filter(Boolean))].sort(), "Tots els equips"); populate($("date"), [...new Set(all.map(item => item.trainingDate).filter(Boolean))].sort().reverse(), "Totes les dates");
+      const search = $("search").value.trim().toLocaleLowerCase("ca"); const team = $("team").value; const date = $("date").value;
+      const items = all.filter(item => (!search || (String(item.player || "") + " " + String(item.team || "")).toLocaleLowerCase("ca").includes(search)) && (!team || item.team === team) && (!date || item.trainingDate === date));
+      $("kpiRecords").textContent = items.length; $("kpiCourtRpe").textContent = average(items,"courtRpe"); $("kpiPhysicalRpe").textContent = average(items,"physicalRpe"); $("kpiCourtMinutes").textContent = minutes(items,"courtTotalMinutes"); $("kpiPhysicalMinutes").textContent = minutes(items,"physicalTotalMinutes"); $("status").textContent = items.length + (items.length === 1 ? " resposta" : " respostes");
+      if(!items.length){ $("content").innerHTML = '<div class="empty">No hi ha respostes que compleixin aquests filtres.</div>'; return; }
+      $("content").innerHTML = '<div class="table-wrap"><table><thead><tr><th>Equip / jugador/a</th><th>Data</th><th>Pista</th><th>RPE pista</th><th>Físic</th><th>RPE físic</th><th>Benestar</th><th>Enviada</th></tr></thead><tbody>' + items.map(item => { const court = Number(item.courtRpe); const physical = Number(item.physicalRpe); return '<tr><td class="player">' + escapeHtml(item.player) + '<br><span class="muted">' + escapeHtml(item.team) + '</span></td><td>' + escapeHtml(item.trainingDate) + '</td><td>' + escapeHtml(duration(item.courtHours,item.courtMinutes)) + '</td><td><span class="badge' + (court >= 8 ? ' high' : '') + '">' + escapeHtml(item.courtRpe) + ' / 10</span></td><td>' + escapeHtml(duration(item.physicalHours,item.physicalMinutes)) + '</td><td><span class="badge' + (physical >= 8 ? ' high' : '') + '">' + escapeHtml(item.physicalRpe) + ' / 10</span></td><td><span class="muted">Fatiga: ' + escapeHtml(item.muscleFatigue) + ' · Dolor: ' + escapeHtml(item.musclePain) + '<br>Estrès: ' + escapeHtml(item.mentalStress) + ' · Humor: ' + escapeHtml(item.mood) + ' · Son: ' + escapeHtml(item.sleepHours) + '</span></td><td class="muted">' + escapeHtml(new Date(item.createdAt).toLocaleString("ca-ES", {dateStyle:"short",timeStyle:"short"})) + '</td></tr>'; }).join("") + '</tbody></table></div>';
     }
-    document.getElementById("clear").onclick = function(){ if(confirm("Vols esborrar totes les respostes RPE de prova d’aquest navegador?")){ localStorage.removeItem(TEST_STORAGE_KEY); render(); } };
+    ["search","team","date"].forEach(id => $(id).addEventListener(id === "search" ? "input" : "change", render));
+    $("clear").onclick = () => { if(confirm("Vols esborrar totes les respostes RPE de prova d’aquest navegador?")){ localStorage.removeItem(TEST_STORAGE_KEY); render(); } };
     render();
   </script>
 </body>

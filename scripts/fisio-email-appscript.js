@@ -72,15 +72,16 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
     return;
   }
 
-  // Destinataris de notificació.
+  // Destinataris de notificació: servei de fisio i Direcció Tècnica.
+  // La coordinació es limita a la branca femenina o masculina corresponent.
   var llistaCorreus = [
     "dtecnic@cbsantjosep.cat",
     "polammu@gmail.com",
-    "jessicagucero@gmail.com",
     "victorfurones@gmail.com",
-    "xavirieracoach@gmail.com",
     "albgrau@gmail.com"
   ];
+  var correuCoordinacio = correuCoordinacioPerGenere(e.namedValues["Gènere"]);
+  if (correuCoordinacio) llistaCorreus.push(correuCoordinacio);
   var correuEntrenador = correuEntrenadorEquip(teamName);
   if (correuEntrenador) llistaCorreus.push(correuEntrenador);
   var destinataris = normalitzarCorreus(llistaCorreus);
@@ -158,6 +159,18 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
 
   Logger.log("Correus enviats amb disseny Sant Pep a: " + destinataris.join(", "));
   return { sentTo: destinataris };
+}
+
+function correuCoordinacioPerGenere(generes) {
+  var genere = valor(generes && generes[0]).toUpperCase();
+  if (genere === "F" || genere === "FEMENI" || genere === "FEMENÍ") {
+    return "jessicagucero@gmail.com";
+  }
+  if (genere === "M" || genere === "MASCULI" || genere === "MASCULÍ") {
+    return "xavirieracoach@gmail.com";
+  }
+  Logger.log("No s'ha pogut identificar el gènere de la petició de fisio: " + genere);
+  return "";
 }
 
 function correuEntrenadorEquip(teamName) {

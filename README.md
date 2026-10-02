@@ -51,6 +51,10 @@ Quan s'actualitzi el fitxer del repositori, cal enganxar-ne també la nova versi
 al projecte d'Apps Script ja desplegat i crear-ne un desplegament nou perquè el
 canvi tingui efecte.
 
+Els avisos s'envien a Direcció Tècnica i al servei de fisio. La coordinació
+es separa per gènere: les peticions femenines s'envien a Jessica García i les
+masculines a Xavi Riera, a més del primer entrenador/a de l'equip.
+
 El formulari guarda primer la petició a Firebase. Després crida Apps Script per
 enviar l'email. A més dels destinataris fixos, l'script afegeix automàticament
 el primer entrenador de l'equip seleccionat, llegint-lo de

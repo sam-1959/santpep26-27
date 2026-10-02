@@ -579,10 +579,9 @@
     }
 
     function orderedLatestChanges(latest){
-      const lastImport=latest && latest.importedAt;
-      const changes=((latest && latest.changes) || []).filter(function(change){
-        return lastImport && changeImportDate(change, lastImport) === lastImport;
-      });
+      // Firebase conserva un historial recent de canvis. Es mostra tot aquest
+      // historial perquè les fletxes de paginació permetin consultar-lo.
+      const changes=(latest && latest.changes) || [];
       const fallback=latest && latest.importedAt;
       return changes.map(function(change,index){
         return {change:change,index:index};

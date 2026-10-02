@@ -34,7 +34,6 @@
   <script>
     const TEST_STORAGE_KEY = "santpep-rpe-proves-season-26-27";
     const $ = id => document.getElementById(id);
-    let weekInitialized = false;
     const escapeHtml = value => String(value == null ? "—" : value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
     const duration = (hours, minutes) => String(hours || 0) + " h " + String(minutes || 0) + " min";
     function records(){ try { return Object.values(JSON.parse(localStorage.getItem(TEST_STORAGE_KEY) || "{}") || {}).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))); } catch(error) { return []; } }
@@ -48,7 +47,7 @@
     function variationClass(value){ return value > 10 ? "variation-high" : value >= 1 ? "variation-caution" : value <= -1 ? "variation-low" : ""; }
     function weeklyAverage(records){ const grouped = {}; records.forEach(record => { const key = weekKey(record.trainingDate); if(!key) return; (grouped[key] ||= []).push(loadOf(record)); }); const values = Object.values(grouped).map(values => values.reduce((sum,value) => sum + value, 0)); return values.length ? values.reduce((sum,value) => sum + value, 0) / values.length : null; }
     function weekLabel(key){ const date = new Date(key + "T12:00:00"); return Number.isNaN(date.getTime()) ? key : "Set. " + String(date.getDate()).padStart(2,"0") + "/" + String(date.getMonth() + 1).padStart(2,"0"); }
-    function populateWeeks(values){ const select = $("week"); const current = select.value; select.innerHTML = '<option value="">Totes les setmanes</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(weekLabel(value)) + '</option>').join(""); select.value = current && values.includes(current) ? current : (weekInitialized ? "" : (values[0] || "")); weekInitialized = true; }
+    function populateWeeks(values){ const select = $("week"); const current = select.value; select.innerHTML = '<option value="">Totes les setmanes</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(weekLabel(value)) + '</option>').join(""); select.value = current && values.includes(current) ? current : ""; }
     function renderLoadTable(all, items){
       const target = $("loadContent");
       if(!items.length){ target.innerHTML = '<div class="empty">No hi ha dades de càrrega que compleixin aquests filtres.</div>'; return; }

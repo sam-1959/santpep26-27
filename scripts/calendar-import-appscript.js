@@ -14,7 +14,10 @@ var SEASON = "season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/" + SEASON;
 var TABLE_ASSIGNMENTS_FIREBASE_PATH = "miniTablesAssignments/" + SEASON;
 var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
-var TABLE_RESTRICTIONS_ALERT_PATH = "miniTablesRestrictionAlerts/" + SEASON;
+// Es desa dins del calendari perquè aquest node ja està autoritzat per a la
+// importació d'Apps Script; el node independent de taules està protegit per
+// les regles de Firebase.
+var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
 var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
 
 var CALENDARS = [

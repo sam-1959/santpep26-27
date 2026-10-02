@@ -186,6 +186,9 @@
     .change-kind { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
     .change-main { font-weight:700; font-size:0.9rem; }
     .change-detail { color:var(--muted); font-size:0.8rem; }
+    .conflict-week-link { margin-top:8px; border:1px solid #c62828; border-radius:6px; background:#fff; color:#a51d1d;
+      padding:5px 8px; font-size:.72rem; font-weight:800; cursor:pointer; }
+    .conflict-week-link:hover { background:#fff1f1; }
     .empty-filter { color:var(--muted); font-style:italic; text-align:center; padding:40px 0; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
     @media (max-width:520px){ .games { grid-template-columns:1fr; } }
@@ -381,7 +384,8 @@
           return '<div class="change-detail">' + g.team + ' ' + (g.sex==='F'?'F':'M') + ' vs ' + g.rival + '</div>';
         }).join('');
         return '<li class="change-item conflict"><div class="change-kind">Conflicte</div>' +
-          '<div class="change-main">' + fmtDateNumeric(first.date) + ' ' + first.time + ' · ' + loc + '</div>' + teams + '</li>';
+          '<div class="change-main">' + fmtDateNumeric(first.date) + ' ' + first.time + ' · ' + loc + '</div>' + teams +
+          '<button type="button" class="conflict-week-link" data-conflict-date="' + first.date + '">Veure setmana →</button></li>';
       }).join('');
       return '<section class="changes conflicts"><h3>Conflictes</h3>' +
         '<p class="changes-meta">Partits amb el mateix dia, hora i lloc.</p>' +
@@ -577,6 +581,20 @@
       if(next) next.onclick=function(){ moveChanges(1); };
     }
 
+    function bindConflictWeekNav(){
+      document.querySelectorAll('.conflict-week-link').forEach(function(button){
+        button.onclick=function(){
+          const date=button.dataset.conflictDate;
+          const weekIndex=DATA.weeks.findIndex(function(week){
+            return week.games.some(function(game){ return game.date===date; });
+          });
+          if(weekIndex<0) return;
+          const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
+          if(monthIndex>=0) showMonth(monthIndex, weekIndex);
+        };
+      });
+    }
+
     function changeImportDate(change, fallback){
       return change && change.importedAt ? change.importedAt : (fallback || '');
     }
@@ -668,6 +686,7 @@
       const venueLegend='<div class="agenda-legend"><span><i class="home"></i>Casa</span><span><i class="away"></i>Fora</span><span class="agenda-summary">Agenda setmanal · '+agendaCount+' partits</span></div>';
       content.innerHTML = '<div class="agenda-layout"><div>' + weekHtml + venueLegend + iconLegend() + '</div><aside class="agenda-side">' + conflicts + renderLatestChanges() + '</aside></div>';
       bindChangesNav();
+      bindConflictWeekNav();
     }
 
     // Dibuixa les setmanes del mes actiu i selecciona-ne una

@@ -28,7 +28,7 @@
     <section class="summary" aria-label="Resum"><div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div><div class="kpi"><span>RPE pista mitjà</span><strong id="kpiCourtRpe">—</strong></div><div class="kpi"><span>RPE físic mitjà</span><strong id="kpiPhysicalRpe">—</strong></div><div class="kpi"><span>Minuts de pista</span><strong id="kpiCourtMinutes">—</strong></div><div class="kpi"><span>Minuts de físic</span><strong id="kpiPhysicalMinutes">—</strong></div></section>
     <p class="notice">Dades de prova guardades només en aquest navegador. No s’envien a Firebase ni apareixen als informes RPE reals.</p>
     <section class="panel"><div class="panel-head"><h3>Respostes</h3><span id="status" class="status">0 respostes</span></div><div id="content"></div></section>
-    <section class="panel load-panel"><div class="panel-head"><h3>Càrrega</h3><span class="status">Mitjana entre RPE × minuts de pista i RPE × minuts de físic</span></div><div id="loadContent"></div></section>
+    <section class="panel load-panel"><div class="panel-head"><h3>Càrrega per setmanes</h3><span class="status">Mitjana entre RPE × minuts de pista i RPE × minuts de físic</span></div><div id="loadContent"></div></section>
   </main>
   <footer>CB Sant Josep de Badalona · RPE de proves · Temporada 26-27</footer>
   <script>
@@ -45,20 +45,21 @@
     function loadOf(record){ return (courtLoadOf(record) + physicalLoadOf(record)) / 2; }
     function weekKey(dateValue){ const date = new Date(dateValue + "T12:00:00"); if(Number.isNaN(date.getTime())) return ""; const day = (date.getDay() + 6) % 7; date.setDate(date.getDate() - day); return date.toISOString().slice(0,10); }
     function variationClass(value){ return value > 10 ? "variation-high" : value >= 1 ? "variation-caution" : value <= -1 ? "variation-low" : ""; }
-    function weeklyAverage(records){ const grouped = {}; records.forEach(record => { const key = weekKey(record.trainingDate); if(!key) return; (grouped[key] ||= []).push(loadOf(record)); }); const values = Object.values(grouped).map(values => values.reduce((sum,value) => sum + value, 0) / values.length); return values.length ? values.reduce((sum,value) => sum + value, 0) / values.length : null; }
+    function weeklyAverage(records){ const grouped = {}; records.forEach(record => { const key = weekKey(record.trainingDate); if(!key) return; (grouped[key] ||= []).push(loadOf(record)); }); const values = Object.values(grouped).map(values => values.reduce((sum,value) => sum + value, 0)); return values.length ? values.reduce((sum,value) => sum + value, 0) / values.length : null; }
+    function weekLabel(key){ const date = new Date(key + "T12:00:00"); return Number.isNaN(date.getTime()) ? key : "Set. " + String(date.getDate()).padStart(2,"0") + "/" + String(date.getMonth() + 1).padStart(2,"0"); }
     function renderLoadTable(all, items){
-      const target = $("loadContent"); const dates = [...new Set(items.map(item => item.trainingDate).filter(Boolean))].sort();
+      const target = $("loadContent"); const weeks = [...new Set(items.map(item => weekKey(item.trainingDate)).filter(Boolean))].sort();
       if(!items.length){ target.innerHTML = '<div class="empty">No hi ha dades de càrrega que compleixin aquests filtres.</div>'; return; }
       const groups = {};
       items.forEach(item => { const key = String(item.team || "") + "|" + String(item.player || ""); (groups[key] ||= { team:item.team, player:item.player, records:[] }).records.push(item); });
       const rows = Object.values(groups).sort((a,b) => String(a.team).localeCompare(String(b.team), "ca") || String(a.player).localeCompare(String(b.player), "ca")).map(group => {
-        const values = dates.map(date => { const day = group.records.filter(record => record.trainingDate === date); return day.length ? day.reduce((sum,record) => sum + loadOf(record), 0) / day.length : null; });
+        const values = weeks.map(week => { const weekRecords = group.records.filter(record => weekKey(record.trainingDate) === week); return weekRecords.length ? weekRecords.reduce((sum,record) => sum + loadOf(record), 0) : null; });
         const visible = values.filter(value => value !== null); const avg = visible.length ? visible.reduce((sum,value) => sum + value, 0) / visible.length : null;
         const seasonRecords = all.filter(record => record.team === group.team && record.player === group.player); const seasonAverage = weeklyAverage(seasonRecords); const variation = avg !== null && seasonAverage ? (avg - seasonAverage) / seasonAverage * 100 : null; const rounded = variation === null ? null : Math.round(variation);
         const trend = rounded === null ? '—' : '<span class="badge ' + variationClass(rounded) + '" title="Variació respecte a la mitjana de totes les setmanes (' + Math.round(seasonAverage) + ')">' + (rounded > 0 ? '+' : '') + rounded + '%</span>';
         return '<tr><td class="player">' + escapeHtml(group.player) + '<br><span class="muted">' + escapeHtml(group.team) + '</span></td>' + values.map(value => '<td>' + (value === null ? '—' : '<span class="badge">' + Math.round(value) + '</span>') + '</td>').join("") + '<td><span class="badge">' + (avg === null ? '—' : Math.round(avg)) + '</span></td><td>' + trend + '</td></tr>';
       }).join("");
-      target.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Jugador/a</th>' + dates.map(date => '<th>' + escapeHtml(date.split("-").reverse().slice(0,2).join("/")) + '</th>').join("") + '<th>Mitjana</th><th>Tendència</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      target.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Jugador/a</th>' + weeks.map(week => '<th>' + escapeHtml(weekLabel(week)) + '</th>').join("") + '<th>Mitjana</th><th>Tendència</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     }
     function render(){
       const all = records(); populate($("team"), [...new Set(all.map(item => item.team).filter(Boolean))].sort(), "Tots els equips"); populate($("date"), [...new Set(all.map(item => item.trainingDate).filter(Boolean))].sort().reverse(), "Totes les dates");

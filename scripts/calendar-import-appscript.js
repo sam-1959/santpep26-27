@@ -598,6 +598,49 @@ function restrictionAlertSignature(issues) {
   return issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");
 }
 
+function escapeAlertHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function(character) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[character];
+  });
+}
+
+function restrictionAlertEmailHtml(issues, forceCheck, changeCount) {
+  var tableRows = issues.map(function(issue, index) {
+    return '<tr>' +
+      '<td style="width:12%;padding:10px;border-bottom:1px solid #E5E5E5;font-weight:bold;background-color:#F9F6FC;color:#4B1D6D;vertical-align:top;">' + (index + 1) + '</td>' +
+      '<td style="width:88%;padding:10px;border-bottom:1px solid #E5E5E5;color:#333333;line-height:1.45;">' + escapeAlertHtml(issue.text) + '</td>' +
+      '</tr>';
+  }).join("");
+  var introduction = forceCheck
+    ? "S'ha executat una verificació manual de les restriccions de planificació."
+    : "S'han detectat " + changeCount + " canvi(s) al calendari i s'han verificat les restriccions de planificació.";
+  var url = "https://sam-1959.github.io/santpep26-27/taules-planificacio.html";
+
+  return '<div style="font-family:\'Helvetica Neue\',Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;">' +
+    '<div style="background-color:#4B1D6D;padding:25px;text-align:center;border-bottom:4px solid #FFC72C;">' +
+      '<h1 style="color:#FFC72C;margin:0;font-size:22px;text-transform:uppercase;letter-spacing:1px;">CB Sant Josep Badalona</h1>' +
+      '<p style="color:#FFFFFF;margin:5px 0 0;font-size:13px;opacity:.9;">Alerta de planificació de taules</p>' +
+    '</div>' +
+    '<div style="padding:25px;background-color:#FFFFFF;">' +
+      '<h3 style="color:#4B1D6D;margin-top:0;font-size:18px;">Restriccions detectades</h3>' +
+      '<p style="margin:0 0 15px;color:#333;line-height:1.45;">' + escapeAlertHtml(introduction) + '</p>' +
+      '<table style="width:100%;table-layout:fixed;border-collapse:collapse;margin:15px 0 20px;">' +
+        '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
+          '<th style="width:12%;padding:10px;text-align:left;font-size:14px;">#</th>' +
+          '<th style="width:88%;padding:10px;text-align:left;font-size:14px;">Incidència</th>' +
+        '</tr></thead><tbody>' + tableRows + '</tbody>' +
+      '</table>' +
+      '<div style="text-align:center;margin:30px 0 10px;padding:20px;background-color:#F9F6FC;border-radius:6px;border:1px dashed #4B1D6D;">' +
+        '<p style="margin:0 0 15px;font-weight:bold;color:#4B1D6D;font-size:15px;">Planificació de taules</p>' +
+        '<a href="' + url + '" target="_blank" style="background-color:#4B1D6D;color:#FFC72C;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;font-size:14px;border:2px solid #FFC72C;">Revisar les restriccions</a>' +
+      '</div>' +
+    '</div>' +
+    '<div style="background-color:#F4F4F4;padding:15px;text-align:center;border-top:1px solid #EEEEEE;">' +
+      '<p style="font-size:12px;color:#666;margin:0;"><strong>CB Sant Josep Badalona</strong> — Notificació automàtica del club.</p>' +
+    '</div>' +
+  '</div>';
+}
+
 function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt, forceCheck) {
   if ((!latestChanges || !latestChanges.length) && !forceCheck) return { checked: false, issues: 0, emailed: false };
   var assignments = readFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {};
@@ -626,17 +669,21 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt,
   }
 
   var subject = "Alerta: restriccions de taules després d'actualitzar calendaris";
+  var intro = forceCheck
+    ? "S'ha executat una verificació manual de les restriccions de taules."
+    : "S'han detectat " + latestChanges.length + " canvi(s) al calendari.";
   var body = [
-    forceCheck
-      ? "S'ha executat una verificació manual de les restriccions de taules."
-      : "S'han detectat " + latestChanges.length + " canvi(s) al calendari.",
+    intro,
     "La verificació de Planificació de taules ha trobat " + issues.length + " incidència(es):",
     ""
   ].concat(issues.map(function(issue) { return "- " + issue.text; })).concat([
     "",
     "Revisa Planificació de taules: https://sam-1959.github.io/santpep26-27/taules-planificacio.html"
   ]).join("\n");
-  MailApp.sendEmail(TABLE_RESTRICTIONS_ALERT_EMAIL, subject, body);
+  MailApp.sendEmail(TABLE_RESTRICTIONS_ALERT_EMAIL, subject, body, {
+    htmlBody: restrictionAlertEmailHtml(issues, forceCheck, latestChanges.length),
+    name: "CB Sant Josep Badalona"
+  });
   status.lastAlertAt = checkedAt;
   writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
   return { checked: true, issues: issues.length, emailed: true };

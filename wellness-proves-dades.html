@@ -50,18 +50,20 @@
     function weekLabel(key){ const date = new Date(key + "T12:00:00"); return Number.isNaN(date.getTime()) ? key : "Set. " + String(date.getDate()).padStart(2,"0") + "/" + String(date.getMonth() + 1).padStart(2,"0"); }
     function populateWeeks(values){ const select = $("week"); const current = select.value; select.innerHTML = '<option value="">Totes les setmanes</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(weekLabel(value)) + '</option>').join(""); select.value = current && values.includes(current) ? current : (weekInitialized ? "" : (values[0] || "")); weekInitialized = true; }
     function renderLoadTable(all, items){
-      const target = $("loadContent"); const weeks = [...new Set(items.map(item => weekKey(item.trainingDate)).filter(Boolean))].sort();
+      const target = $("loadContent");
       if(!items.length){ target.innerHTML = '<div class="empty">No hi ha dades de càrrega que compleixin aquests filtres.</div>'; return; }
       const groups = {};
       items.forEach(item => { const key = String(item.team || "") + "|" + String(item.player || ""); (groups[key] ||= { team:item.team, player:item.player, records:[] }).records.push(item); });
-      const rows = Object.values(groups).sort((a,b) => String(a.team).localeCompare(String(b.team), "ca") || String(a.player).localeCompare(String(b.player), "ca")).map(group => {
-        const values = weeks.map(week => { const weekRecords = group.records.filter(record => weekKey(record.trainingDate) === week); return weekRecords.length ? weekRecords.reduce((sum,record) => sum + loadOf(record), 0) : null; });
-        const visible = values.filter(value => value !== null); const avg = visible.length ? visible.reduce((sum,value) => sum + value, 0) / visible.length : null;
-        const seasonRecords = all.filter(record => record.team === group.team && record.player === group.player); const seasonAverage = weeklyAverage(seasonRecords); const variation = avg !== null && seasonAverage ? (avg - seasonAverage) / seasonAverage * 100 : null; const rounded = variation === null ? null : Math.round(variation);
-        const trend = rounded === null ? '—' : '<span class="badge ' + variationClass(rounded) + '" title="Variació respecte a la mitjana de totes les setmanes (' + Math.round(seasonAverage) + ')">' + (rounded > 0 ? '+' : '') + rounded + '%</span>';
-        return '<tr><td class="player">' + escapeHtml(group.player) + '<br><span class="muted">' + escapeHtml(group.team) + '</span></td>' + values.map(value => '<td>' + (value === null ? '—' : '<span class="badge">' + Math.round(value) + '</span>') + '</td>').join("") + '<td><span class="badge">' + (avg === null ? '—' : Math.round(avg)) + '</span></td><td>' + trend + '</td></tr>';
-      }).join("");
-      target.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Jugador/a</th>' + weeks.map(week => '<th>' + escapeHtml(weekLabel(week)) + '</th>').join("") + '<th>Mitjana</th><th>Tendència</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      const rows = Object.values(groups).flatMap(group => {
+        const seasonRecords = all.filter(record => record.team === group.team && record.player === group.player); const seasonAverage = weeklyAverage(seasonRecords);
+        const byWeek = {}; group.records.forEach(record => { const key = weekKey(record.trainingDate); if(key) (byWeek[key] ||= []).push(record); });
+        return Object.keys(byWeek).map(week => {
+          const load = byWeek[week].reduce((sum,record) => sum + loadOf(record), 0); const variation = seasonAverage ? (load - seasonAverage) / seasonAverage * 100 : null; const rounded = variation === null ? null : Math.round(variation);
+          const trend = rounded === null ? '—' : '<span class="badge ' + variationClass(rounded) + '" title="Variació respecte a la mitjana de totes les setmanes (' + Math.round(seasonAverage) + ')">' + (rounded > 0 ? '+' : '') + rounded + '%</span>';
+          return { week, player:group.player, team:group.team, load, seasonAverage, trend };
+        });
+      }).sort((a,b) => b.week.localeCompare(a.week) || String(a.team).localeCompare(String(b.team), "ca") || String(a.player).localeCompare(String(b.player), "ca")).map(row => '<tr><td>' + escapeHtml(weekLabel(row.week)) + '</td><td class="player">' + escapeHtml(row.player) + '<br><span class="muted">' + escapeHtml(row.team) + '</span></td><td><span class="badge">' + Math.round(row.load) + '</span></td><td><span class="badge">' + Math.round(row.seasonAverage) + '</span></td><td>' + row.trend + '</td></tr>').join("");
+      target.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Setmana</th><th>Jugador/a</th><th>Càrrega</th><th>Mitjana</th><th>Tendència</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     }
     function render(){
       const all = records(); populate($("team"), [...new Set(all.map(item => item.team).filter(Boolean))].sort(), "Tots els equips"); populateWeeks([...new Set(all.map(item => weekKey(item.trainingDate)).filter(Boolean))].sort().reverse());

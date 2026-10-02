@@ -342,15 +342,18 @@
         if(!gamesByPlaceTime.has(key)) gamesByPlaceTime.set(key,[]);
         gamesByPlaceTime.get(key).push(g);
       }); });
-      gamesByPlaceTime.forEach(function(games,key){ if(games.length>1 && !isAllowedMiniSaturdayAfternoon(games)) conflictKeys.add(key); });
+      gamesByPlaceTime.forEach(function(games,key){ if(games.length>1 && !isAllowedSmallBasketSlot(games)) conflictKeys.add(key); });
     }
     rebuildConflicts();
 
-    function isAllowedMiniSaturdayAfternoon(games){
+    function isAllowedSmallBasketSlot(games){
       return games.length<=3 && games.every(function(g){
         const smallBasket=g.fam==='MINI';
         const saturdayAfternoon=g.dow===6 && g.time==='16:00';
-        const sundayMorning=g.dow===0 && g.time==='09:00';
+        const beforeNovember=g.date<'2026-11-01';
+        const sundayMorning=beforeNovember
+          ? g.dow===0 && g.time==='09:00'
+          : g.dow===0 && g.time==='10:45';
         return smallBasket && (saturdayAfternoon || sundayMorning);
       });
     }
@@ -366,7 +369,7 @@
       const conflicts=[];
       gamesByPlaceTime.forEach(function(games,key){
         if(games.length<=1) return;
-        if(isAllowedMiniSaturdayAfternoon(games)) return;
+        if(isAllowedSmallBasketSlot(games)) return;
         conflicts.push({key,games});
       });
       if(!conflicts.length) return '';

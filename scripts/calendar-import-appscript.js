@@ -4,6 +4,7 @@
 // 1) Copia aquest fitxer en un projecte d'Apps Script.
 // 2) Executa `importarCalendarisPartits()` una vegada manualment.
 // 3) Executa `crearTriggerImportacioCalendaris()` per programar-ho cada hora.
+// 4) Autoritza MailApp: quan hi hagi canvis amb restriccions de taula, envia un avís a Direcció Tècnica.
 //
 // Escriu a Firebase RTDB:
 //   calendarGames/season-26-27
@@ -11,6 +12,10 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON = "season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/" + SEASON;
+var TABLE_ASSIGNMENTS_FIREBASE_PATH = "miniTablesAssignments/" + SEASON;
+var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
+var TABLE_RESTRICTIONS_ALERT_PATH = "miniTablesRestrictionAlerts/" + SEASON;
+var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
 
 var CALENDARS = [
   {
@@ -433,6 +438,205 @@ function mergeChangeHistory(oldData, newChanges, importedAt) {
   };
 }
 
+function tableNormalize(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function tableCanonicalTeam(value) {
+  return tableNormalize(value) === "cadet-b-f" ? "Cadet F" : String(value || "").trim();
+}
+
+function tableTeamLabel(game) {
+  return tableCanonicalTeam([game.team || "", game.sex || ""].join(" ").trim());
+}
+
+function tableGameId(game) {
+  return [
+    game.date, game.time, game.team, game.sex, game.rival,
+    game.loc || "", game.home ? "home" : "away", game.friendly ? "friendly" : "official"
+  ].map(tableNormalize).join("_");
+}
+
+function tableAssignmentMatchKey(game) {
+  return [game.team, game.sex || "", game.rival || "", game.home ? "home" : "away", game.friendly ? "friendly" : "official"]
+    .map(tableNormalize)
+    .join("_");
+}
+
+function tablePersonKey(name) {
+  return tableNormalize(name);
+}
+
+function tableDayPart(game) {
+  var match = String(game.time || "").match(/(\d{1,2})/);
+  if (!match) return "";
+  return Number(match[1]) < 14 ? "morning" : "afternoon";
+}
+
+function tableIsClubVenue(game) {
+  var loc = tableNormalize(game.loc || "");
+  return !!game.home || loc.indexOf("la-colina") !== -1 || loc.indexOf("montigala") !== -1 || loc.indexOf("bufala") !== -1 || loc.indexOf("pomar") !== -1;
+}
+
+function tableNeedsExperience(game) {
+  return ["mini-a-m", "mini-b-m", "mini-f"].indexOf(tableNormalize(tableTeamLabel(game))) !== -1;
+}
+
+function tableTeamList(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return String(value || "").split(",").map(function(item) { return item.trim(); }).filter(Boolean);
+}
+
+function tableProfilesByPerson(rawProfiles) {
+  var profiles = {};
+  Object.keys(rawProfiles || {}).forEach(function(key) {
+    var profile = rawProfiles[key];
+    if (!profile || !profile.name) return;
+    profiles[tablePersonKey(profile.name)] = {
+      name: profile.name,
+      active: profile.active !== false,
+      experienced: profile.experienced === true,
+      playerTeams: tableTeamList(profile.playerTeams),
+      assistantTeams: tableTeamList(profile.assistantTeams)
+    };
+  });
+  return profiles;
+}
+
+function tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames) {
+  if (gamesById[assignmentId]) return gamesById[assignmentId];
+  if (!assignment || !assignment.game) return null;
+  var saved = assignment.game;
+  var matchKey = tableAssignmentMatchKey(saved);
+  var candidates = tableGames.filter(function(game) {
+    return tableAssignmentMatchKey(game) === matchKey && mondayISO(game.date) === mondayISO(saved.date);
+  });
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
+function tableRestrictionIssues(calendarData, rawAssignments, rawProfiles) {
+  var all = allGames(calendarData);
+  var tableGames = all.filter(function(game) {
+    return tableIsClubVenue(game) && (game.fam === "MINI" || game.fam === "PREMINI" || game.friendly);
+  });
+  var gamesById = {};
+  tableGames.forEach(function(game) { gamesById[tableGameId(game)] = game; });
+  var profiles = tableProfilesByPerson(rawProfiles);
+  var issues = [];
+
+  Object.keys(rawAssignments || {}).forEach(function(assignmentId) {
+    var assignment = rawAssignments[assignmentId] || {};
+    if (!assignment.table1 && !assignment.table2) return;
+    var game = tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames);
+    if (!game) {
+      issues.push({
+        fingerprint: "assignment-not-mapped|" + assignmentId,
+        text: "Assignació sense partit mini coincident al calendari actual: " + assignmentId + "."
+      });
+      return;
+    }
+
+    var people = [assignment.table1 || "", assignment.table2 || ""].filter(Boolean);
+    var gameText = game.date + " " + (game.time || "hora pendent") + " · " + tableTeamLabel(game) + " vs " + (game.rival || "rival pendent");
+    if (assignment.table1 && assignment.table2 && assignment.table1 === assignment.table2) {
+      issues.push({
+        fingerprint: "duplicate|" + tableGameId(game) + "|" + tablePersonKey(assignment.table1),
+        text: gameText + ": " + assignment.table1 + " està assignada dues vegades."
+      });
+    }
+
+    people.forEach(function(person) {
+      var profile = profiles[tablePersonKey(person)] || { name: person, active: true, experienced: false, playerTeams: [], assistantTeams: [] };
+      var blockedTeams = profile.playerTeams.concat(profile.assistantTeams).map(tableCanonicalTeam).map(tableNormalize);
+      var currentTeam = tableNormalize(tableTeamLabel(game));
+      if (profile.active === false) {
+        issues.push({ fingerprint: "inactive|" + tableGameId(game) + "|" + tablePersonKey(person), text: gameText + ": " + person + " no està activa." });
+      }
+      if (blockedTeams.indexOf(currentTeam) !== -1) {
+        issues.push({ fingerprint: "own-team|" + tableGameId(game) + "|" + tablePersonKey(person), text: gameText + ": " + person + " juga o ajuda en aquest equip." });
+      }
+      var dayPart = tableDayPart(game);
+      if (dayPart) {
+        all.some(function(otherGame) {
+          if (otherGame.date !== game.date || tableDayPart(otherGame) !== dayPart) return false;
+          if (blockedTeams.indexOf(tableNormalize(tableTeamLabel(otherGame))) === -1) return false;
+          var partLabel = dayPart === "morning" ? "matí" : "tarda";
+          issues.push({
+            fingerprint: "same-day|" + tableGameId(game) + "|" + tablePersonKey(person) + "|" + tableGameId(otherGame),
+            text: gameText + ": " + person + " té partit amb " + tableTeamLabel(otherGame) + " el mateix dia i franja de " + partLabel + "."
+          });
+          return true;
+        });
+      }
+    });
+
+    if (tableNeedsExperience(game)) {
+      var hasExperience = people.some(function(person) {
+        return profiles[tablePersonKey(person)] && profiles[tablePersonKey(person)].experienced === true;
+      });
+      if (!hasExperience) {
+        issues.push({
+          fingerprint: "experience|" + tableGameId(game),
+          text: gameText + ": aquest partit mini necessita almenys una persona amb experiència a la taula."
+        });
+      }
+    }
+  });
+  return issues;
+}
+
+function restrictionAlertSignature(issues) {
+  return issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");
+}
+
+function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt) {
+  if (!latestChanges || !latestChanges.length) return { checked: false, issues: 0, emailed: false };
+  var assignments = readFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {};
+  var profiles = readFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {};
+  var alertStatus = readFirebase(TABLE_RESTRICTIONS_ALERT_PATH) || {};
+  var issues = tableRestrictionIssues(calendarData, assignments, profiles);
+  var signature = restrictionAlertSignature(issues);
+  var status = {
+    checkedAt: checkedAt,
+    changesDetected: latestChanges.length,
+    issueCount: issues.length,
+    lastIssueSignature: issues.length ? signature : "",
+    lastIssues: issues.map(function(issue) { return issue.text; })
+  };
+
+  if (!issues.length) {
+    if (alertStatus.lastIssueSignature) status.resolvedAt = checkedAt;
+    writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
+    return { checked: true, issues: 0, emailed: false };
+  }
+
+  if (alertStatus.lastIssueSignature === signature) {
+    status.lastAlertAt = alertStatus.lastAlertAt || "";
+    writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
+    return { checked: true, issues: issues.length, emailed: false, duplicate: true };
+  }
+
+  var subject = "Alerta: restriccions de taules després d'actualitzar calendaris";
+  var body = [
+    "S'han detectat " + latestChanges.length + " canvi(s) al calendari.",
+    "La verificació de Planificació de taules ha trobat " + issues.length + " incidència(es):",
+    ""
+  ].concat(issues.map(function(issue) { return "- " + issue.text; })).concat([
+    "",
+    "Revisa Planificació de taules: https://sam-1959.github.io/santpep26-27/taules-planificacio.html"
+  ]).join("\n");
+  MailApp.sendEmail(TABLE_RESTRICTIONS_ALERT_EMAIL, subject, body);
+  status.lastAlertAt = checkedAt;
+  writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
+  return { checked: true, issues: issues.length, emailed: true };
+}
+
 function importarCalendarisPartits() {
   var oldData = readFirebase(CALENDAR_FIREBASE_PATH);
   var oldHasWeeks = oldData && Array.isArray(oldData.weeks) && oldData.weeks.length;
@@ -446,9 +650,10 @@ function importarCalendarisPartits() {
     ? mergeChangeHistory(oldData, latestChanges, now)
     : { checkedAt: now, importedAt: now, changes: [] };
   writeFirebase(CALENDAR_FIREBASE_PATH, data);
+  var restrictions = verifyTableRestrictionsAndAlert(data, latestChanges, now);
   var total = allGames(data).length;
-  Logger.log("Calendaris importats: " + data.weeks.length + " setmanes, " + total + " partits, " + latestChanges.length + " canvi(s) nous.");
-  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length };
+  Logger.log("Calendaris importats: " + data.weeks.length + " setmanes, " + total + " partits, " + latestChanges.length + " canvi(s) nous. Restriccions: " + restrictions.issues + ".");
+  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, restrictions: restrictions };
 }
 
 function crearTriggerImportacioCalendaris() {

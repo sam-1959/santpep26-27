@@ -69,6 +69,15 @@
     .pdf-email-status { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; font-size:0.78rem; font-weight:900; }
     .pdf-email-sent { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; }
     .pdf-email-pending { background:#f1eef5; color:var(--muted); border:1px solid var(--line); }
+    .edit-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:6px 9px; font-weight:900; cursor:pointer; }
+    .edit-button:hover { border-color:var(--brand); background:#faf8fd; }
+    dialog { width:min(760px,calc(100% - 24px)); max-height:calc(100vh - 24px); border:0; border-radius:16px; padding:0; color:var(--ink); box-shadow:0 16px 50px rgba(42,34,51,.28); }
+    dialog::backdrop { background:rgba(42,34,51,.42); }
+    .edit-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; background:var(--brand); color:#fff; }
+    .edit-dialog-head h3 { margin:0; font-size:1rem; } .edit-dialog-head p { margin:3px 0 0; font-size:.78rem; opacity:.9; }
+    .dialog-close { border:1px solid rgba(255,255,255,.4); border-radius:999px; background:transparent; color:#fff; padding:5px 9px; font-weight:900; cursor:pointer; }
+    .edit-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:18px; } .edit-form label { display:grid; gap:4px; color:var(--brand-dark); font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:.04em; } .edit-form label.wide { grid-column:1 / -1; } .edit-form input, .edit-form textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:8px 10px; color:var(--ink); font:inherit; } .edit-form textarea { min-height:90px; resize:vertical; }
+    .edit-actions { display:flex; justify-content:flex-end; gap:8px; grid-column:1 / -1; padding-top:4px; } .edit-actions button { border:0; border-radius:999px; padding:8px 13px; font-weight:900; cursor:pointer; background:var(--brand); color:#fff; } .edit-actions .secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .pdf-loading { display:inline-grid; place-items:center; }
     .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -89,6 +98,7 @@
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
+    @media (max-width:640px) { .edit-form { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -126,6 +136,21 @@
       <div class="analysis" id="analysis"></div>
     </section>
   </main>
+  <dialog id="editDialog" aria-labelledby="editDialogTitle">
+    <div class="edit-dialog-head"><div><h3 id="editDialogTitle">Editar comunicat d'accident</h3><p id="editDialogSubtitle"></p></div><button class="dialog-close" id="editCancelTop" type="button" aria-label="Tancar">×</button></div>
+    <form id="editForm" class="edit-form">
+      <label>Adreça electrònica<input id="editEmail" type="email" required /></label>
+      <label>Pare/mare o tutor/a<input id="editGuardianName" type="text" required /></label>
+      <label>Jugador/a<input id="editPlayer" type="text" required /></label>
+      <label>Telèfon<input id="editPhone" type="tel" required /></label>
+      <label>Data de la lesió<input id="editInjuryDate" type="date" required /></label>
+      <label>Número d'expedient<input id="editClaimNumber" type="text" /></label>
+      <label class="wide">Instal·lació<input id="editVenue" type="text" required /></label>
+      <label class="wide">Danys soferts<textarea id="editDamage" required></textarea></label>
+      <label class="wide">Lloc de la lesió<input id="editSide" type="text" required /></label>
+      <div class="edit-actions"><button class="secondary" id="editCancel" type="button">Cancel·lar</button><button id="editSave" type="submit">Desar canvis</button></div>
+    </form>
+  </dialog>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -138,6 +163,9 @@
     const paginationEl = document.getElementById("pagination");
     const analysisEl = document.getElementById("analysis");
     const totalEl = document.getElementById("totalRequests");
+    const editDialog = document.getElementById("editDialog");
+    const editForm = document.getElementById("editForm");
+    const editSaveButton = document.getElementById("editSave");
     const privacyText = document.getElementById("privacyText");
     const authTitle = document.getElementById("authTitle");
     const authText = document.getElementById("authText");
@@ -172,6 +200,7 @@
     let refreshTimer = null;
     let isRefreshing = false;
     let pdfBusy = null;
+    let editingRowId = null;
 
     function parseDateValue(value){
       const text = String(value || "");
@@ -417,7 +446,7 @@
     function setPrivateMode(user){
       isPrivateView = true;
       authTitle.textContent = "Vista completa";
-      authText.textContent = "Sessió iniciada com " + user.email + ".";
+      authText.textContent = "Sessió iniciada com " + user.email + ". Pots editar les dades dels comunicats.";
       privacyText.textContent = "Es mostren totes les dades disponibles dels comunicats d'accident.";
       loginButton.hidden = true;
       logoutButton.hidden = false;
@@ -446,7 +475,7 @@
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
-      const privateHead = isPrivateView ? '<th class="col-status">Estat</th><th class="col-name">Document (PDF)</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-status">Estat</th><th class="col-name">Document (PDF)</th><th class="col-name">Expedient</th><th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th class="col-name">Correu</th><th class="col-name">Accions</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-date">Data comunicat</th><th class="col-name">Jugador/a</th><th class="col-date">Data lesió</th><th class="col-name">Instal·lació</th><th class="col-name">Lloc</th><th class="desc">Danys soferts</th>' + privateHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
@@ -473,7 +502,8 @@
             '<td class="col-name">' + escapeHtml(row.claimNumber || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + escapeHtml(row.phone || "—") + '</td>' +
-            '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' : '';
+            '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
+            '<td class="col-name"><button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️ Editar</button></td>' : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -487,6 +517,7 @@
         }).join("") +
         '</tbody></table>';
       bindPdfUploads();
+      bindEditActions();
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);
     }
@@ -555,6 +586,88 @@
           render();
         });
       });
+    }
+
+    function inputDateValue(date){
+      if(!date || Number.isNaN(date.getTime())) return "";
+      return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+
+    function openEditDialog(row){
+      if(!isPrivateView || !currentUser || !row) return;
+      editingRowId = row.id;
+      document.getElementById("editDialogSubtitle").textContent = "Actualitza les dades rebudes de " + shortName(row.player) + ".";
+      document.getElementById("editEmail").value = row.email || "";
+      document.getElementById("editGuardianName").value = row.guardianName || "";
+      document.getElementById("editPlayer").value = row.player || "";
+      document.getElementById("editPhone").value = row.phone || "";
+      document.getElementById("editInjuryDate").value = inputDateValue(row.injuryDate);
+      document.getElementById("editVenue").value = row.venue || "";
+      document.getElementById("editDamage").value = row.damage || "";
+      document.getElementById("editSide").value = row.side || "";
+      document.getElementById("editClaimNumber").value = row.claimNumber || "";
+      editDialog.showModal();
+    }
+
+    function closeEditDialog(){
+      editingRowId = null;
+      if(editDialog.open) editDialog.close();
+    }
+
+    function bindEditActions(){
+      tableWrap.querySelectorAll("[data-edit-request]").forEach(button => {
+        button.addEventListener("click", () => openEditDialog(rows.find(row => row.id === button.dataset.editRequest)));
+      });
+    }
+
+    async function saveEditedRequest(event){
+      event.preventDefault();
+      const row = rows.find(item => item.id === editingRowId);
+      if(!row || !currentUser || !isPrivateView) return;
+      const payload = {
+        email: document.getElementById("editEmail").value.trim(),
+        guardianName: document.getElementById("editGuardianName").value.trim(),
+        player: document.getElementById("editPlayer").value.trim(),
+        phone: document.getElementById("editPhone").value.trim(),
+        injuryDate: document.getElementById("editInjuryDate").value,
+        venue: document.getElementById("editVenue").value.trim(),
+        damage: document.getElementById("editDamage").value.trim(),
+        side: document.getElementById("editSide").value.trim(),
+        claimNumber: document.getElementById("editClaimNumber").value.trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.email || ""
+      };
+      if(!payload.email || !payload.guardianName || !payload.player || !payload.phone || !payload.injuryDate || !payload.venue || !payload.damage || !payload.side){
+        window.alert("Completa tots els camps obligatoris abans de desar.");
+        return;
+      }
+      editSaveButton.disabled = true;
+      editSaveButton.textContent = "Desant...";
+      try {
+        const token = await currentUser.getIdToken();
+        const publicPayload = {
+          player: payload.player,
+          injuryDate: payload.injuryDate,
+          venue: payload.venue,
+          damage: payload.damage,
+          side: payload.side,
+          hasClaimNumber: !!payload.claimNumber,
+          updatedAt: payload.updatedAt
+        };
+        await Promise.all([
+          patchFirebaseRequest(PRIVATE_REQUESTS_PATH, row.id, { ...payload, hasClaimNumber: !!payload.claimNumber }, token),
+          patchFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, publicPayload, token)
+        ]);
+        closeEditDialog();
+        await loadPrivateRequests(currentUser);
+        statusMessage = "Comunicat de " + shortName(payload.player) + " actualitzat.";
+        render();
+      } catch(error) {
+        window.alert("No s'han pogut desar els canvis. Revisa els permisos de Firebase.");
+      } finally {
+        editSaveButton.disabled = false;
+        editSaveButton.textContent = "Desar canvis";
+      }
     }
 
     function renderPagination(total, totalPages){
@@ -783,6 +896,10 @@
     logoutButton.addEventListener("click", async () => {
       if(auth) await signOut(auth);
     });
+
+    editForm.addEventListener("submit", saveEditedRequest);
+    document.getElementById("editCancel").addEventListener("click", closeEditDialog);
+    document.getElementById("editCancelTop").addEventListener("click", closeEditDialog);
 
     async function init(){
       setPublicMode();

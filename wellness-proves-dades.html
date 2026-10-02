@@ -24,7 +24,7 @@
   <header><a class="logo-link" href="rpe-equips.html"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a><div class="htext"><h1><span class="club">CB Sant Josep de Badalona</span> Dades RPE</h1><p>Entorn de proves</p></div><span class="logo-mark" aria-hidden="true">📊</span></header>
   <main>
     <div class="toolbar"><div class="intro"><h2>Dades RPE de proves</h2><p>Seguiment de les respostes locals, amb pista i físic separats.</p></div><div class="actions"><button class="btn secondary danger" id="clear" type="button">Esborrar proves</button></div></div>
-    <section class="filters" aria-label="Filtres"><label>Cerca<input id="search" type="search" placeholder="Nom de jugador/a..." /></label><label>Equip<select id="team"><option value="">Tots els equips</option></select></label><label>Data<select id="date"><option value="">Totes les dates</option></select></label></section>
+    <section class="filters" aria-label="Filtres"><label>Cerca<input id="search" type="search" placeholder="Nom de jugador/a..." /></label><label>Equip<select id="team"><option value="">Tots els equips</option></select></label><label>Setmana<select id="week"><option value="">Totes les setmanes</option></select></label></section>
     <section class="summary" aria-label="Resum"><div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div><div class="kpi"><span>RPE pista mitjà</span><strong id="kpiCourtRpe">—</strong></div><div class="kpi"><span>RPE físic mitjà</span><strong id="kpiPhysicalRpe">—</strong></div><div class="kpi"><span>Minuts de pista</span><strong id="kpiCourtMinutes">—</strong></div><div class="kpi"><span>Minuts de físic</span><strong id="kpiPhysicalMinutes">—</strong></div></section>
     <p class="notice">Dades de prova guardades només en aquest navegador. No s’envien a Firebase ni apareixen als informes RPE reals.</p>
     <section class="panel"><div class="panel-head"><h3>Respostes</h3><span id="status" class="status">0 respostes</span></div><div id="content"></div></section>
@@ -34,6 +34,7 @@
   <script>
     const TEST_STORAGE_KEY = "santpep-rpe-proves-season-26-27";
     const $ = id => document.getElementById(id);
+    let weekInitialized = false;
     const escapeHtml = value => String(value == null ? "—" : value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]));
     const duration = (hours, minutes) => String(hours || 0) + " h " + String(minutes || 0) + " min";
     function records(){ try { return Object.values(JSON.parse(localStorage.getItem(TEST_STORAGE_KEY) || "{}") || {}).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))); } catch(error) { return []; } }
@@ -47,6 +48,7 @@
     function variationClass(value){ return value > 10 ? "variation-high" : value >= 1 ? "variation-caution" : value <= -1 ? "variation-low" : ""; }
     function weeklyAverage(records){ const grouped = {}; records.forEach(record => { const key = weekKey(record.trainingDate); if(!key) return; (grouped[key] ||= []).push(loadOf(record)); }); const values = Object.values(grouped).map(values => values.reduce((sum,value) => sum + value, 0)); return values.length ? values.reduce((sum,value) => sum + value, 0) / values.length : null; }
     function weekLabel(key){ const date = new Date(key + "T12:00:00"); return Number.isNaN(date.getTime()) ? key : "Set. " + String(date.getDate()).padStart(2,"0") + "/" + String(date.getMonth() + 1).padStart(2,"0"); }
+    function populateWeeks(values){ const select = $("week"); const current = select.value; select.innerHTML = '<option value="">Totes les setmanes</option>' + values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(weekLabel(value)) + '</option>').join(""); select.value = current && values.includes(current) ? current : (weekInitialized ? "" : (values[0] || "")); weekInitialized = true; }
     function renderLoadTable(all, items){
       const target = $("loadContent"); const weeks = [...new Set(items.map(item => weekKey(item.trainingDate)).filter(Boolean))].sort();
       if(!items.length){ target.innerHTML = '<div class="empty">No hi ha dades de càrrega que compleixin aquests filtres.</div>'; return; }
@@ -62,15 +64,15 @@
       target.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Jugador/a</th>' + weeks.map(week => '<th>' + escapeHtml(weekLabel(week)) + '</th>').join("") + '<th>Mitjana</th><th>Tendència</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     }
     function render(){
-      const all = records(); populate($("team"), [...new Set(all.map(item => item.team).filter(Boolean))].sort(), "Tots els equips"); populate($("date"), [...new Set(all.map(item => item.trainingDate).filter(Boolean))].sort().reverse(), "Totes les dates");
-      const search = $("search").value.trim().toLocaleLowerCase("ca"); const team = $("team").value; const date = $("date").value;
-      const items = all.filter(item => (!search || (String(item.player || "") + " " + String(item.team || "")).toLocaleLowerCase("ca").includes(search)) && (!team || item.team === team) && (!date || item.trainingDate === date));
+      const all = records(); populate($("team"), [...new Set(all.map(item => item.team).filter(Boolean))].sort(), "Tots els equips"); populateWeeks([...new Set(all.map(item => weekKey(item.trainingDate)).filter(Boolean))].sort().reverse());
+      const search = $("search").value.trim().toLocaleLowerCase("ca"); const team = $("team").value; const week = $("week").value;
+      const items = all.filter(item => (!search || (String(item.player || "") + " " + String(item.team || "")).toLocaleLowerCase("ca").includes(search)) && (!team || item.team === team) && (!week || weekKey(item.trainingDate) === week));
       $("kpiRecords").textContent = items.length; $("kpiCourtRpe").textContent = average(items,"courtRpe"); $("kpiPhysicalRpe").textContent = average(items,"physicalRpe"); $("kpiCourtMinutes").textContent = minutes(items,"courtTotalMinutes"); $("kpiPhysicalMinutes").textContent = minutes(items,"physicalTotalMinutes"); $("status").textContent = items.length + (items.length === 1 ? " resposta" : " respostes");
       renderLoadTable(all, items);
       if(!items.length){ $("content").innerHTML = '<div class="empty">No hi ha respostes que compleixin aquests filtres.</div>'; return; }
       $("content").innerHTML = '<div class="table-wrap"><table><thead><tr><th>Equip / jugador/a</th><th>Data</th><th>Pista</th><th>RPE pista</th><th>Càrrega pista</th><th>Físic</th><th>RPE físic</th><th>Càrrega físic</th><th>Càrrega resposta</th><th>Benestar</th><th>Enviada</th></tr></thead><tbody>' + items.map(item => { const court = Number(item.courtRpe); const physical = Number(item.physicalRpe); const courtLoad = Math.round(courtLoadOf(item)); const physicalLoad = Math.round(physicalLoadOf(item)); const load = Math.round(loadOf(item)); return '<tr><td class="player">' + escapeHtml(item.player) + '<br><span class="muted">' + escapeHtml(item.team) + '</span></td><td>' + escapeHtml(item.trainingDate) + '</td><td>' + escapeHtml(duration(item.courtHours,item.courtMinutes)) + '</td><td><span class="badge' + (court >= 8 ? ' high' : '') + '">' + escapeHtml(item.courtRpe) + ' / 10</span></td><td><span class="badge">' + courtLoad + '</span></td><td>' + escapeHtml(duration(item.physicalHours,item.physicalMinutes)) + '</td><td><span class="badge' + (physical >= 8 ? ' high' : '') + '">' + escapeHtml(item.physicalRpe) + ' / 10</span></td><td><span class="badge">' + physicalLoad + '</span></td><td><span class="badge">' + load + '</span></td><td><span class="muted">Fatiga: ' + escapeHtml(item.muscleFatigue) + ' · Dolor: ' + escapeHtml(item.musclePain) + '<br>Estrès: ' + escapeHtml(item.mentalStress) + ' · Humor: ' + escapeHtml(item.mood) + ' · Son: ' + escapeHtml(item.sleepHours) + '</span></td><td class="muted">' + escapeHtml(new Date(item.createdAt).toLocaleString("ca-ES", {dateStyle:"short",timeStyle:"short"})) + '</td></tr>'; }).join("") + '</tbody></table></div>';
     }
-    ["search","team","date"].forEach(id => $(id).addEventListener(id === "search" ? "input" : "change", render));
+    ["search","team","week"].forEach(id => $(id).addEventListener(id === "search" ? "input" : "change", render));
     $("clear").onclick = () => { if(confirm("Vols esborrar totes les respostes RPE de prova d’aquest navegador?")){ localStorage.removeItem(TEST_STORAGE_KEY); render(); } };
     render();
   </script>

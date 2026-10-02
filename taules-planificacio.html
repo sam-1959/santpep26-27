@@ -238,6 +238,7 @@
     <div class="planning-toolbar">
       <div class="actions" aria-label="Accions de planificació mensual">
         <button id="generateProposal" class="action-button" type="button"><span class="proposal-button-icon" aria-hidden="true">♻</span>Generar proposta</button>
+        <button id="verifyRestrictions" class="action-button secondary" type="button">✓ Verificar restriccions</button>
         <button id="clearCurrentWeek" class="action-button danger" type="button">Netejar període</button>
         <button id="togglePeoplePanel" class="action-button secondary" type="button">Perfils del grup de taules</button>
       </div>
@@ -355,6 +356,7 @@
       prevPeriod: document.getElementById("prevPeriod"),
       nextPeriod: document.getElementById("nextPeriod"),
       generateProposal: document.getElementById("generateProposal"),
+      verifyRestrictions: document.getElementById("verifyRestrictions"),
       clearCurrentWeek: document.getElementById("clearCurrentWeek"),
       togglePeoplePanel: document.getElementById("togglePeoplePanel"),
       peoplePanel: document.getElementById("peoplePanel"),
@@ -1896,6 +1898,19 @@
       } catch (error) {
         console.error(error);
         setStatus(error.message, "error");
+      }
+    });
+
+    els.verifyRestrictions.addEventListener("click", () => {
+      collectPeopleProfiles();
+      validationIssues = computeCurrentPeriodValidationIssues();
+      lastProposalLog = null;
+      render();
+      const issueCount = validationIssueCount();
+      if (issueCount) {
+        setStatus(`Restriccions verificades: ${issueCount} incidència(es). Revisa les files marcades en vermell.`, "error");
+      } else {
+        setStatus("Restriccions verificades: cap incidència al període seleccionat.");
       }
     });
 

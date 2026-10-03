@@ -218,6 +218,10 @@
       input.value = normalisePersonName(input.value);
       return input.value;
     }
+    function capitaliseFirstLetter(value){
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toLocaleUpperCase("ca-ES") + text.slice(1) : "";
+    }
     function venueValue(){
       return inputValue("venue") === "ALTRES" ? inputValue("venueOther") : inputValue("venue");
     }
@@ -266,6 +270,8 @@
       event.preventDefault();
       normalisePersonNameInput("guardianName");
       normalisePersonNameInput("playerName");
+      document.getElementById("damage").value = capitaliseFirstLetter(document.getElementById("damage").value);
+      document.getElementById("side").value = capitaliseFirstLetter(document.getElementById("side").value);
       if(!isValidEmail(inputValue("email"))){
         setStatus("err", "Introdueix una adreça electrònica vàlida.");
         document.getElementById("email").focus();

@@ -261,6 +261,11 @@
       return input.value;
     }
 
+    function capitaliseFirstLetter(value){
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toLocaleUpperCase("ca-ES") + text.slice(1) : "";
+    }
+
     function isSameDay(a, b){
       return a && b &&
         a.getFullYear() === b.getFullYear() &&
@@ -678,6 +683,8 @@
       if(!row || !currentUser || !isPrivateView) return;
       normaliseEditPersonName("editGuardianName");
       normaliseEditPersonName("editPlayer");
+      document.getElementById("editDamage").value = capitaliseFirstLetter(document.getElementById("editDamage").value);
+      document.getElementById("editSide").value = capitaliseFirstLetter(document.getElementById("editSide").value);
       const payload = {
         email: document.getElementById("editEmail").value.trim(),
         guardianName: document.getElementById("editGuardianName").value.trim(),

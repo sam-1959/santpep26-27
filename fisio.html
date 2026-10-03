@@ -24,11 +24,12 @@
     .intro p { margin:0 0 6px; color:var(--muted); font-size:0.84rem; }
     .tag { display:inline-flex; margin-top:2px; color:var(--brand-dark); background:var(--accent); border-radius:999px; padding:3px 9px; font-size:0.72rem; font-weight:800; }
     form { display:grid; gap:10px; }
-    label { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
-    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
+    label { display:block; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
+    input, select, textarea { display:block; width:100%; margin-top:4px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
     input:focus, select:focus, textarea:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
     textarea { min-height:88px; resize:vertical; }
     .required { color:#c62828; }
+    .hint { display:block; margin-top:4px; color:var(--muted); font-size:0.72rem; font-weight:650; text-transform:none; letter-spacing:0; }
     .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:2px; }
     button { border:0; border-radius:999px; background:var(--brand); color:#fff; padding:9px 16px; font-weight:800; cursor:pointer; box-shadow:var(--shadow); }
     button:disabled { opacity:0.58; cursor:not-allowed; }

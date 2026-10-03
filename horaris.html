@@ -168,17 +168,6 @@
     const currentViewLabelEl = document.getElementById("currentViewLabel");
     const prevViewEl = document.getElementById("prevView");
     const nextViewEl = document.getElementById("nextView");
-    const VENUE_DISPLAY_NAMES = {
-      "BUFALÀ": "Poliesportiu Bufalà",
-      "LA COLINA": "Poliesportiu La Colina",
-      "PAVELLÓ DE MONTIGALÀ": "Poliesportiu Montigalà",
-      "POLIESPORTIU DE POMAR": "Poliesportiu de Pomar",
-      "CEM BESÒS": "CEM Besòs"
-    };
-
-    function venueDisplayName(name){
-      return VENUE_DISPLAY_NAMES[String(name || "").trim().toUpperCase()] || name;
-    }
 
     function setLoadStatus(text, tone){
       const old = document.getElementById("sheetStatus");
@@ -452,9 +441,8 @@
           (isToday ? '<span class="today-badge">Avui</span>' : '') + '</div>' + slots + '</div>';
       }
       if(!hasVisibleSlots) return ""; // cap franja passa el filtre en aquesta instal·lació
-      const venueName = venueDisplayName(v.name);
-      return '<div class="venue"><div class="venue-head"><span class="pin">' + venuePin(venueName) +
-        '</span>' + venueName + '</div><div class="days" style="--day-count:' + dayCount + '">' + daysHtml + '</div></div>';
+      return '<div class="venue"><div class="venue-head"><span class="pin">' + venuePin(v.name) +
+        '</span>' + v.name + '</div><div class="days" style="--day-count:' + dayCount + '">' + daysHtml + '</div></div>';
     }
 
     const VIEWS = [];

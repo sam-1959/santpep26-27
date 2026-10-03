@@ -512,9 +512,10 @@
           const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
           const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
           const disabledAttr = isAnyPdfBusy ? ' disabled' : '';
+          const emailCopies = "Còpia a info@cbsantjosep.cat, dtecnic@cbsantjosep.cat, siniestros.baloncesto@aon.es i basquetcatala@digglo.eu";
           const emailSentTitle = row.familyEmailSentAt
-            ? "Correu enviat" + (row.familyEmailSentTo ? " a " + row.familyEmailSentTo : "") + " el " + formatDate(row.familyEmailSentAt, true)
-            : "Correu pendent d'enviar a la família";
+            ? "Correu enviat a la família" + (row.familyEmailSentTo ? " (" + row.familyEmailSentTo + ")" : "") + ". " + emailCopies + ". " + formatDate(row.familyEmailSentAt, true)
+            : "Correu pendent d'enviar a la família. " + emailCopies + ".";
           const emailStatusIcon = row.familyEmailSentAt
             ? '<span class="pdf-email-status pdf-email-sent" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>'
             : '<span class="pdf-email-status pdf-email-pending" title="' + escapeHtml(emailSentTitle) + '" aria-label="' + escapeHtml(emailSentTitle) + '">✉</span>';

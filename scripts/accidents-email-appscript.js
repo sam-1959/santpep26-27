@@ -126,6 +126,11 @@ function enviarCorreuDocumentFamilia(request, pdf) {
     Logger.log("No s'envia correu a família: falta adreça electrònica vàlida.");
     return [];
   }
+  if (!pdf || !pdf.pdfDriveId) {
+    throw new Error("No s'ha pogut adjuntar el PDF: falta l'identificador de Drive.");
+  }
+  var fitxerPdf = DriveApp.getFileById(pdf.pdfDriveId);
+  var pdfAdjunt = fitxerPdf.getBlob().setName(pdf.pdfName || fitxerPdf.getName());
 
   var jugador = valor(request.player);
   var expedient = valor(request.claimNumber);
@@ -141,7 +146,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
     "Hola,\n\n" +
     "Us enviem el Comunicat d'Accident Esportiu" + (jugador !== "—" ? " de " + jugador : "") + ".\n\n" +
     expedientText +
-    "Podeu descarregar-lo aquí:\n" + pdf.pdfUrl + "\n\n" +
+    "Trobareu el comunicat adjunt a aquest correu.\n\n" +
     "CB Sant Josep de Badalona";
 
   var cosHTML = `
@@ -154,11 +159,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
         <p style="margin-top: 0;">Hola,</p>
         <p>Us enviem el Comunicat d'Accident Esportiu${jugador !== "—" ? " de <strong>" + escaparHtml(jugador) + "</strong>" : ""}.</p>
         ${expedientHTML}
-        <div style="text-align: center; margin: 26px 0; padding: 18px; background-color: #F9F6FC; border-radius: 6px; border: 1px dashed #4B1D6D;">
-          <a href="${pdf.pdfUrl}" target="_blank" style="background-color: #4B1D6D; color: #FFC72C; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; font-size: 14px; border: 2px solid #FFC72C;">
-            Descarregar comunicat
-          </a>
-        </div>
+        <p style="margin: 20px 0; padding: 12px; background-color: #F9F6FC; border-left: 4px solid #4B1D6D; border-radius: 6px;">Trobareu el comunicat adjunt a aquest correu.</p>
         <p style="font-size: 13px; color: #666;">Si teniu cap dubte, podeu contactar amb info@cbsantjosep.cat.</p>
       </div>
       <div style="background-color: #F4F4F4; padding: 15px; text-align: center; border-top: 1px solid #EEEEEE;">
@@ -170,6 +171,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
   destinataris.forEach(function(correu) {
     GmailApp.sendEmail(correu, assumpte, cosText, {
       cc: "info@cbsantjosep.cat,siniestros.baloncesto@aon.es,basquetcatala@digglo.eu",
+      attachments: [pdfAdjunt],
       htmlBody: cosHTML,
       name: "CB Sant Josep Badalona"
     });

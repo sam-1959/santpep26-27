@@ -37,6 +37,7 @@
     .insurance-box a { color:var(--brand-dark); font-weight:900; }
     form { display:grid; gap:10px; }
     label { display:grid; gap:4px; font-size:0.7rem; font-weight:800; color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
+    .field-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     input, select, textarea { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.9rem; padding:8px 10px; outline:none; }
     input:focus, select:focus, textarea:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
     textarea { min-height:88px; resize:vertical; }
@@ -56,6 +57,7 @@
     .hint { color:var(--muted); font-size:0.72rem; font-weight:650; text-transform:none; letter-spacing:0; }
     .form-title { margin:4px 0 0; color:var(--brand-dark); font-size:1rem; }
     footer { text-align:center; color:var(--muted); font-size:0.72rem; padding:16px; }
+    @media (max-width:560px) { .field-pair { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -100,20 +102,22 @@
         <label>Dia de la lesió <span class="required">*</span>
           <input id="injuryDate" type="date" required />
         </label>
-        <label>Instal·lació on s'ha fet la lesió <span class="required">*</span>
-          <select id="venue" required>
-            <option value="">Selecciona...</option>
-            <option value="CEM Besòs">CEM Besòs</option>
-            <option value="Poliesportiu Bufalà">Poliesportiu Bufalà</option>
-            <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
-            <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
-            <option value="Poliesportiu de Pomar">Poliesportiu de Pomar</option>
-            <option value="ALTRES">Altres...</option>
-          </select>
-        </label>
-        <label id="venueOtherField" hidden>Indica la instal·lació <span class="required">*</span>
-          <input id="venueOther" type="text" />
-        </label>
+        <div class="field-pair">
+          <label>Instal·lació on s'ha fet la lesió <span class="required">*</span>
+            <select id="venue" required>
+              <option value="">Selecciona...</option>
+              <option value="CEM Besòs">CEM Besòs</option>
+              <option value="Poliesportiu Bufalà">Poliesportiu Bufalà</option>
+              <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
+              <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
+              <option value="Poliesportiu de Pomar">Poliesportiu de Pomar</option>
+              <option value="ALTRES">Altres...</option>
+            </select>
+          </label>
+          <label id="venueOtherField" hidden>Indica la instal·lació <span class="required">*</span>
+            <input id="venueOther" type="text" />
+          </label>
+        </div>
         <label>Danys soferts <span class="required">*</span>
           <textarea id="damage" required></textarea>
         </label>

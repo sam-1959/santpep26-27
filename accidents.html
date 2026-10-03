@@ -209,6 +209,15 @@
       const el = document.getElementById(id);
       return el ? el.value.trim() : "";
     }
+    function normalisePersonName(value){
+      return String(value || "").trim().toLocaleLowerCase("ca-ES")
+        .replace(/(^|[\s'’-])(\p{L})/gu, (_, separator, letter) => separator + letter.toLocaleUpperCase("ca-ES"));
+    }
+    function normalisePersonNameInput(id){
+      const input = document.getElementById(id);
+      input.value = normalisePersonName(input.value);
+      return input.value;
+    }
     function venueValue(){
       return inputValue("venue") === "ALTRES" ? inputValue("venueOther") : inputValue("venue");
     }
@@ -255,6 +264,8 @@
 
     form.addEventListener("submit", async function(event){
       event.preventDefault();
+      normalisePersonNameInput("guardianName");
+      normalisePersonNameInput("playerName");
       if(!isValidEmail(inputValue("email"))){
         setStatus("err", "Introdueix una adreça electrònica vàlida.");
         document.getElementById("email").focus();
@@ -319,6 +330,8 @@
       form.querySelector("input, textarea").focus();
     });
     document.getElementById("venue").addEventListener("change", syncVenueOtherField);
+    document.getElementById("guardianName").addEventListener("blur", () => normalisePersonNameInput("guardianName"));
+    document.getElementById("playerName").addEventListener("blur", () => normalisePersonNameInput("playerName"));
     syncVenueOtherField();
   </script>
 </body>

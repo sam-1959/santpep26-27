@@ -250,6 +250,17 @@
       return parts.slice(0, 2).join(" ");
     }
 
+    function normalisePersonName(value){
+      return String(value || "").trim().toLocaleLowerCase("ca-ES")
+        .replace(/(^|[\s'’-])(\p{L})/gu, (_, separator, letter) => separator + letter.toLocaleUpperCase("ca-ES"));
+    }
+
+    function normaliseEditPersonName(id){
+      const input = document.getElementById(id);
+      input.value = normalisePersonName(input.value);
+      return input.value;
+    }
+
     function isSameDay(a, b){
       return a && b &&
         a.getFullYear() === b.getFullYear() &&
@@ -639,8 +650,8 @@
       editingRowId = row.id;
       document.getElementById("editDialogSubtitle").textContent = "Actualitza les dades rebudes de " + shortName(row.player) + ".";
       document.getElementById("editEmail").value = row.email || "";
-      document.getElementById("editGuardianName").value = row.guardianName || "";
-      document.getElementById("editPlayer").value = row.player || "";
+      document.getElementById("editGuardianName").value = normalisePersonName(row.guardianName);
+      document.getElementById("editPlayer").value = normalisePersonName(row.player);
       document.getElementById("editPhone").value = row.phone || "";
       document.getElementById("editInjuryDate").value = inputDateValue(row.injuryDate);
       setEditVenue(row.venue);
@@ -665,6 +676,8 @@
       event.preventDefault();
       const row = rows.find(item => item.id === editingRowId);
       if(!row || !currentUser || !isPrivateView) return;
+      normaliseEditPersonName("editGuardianName");
+      normaliseEditPersonName("editPlayer");
       const payload = {
         email: document.getElementById("editEmail").value.trim(),
         guardianName: document.getElementById("editGuardianName").value.trim(),
@@ -940,6 +953,8 @@
 
     editForm.addEventListener("submit", saveEditedRequest);
     document.getElementById("editVenue").addEventListener("change", syncEditVenueOtherField);
+    document.getElementById("editGuardianName").addEventListener("blur", () => normaliseEditPersonName("editGuardianName"));
+    document.getElementById("editPlayer").addEventListener("blur", () => normaliseEditPersonName("editPlayer"));
     document.getElementById("editCancel").addEventListener("click", closeEditDialog);
     document.getElementById("editCancelTop").addEventListener("click", closeEditDialog);
 

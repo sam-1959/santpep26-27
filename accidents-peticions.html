@@ -76,7 +76,7 @@
     .edit-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; background:var(--brand); color:#fff; }
     .edit-dialog-head h3 { margin:0; font-size:1rem; } .edit-dialog-head p { margin:3px 0 0; font-size:.78rem; opacity:.9; }
     .dialog-close { border:1px solid rgba(255,255,255,.4); border-radius:999px; background:transparent; color:#fff; padding:5px 9px; font-weight:900; cursor:pointer; }
-    .edit-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:18px; } .edit-form label { display:grid; gap:4px; color:var(--brand-dark); font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:.04em; } .edit-form label.wide { grid-column:1 / -1; } .edit-form input, .edit-form textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:8px 10px; color:var(--ink); font:inherit; } .edit-form textarea { min-height:90px; resize:vertical; }
+    .edit-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:18px; } .edit-form label { display:grid; gap:4px; color:var(--brand-dark); font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:.04em; } .edit-form label.wide { grid-column:1 / -1; } .edit-venue-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; grid-column:1 / -1; } .edit-form input, .edit-form select, .edit-form textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:8px 10px; color:var(--ink); font:inherit; } .edit-form textarea { min-height:90px; resize:vertical; }
     .edit-actions { display:flex; justify-content:flex-end; gap:8px; grid-column:1 / -1; padding-top:4px; } .edit-actions button { border:0; border-radius:999px; padding:8px 13px; font-weight:900; cursor:pointer; background:var(--brand); color:#fff; } .edit-actions .secondary { background:#fff; color:var(--brand); border:1px solid var(--line); }
     .pdf-loading { display:inline-grid; place-items:center; }
     .pdf-loading::before { content:""; width:10px; height:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; }
@@ -98,7 +98,7 @@
     .empty, .error { padding:18px; text-align:center; color:var(--muted); }
     .error { color:#b71c1c; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:10px 20px 16px; }
-    @media (max-width:640px) { .edit-form { grid-template-columns:1fr; } }
+    @media (max-width:640px) { .edit-form, .edit-venue-pair { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -145,7 +145,18 @@
       <label>Telèfon<input id="editPhone" type="tel" required /></label>
       <label>Data de la lesió<input id="editInjuryDate" type="date" required /></label>
       <label>Número d'expedient<input id="editClaimNumber" type="text" /></label>
-      <label class="wide">Instal·lació<input id="editVenue" type="text" required /></label>
+      <div class="edit-venue-pair">
+        <label>Instal·lació<select id="editVenue" required>
+          <option value="">Selecciona...</option>
+          <option value="CEM Besòs">CEM Besòs</option>
+          <option value="Poliesportiu Bufalà">Poliesportiu Bufalà</option>
+          <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
+          <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
+          <option value="Poliesportiu de Pomar">Poliesportiu de Pomar</option>
+          <option value="ALTRES">Altres...</option>
+        </select></label>
+        <label id="editVenueOtherField" hidden>Indica la instal·lació<input id="editVenueOther" type="text" /></label>
+      </div>
       <label class="wide">Danys soferts<textarea id="editDamage" required></textarea></label>
       <label class="wide">Lloc de la lesió<input id="editSide" type="text" required /></label>
       <div class="edit-actions"><button class="secondary" id="editCancel" type="button">Cancel·lar</button><button id="editSave" type="submit">Desar canvis</button></div>
@@ -187,6 +198,7 @@
     const ACCIDENT_FILES_URL = "https://script.google.com/macros/s/AKfycbwrOIWp7ifH2pmw5ExcaUe-DMQ57U_Y93HUo2RLIZ38J4TEBtNZuejrsJmyw6BgOrxE/exec";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
+    const VENUE_OPTIONS = new Set(["CEM Besòs", "Poliesportiu Bufalà", "Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu de Pomar"]);
     let rows = [];
     let currentPage = 1;
     let statusMessage = "";
@@ -593,6 +605,35 @@
       return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
     }
 
+    function syncEditVenueOtherField(){
+      const venue = document.getElementById("editVenue").value;
+      const otherField = document.getElementById("editVenueOtherField");
+      const otherInput = document.getElementById("editVenueOther");
+      const isOther = venue === "ALTRES";
+      otherField.hidden = !isOther;
+      otherInput.required = isOther;
+      if(!isOther) otherInput.value = "";
+    }
+
+    function setEditVenue(venue){
+      const select = document.getElementById("editVenue");
+      const otherInput = document.getElementById("editVenueOther");
+      const value = String(venue || "").trim();
+      if(value && !VENUE_OPTIONS.has(value)){
+        select.value = "ALTRES";
+        otherInput.value = value;
+      } else {
+        select.value = value;
+        otherInput.value = "";
+      }
+      syncEditVenueOtherField();
+    }
+
+    function editVenueValue(){
+      const venue = document.getElementById("editVenue").value;
+      return venue === "ALTRES" ? document.getElementById("editVenueOther").value.trim() : venue;
+    }
+
     function openEditDialog(row){
       if(!isPrivateView || !currentUser || !row) return;
       editingRowId = row.id;
@@ -602,7 +643,7 @@
       document.getElementById("editPlayer").value = row.player || "";
       document.getElementById("editPhone").value = row.phone || "";
       document.getElementById("editInjuryDate").value = inputDateValue(row.injuryDate);
-      document.getElementById("editVenue").value = row.venue || "";
+      setEditVenue(row.venue);
       document.getElementById("editDamage").value = row.damage || "";
       document.getElementById("editSide").value = row.side || "";
       document.getElementById("editClaimNumber").value = row.claimNumber || "";
@@ -630,7 +671,7 @@
         player: document.getElementById("editPlayer").value.trim(),
         phone: document.getElementById("editPhone").value.trim(),
         injuryDate: document.getElementById("editInjuryDate").value,
-        venue: document.getElementById("editVenue").value.trim(),
+        venue: editVenueValue(),
         damage: document.getElementById("editDamage").value.trim(),
         side: document.getElementById("editSide").value.trim(),
         claimNumber: document.getElementById("editClaimNumber").value.trim(),
@@ -898,6 +939,7 @@
     });
 
     editForm.addEventListener("submit", saveEditedRequest);
+    document.getElementById("editVenue").addEventListener("change", syncEditVenueOtherField);
     document.getElementById("editCancel").addEventListener("click", closeEditDialog);
     document.getElementById("editCancelTop").addEventListener("click", closeEditDialog);
 

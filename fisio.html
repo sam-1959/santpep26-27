@@ -177,6 +177,10 @@
       input.value = normalisePersonName(input.value);
       return input.value;
     }
+    function capitaliseFirstLetter(value){
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toLocaleUpperCase("ca-ES") + text.slice(1) : "";
+    }
     function isValidMobile(value){
       const digits = String(value || "").replace(/\D/g, "");
       const national = digits.startsWith("0034") ? digits.slice(4)
@@ -209,6 +213,7 @@
       event.preventDefault();
       normalisePersonNameInput("guardianName");
       normalisePersonNameInput("playerName");
+      document.getElementById("description").value = capitaliseFirstLetter(document.getElementById("description").value);
       if(!dateEl.value){
         setStatus("err", "Indica la data de la lesió.");
         return;

@@ -197,18 +197,26 @@ function enviarCorreuProvaPdf(request) {
   var pdfAdjunt = fitxerPdf.getBlob().setName(request.pdfName || fitxerPdf.getName());
   var jugador = valor(request.player);
   var expedient = valor(request.claimNumber);
+  var teExpedient = expedient !== "—";
+  var expedientText = teExpedient
+    ? "Número d'expedient: " + expedient + "\n\n"
+    : "Quan pugueu, envieu-nos el número d'expedient responent aquest correu.\n\n";
+  var expedientHTML = teExpedient
+    ? '<p style="margin:16px 0;padding:12px;background:#F9F6FC;border-left:4px solid #4B1D6D;border-radius:6px;"><strong>Número d\'expedient:</strong> ' + escaparHtml(expedient) + '</p>'
+    : '<p style="margin:16px 0;padding:12px;background:#FFF8D6;border-left:4px solid #FFC72C;border-radius:6px;">Quan pugueu, envieu-nos el número d\'expedient responent aquest correu.</p>';
   var assumpte = "PROVA · Comunicat d'Accident Esportiu - CB Sant Josep";
   var cosText = "AQUEST ÉS UN CORREU DE PROVA.\n" +
     "S'ha enviat exclusivament a Direcció Tècnica; no s'ha enviat a la família ni a cap altre destinatari.\n\n" +
-    "Comunicat d'Accident Esportiu" + (jugador !== "—" ? " de " + jugador : "") + ".\n" +
-    "Número d'expedient: " + expedient + "\n\n" +
+    "Hola,\n\n" +
+    "Us enviem el Comunicat d'Accident Esportiu" + (jugador !== "—" ? " de " + jugador : "") + ".\n\n" +
+    expedientText +
     "Trobareu el comunicat adjunt a aquest correu.\n\n" +
     "CB Sant Josep de Badalona";
   var cosHTML = '<div style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;">' +
     '<div style="background:#4B1D6D;padding:22px;text-align:center;border-bottom:4px solid #FFC72C;"><h1 style="color:#FFC72C;margin:0;font-size:20px;">CB SANT JOSEP BADALONA</h1><p style="color:#fff;margin:5px 0 0;font-size:13px;">Prova de comunicat d\'accident</p></div>' +
     '<div style="padding:24px;background:#fff;"><p style="margin-top:0;padding:10px;background:#FFF8D6;border-left:4px solid #FFC72C;border-radius:6px;"><strong>CORREU DE PROVA:</strong> enviat exclusivament a Direcció Tècnica.</p>' +
-    '<p>Comunicat d\'Accident Esportiu' + (jugador !== "—" ? ' de <strong>' + escaparHtml(jugador) + '</strong>' : '') + '.</p>' +
-    '<p><strong>Número d\'expedient:</strong> ' + escaparHtml(expedient) + '</p>' +
+    '<p>Hola,</p><p>Us enviem el Comunicat d\'Accident Esportiu' + (jugador !== "—" ? ' de <strong>' + escaparHtml(jugador) + '</strong>' : '') + '.</p>' +
+    expedientHTML +
     '<p style="margin:20px 0;padding:12px;background:#F9F6FC;border-left:4px solid #4B1D6D;border-radius:6px;">Trobareu el comunicat adjunt a aquest correu.</p></div></div>';
 
   GmailApp.sendEmail(ACCIDENT_TEST_EMAIL, assumpte, cosText, {

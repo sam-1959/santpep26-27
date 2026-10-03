@@ -821,8 +821,11 @@
       ].forEach(config => {
         const values = config.values || [];
         if(config.el.tagName === "SELECT"){
+          const selectedValue = config.el.value;
+          const optionValues = [...new Set(values.concat(selectedValue ? [selectedValue] : []))];
           config.el.innerHTML = '<option value="">Selecciona...</option>' +
-            values.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join("");
+            optionValues.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join("");
+          config.el.value = selectedValue;
         } else {
           config.el.innerHTML = values
             .map(value => '<option value="' + escapeHtml(value) + '"></option>')

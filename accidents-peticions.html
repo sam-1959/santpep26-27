@@ -339,19 +339,6 @@
       });
     }
 
-    function sendAccidentPdfTest(row){
-      if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.pdfDriveId) throw new Error("No hi ha cap PDF disponible per enviar la prova.");
-      postToAppsScript({
-        action:"testPdfEmail",
-        requestId:row.id,
-        pdfDriveId:row.pdfDriveId,
-        pdfUrl:row.pdfUrl || "",
-        pdfName:row.pdfName || "",
-        player:row.player || "",
-        claimNumber:row.claimNumber || ""
-      });
-    }
-
     function postToAppsScript(payload){
       const iframeName = "appsScriptUploadFrame";
       let iframe = document.querySelector('iframe[name="' + iframeName + '"]');
@@ -534,7 +521,6 @@
           const pdfCell = '<td class="col-name' + (row.pdfUrl ? '' : ' pdf-missing') + '"><div class="pdf-actions">' +
             (row.pdfUrl ? '<a class="pdf-link" href="' + escapeHtml(row.pdfUrl) + '" target="_blank" rel="noopener" title="Descarregar PDF" aria-label="Descarregar PDF">↓</a>' : '<span class="pdf-warning" title="PDF pendent" aria-label="PDF pendent">⚠</span>') +
             '<button class="pdf-button" type="button" data-upload-pdf="' + escapeHtml(row.id) + '" title="' + uploadTitle + '" aria-label="' + uploadTitle + '"' + disabledAttr + '>' + uploadLabel + '</button>' +
-            (row.pdfDriveId ? '<button class="pdf-button" type="button" data-test-pdf="' + escapeHtml(row.id) + '" title="Enviar prova només a Direcció Tècnica" aria-label="Enviar prova només a Direcció Tècnica"' + disabledAttr + '>🧪</button>' : '') +
             (row.pdfUrl ? '<button class="pdf-button pdf-delete" type="button" data-delete-pdf="' + escapeHtml(row.id) + '" title="Eliminar PDF" aria-label="Eliminar PDF"' + disabledAttr + '>' + deleteLabel + '</button>' : '') +
             '</div></td>';
           const privateCells = isPrivateView ?
@@ -621,26 +607,6 @@
               : "Eliminació enviada, però encara apareix al comunicat. Revisa l'execució de l'Apps Script.";
           } catch(error) {
             statusMessage = error && error.message ? error.message : "No s'ha pogut eliminar el PDF.";
-          } finally {
-            pdfBusy = null;
-          }
-          render();
-        });
-      });
-      tableWrap.querySelectorAll("[data-test-pdf]").forEach(button => {
-        button.addEventListener("click", () => {
-          if(!isPrivateView || !currentUser) return;
-          const row = rows.find(item => item.id === button.dataset.testPdf);
-          if(!row || !row.pdfDriveId) return;
-          if(!window.confirm("Enviar una prova del comunicat de " + shortName(row.player) + " exclusivament a dtecnic@cbsantjosep.cat? No s'enviarà a cap altre correu.")) return;
-          try {
-            pdfBusy = { id:row.id, action:"test" };
-            statusMessage = "Enviant prova només a Direcció Tècnica...";
-            render();
-            sendAccidentPdfTest(row);
-            statusMessage = "Prova enviada a dtecnic@cbsantjosep.cat. No s'ha enviat a cap altre destinatari.";
-          } catch(error) {
-            statusMessage = error && error.message ? error.message : "No s'ha pogut enviar la prova.";
           } finally {
             pdfBusy = null;
           }

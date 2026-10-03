@@ -336,8 +336,6 @@
       form.querySelector("input, textarea").focus();
     });
     document.getElementById("venue").addEventListener("change", syncVenueOtherField);
-    document.getElementById("guardianName").addEventListener("blur", () => normalisePersonNameInput("guardianName"));
-    document.getElementById("playerName").addEventListener("blur", () => normalisePersonNameInput("playerName"));
     syncVenueOtherField();
   </script>
 </body>

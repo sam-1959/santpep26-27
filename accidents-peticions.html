@@ -655,8 +655,8 @@
       editingRowId = row.id;
       document.getElementById("editDialogSubtitle").textContent = "Actualitza les dades rebudes de " + shortName(row.player) + ".";
       document.getElementById("editEmail").value = row.email || "";
-      document.getElementById("editGuardianName").value = normalisePersonName(row.guardianName);
-      document.getElementById("editPlayer").value = normalisePersonName(row.player);
+      document.getElementById("editGuardianName").value = row.guardianName || "";
+      document.getElementById("editPlayer").value = row.player || "";
       document.getElementById("editPhone").value = row.phone || "";
       document.getElementById("editInjuryDate").value = inputDateValue(row.injuryDate);
       setEditVenue(row.venue);
@@ -960,8 +960,6 @@
 
     editForm.addEventListener("submit", saveEditedRequest);
     document.getElementById("editVenue").addEventListener("change", syncEditVenueOtherField);
-    document.getElementById("editGuardianName").addEventListener("blur", () => normaliseEditPersonName("editGuardianName"));
-    document.getElementById("editPlayer").addEventListener("blur", () => normaliseEditPersonName("editPlayer"));
     document.getElementById("editCancel").addEventListener("click", closeEditDialog);
     document.getElementById("editCancelTop").addEventListener("click", closeEditDialog);
 

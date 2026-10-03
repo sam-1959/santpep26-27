@@ -219,6 +219,7 @@
       const input = document.getElementById("venueOther");
       field.hidden = !other;
       input.required = other;
+      input.disabled = !other;
       if(!other) input.value = "";
     }
     function isValidEmail(value){

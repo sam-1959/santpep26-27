@@ -612,6 +612,7 @@
       const isOther = venue === "ALTRES";
       otherField.hidden = !isOther;
       otherInput.required = isOther;
+      otherInput.disabled = !isOther;
       if(!isOther) otherInput.value = "";
     }
 

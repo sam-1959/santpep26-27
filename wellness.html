@@ -33,7 +33,7 @@
     input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
     .required { color:#c62828; }
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .training-details { display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end; }
+    .training-details { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:end; }
     .duration-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end; }
     .duration-title { white-space:nowrap; }
     .scale-field { display:grid; gap:7px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; }
@@ -92,11 +92,19 @@
         </label>
         <div class="training-details">
           <div class="duration-grid">
-            <label><span class="duration-title">Duració entrenament (Pista + Físic) <span class="required">*</span></span>
-              <input id="durationHours" type="number" min="0" max="6" step="1" inputmode="numeric" required />
+            <label><span class="duration-title">Duració de pista <span class="required">*</span></span>
+              <input id="courtHours" type="number" min="0" max="6" step="1" inputmode="numeric" required />
             </label>
             <label><span class="sr-only">Minuts</span>
-              <input id="durationMinutes" type="number" min="0" max="59" step="1" inputmode="numeric" required />
+              <input id="courtMinutes" type="number" min="0" max="59" step="1" inputmode="numeric" required />
+            </label>
+          </div>
+          <div class="duration-grid">
+            <label><span class="duration-title">Duració de físic <span class="required">*</span></span>
+              <input id="physicalHours" type="number" min="0" max="6" step="1" inputmode="numeric" required />
+            </label>
+            <label><span class="sr-only">Minuts</span>
+              <input id="physicalMinutes" type="number" min="0" max="59" step="1" inputmode="numeric" required />
             </label>
           </div>
           <label><span class="duration-title">Hores de son <span class="required">*</span></span>
@@ -271,7 +279,8 @@
       { id:"musclePain", label:"Dolor muscular", max:5, help:"1 = Molt bones sensacions · 2 = Bones sensacions · 3 = Normal · 4 = Augment del dolor muscular · 5 = Molt adolorit" },
       { id:"mentalStress", label:"Estrès i fatiga mental", max:5, help:"1 = Molt relaxat · 2 = Relaxat · 3 = Normal · 4 = Estressat · 5 = Molt estressat" },
       { id:"mood", label:"Humor (en el dia d'avui)", max:5, help:"1 = Molt positiu · 2 = Bon humor · 3 = Normal · 4 = Mal geni · 5 = Molest" },
-      { id:"rpe", label:"Percepció de l'esforç en l'entrenament d'avui?", max:10, help:"1 = Molt suau · 10 = Màxim esforç" }
+      { id:"courtRpe", label:"Percepció de l'esforç · Pista", max:10, help:"1 = Molt suau · 10 = Màxim esforç" },
+      { id:"physicalRpe", label:"Percepció de l'esforç · Físic", min:0, max:10, help:"0 = No he fet físic · 1 = Molt suau · 10 = Màxim esforç" }
     ];
 
     const form = document.getElementById("wellnessForm");
@@ -355,17 +364,24 @@
     function renderScales(){
       const container = document.getElementById("scales");
       container.innerHTML = SCALE_FIELDS.map(field => {
-        const options = Array.from({ length: field.max }, (_, index) => {
-          const value = index + 1;
+        const minimum = field.min === undefined ? 1 : field.min;
+        const options = Array.from({ length: field.max - minimum + 1 }, (_, index) => {
+          const value = minimum + index;
           return '<label><input type="radio" name="' + field.id + '" value="' + value + '" required><span>' + value + '</span></label>';
         }).join("");
         return '<section class="scale-field"><div class="scale-head"><div><p class="scale-title">' + field.label + ' <span class="required">*</span></p><p class="scale-help">' + field.help + '</p></div></div><div class="scale-options">' + options + '</div></section>';
       }).join("");
     }
-    function validateDuration(){
-      const hours = Number(inputValue("durationHours"));
-      const minutes = Number(inputValue("durationMinutes"));
-      return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && minutes >= 0 && minutes <= 59 && (hours > 0 || minutes > 0);
+    function durationMinutes(prefix){
+      const hours = Number(inputValue(prefix + "Hours"));
+      const minutes = Number(inputValue(prefix + "Minutes"));
+      if(!Number.isFinite(hours) || !Number.isFinite(minutes) || hours < 0 || minutes < 0 || minutes > 59) return null;
+      return hours * 60 + minutes;
+    }
+    function validateDurations(){
+      const court = durationMinutes("court");
+      const physical = durationMinutes("physical");
+      return court !== null && physical !== null && court > 0;
     }
     async function saveResponse(id, payload){
       const response = await fetch(firebaseUrl(RESPONSES_PATH, id), {
@@ -412,21 +428,31 @@
     }
     init();
     document.getElementById("trainingDate").value = todayISO();
-    document.getElementById("durationHours").value = "1";
-    document.getElementById("durationMinutes").value = "30";
+    document.getElementById("courtHours").value = "1";
+    document.getElementById("courtMinutes").value = "30";
+    document.getElementById("physicalHours").value = "1";
+    document.getElementById("physicalMinutes").value = "0";
 
     form.addEventListener("submit", async function(event){
       event.preventDefault();
-      if(!validateDuration()){
-        setStatus("err", "Indica un temps vàlid de pista + físic.");
-        document.getElementById("durationHours").focus();
+      if(!validateDurations()){
+        setStatus("err", "Indica un temps de pista vàlid i, si n'hi ha, el temps de físic.");
+        document.getElementById("courtHours").focus();
         return;
       }
       submitButton.disabled = true;
       setStatus("ok", "Enviant resposta...");
       const id = requestId();
-      const durationHours = Number(inputValue("durationHours"));
-      const durationMinutes = Number(inputValue("durationMinutes"));
+      const courtHours = Number(inputValue("courtHours"));
+      const courtMinutes = Number(inputValue("courtMinutes"));
+      const physicalHours = Number(inputValue("physicalHours"));
+      const physicalMinutes = Number(inputValue("physicalMinutes"));
+      const courtRpe = selectedScale("courtRpe");
+      const physicalRpe = selectedScale("physicalRpe");
+      const courtTotalMinutes = courtHours * 60 + courtMinutes;
+      const physicalTotalMinutes = physicalHours * 60 + physicalMinutes;
+      const courtLoad = courtRpe * courtTotalMinutes;
+      const physicalLoad = physicalRpe * physicalTotalMinutes;
       const playerSelect = document.getElementById("player");
       const selectedPlayer = playerSelect.options[playerSelect.selectedIndex];
       const payload = {
@@ -437,22 +463,26 @@
         player: inputValue("player"),
         playerNumber: selectedPlayer ? selectedPlayer.dataset.number || "" : "",
         trainingDate: inputValue("trainingDate"),
-        durationHours,
-        durationMinutes,
-        durationTotalMinutes: durationHours * 60 + durationMinutes,
+        courtHours, courtMinutes, courtTotalMinutes,
+        physicalHours, physicalMinutes, physicalTotalMinutes,
+        durationTotalMinutes: courtTotalMinutes + physicalTotalMinutes,
         muscleFatigue: selectedScale("muscleFatigue"),
         sleepHours: inputValue("sleepHours"),
         musclePain: selectedScale("musclePain"),
         mentalStress: selectedScale("mentalStress"),
         mood: selectedScale("mood"),
-        rpe: selectedScale("rpe")
+        courtRpe, physicalRpe, courtLoad, physicalLoad,
+        load: courtLoad + physicalLoad,
+        rpe: Math.max(courtRpe, physicalRpe)
       };
       try {
         await saveResponse(id, payload);
         form.reset();
         document.getElementById("trainingDate").value = todayISO();
-        document.getElementById("durationHours").value = "1";
-        document.getElementById("durationMinutes").value = "30";
+        document.getElementById("courtHours").value = "1";
+        document.getElementById("courtMinutes").value = "30";
+        document.getElementById("physicalHours").value = "1";
+        document.getElementById("physicalMinutes").value = "0";
         statusEl.className = "status";
         statusEl.textContent = "";
         form.style.display = "none";

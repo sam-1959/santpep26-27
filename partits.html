@@ -124,7 +124,7 @@
     .badge.home { background:var(--home); color:var(--home-ink); }
     .badge.away { background:var(--away); color:var(--away-ink); }
     .badge.day { background:#ede7f6; color:#4527a0; }
-    .friendly, .mini-mark, .change-mark, .conflict-mark { cursor:help; font-size:0.9em; }
+    .friendly, .mini-mark, .change-mark, .conflict-mark, .storm-mark { cursor:help; font-size:0.9em; }
     .change-mark { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
       margin-left:4px; border-radius:50%; background:var(--accent); color:var(--brand-dark); font-weight:900; }
     .conflict-mark { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
@@ -142,7 +142,7 @@
     .legend { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin:6px 0 12px;
       color:var(--muted); font-size:0.72rem; font-weight:600; }
     .legend-item { display:inline-flex; align-items:center; gap:5px; }
-    .legend .friendly, .legend .mini-mark, .legend .change-mark, .legend .conflict-mark { margin-left:0; }
+    .legend .friendly, .legend .mini-mark, .legend .change-mark, .legend .conflict-mark, .legend .storm-mark { margin-left:0; }
     /* Graella de casa: 3 columnes iguals (les 3 hores de la franja) */
     .hgrid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
       align-items:start; margin:0 0 8px; }
@@ -281,6 +281,8 @@
     }
 
     const changedGames=new Set();
+    const STORM_CANCELLED_FROM='2026-10-03T17:00';
+    const STORM_CANCELLED_TO='2026-10-04T14:00';
     function rebuildChangedGames(){
       changedGames.clear();
       if(DATA.latestChanges && DATA.latestChanges.changes){
@@ -313,6 +315,13 @@
     function changeMark(g){
       return changedGames.has(changedGameKey(g))
         ? ' <span class="change-mark" title="Partit amb canvis recents">↻</span>'
+        : '';
+    }
+
+    function stormMark(g){
+      const when=(g.date||'')+'T'+(g.time||'');
+      return when>=STORM_CANCELLED_FROM && when<=STORM_CANCELLED_TO
+        ? ' <span class="storm-mark" title="Partit anul·lat per tempesta">⛈️</span>'
         : '';
     }
 
@@ -398,6 +407,7 @@
         '<span class="legend-item"><span class="friendly" title="Partit amistós">🤝</span> Amistós</span>' +
         '<span class="legend-item"><span class="mini-mark" title="Partit de Mini">🍼</span> Mini</span>' +
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
+        '<span class="legend-item"><span class="storm-mark" title="Partit anul·lat per tempesta">⛈️</span> Anul·lat per tempesta</span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
         importStatus +
         '</div>';
@@ -425,9 +435,10 @@
       const fr = g.friendly ? ' <span class="friendly" title="Partit amistós">🤝</span>' : '';
       const mini = miniMark(g);
       const ch = changeMark(g);
+      const storm = stormMark(g);
       const cf = conflictMark(g);
       // El gènere s'identifica pel color de la targeta (masc/fem), sense text.
-      return '<div class="game ' + sexCls + '"><div class="game-team">' + g.team + fr + mini + ch + cf + '</div>' +
+      return '<div class="game ' + sexCls + '"><div class="game-team">' + g.team + fr + mini + ch + storm + cf + '</div>' +
         vs + loc + cost + '</div>';
     }
 
@@ -469,10 +480,11 @@
       const fr = g.friendly ? ' <span class="friendly" title="Partit amistós">🤝</span>' : '';
       const mini = miniMark(g);
       const ch = changeMark(g);
+      const storm = stormMark(g);
       const cf = conflictMark(g);
       // El gènere s'identifica pel color de la targeta (masc/fem), sense text.
       return '<div class="gchip ' + sexCls + '"><div class="gchip-top">' +
-        '<span class="gchip-team">' + g.team + fr + mini + ch + cf + '</span></div>' +
+        '<span class="gchip-team">' + g.team + fr + mini + ch + storm + cf + '</span></div>' +
         '<div class="gchip-vs"><span class="lbl">vs</span> ' + g.rival + '</div>' + loc + cost + '</div>';
     }
 
@@ -532,9 +544,9 @@
         const morning=gs.filter(function(g){return g.time<'14:00';}), afternoon=gs.filter(function(g){return g.time>='14:00';});
         function cards(list){return list.map(function(g){
           const fr=g.friendly?' <span class="friendly" title="Partit amistós">🤝</span>':'';
-          const mini=miniMark(g), ch=changeMark(g), cf=conflictMark(g);
+          const mini=miniMark(g), ch=changeMark(g), storm=stormMark(g), cf=conflictMark(g);
           const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
-          return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+cf+'</span>'+loc+'</div>';
+          return '<div class="agenda-game '+(g.home?'home':'away')+'"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+storm+cf+'</span>'+loc+'</div>';
         }).join('');}
         html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';

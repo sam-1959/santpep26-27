@@ -449,6 +449,12 @@
       const courtMinutes = Number(inputValue("courtMinutes"));
       const physicalHours = Number(inputValue("physicalHours"));
       const physicalMinutes = Number(inputValue("physicalMinutes"));
+      const courtRpe = selectedScale("courtRpe");
+      const physicalRpe = selectedScale("physicalRpe");
+      const courtTotalMinutes = courtHours * 60 + courtMinutes;
+      const physicalTotalMinutes = physicalHours * 60 + physicalMinutes;
+      const courtLoad = courtRpe * courtTotalMinutes;
+      const physicalLoad = physicalRpe * physicalTotalMinutes;
       const playerSelect = document.getElementById("player");
       const selectedPlayer = playerSelect.options[playerSelect.selectedIndex];
       const payload = {
@@ -462,18 +468,21 @@
         trainingDate: inputValue("trainingDate"),
         courtHours,
         courtMinutes,
-        courtTotalMinutes: courtHours * 60 + courtMinutes,
+        courtTotalMinutes,
         physicalHours,
         physicalMinutes,
-        physicalTotalMinutes: physicalHours * 60 + physicalMinutes,
-        durationTotalMinutes: (courtHours * 60 + courtMinutes) + (physicalHours * 60 + physicalMinutes),
+        physicalTotalMinutes,
+        durationTotalMinutes: courtTotalMinutes + physicalTotalMinutes,
         muscleFatigue: selectedScale("muscleFatigue"),
         sleepHours: inputValue("sleepHours"),
         musclePain: selectedScale("musclePain"),
         mentalStress: selectedScale("mentalStress"),
         mood: selectedScale("mood"),
-        courtRpe: selectedScale("courtRpe"),
-        physicalRpe: selectedScale("physicalRpe")
+        courtRpe,
+        physicalRpe,
+        courtLoad,
+        physicalLoad,
+        load: courtLoad + physicalLoad
       };
       try {
         await saveResponse(id, payload);

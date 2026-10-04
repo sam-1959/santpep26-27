@@ -29,7 +29,7 @@
     label { display:grid; gap:4px; color:var(--brand-dark); font-size:0.68rem; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
     input, select { width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:0.86rem; padding:8px 10px; outline:none; }
     input:focus, select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,0.12); }
-    .summary { display:grid; grid-template-columns:repeat(6,minmax(150px,1fr)); gap:12px; margin-bottom:14px; }
+    .summary { display:grid; grid-template-columns:repeat(5,minmax(160px,1fr)); gap:12px; margin-bottom:14px; }
     .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:13px; }
     .kpi span { display:block; color:var(--muted); font-size:0.72rem; font-weight:900; text-transform:uppercase; letter-spacing:0.04em; }
     .kpi strong { display:block; margin-top:5px; color:var(--brand-dark); font-size:1.45rem; line-height:1; }
@@ -129,8 +129,7 @@
 
     <section class="summary" aria-label="Resum">
       <div class="kpi"><span>Registres</span><strong id="kpiRecords">0</strong></div>
-      <div class="kpi"><span>RPE pista mitjà</span><strong id="kpiRpe">—</strong></div>
-      <div class="kpi"><span>RPE físic mitjà</span><strong id="kpiPhysicalRpe">—</strong></div>
+      <div class="kpi"><span>RPE mitjà</span><strong id="kpiRpe">—</strong></div>
       <div class="kpi"><span>Fatiga mitjana</span><strong id="kpiFatigue">—</strong></div>
       <div class="kpi"><span>Hores de son mitjana</span><strong id="kpiSleep">—</strong></div>
       <div class="kpi"><span>Càrrega total</span><strong id="kpiLoad">—</strong></div>
@@ -150,17 +149,13 @@
 
     <section class="metrics-grid">
       <div class="panel">
-        <div class="panel-head"><h3>RPE pista</h3></div>
+        <div class="panel-head"><h3>RPE</h3></div>
         <div class="table-wrap">
           <table class="metric-table">
             <thead id="rpeHead"></thead>
             <tbody id="rpeBody"></tbody>
           </table>
         </div>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h3>RPE físic</h3></div>
-        <div class="table-wrap"><table class="metric-table"><thead id="physicalRpeHead"></thead><tbody id="physicalRpeBody"></tbody></table></div>
       </div>
       <div class="panel">
         <div class="panel-head"><h3>Fatiga</h3></div>
@@ -181,7 +176,7 @@
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Càrrega</h3><span class="formula">(RPE pista × min pista) + (RPE físic × min físic)</span></div>
+        <div class="panel-head"><h3>Càrrega</h3><span class="formula">Càrrega total d'entrenament</span></div>
         <div class="table-wrap">
           <table class="metric-table">
             <thead id="loadHead"></thead>
@@ -597,8 +592,7 @@
       const records = state.filtered;
       const totalLoad = records.reduce((sum, record) => sum + numeric(record.load), 0);
       document.getElementById("kpiRecords").textContent = records.length;
-      document.getElementById("kpiRpe").textContent = formatNumber(average(records, "courtRpe"));
-      document.getElementById("kpiPhysicalRpe").textContent = formatNumber(average(records, "physicalRpe"));
+      document.getElementById("kpiRpe").textContent = formatNumber(average(records, "rpe"));
       document.getElementById("kpiFatigue").textContent = formatNumber(average(records, "muscleFatigue"));
       document.getElementById("kpiSleep").textContent = formatNumber(average(records, "sleepHours"));
       document.getElementById("kpiLoad").textContent = totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—";
@@ -639,8 +633,6 @@
         ...group,
         load: group.records.reduce((sum, record) => sum + numeric(record.load), 0),
         rpe: average(group.records, "rpe"),
-        courtRpe: average(group.records, "courtRpe"),
-        physicalRpe: average(group.records, "physicalRpe"),
         fatigue: average(group.records, "muscleFatigue"),
         sleep: average(group.records, "sleepHours")
       })).sort((a, b) => a.team.localeCompare(b.team, "ca") || numberSortValue(a.records.find(record => record.playerNumber)?.playerNumber) - numberSortValue(b.records.find(record => record.playerNumber)?.playerNumber) || a.player.localeCompare(b.player, "ca"));
@@ -653,8 +645,7 @@
       const start = state.playerPageIndex * PLAYERS_PER_PAGE;
       const pagedGroups = groups.slice(start, start + PLAYERS_PER_PAGE);
       renderPlayerPagination(groups.length, start, pagedGroups.length, totalPages);
-      renderMetricTable("rpe", "RPE pista", dates, pagedGroups, record => record.courtRpe, value => colorClass(value, 10), value => value || "—", null, null, value => value.toFixed(1));
-      renderMetricTable("physicalRpe", "RPE físic", dates, pagedGroups, record => record.physicalRpe, value => colorClass(value, 10), value => value === 0 ? "0" : (value || "—"), null, null, value => value.toFixed(1));
+      renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, value => colorClass(value, 10), value => value || "—", null, null, value => value.toFixed(1));
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—", null, null, value => value.toFixed(1));
       renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => sleepHoursLabel(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
@@ -736,12 +727,11 @@
       if(!valid.length) return "";
       if(isSummary){
         const total = valid.reduce((sum, record) => sum + numeric(record.load), 0);
-        const details = valid.map(record => "(" + numeric(record.courtRpe) + " × " + numeric(record.courtTotalMinutes) + ") + (" + numeric(record.physicalRpe) + " × " + numeric(record.physicalTotalMinutes) + ")").join(" + ");
-        return "Càrrega setmanal: " + details + " = " + Math.round(total);
+        return "Càrrega setmanal: " + Math.round(total);
       }
       const record = valid[0];
       const load = Math.round(numeric(record.load));
-      return "Càrrega = (RPE pista " + numeric(record.courtRpe) + " × " + numeric(record.courtTotalMinutes) + " min) + (RPE físic " + numeric(record.physicalRpe) + " × " + numeric(record.physicalTotalMinutes) + " min) = " + load;
+      return "Càrrega de la resposta: " + load;
     }
     function buildWeeklyEmailPayload(){
       const selectedWeek = currentWeekKey();

@@ -799,15 +799,9 @@ function calendarChangeEmailHtml(teamLabel, changes) {
 }
 
 function notifyCalendarChangesByTeam(latestChanges) {
-  // Els partits nous són una càrrega inicial del calendari, no un avís urgent
-  // per a l'entrenador. Només notifiquem canvis o eliminacions de partits ja
-  // existents.
-  var notifiableChanges = (latestChanges || []).filter(function(change) {
-    return change.type !== "added";
-  });
-  if (!notifiableChanges.length) return { emailed: 0, teams: 0, ignoredAdded: (latestChanges || []).length };
+  if (!latestChanges || !latestChanges.length) return { emailed: 0, teams: 0 };
   var grouped = {};
-  notifiableChanges.forEach(function(change) {
+  latestChanges.forEach(function(change) {
     if (!change.game || !change.game.team) return;
     var key = teamKeyForGame(change.game);
     if (!grouped[key]) grouped[key] = { teamKey: key, label: teamLabelForGame(change.game), changes: [] };

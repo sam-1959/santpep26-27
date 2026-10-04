@@ -321,7 +321,7 @@
     function stormMark(g){
       const when=(g.date||'')+'T'+(g.time||'');
       return when>=STORM_CANCELLED_FROM && when<=STORM_CANCELLED_TO
-        ? ' <span class="storm-mark" title="Partit anul·lat per tempesta">⛈️</span>'
+        ? ' <span class="storm-mark" title="Partit ajornat per tempesta">⛈️</span>'
         : '';
     }
 
@@ -407,7 +407,7 @@
         '<span class="legend-item"><span class="friendly" title="Partit amistós">🤝</span> Amistós</span>' +
         '<span class="legend-item"><span class="mini-mark" title="Partit de Mini">🍼</span> Mini</span>' +
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
-        '<span class="legend-item"><span class="storm-mark" title="Partit anul·lat per tempesta">⛈️</span> Anul·lat per tempesta</span>' +
+        '<span class="legend-item"><span class="storm-mark" title="Partit ajornat per tempesta">⛈️</span> Ajornat per tempesta</span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
         importStatus +
         '</div>';

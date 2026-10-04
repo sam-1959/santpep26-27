@@ -685,7 +685,9 @@
           return { value, records: dayRecords };
         });
         const values = dayGroups.map(day => day.value);
-        const avg = values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
+        const avg = prefix === "load"
+          ? group.records.reduce((sum, record) => sum + numeric(record.load), 0) / Math.max(group.records.length, 1)
+          : values.filter(value => value !== null).reduce((sum, value) => sum + value, 0) / Math.max(values.filter(value => value !== null).length, 1);
         const number = group.records.find(record => record.playerNumber)?.playerNumber || "";
         const alerts = alertLabels(group);
         const alertBadges = alerts.length
@@ -699,12 +701,8 @@
       }).join("");
     }
     function weeklyLoadAverage(records){
-      const dates = [...new Set(records.map(record => record.trainingDate).filter(Boolean))];
-      const dailyAverages = dates.map(date => {
-        const dayRecords = records.filter(record => record.trainingDate === date);
-        return dayRecords.reduce((sum, record) => sum + numeric(record.load), 0) / Math.max(dayRecords.length, 1);
-      });
-      return dailyAverages.length ? dailyAverages.reduce((sum, value) => sum + value, 0) / dailyAverages.length : null;
+      if(!records.length) return null;
+      return records.reduce((sum, record) => sum + numeric(record.load), 0) / records.length;
     }
     function loadVariation(group, selectedWeekAverage){
       if(selectedWeekAverage === null || selectedWeekAverage === undefined) return null;

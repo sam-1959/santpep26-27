@@ -740,10 +740,25 @@ function calendarChangeDescription(change) {
 
 function calendarChangeEmailHtml(teamLabel, changes) {
   var rows = changes.map(function(change, index) {
-    var description = calendarChangeDescription(change).replace(/\n/g, "<br>");
+    var game = change.game || {};
+    var matchup = game.home
+      ? game.team + " vs " + game.rival
+      : game.rival + " vs " + game.team;
+    var kind = change.type === "added" ? "Nou partit" : change.type === "removed" ? "Partit eliminat" : "Partit modificat";
+    var kindColor = change.type === "added" ? "#2E7D32" : change.type === "removed" ? "#B3261E" : "#4B1D6D";
+    var details = change.type === "changed"
+      ? (change.fields || []).map(function(field) {
+          return '<div style="margin-top:4px;"><strong>' + escapeAlertHtml(field.label) + ':</strong> <span style="color:#777;text-decoration:line-through;">' + escapeAlertHtml(field.from) + '</span> <span style="color:#4B1D6D;font-weight:700;">→ ' + escapeAlertHtml(field.to) + '</span></div>';
+        }).join("")
+      : '<div style="margin-top:4px;color:#555;">' + escapeAlertHtml(change.type === "added" ? "Afegit al calendari." : "Eliminat del calendari.") + '</div>';
     return '<tr>' +
-      '<td style="padding:11px 10px;border-bottom:1px solid #E5E5E5;color:#4B1D6D;font-weight:700;vertical-align:top;">' + (index + 1) + '</td>' +
-      '<td style="padding:11px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' + escapeAlertHtml(description).replace(/&lt;br&gt;/g, "<br>") + '</td>' +
+      '<td style="padding:13px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' +
+        '<div style="font-weight:700;color:#4B1D6D;font-size:15px;">' + escapeAlertHtml(matchup) + '</div>' +
+        '<div style="color:#666;font-size:12px;margin-top:3px;">' + escapeAlertHtml((game.date || "sense data") + " · " + (game.time || "sense hora")) + '</div>' +
+      '</td>' +
+      '<td style="padding:13px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' +
+        '<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#F9F6FC;color:' + kindColor + ';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">' + escapeAlertHtml(kind) + '</span>' + details +
+      '</td>' +
     '</tr>';
   }).join("");
   return '<div style="font-family:Helvetica,Arial,sans-serif;color:#333;max-width:680px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;">' +
@@ -754,8 +769,7 @@ function calendarChangeEmailHtml(teamLabel, changes) {
     '<div style="padding:24px;background:#fff;">' +
       '<h2 style="color:#4B1D6D;margin:0 0 10px;font-size:18px;">Canvis per a ' + escapeAlertHtml(teamLabel) + '</h2>' +
       '<p style="margin:0 0 16px;line-height:1.45;">S’han detectat ' + changes.length + ' canvi(s) en el calendari de l’equip.</p>' +
-      '<table style="border-collapse:collapse;width:100%;"><thead><tr style="background:#F9F6FC;"><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">#</th><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">Canvi</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<p style="margin:20px 0 0;"><a href="https://sam-1959.github.io/santpep26-27/partits.html" style="background:#4B1D6D;color:#FFC72C;padding:10px 16px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;">Veure calendari de partits</a></p>' +
+      '<table style="border-collapse:collapse;width:100%;"><thead><tr style="background:#F9F6FC;"><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">Partit</th><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">Canvi</th></tr></thead><tbody>' + rows + '</tbody></table>' +
     '</div>' +
     '<div style="background:#F4F4F4;padding:14px;text-align:center;border-top:1px solid #EEEEEE;font-size:12px;color:#666;">CB Sant Josep Badalona · Notificació automàtica</div>' +
   '</div>';

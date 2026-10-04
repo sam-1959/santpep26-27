@@ -19,6 +19,10 @@ var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // les regles de Firebase.
 var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
 var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
+// Mentre es valida la notificació, tots els avisos de canvis de calendari
+// s'envien aquí. Quan estigui validat, cal substituir aquesta resolució pels
+// correus dels entrenadors de TEAM_COACH_EMAILS.
+var CALENDAR_CHANGE_TEST_EMAIL = "dtecnic@cbsantjosep.cat";
 
 var CALENDARS = [
   {
@@ -709,6 +713,83 @@ function verificarRestriccionsTaulesAra() {
   return verifyTableRestrictionsAndAlert(calendarData, [], new Date().toISOString(), true);
 }
 
+function teamKeyForGame(game) {
+  var match = Object.keys(OWN).filter(function(key) {
+    return OWN[key].team === game.team && OWN[key].sex === game.sex;
+  })[0];
+  return match || (game.team + "|" + game.sex);
+}
+
+function teamLabelForGame(game) {
+  return game.team + (game.sex ? " " + game.sex : "");
+}
+
+function calendarChangeDescription(change) {
+  var game = change.game || {};
+  var matchup = game.home
+    ? game.team + " vs " + game.rival
+    : game.rival + " vs " + game.team;
+  var base = (game.date || "sense data") + " " + (game.time || "sense hora") + " · " + matchup;
+  if (change.type === "added") return "Nou partit: " + base;
+  if (change.type === "removed") return "Partit eliminat: " + base;
+  var details = (change.fields || []).map(function(field) {
+    return field.label + ": " + field.from + " → " + field.to;
+  }).join(" · ");
+  return "Partit modificat: " + base + (details ? "\n" + details : "");
+}
+
+function calendarChangeEmailHtml(teamLabel, changes) {
+  var rows = changes.map(function(change, index) {
+    var description = calendarChangeDescription(change).replace(/\n/g, "<br>");
+    return '<tr>' +
+      '<td style="padding:11px 10px;border-bottom:1px solid #E5E5E5;color:#4B1D6D;font-weight:700;vertical-align:top;">' + (index + 1) + '</td>' +
+      '<td style="padding:11px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' + escapeAlertHtml(description).replace(/&lt;br&gt;/g, "<br>") + '</td>' +
+    '</tr>';
+  }).join("");
+  return '<div style="font-family:Helvetica,Arial,sans-serif;color:#333;max-width:680px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;">' +
+    '<div style="background:#4B1D6D;padding:24px;text-align:center;border-bottom:4px solid #FFC72C;">' +
+      '<h1 style="color:#FFC72C;margin:0;font-size:22px;text-transform:uppercase;">CB Sant Josep Badalona</h1>' +
+      '<p style="color:#fff;margin:5px 0 0;font-size:13px;opacity:.9;">Actualització de calendari</p>' +
+    '</div>' +
+    '<div style="padding:24px;background:#fff;">' +
+      '<h2 style="color:#4B1D6D;margin:0 0 10px;font-size:18px;">Canvis per a ' + escapeAlertHtml(teamLabel) + '</h2>' +
+      '<p style="margin:0 0 16px;line-height:1.45;">S’han detectat ' + changes.length + ' canvi(s) en el calendari de l’equip.</p>' +
+      '<table style="border-collapse:collapse;width:100%;"><thead><tr style="background:#F9F6FC;"><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">#</th><th style="padding:9px 10px;text-align:left;color:#4B1D6D;">Canvi</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p style="margin:20px 0 0;"><a href="https://sam-1959.github.io/santpep26-27/partits.html" style="background:#4B1D6D;color:#FFC72C;padding:10px 16px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;">Veure calendari de partits</a></p>' +
+    '</div>' +
+    '<div style="background:#F4F4F4;padding:14px;text-align:center;border-top:1px solid #EEEEEE;font-size:12px;color:#666;">CB Sant Josep Badalona · Notificació automàtica</div>' +
+  '</div>';
+}
+
+function notifyCalendarChangesByTeam(latestChanges) {
+  if (!latestChanges || !latestChanges.length) return { emailed: 0, teams: 0 };
+  var grouped = {};
+  latestChanges.forEach(function(change) {
+    if (!change.game || !change.game.team) return;
+    var key = teamKeyForGame(change.game);
+    if (!grouped[key]) grouped[key] = { label: teamLabelForGame(change.game), changes: [] };
+    grouped[key].changes.push(change);
+  });
+  var groups = Object.keys(grouped).map(function(key) { return grouped[key]; });
+  var emailed = 0;
+  groups.forEach(function(group) {
+    var subject = "Canvi de calendari · " + group.label;
+    var body = [
+      "S'han detectat " + group.changes.length + " canvi(s) en el calendari de " + group.label + ".",
+      ""
+    ].concat(group.changes.map(function(change) { return "- " + calendarChangeDescription(change); })).concat([
+      "",
+      "Calendari de partits: https://sam-1959.github.io/santpep26-27/partits.html"
+    ]).join("\n");
+    MailApp.sendEmail(CALENDAR_CHANGE_TEST_EMAIL, subject, body, {
+      htmlBody: calendarChangeEmailHtml(group.label, group.changes),
+      name: "CB Sant Josep Badalona"
+    });
+    emailed += 1;
+  });
+  return { emailed: emailed, teams: groups.length };
+}
+
 function importarCalendarisPartits() {
   var oldData = readFirebase(CALENDAR_FIREBASE_PATH);
   var oldHasWeeks = oldData && Array.isArray(oldData.weeks) && oldData.weeks.length;
@@ -722,10 +803,16 @@ function importarCalendarisPartits() {
     ? mergeChangeHistory(oldData, latestChanges, now)
     : { checkedAt: now, importedAt: now, changes: [] };
   writeFirebase(CALENDAR_FIREBASE_PATH, data);
+  var calendarNotifications = { emailed: 0, teams: 0 };
+  try {
+    calendarNotifications = notifyCalendarChangesByTeam(latestChanges);
+  } catch (error) {
+    Logger.log("No s'han pogut enviar els avisos de canvis de calendari: " + error);
+  }
   var restrictions = verifyTableRestrictionsAndAlert(data, latestChanges, now);
   var total = allGames(data).length;
   Logger.log("Calendaris importats: " + data.weeks.length + " setmanes, " + total + " partits, " + latestChanges.length + " canvi(s) nous. Restriccions: " + restrictions.issues + ".");
-  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, restrictions: restrictions };
+  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, calendarNotifications: calendarNotifications, restrictions: restrictions };
 }
 
 function crearTriggerImportacioCalendaris() {

@@ -525,7 +525,7 @@
         if(team && teamName !== team) return false;
         return true;
       });
-      state.weeks = [...new Set(state.baseFiltered.map(record => weekKey(record.trainingDate)).filter(Boolean))]
+      state.weeks = [...new Set([currentCalendarWeekKey(), ...state.baseFiltered.map(record => weekKey(record.trainingDate)).filter(Boolean)])]
         .sort((a, b) => b.localeCompare(a));
       const selectedIndex = previousWeek ? state.weeks.indexOf(previousWeek) : -1;
       const currentWeekIndex = state.weeks.indexOf(currentCalendarWeekKey());

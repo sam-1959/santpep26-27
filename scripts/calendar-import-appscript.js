@@ -19,10 +19,10 @@ var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // les regles de Firebase.
 var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
 var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
-// Mentre es valida la notificació, tots els avisos de canvis de calendari
-// s'envien aquí. Quan estigui validat, cal substituir aquesta resolució pels
-// correus dels entrenadors de TEAM_COACH_EMAILS.
-var CALENDAR_CHANGE_TEST_EMAIL = "dtecnic@cbsantjosep.cat";
+// Contactes d'entrenadors principals, gestionats des de l'aplicació.
+var HEAD_COACHES_CONTACTS_PATH = "seasonContacts/" + SEASON + "/headCoaches";
+// Direcció Tècnica rep sempre una còpia dels avisos de calendari.
+var CALENDAR_CHANGE_CC_EMAIL = "dtecnic@cbsantjosep.cat";
 
 var CALENDARS = [
   {
@@ -724,6 +724,28 @@ function teamLabelForGame(game) {
   return game.team + (game.sex ? " " + game.sex : "");
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function headCoachEmailForTeam(teamKey) {
+  if (!teamKey) return "";
+  try {
+    var url = FIREBASE_DB_URL + "/" + HEAD_COACHES_CONTACTS_PATH + "/" + encodeURIComponent(teamKey) + ".json";
+    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) {
+      Logger.log("No s'ha pogut consultar l'entrenador de l'equip " + teamKey + ".");
+      return "";
+    }
+    var coach = JSON.parse(response.getContentText() || "null");
+    var email = String(coach && coach.email || "").trim();
+    return isValidEmail(email) ? email : "";
+  } catch (error) {
+    Logger.log("Error consultant l'entrenador de l'equip " + teamKey + ": " + error);
+    return "";
+  }
+}
+
 function calendarChangeDescription(change) {
   var game = change.game || {};
   var matchup = game.home
@@ -782,7 +804,7 @@ function notifyCalendarChangesByTeam(latestChanges) {
   latestChanges.forEach(function(change) {
     if (!change.game || !change.game.team) return;
     var key = teamKeyForGame(change.game);
-    if (!grouped[key]) grouped[key] = { label: teamLabelForGame(change.game), changes: [] };
+    if (!grouped[key]) grouped[key] = { teamKey: key, label: teamLabelForGame(change.game), changes: [] };
     grouped[key].changes.push(change);
   });
   var groups = Object.keys(grouped).map(function(key) { return grouped[key]; });
@@ -796,10 +818,18 @@ function notifyCalendarChangesByTeam(latestChanges) {
       "",
       "Calendari de partits: https://sam-1959.github.io/santpep26-27/partits.html"
     ]).join("\n");
-    MailApp.sendEmail(CALENDAR_CHANGE_TEST_EMAIL, subject, body, {
+    var coachEmail = headCoachEmailForTeam(group.teamKey);
+    var recipient = coachEmail || CALENDAR_CHANGE_CC_EMAIL;
+    var options = {
       htmlBody: calendarChangeEmailHtml(group.label, group.changes),
       name: "CB Sant Josep Badalona"
-    });
+    };
+    if (coachEmail && coachEmail.toLowerCase() !== CALENDAR_CHANGE_CC_EMAIL) {
+      options.cc = CALENDAR_CHANGE_CC_EMAIL;
+    } else if (!coachEmail) {
+      Logger.log("No s'ha trobat correu d'entrenador per a " + group.teamKey + "; l'avís s'envia a Direcció Tècnica.");
+    }
+    MailApp.sendEmail(recipient, subject, body, options);
     emailed += 1;
   });
   return { emailed: emailed, teams: groups.length };

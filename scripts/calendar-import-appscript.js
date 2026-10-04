@@ -23,6 +23,8 @@ var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
 var HEAD_COACHES_CONTACTS_PATH = "seasonContacts/" + SEASON + "/headCoaches";
 // Direcció Tècnica rep sempre una còpia dels avisos de calendari.
 var CALENDAR_CHANGE_CC_EMAIL = "dtecnic@cbsantjosep.cat";
+// Per al JBF, Direcció Tècnica ja és el destinatari operatiu de l'avís.
+var CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL = { JBF: true };
 
 var CALENDARS = [
   {
@@ -818,7 +820,9 @@ function notifyCalendarChangesByTeam(latestChanges) {
       "",
       "Calendari de partits: https://sam-1959.github.io/santpep26-27/partits.html"
     ]).join("\n");
-    var coachEmail = headCoachEmailForTeam(group.teamKey);
+    var coachEmail = CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL[group.teamKey]
+      ? ""
+      : headCoachEmailForTeam(group.teamKey);
     var recipient = coachEmail || CALENDAR_CHANGE_CC_EMAIL;
     var options = {
       htmlBody: calendarChangeEmailHtml(group.label, group.changes),
@@ -826,7 +830,7 @@ function notifyCalendarChangesByTeam(latestChanges) {
     };
     if (coachEmail && coachEmail.toLowerCase() !== CALENDAR_CHANGE_CC_EMAIL) {
       options.cc = CALENDAR_CHANGE_CC_EMAIL;
-    } else if (!coachEmail) {
+    } else if (!coachEmail && !CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL[group.teamKey]) {
       Logger.log("No s'ha trobat correu d'entrenador per a " + group.teamKey + "; l'avís s'envia a Direcció Tècnica.");
     }
     MailApp.sendEmail(recipient, subject, body, options);

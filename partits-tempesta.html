@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Partits afectats per la tempesta · CB Sant Josep</title>
+  <style>
+    :root { --brand:#713f97; --brand-dark:#5a2f7d; --accent:#fcdb20; --bg:#f5f3f8; --card:#fff; --ink:#2a2233; --muted:#7a7085; --line:#e6e0ee; --shadow:0 1px 3px rgba(60,40,90,.08),0 4px 16px rgba(60,40,90,.06); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4; }
+    header { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--brand); color:#fff; box-shadow:var(--shadow); }
+    .logo { display:inline-flex; flex-shrink:0; text-decoration:none; } .club-logo { width:48px; height:48px; object-fit:contain; background:#fff; border-radius:10px; padding:3px; }
+    .head-text { flex:1; min-width:0; } .head-text h1 { margin:0; font-size:1.06rem; } .head-text h1 span { display:block; font-size:.72rem; font-weight:500; opacity:.86; letter-spacing:.04em; text-transform:uppercase; } .head-text p { margin:2px 0 0; font-size:.8rem; opacity:.9; }
+    main { width:min(1100px,calc(100% - 32px)); margin:0 auto; padding:24px 0 48px; }
+    .back { display:inline-flex; margin-bottom:14px; color:var(--brand); font-weight:800; font-size:.86rem; text-decoration:none; }
+    .notice { display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:center; padding:18px; border:1px solid #e7c96c; border-left:6px solid #e4a500; border-radius:var(--radius); background:#fff8d6; box-shadow:var(--shadow); }
+    .notice-icon { font-size:2.2rem; } .notice h2 { margin:0 0 4px; color:#5f4a00; font-size:1.2rem; } .notice p { margin:0; color:#625220; font-size:.9rem; }
+    .summary { margin:20px 0 12px; color:var(--muted); font-size:.88rem; font-weight:700; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    section { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    h3 { margin:0; padding:13px 16px; color:#fff; font-size:1rem; } .home h3 { background:#2e7d32; } .away h3 { background:#e57d00; }
+    table { width:100%; border-collapse:collapse; } th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } tr:last-child td { border-bottom:0; } th { color:var(--muted); background:#faf8fd; font-size:.67rem; text-transform:uppercase; letter-spacing:.05em; } td { font-size:.86rem; } .time { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); } .place { color:var(--muted); font-size:.78rem; } .status { display:inline-flex; gap:4px; align-items:center; margin-top:3px; color:#8a6500; font-size:.74rem; font-weight:900; }
+    .calendar-link { display:inline-flex; margin-top:20px; padding:9px 14px; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; font-size:.86rem; font-weight:900; }
+    footer { padding:18px; text-align:center; color:var(--muted); font-size:.75rem; }
+    @media (max-width:760px) { main { width:min(100% - 24px,1100px); } .grid { grid-template-columns:1fr; } th, td { padding:9px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo" href="index.html" title="Tornar a l'inici"><img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" /></a>
+    <div class="head-text"><h1><span>CB Sant Josep de Badalona</span> Partits afectats per la tempesta</h1><p>Cap de setmana del 3 i 4 d'octubre de 2026</p></div>
+  </header>
+  <main>
+    <a class="back" href="partits.html">← Tornar al calendari de partits</a>
+    <div class="notice">
+      <div class="notice-icon" aria-hidden="true">⛈️</div>
+      <div><h2>Partits anul·lats per tempesta</h2><p>S'han anul·lat tots els partits compresos entre dissabte 3 d'octubre a les 17:00 i diumenge 4 d'octubre a les 14:00.</p></div>
+    </div>
+    <p class="summary">7 partits afectats: 4 a casa i 3 a fora.</p>
+    <div class="grid">
+      <section class="home"><h3>Partits a casa · 4</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Instal·lació</th></tr></thead><tbody>
+        <tr><td class="time">Ds. 03/10 · 17:45</td><td>Cadet A M vs BARÇA<div class="status">⛈️ Anul·lat</div></td><td class="place">La Colina</td></tr>
+        <tr><td class="time">Dg. 04/10 · 09:00</td><td>Infantil F vs #SOMCAPITAL CB SANTFELIUENC U13<div class="status">⛈️ Anul·lat</div></td><td class="place">La Colina</td></tr>
+        <tr><td class="time">Dg. 04/10 · 10:45</td><td>Cadet F vs CE SANT NICOLAU 1<div class="status">⛈️ Anul·lat</div></td><td class="place">La Colina</td></tr>
+        <tr><td class="time">Dg. 04/10 · 12:30</td><td>Júnior B F vs SESE B<div class="status">⛈️ Anul·lat</div></td><td class="place">La Colina</td></tr>
+      </tbody></table></section>
+      <section class="away"><h3>Partits a fora · 3</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Instal·lació</th></tr></thead><tbody>
+        <tr><td class="time">Ds. 03/10 · 18:45</td><td>UE HORTA B vs Sènior B M<div class="status">⛈️ Anul·lat</div></td><td class="place">U.E. Horta</td></tr>
+        <tr><td class="time">Ds. 03/10 · 19:15</td><td>CB BOET MATARÓ 2009 vs Júnior A M<div class="status">⛈️ Anul·lat</div></td><td class="place">Poliesportiu Eusebi Millan</td></tr>
+        <tr><td class="time">Dg. 04/10 · 10:45</td><td>BÀSQUET ATENEU MONTSERRAT A vs Sènior A M<div class="status">⛈️ Anul·lat</div></td><td class="place">Pavelló Olímpic Espanya Industrial</td></tr>
+      </tbody></table></section>
+    </div>
+    <a class="calendar-link" href="partits.html">Veure els partits al calendari →</a>
+  </main>
+  <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+</body>
+</html>

@@ -342,13 +342,13 @@ async function sendPayload(payload){
   });
   const text = await response.text();
   if(!response.ok) throw new Error(`App Script ha retornat ${response.status}: ${text}`);
+  let result;
   try {
-    const result = JSON.parse(text);
-    if(result && result.ok === false) throw new Error(result.error || "L'Apps Script no ha pogut enviar el correu.");
+    result = JSON.parse(text);
   } catch(error) {
-    if(error instanceof SyntaxError) return text;
-    throw error;
+    throw new Error(`L'Apps Script ha retornat una resposta no vàlida: ${text.slice(0, 180)}`);
   }
+  if(!result || result.ok !== true) throw new Error(result && result.error || "L'Apps Script no ha pogut enviar el correu.");
   return text;
 }
 

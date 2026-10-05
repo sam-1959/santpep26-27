@@ -7,6 +7,17 @@ header .logo { display:block; flex-shrink:0; }
 header .h { min-width:0; }
 header .h h1 { font-weight:700; letter-spacing:-.01em; }
 header .icon { font-weight:900; }
+/* El partit JBF–SESE B del 4 d'octubre es va ajornar per tempesta. */
+.actions::after {
+  content:"⛈️ Ajornat per tempesta";
+  padding:5px 10px;
+  border:1px solid #e8c85b;
+  border-radius:999px;
+  background:#fff4c6;
+  color:#765300;
+  font-size:.75rem;
+  font-weight:900;
+}
 /* Les conclusions i el pla de staff es consulten un cop revisades totes les dades. */
 .grid > article:nth-child(7) { order:30; }
 .grid > article:nth-child(8) { order:31; }

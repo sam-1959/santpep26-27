@@ -22,8 +22,8 @@
     section { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
     h3 { margin:0; padding:13px 16px; color:#fff; font-size:1rem; } .home h3 { background:#2e7d32; } .away h3 { background:#e57d00; }
     table { width:100%; border-collapse:collapse; } th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } tr:last-child td { border-bottom:0; } th { color:var(--muted); background:#faf8fd; font-size:.67rem; text-transform:uppercase; letter-spacing:.05em; } td { font-size:.86rem; } .time { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); } .place { color:var(--muted); font-size:.78rem; } .status { display:inline-flex; gap:4px; align-items:center; margin-top:3px; color:#8a6500; font-size:.74rem; font-weight:900; }
-    .home th:nth-child(1) { width:13%; }.home th:nth-child(2) { width:24%; }.home th:nth-child(3) { width:33%; }.home th:nth-child(4) { width:30%; }
-    .away th:nth-child(1) { width:16%; }.away th:nth-child(2) { width:43%; }.away th:nth-child(3) { width:41%; }
+    .home th:nth-child(1) { width:12%; }.home th:nth-child(2) { width:22%; }.home th:nth-child(3) { width:27%; }.home th:nth-child(4) { width:23%; }.home th:nth-child(5) { width:16%; }
+    .away th:nth-child(1) { width:15%; }.away th:nth-child(2) { width:34%; }.away th:nth-child(3) { width:29%; }.away th:nth-child(4) { width:22%; }
     .proposal { margin:14px 0 0; padding:11px 14px; border-radius:10px; background:#f5f1fa; color:#514360; font-size:.8rem; }
     .proposal strong { color:var(--brand-dark); }
     .dates { color:#356b39; font-weight:800; }
@@ -32,6 +32,10 @@
     .recovery-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }
     .recovery-status { display:block; width:100%; color:var(--muted); font-size:.72rem; }
     .recovery-status.ok { color:#267331; font-weight:700; }.recovery-status.error { color:#b3261e; font-weight:700; }
+    .contact-fields { display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:190px; }
+    .contact-fields input { width:100%; min-height:32px; padding:4px 6px; border:1px solid #cfc6db; border-radius:6px; background:#fff; color:var(--ink); font:inherit; font-size:.78rem; }
+    .contact-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }
+    .contact-status { display:block; width:100%; color:var(--muted); font-size:.72rem; }.contact-status.ok { color:#267331; font-weight:700; }.contact-status.error { color:#b3261e; font-weight:700; }
     .calendar-link { display:inline-flex; margin-top:20px; padding:9px 14px; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; font-size:.86rem; font-weight:900; }
     footer { padding:18px; text-align:center; color:var(--muted); font-size:.75rem; }
     @media (max-width:760px) { main { width:min(100% - 24px,1100px); } .grid { grid-template-columns:1fr; } th, td { padding:9px; } }
@@ -50,16 +54,16 @@
     </div>
     <p class="summary">7 partits afectats: 4 a casa i 3 a fora.</p>
     <div class="grid">
-      <section class="home"><h3>Partits a casa · 4</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Proposta de recuperació</th><th>Data i hora per disputar</th></tr></thead><tbody>
-        <tr data-game-id="cadet-a-m-barca"><td class="time">Ds. 03/10 · 17:45</td><td>Cadet A M vs BARÇA<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: ds. 31/10 (juga dg. 1/11)</span><br><span class="place">Alternativa: ds. 7/11 (juga dg. 8/11)</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
-        <tr data-game-id="infantil-f-santfeliuenc"><td class="time">Dg. 04/10 · 09:00</td><td>Infantil F vs #SOMCAPITAL CB SANTFELIUENC U13<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga ds. 31/10)</span><br><span class="place">Alternativa: ds. 14/11 (juga dg. 15/11)</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
-        <tr data-game-id="cadet-f-sant-nicolau"><td class="time">Dg. 04/10 · 10:45</td><td>Cadet F vs CE SANT NICOLAU 1<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 10:45)</span><br><span class="place">Alternatives: ds. 31/10 o ds. 14/11</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
-        <tr data-game-id="junior-b-f-sese"><td class="time">Dg. 04/10 · 12:30</td><td>Júnior B F vs SESE B<div class="status">⛈️ Ajornat</div></td><td><span class="dates">7 o 8 de novembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 12:30)</span><br><span class="place">Alternatives: ds. 31/10 o 5 i 6 de desembre</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
+      <section class="home"><h3>Partits a casa · 4</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Proposta de recuperació</th><th>Data i hora per disputar</th><th>Contacte</th></tr></thead><tbody>
+        <tr data-game-id="cadet-a-m-barca"><td class="time">Ds. 03/10 · 17:45</td><td>Cadet A M vs BARÇA<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: ds. 31/10 (juga dg. 1/11)</span><br><span class="place">Alternativa: ds. 7/11 (juga dg. 8/11)</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
+        <tr data-game-id="infantil-f-santfeliuenc"><td class="time">Dg. 04/10 · 09:00</td><td>Infantil F vs #SOMCAPITAL CB SANTFELIUENC U13<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga ds. 31/10)</span><br><span class="place">Alternativa: ds. 14/11 (juga dg. 15/11)</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
+        <tr data-game-id="cadet-f-sant-nicolau"><td class="time">Dg. 04/10 · 10:45</td><td>Cadet F vs CE SANT NICOLAU 1<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 10:45)</span><br><span class="place">Alternatives: ds. 31/10 o ds. 14/11</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
+        <tr data-game-id="junior-b-f-sese"><td class="time">Dg. 04/10 · 12:30</td><td>Júnior B F vs SESE B<div class="status">⛈️ Ajornat</div></td><td><span class="dates">7 o 8 de novembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 12:30)</span><br><span class="place">Alternatives: ds. 31/10 o 5 i 6 de desembre</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
       </tbody></table></section>
-      <section class="away"><h3>Partits a fora · 3</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Data i hora per disputar</th></tr></thead><tbody>
-        <tr data-game-id="senior-b-m-ue-horta"><td class="time">Ds. 03/10 · 18:45</td><td>UE HORTA B vs Sènior B M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
-        <tr data-game-id="junior-a-m-boet"><td class="time">Ds. 03/10 · 19:15</td><td>CB BOET MATARÓ 2009 vs Júnior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
-        <tr data-game-id="senior-a-m-ateneu"><td class="time">Dg. 04/10 · 10:45</td><td>BÀSQUET ATENEU MONTSERRAT A vs Sènior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td></tr>
+      <section class="away"><h3>Partits a fora · 3</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Data i hora per disputar</th><th>Contacte</th></tr></thead><tbody>
+        <tr data-game-id="senior-b-m-ue-horta"><td class="time">Ds. 03/10 · 18:45</td><td>UE HORTA B vs Sènior B M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
+        <tr data-game-id="junior-a-m-boet"><td class="time">Ds. 03/10 · 19:15</td><td>CB BOET MATARÓ 2009 vs Júnior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
+        <tr data-game-id="senior-a-m-ateneu"><td class="time">Dg. 04/10 · 10:45</td><td>BÀSQUET ATENEU MONTSERRAT A vs Sènior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
       </tbody></table></section>
     </div>
     <p class="proposal"><strong>Nota:</strong> les dates principals són caps de setmana lliures de l'equip local afectat. Les alternatives indicades impliquen doble jornada; cal confirmar la disponibilitat del rival i de la pista.</p>
@@ -77,6 +81,38 @@
       status.textContent = message;
       status.className = 'recovery-status' + (type ? ' ' + type : '');
     }
+    function setContactStatus(row, message, type) {
+      const status = row.querySelector('.contact-status');
+      status.textContent = message;
+      status.className = 'contact-status' + (type ? ' ' + type : '');
+    }
+    async function saveGame(row, source) {
+      const date = row.querySelector('.recovery-date').value;
+      const time = row.querySelector('.recovery-time').value;
+      const contact = row.querySelector('.contact').value.trim();
+      if (source === 'recovery' && (!date || !time)) {
+        setStatus(row, 'Indica data i hora.', 'error');
+        return;
+      }
+      const button = row.querySelector(source === 'recovery' ? '.save-recovery' : '.save-contact');
+      button.disabled = true;
+      if (source === 'recovery') setStatus(row, 'Desant…');
+      else setContactStatus(row, 'Desant…');
+      try {
+        const response = await fetch(firebaseUrl(POSTPONED_GAMES_PATH + '/' + row.dataset.gameId), {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: date, time: time, contact: contact, updatedAt: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error('No s’ha pogut desar.');
+        if (source === 'recovery') setStatus(row, date && time ? 'Desat i compartit' : 'Pendent de confirmar', date && time ? 'ok' : '');
+        else setContactStatus(row, contact ? 'Desat i compartit' : 'Contacte eliminat', 'ok');
+      } catch (error) {
+        if (source === 'recovery') setStatus(row, 'No s’ha pogut desar.', 'error');
+        else setContactStatus(row, 'No s’ha pogut desar.', 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
     async function loadRecoveryDates() {
       try {
         const response = await fetch(firebaseUrl(POSTPONED_GAMES_PATH), { cache: 'no-store' });
@@ -87,33 +123,17 @@
           if (!saved) return;
           row.querySelector('.recovery-date').value = saved.date || '';
           row.querySelector('.recovery-time').value = saved.time || '';
+          row.querySelector('.contact').value = saved.contact || '';
           setStatus(row, saved.date && saved.time ? 'Desat i compartit' : 'Pendent de confirmar', saved.date && saved.time ? 'ok' : '');
+          if (saved.contact) setContactStatus(row, 'Desat i compartit', 'ok');
         });
       } catch (error) {
         document.querySelectorAll('tr[data-game-id]').forEach(function(row) { setStatus(row, 'No s’han pogut carregar les dades.', 'error'); });
       }
     }
     document.querySelectorAll('tr[data-game-id]').forEach(function(row) {
-      row.querySelector('button').addEventListener('click', async function() {
-        const date = row.querySelector('.recovery-date').value;
-        const time = row.querySelector('.recovery-time').value;
-        if (!date || !time) { setStatus(row, 'Indica data i hora.', 'error'); return; }
-        const button = row.querySelector('button');
-        button.disabled = true;
-        setStatus(row, 'Desant…');
-        try {
-          const response = await fetch(firebaseUrl(POSTPONED_GAMES_PATH + '/' + row.dataset.gameId), {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date: date, time: time, updatedAt: new Date().toISOString() })
-          });
-          if (!response.ok) throw new Error('No s’ha pogut desar.');
-          setStatus(row, 'Desat i compartit', 'ok');
-        } catch (error) {
-          setStatus(row, 'No s’ha pogut desar.', 'error');
-        } finally {
-          button.disabled = false;
-        }
-      });
+      row.querySelector('.save-recovery').addEventListener('click', function() { saveGame(row, 'recovery'); });
+      row.querySelector('.save-contact').addEventListener('click', function() { saveGame(row, 'contact'); });
     });
     loadRecoveryDates();
   </script>

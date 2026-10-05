@@ -16,6 +16,7 @@ const RECIPIENT_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_OVERRIDE || ""
 const RECIPIENT_NAMES_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE || "").trim();
 const MAX_TEAMS_PER_RECIPIENT_EMAIL = Math.max(1, Number(process.env.RPE_MAX_TEAMS_PER_EMAIL || 2));
 const DEFAULT_TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
+const RPE_EXCLUDED_TEAM_KEYS = new Set(["IBM", "IAM", "IF"]);
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {
   CBM: "Cadet B M",
@@ -186,9 +187,11 @@ async function loadRosters(){
 function selectedTeamKeys(){
   const raw = String(process.env.RPE_TEAM_KEYS || "ALL").trim();
   if(raw && raw.toUpperCase() !== "ALL"){
-    return raw.split(/[;,\s]+/).map(key => key.trim().toUpperCase()).filter(Boolean);
+    return raw.split(/[;,\s]+/)
+      .map(key => key.trim().toUpperCase())
+      .filter(key => key && !RPE_EXCLUDED_TEAM_KEYS.has(key));
   }
-  const keys = Object.keys(teamNamesByKey);
+  const keys = Object.keys(teamNamesByKey).filter(key => !RPE_EXCLUDED_TEAM_KEYS.has(key));
   return [
     ...DEFAULT_TEAM_ORDER.filter(key => keys.includes(key)),
     ...keys.filter(key => !DEFAULT_TEAM_ORDER.includes(key)).sort((a, b) => a.localeCompare(b, "ca"))

@@ -62,6 +62,12 @@
     .badge.variation-high { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
     .badge.variation-low { background:#c8e6c9; color:#145a18; border-color:#a5d6a7; }
     .badge.variation-even { background:#f4eef9; color:var(--brand-dark); border-color:#dccce9; }
+    .load-breakdown { display:grid; gap:4px; min-width:92px; }
+    .load-parts { display:flex; justify-content:center; gap:4px; font-size:0.64rem; font-weight:900; white-space:nowrap; }
+    .load-part { display:inline-flex; align-items:center; gap:2px; padding:1px 4px; border-radius:5px; }
+    .load-part.court { background:#e4f1fa; color:#075781; }
+    .load-part.physical { background:#fff0df; color:#9a4e00; }
+    .load-total { font-variant-numeric:tabular-nums; }
     .alerts { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     .alert { padding:13px; border-right:1px solid var(--line); }
     .alert:last-child { border-right:0; }
@@ -176,7 +182,7 @@
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Càrrega</h3><span class="formula">Càrrega total d'entrenament</span></div>
+        <div class="panel-head"><h3>Càrrega</h3><span class="formula">Pista + físic · total d'entrenament</span></div>
         <div class="table-wrap">
           <table class="metric-table">
             <thead id="loadHead"></thead>
@@ -686,10 +692,14 @@
         const alertBadges = alerts.length
           ? '<span class="alert-chips">' + alerts.map(alert => '<span class="alert-chip ' + alertClass(alert) + '">' + escapeHtml(alert) + '</span>').join("") + '</span>'
           : "—";
+        const cells = hasWeeklyTotal
+          ? dayGroups.map(day => loadBreakdownCell(day.records, "day", classGetter, tooltipGetter ? tooltipGetter(day.records, day.value, false) : "")).join("") +
+            loadBreakdownCell(group.records, "week", classGetter, tooltipGetter ? tooltipGetter(group.records, weeklyTotal, true) : "") +
+            loadBreakdownCell(group.records, "average", classGetter, tooltipGetter ? tooltipGetter(group.records, avg, true) : "")
+          : dayGroups.map(day => metricCell(day.value, classGetter, formatter, tooltipGetter ? tooltipGetter(day.records, day.value, false) : "")).join("") +
+            metricCell(values.some(value => value !== null) ? avg : null, classGetter, averageFormatter || formatter, tooltipGetter ? tooltipGetter(group.records, avg, true) : "");
         return '<tr class="' + (alerts.length ? 'player-alert' : '') + '"><td class="player"><span class="player-line">' + (number ? '<span class="number-chip">' + escapeHtml(number) + '</span>' : "") + '<span>' + escapeHtml(group.player) + '</span></span></td><td class="alerts-cell">' + alertBadges + '</td>' +
-          dayGroups.map(day => metricCell(day.value, classGetter, formatter, tooltipGetter ? tooltipGetter(day.records, day.value, false) : "")).join("") +
-          (hasWeeklyTotal ? metricCell(weeklyTotal, classGetter, formatter, tooltipGetter ? tooltipGetter(group.records, weeklyTotal, true) : "") : "") +
-          metricCell(values.some(value => value !== null) ? avg : null, classGetter, averageFormatter || formatter, tooltipGetter ? tooltipGetter(group.records, avg, true) : "") +
+          cells +
           (variationGetter ? variationCell(variationGetter(group, avg)) : "") +
         '</tr>';
       }).join("");
@@ -724,6 +734,17 @@
     function metricCell(value, classGetter, formatter, tooltip){
       if(value === null || value === undefined) return '<td>—</td>';
       return '<td><span class="badge ' + classGetter(value) + '"' + (tooltip ? ' title="' + escapeHtml(tooltip) + '"' : "") + '>' + escapeHtml(formatter(value)) + '</span></td>';
+    }
+    function loadBreakdownCell(records, mode, classGetter, tooltip){
+      const valid = (records || []).filter(record => numeric(record.load) > 0);
+      if(!valid.length) return '<td>—</td>';
+      const divisor = mode === "week" ? 1 : valid.length;
+      const court = valid.reduce((sum, record) => sum + numeric(record.courtLoad), 0) / divisor;
+      const physical = valid.reduce((sum, record) => sum + numeric(record.physicalLoad), 0) / divisor;
+      const total = court + physical;
+      const number = value => Math.round(value).toLocaleString("ca-ES");
+      const title = tooltip ? ' title="' + escapeHtml(tooltip) + '"' : "";
+      return '<td' + title + '><div class="load-breakdown"><div class="load-parts"><span class="load-part court">P ' + number(court) + '</span><span class="load-part physical">F ' + number(physical) + '</span></div><span class="badge load-total ' + classGetter(total) + '">' + number(total) + '</span></div></td>';
     }
     function loadTooltip(records, value, isSummary){
       const valid = (records || []).filter(record => numeric(record.load) > 0);

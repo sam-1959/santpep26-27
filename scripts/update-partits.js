@@ -178,7 +178,9 @@ function parseCalendar(ics) {
       parts.forEach((p, i) => { if (OWN[p]) { ownSide = i; sigla = p; } });
       if (ownSide < 0) return null; // partit sense equip propi identificable
       const rival = cleanText(parts[ownSide === 0 ? 1 : 0] || "");
-      let home = /LA COLINA|GRAN BRETANYA|MONTIGAL[ÀA]/i.test(e.loc); // casa = pavelló propi
+      // El calendari escriu els locals abans de "vs". La pista pot ser
+      // La Colina, Montigalà, Bufalà o qualsevol altra instal·lació pròpia.
+      let home = ownSide === 0;
       const M = madrid(e.start.d);
       const info = OWN[sigla];
       let loc = cleanLoc(e.loc);

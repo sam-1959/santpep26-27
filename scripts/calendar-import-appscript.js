@@ -233,7 +233,9 @@ function parseCalendar(ics) {
 
     var rival = cleanText(parts[ownSide === 0 ? 1 : 0] || "");
     var loc = cleanLoc(field(block, "LOCATION"));
-    var home = /LA COLINA|GRAN BRETANYA|MONTIGAL[ÀA]/i.test(field(block, "LOCATION"));
+    // L'ordre del títol del calendari és la font de veritat: equip propi
+    // abans de "vs" implica partit a casa, independentment de la pista.
+    var home = ownSide === 0;
     var M = madrid(start.d);
     var info = OWN[sigla];
     var ov = VENUE_OVERRIDES[M.date + "|" + sigla];

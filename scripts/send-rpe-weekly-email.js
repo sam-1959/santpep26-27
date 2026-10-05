@@ -14,6 +14,7 @@ const FORCE_SEND = String(process.env.RPE_EMAIL_FORCE || "").toLowerCase() === "
 const WEEK_OFFSET_DAYS = Number(process.env.RPE_WEEK_OFFSET_DAYS || 7);
 const RECIPIENT_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_OVERRIDE || "").trim();
 const RECIPIENT_NAMES_OVERRIDE = String(process.env.RPE_EMAIL_RECIPIENT_NAMES_OVERRIDE || "").trim();
+const MAX_TEAMS_PER_RECIPIENT_EMAIL = Math.max(1, Number(process.env.RPE_MAX_TEAMS_PER_EMAIL || 2));
 const DEFAULT_TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
 
 const DEFAULT_TEAM_NAMES_BY_KEY = {
@@ -341,6 +342,13 @@ async function sendPayload(payload){
   });
   const text = await response.text();
   if(!response.ok) throw new Error(`App Script ha retornat ${response.status}: ${text}`);
+  try {
+    const result = JSON.parse(text);
+    if(result && result.ok === false) throw new Error(result.error || "L'Apps Script no ha pogut enviar el correu.");
+  } catch(error) {
+    if(error instanceof SyntaxError) return text;
+    throw error;
+  }
   return text;
 }
 
@@ -548,7 +556,14 @@ async function main(){
 
   const sendResults = [];
   for(const recipient of recipientMap.values()){
-    sendResults.push(await sendGroupedRecipient({ recipient, selectedWeek, status }));
+    for(let index = 0; index < recipient.teams.length; index += MAX_TEAMS_PER_RECIPIENT_EMAIL){
+      const teams = recipient.teams.slice(index, index + MAX_TEAMS_PER_RECIPIENT_EMAIL);
+      sendResults.push(await sendGroupedRecipient({
+        recipient: { ...recipient, key: `${recipient.key}_${Math.floor(index / MAX_TEAMS_PER_RECIPIENT_EMAIL) + 1}`, teams },
+        selectedWeek,
+        status
+      }));
+    }
   }
 
   const errors = [...results, ...sendResults].filter(result => result.status === "error");

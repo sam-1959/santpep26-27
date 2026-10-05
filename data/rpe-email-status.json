@@ -1,11 +1,11 @@
 {
   "JBF": {
     "lastAttemptDate": "2026-10-05",
-    "lastAttemptAt": "2026-10-05T10:13:51.524Z",
+    "lastAttemptAt": "2026-10-05T10:26:39.710Z",
     "lastStatus": "sent",
     "lastError": "",
     "lastSentDate": "2026-10-05",
-    "lastSentAt": "2026-10-05T10:13:54.538Z",
+    "lastSentAt": "2026-10-05T10:26:41.025Z",
     "lastRecipient": "ricard.fuste@gmail.com",
     "lastRecipients": [
       "jessicagucero@gmail.com",
@@ -27,7 +27,7 @@
       "Víctor Furones",
       "Juan Guzmán"
     ],
-    "lastPreparedAt": "2026-10-05T10:13:51.526Z",
+    "lastPreparedAt": "2026-10-05T10:26:39.725Z",
     "lastPreparedWeek": "2026-09-28",
     "lastSentRecipientNames": [
       "Albert Grau",
@@ -36,7 +36,8 @@
       "Ricard Fusté",
       "Juan Guzmán",
       "albgrau@gmail.com",
-      "victorfurones@gmail.com"
+      "victorfurones@gmail.com",
+      "ricard.fuste@gmail.com"
     ]
   },
   "CBM": {
@@ -778,6 +779,22 @@
       ],
       "lastRecipient": "victorfurones@gmail.com",
       "lastRecipientName": "victorfurones@gmail.com",
+      "lastWeekLabel": "28/09/2026 – 04/10/2026"
+    },
+    "ricard_fuste@gmail_com_1": {
+      "lastAttemptDate": "2026-10-05",
+      "lastAttemptAt": "2026-10-05T10:26:39.727Z",
+      "lastAttemptWeek": "2026-09-28",
+      "lastStatus": "sent",
+      "lastError": "",
+      "lastSentDate": "2026-10-05",
+      "lastSentAt": "2026-10-05T10:26:41.025Z",
+      "lastSentWeek": "2026-09-28",
+      "lastSentTeams": [
+        "JBF"
+      ],
+      "lastRecipient": "ricard.fuste@gmail.com",
+      "lastRecipientName": "ricard.fuste@gmail.com",
       "lastWeekLabel": "28/09/2026 – 04/10/2026"
     }
   }

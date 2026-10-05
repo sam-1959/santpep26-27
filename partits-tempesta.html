@@ -22,8 +22,7 @@
     section { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
     h3 { margin:0; padding:13px 16px; color:#fff; font-size:1rem; } .home h3 { background:#2e7d32; } .away h3 { background:#e57d00; }
     table { width:100%; border-collapse:collapse; } th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; } tr:last-child td { border-bottom:0; } th { color:var(--muted); background:#faf8fd; font-size:.67rem; text-transform:uppercase; letter-spacing:.05em; } td { font-size:.86rem; } .time { width:1%; white-space:nowrap; font-weight:900; color:var(--brand-dark); } .place { color:var(--muted); font-size:.78rem; } .status { display:inline-flex; gap:4px; align-items:center; margin-top:3px; color:#8a6500; font-size:.74rem; font-weight:900; }
-    .home th:nth-child(1) { width:12%; }.home th:nth-child(2) { width:22%; }.home th:nth-child(3) { width:27%; }.home th:nth-child(4) { width:16%; }.home th:nth-child(5) { width:23%; }
-    .away th:nth-child(1) { width:15%; }.away th:nth-child(2) { width:34%; }.away th:nth-child(3) { width:22%; }.away th:nth-child(4) { width:29%; }
+    .home th:nth-child(1), .away th:nth-child(1) { width:12%; }.home th:nth-child(2), .away th:nth-child(2) { width:22%; }.home th:nth-child(3), .away th:nth-child(3) { width:27%; }.home th:nth-child(4), .away th:nth-child(4) { width:16%; }.home th:nth-child(5), .away th:nth-child(5) { width:23%; }
     .proposal { margin:14px 0 0; padding:11px 14px; border-radius:10px; background:#f5f1fa; color:#514360; font-size:.8rem; }
     .proposal strong { color:var(--brand-dark); }
     .dates { color:#356b39; font-weight:800; }
@@ -36,6 +35,7 @@
     .contact-fields input { flex:1 1 110px; min-width:0; min-height:32px; padding:4px 6px; border:1px solid #cfc6db; border-radius:6px; background:#fff; color:var(--ink); font:inherit; font-size:.78rem; }
     .contact-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }
     .contact-status { display:block; width:100%; color:var(--muted); font-size:.72rem; }.contact-status.ok { color:#267331; font-weight:700; }.contact-status.error { color:#b3261e; font-weight:700; }
+    .proposal-empty { color:var(--muted); text-align:center; }
     .calendar-link { display:inline-flex; margin-top:20px; padding:9px 14px; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; font-size:.86rem; font-weight:900; }
     footer { padding:18px; text-align:center; color:var(--muted); font-size:.75rem; }
     @media (max-width:760px) { main { width:min(100% - 24px,1100px); } .grid { grid-template-columns:1fr; } th, td { padding:9px; } }
@@ -60,7 +60,7 @@
         <tr data-game-id="cadet-f-sant-nicolau"><td class="time">Dg. 04/10 · 10:45</td><td>Cadet F vs CE SANT NICOLAU 1<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 10:45)</span><br><span class="place">Alternatives: ds. 31/10 o ds. 14/11</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
         <tr data-game-id="junior-b-f-sese"><td class="time">Dg. 04/10 · 12:30</td><td>Júnior B F vs SESE B<div class="status">⛈️ Ajornat</div></td><td><span class="dates">7 o 8 de novembre</span><br><span class="place">Doble jornada: dg. 1/11 a les 19:30 (juga a les 12:30)</span><br><span class="place">Alternatives: ds. 31/10 o 5 i 6 de desembre</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
       </tbody></table></section>
-      <section class="away"><h3>Partits a fora · 3</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Contacte</th><th>Data i hora per disputar</th></tr></thead><tbody>
+      <section class="away"><h3>Partits a fora · 3</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Proposta de recuperació</th><th>Contacte</th><th>Data i hora per disputar</th></tr></thead><tbody>
         <tr data-game-id="senior-b-m-ue-horta"><td class="time">Ds. 03/10 · 18:45</td><td>UE HORTA B vs Sènior B M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
         <tr data-game-id="junior-a-m-boet"><td class="time">Ds. 03/10 · 19:15</td><td>CB BOET MATARÓ 2009 vs Júnior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
         <tr data-game-id="senior-a-m-ateneu"><td class="time">Dg. 04/10 · 10:45</td><td>BÀSQUET ATENEU MONTSERRAT A vs Sènior A M<div class="status">⛈️ Ajornat</div></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
@@ -135,6 +135,12 @@
       const contactCell = row.querySelector('.contact-fields').closest('td');
       const recoveryCell = row.querySelector('.recovery-fields').closest('td');
       row.insertBefore(contactCell, recoveryCell);
+      if (row.closest('.away')) {
+        const proposalCell = document.createElement('td');
+        proposalCell.className = 'proposal-empty';
+        proposalCell.textContent = '—';
+        row.insertBefore(proposalCell, contactCell);
+      }
       row.querySelector('.save-recovery').addEventListener('click', function() { saveGame(row, 'recovery'); });
       row.querySelector('.save-contact').addEventListener('click', function() { saveGame(row, 'contact'); });
     });

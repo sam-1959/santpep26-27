@@ -185,9 +185,11 @@
     .change-kind { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
     .change-main { font-weight:700; font-size:0.9rem; }
     .change-detail { color:var(--muted); font-size:0.8rem; }
-    .conflict-week-link { margin-top:8px; border:1px solid #c62828; border-radius:6px; background:#fff; color:#a51d1d;
+    .conflict-week-link, .change-week-link { margin-top:8px; border:1px solid #c62828; border-radius:6px; background:#fff; color:#a51d1d;
       padding:5px 8px; font-size:.72rem; font-weight:800; cursor:pointer; }
-    .conflict-week-link:hover { background:#fff1f1; }
+    .conflict-week-link:hover, .change-week-link:hover { background:#fff1f1; }
+    .change-week-link { border-color:var(--brand); color:var(--brand-dark); }
+    .change-week-link:hover { background:#f6f0fb; }
     .empty-filter { color:var(--muted); font-style:italic; text-align:center; padding:40px 0; }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
     @media (max-width:520px){ .games { grid-template-columns:1fr; } }
@@ -592,14 +594,24 @@
     function bindConflictWeekNav(){
       document.querySelectorAll('.conflict-week-link').forEach(function(button){
         button.onclick=function(){
-          const date=button.dataset.conflictDate;
-          const weekIndex=DATA.weeks.findIndex(function(week){
-            return week.games.some(function(game){ return game.date===date; });
-          });
-          if(weekIndex<0) return;
-          const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
-          if(monthIndex>=0) showMonth(monthIndex, weekIndex);
+          showWeekForDate(button.dataset.conflictDate);
         };
+      });
+    }
+
+    function showWeekForDate(date){
+      if(!date) return;
+      const weekIndex=DATA.weeks.findIndex(function(week){
+        return date >= week.monday && date <= addDays(week.monday, 6);
+      });
+      if(weekIndex<0) return;
+      const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
+      if(monthIndex>=0) showMonth(monthIndex, weekIndex);
+    }
+
+    function bindChangeWeekNav(){
+      document.querySelectorAll('.change-week-link').forEach(function(button){
+        button.onclick=function(){ showWeekForDate(button.dataset.changeDate); };
       });
     }
 
@@ -644,8 +656,11 @@
           return '<div class="change-detail">' + f.label + ': ' +
             fmtChangeValue(f.label, f.from) + ' → ' + fmtChangeValue(f.label, f.to) + '</div>';
         }).join('');
+        const weekLink=c.game && c.game.date
+          ? '<button type="button" class="change-week-link" data-change-date="' + c.game.date + '">Veure setmana →</button>'
+          : '';
         return '<li class="change-item ' + c.type + '"><div class="change-kind">' + changeTypeLabel(c.type) + '</div>' +
-          '<div class="change-main">' + changeGameLine(c.game) + '</div>' + details + '</li>';
+          '<div class="change-main">' + changeGameLine(c.game) + '</div>' + details + weekLink + '</li>';
       }).join('');
       const nav=total > CHANGES_PER_PAGE
         ? '<div class="changes-nav">' +
@@ -695,6 +710,7 @@
       content.innerHTML = '<div class="agenda-layout"><div>' + weekHtml + venueLegend + iconLegend() + '</div><aside class="agenda-side">' + conflicts + renderLatestChanges() + '</aside></div>';
       bindChangesNav();
       bindConflictWeekNav();
+      bindChangeWeekNav();
     }
 
     // Dibuixa les setmanes del mes actiu i selecciona-ne una

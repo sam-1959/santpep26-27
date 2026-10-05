@@ -97,6 +97,14 @@
       MAM:{ team:'Mini A', fam:'MINI', sex:'M' }, MBM:{ team:'Mini B', fam:'MINI', sex:'M' }, MF:{ team:'Mini', fam:'MINI', sex:'F' },
       PAM:{ team:'Premini A', fam:'PREMINI', sex:'M' }, PBM:{ team:'Premini B', fam:'PREMINI', sex:'M' }
     };
+    const MANUAL_TOURNAMENTS = [
+      {
+        id:'vila-parets-2026-if', sheet:'Vila de Parets',
+        title:'XXI Torneig Vila de Parets', dates:'5, 6, 7 i 8 de desembre de 2026',
+        link:'https://drive.google.com/file/d/1p70V1eCB83Map-lLOeeQ6RnOYKd1I3nP/view?usp=sharing',
+        category:'U13 · Infantil 1r any', year:'2014', code:'IF', ...TEAM_META.IF
+      }
+    ];
     const activeFamilies = new Set();
     const activeSex = new Set();
 
@@ -270,7 +278,7 @@
             })
             .then(text => ({ sheet, text }))
         ));
-        const tournaments = csvs.flatMap(({ sheet, text }) => parseTournamentsFromSheet(text, sheet));
+        const tournaments = [...csvs.flatMap(({ sheet, text }) => parseTournamentsFromSheet(text, sheet)), ...MANUAL_TOURNAMENTS];
         document.getElementById('status').textContent = 'Actualitzat des del Google Sheet';
         renderFilters(tournaments);
         render(tournaments);

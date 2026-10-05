@@ -49,11 +49,11 @@
   },
   "CAM": {
     "lastAttemptDate": "2026-10-05",
-    "lastAttemptAt": "2026-10-05T10:05:53.725Z",
+    "lastAttemptAt": "2026-10-05T10:09:28.922Z",
     "lastAttemptWeek": "2026-09-28",
     "lastStatus": "sent",
     "lastError": "",
-    "lastPreparedAt": "2026-10-05T10:05:53.733Z",
+    "lastPreparedAt": "2026-10-05T10:09:28.930Z",
     "lastPreparedWeek": "2026-09-28",
     "lastRecipients": [
       "xavirieracoach@gmail.com",
@@ -74,14 +74,15 @@
     "lastWeekLabel": "28/09/2026 – 04/10/2026",
     "lastRecords": 22,
     "lastSentDate": "2026-10-05",
-    "lastSentAt": "2026-10-05T10:05:58.418Z",
+    "lastSentAt": "2026-10-05T10:09:40.897Z",
     "lastSentWeek": "2026-09-28",
     "lastSentRecipientNames": [
       "Xavi Riera",
       "César Saura",
       "Albert Grau",
       "Víctor Furones",
-      "Miquel Sánchez"
+      "Miquel Sánchez",
+      "xavirieracoach@gmail.com"
     ]
   },
   "CF": {
@@ -123,11 +124,11 @@
   },
   "JBM": {
     "lastAttemptDate": "2026-10-05",
-    "lastAttemptAt": "2026-10-05T10:05:53.737Z",
+    "lastAttemptAt": "2026-10-05T10:09:28.931Z",
     "lastAttemptWeek": "2026-09-28",
     "lastStatus": "sent",
     "lastError": "",
-    "lastPreparedAt": "2026-10-05T10:05:53.739Z",
+    "lastPreparedAt": "2026-10-05T10:09:28.934Z",
     "lastPreparedWeek": "2026-09-28",
     "lastRecipients": [
       "xavirieracoach@gmail.com",
@@ -146,13 +147,14 @@
     "lastWeekLabel": "28/09/2026 – 04/10/2026",
     "lastRecords": 16,
     "lastSentDate": "2026-10-05",
-    "lastSentAt": "2026-10-05T10:05:58.418Z",
+    "lastSentAt": "2026-10-05T10:09:40.897Z",
     "lastSentWeek": "2026-09-28",
     "lastSentRecipientNames": [
       "Xavi Riera",
       "Albert Grau",
       "Víctor Furones",
-      "Miquel Sánchez"
+      "Miquel Sánchez",
+      "xavirieracoach@gmail.com"
     ]
   },
   "JAM": {
@@ -202,11 +204,11 @@
   },
   "SBM": {
     "lastAttemptDate": "2026-10-05",
-    "lastAttemptAt": "2026-10-05T10:05:53.746Z",
+    "lastAttemptAt": "2026-10-05T10:09:28.935Z",
     "lastAttemptWeek": "2026-09-28",
     "lastStatus": "sent",
     "lastError": "",
-    "lastPreparedAt": "2026-10-05T10:05:53.748Z",
+    "lastPreparedAt": "2026-10-05T10:09:28.936Z",
     "lastPreparedWeek": "2026-09-28",
     "lastRecipients": [
       "xavirieracoach@gmail.com",
@@ -227,23 +229,24 @@
     "lastWeekLabel": "28/09/2026 – 04/10/2026",
     "lastRecords": 6,
     "lastSentDate": "2026-10-05",
-    "lastSentAt": "2026-10-05T10:06:03.783Z",
+    "lastSentAt": "2026-10-05T10:09:53.132Z",
     "lastSentWeek": "2026-09-28",
     "lastSentRecipientNames": [
       "Xavi Riera",
       "Albert Grau",
       "Víctor Furones",
       "Juan Guzmán",
-      "Dídac Procas"
+      "Dídac Procas",
+      "xavirieracoach@gmail.com"
     ]
   },
   "SAM": {
     "lastAttemptDate": "2026-10-05",
-    "lastAttemptAt": "2026-10-05T10:05:53.748Z",
+    "lastAttemptAt": "2026-10-05T10:09:28.937Z",
     "lastAttemptWeek": "2026-09-28",
     "lastStatus": "sent",
     "lastError": "",
-    "lastPreparedAt": "2026-10-05T10:05:53.750Z",
+    "lastPreparedAt": "2026-10-05T10:09:28.939Z",
     "lastPreparedWeek": "2026-09-28",
     "lastRecipients": [
       "xavirieracoach@gmail.com",
@@ -264,14 +267,15 @@
     "lastWeekLabel": "28/09/2026 – 04/10/2026",
     "lastRecords": 24,
     "lastSentDate": "2026-10-05",
-    "lastSentAt": "2026-10-05T10:06:05.517Z",
+    "lastSentAt": "2026-10-05T10:09:53.132Z",
     "lastSentWeek": "2026-09-28",
     "lastSentRecipientNames": [
       "Xavi Riera",
       "Albert Grau",
       "Víctor Furones",
       "Oriol Ramoneda",
-      "Éric Nicolás"
+      "Éric Nicolás",
+      "xavirieracoach@gmail.com"
     ]
   },
   "SAF": {
@@ -588,6 +592,40 @@
       ],
       "lastRecipient": "alejandro_alvarez_santos@hotmail.com",
       "lastRecipientName": "Àlex Álvarez",
+      "lastWeekLabel": "28/09/2026 – 04/10/2026"
+    },
+    "xavirieracoach@gmail_com_1": {
+      "lastAttemptDate": "2026-10-05",
+      "lastAttemptAt": "2026-10-05T10:09:28.940Z",
+      "lastAttemptWeek": "2026-09-28",
+      "lastStatus": "sent",
+      "lastError": "",
+      "lastSentDate": "2026-10-05",
+      "lastSentAt": "2026-10-05T10:09:40.897Z",
+      "lastSentWeek": "2026-09-28",
+      "lastSentTeams": [
+        "CAM",
+        "JBM"
+      ],
+      "lastRecipient": "xavirieracoach@gmail.com",
+      "lastRecipientName": "xavirieracoach@gmail.com",
+      "lastWeekLabel": "28/09/2026 – 04/10/2026"
+    },
+    "xavirieracoach@gmail_com_2": {
+      "lastAttemptDate": "2026-10-05",
+      "lastAttemptAt": "2026-10-05T10:09:40.898Z",
+      "lastAttemptWeek": "2026-09-28",
+      "lastStatus": "sent",
+      "lastError": "",
+      "lastSentDate": "2026-10-05",
+      "lastSentAt": "2026-10-05T10:09:53.132Z",
+      "lastSentWeek": "2026-09-28",
+      "lastSentTeams": [
+        "SBM",
+        "SAM"
+      ],
+      "lastRecipient": "xavirieracoach@gmail.com",
+      "lastRecipientName": "xavirieracoach@gmail.com",
       "lastWeekLabel": "28/09/2026 – 04/10/2026"
     }
   }

@@ -748,16 +748,22 @@ function headCoachEmailForTeam(teamKey) {
   }
 }
 
+function formatCalendarEmailDate(value) {
+  var iso = String(value || "").trim();
+  var match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? match[3] + "/" + match[2] + "/" + match[1] : (iso || "sense data");
+}
+
 function calendarChangeDescription(change) {
   var game = change.game || {};
   var matchup = game.home
     ? game.team + " vs " + game.rival
     : game.rival + " vs " + game.team;
-  var base = (game.date || "sense data") + " " + (game.time || "sense hora") + " · " + matchup;
+  var base = formatCalendarEmailDate(game.date) + " " + (game.time || "sense hora") + " · " + matchup;
   if (change.type === "added") return "Nou partit: " + base;
   if (change.type === "removed") return "Partit eliminat: " + base;
   var details = (change.fields || []).map(function(field) {
-    return field.label + ": " + field.from + " → " + field.to;
+    return field.label + ": " + (field.label === "Data" ? formatCalendarEmailDate(field.from) + " → " + formatCalendarEmailDate(field.to) : field.from + " → " + field.to);
   }).join(" · ");
   return "Partit modificat: " + base + (details ? "\n" + details : "");
 }
@@ -772,13 +778,15 @@ function calendarChangeEmailHtml(teamLabel, changes) {
     var kindColor = change.type === "added" ? "#2E7D32" : change.type === "removed" ? "#B3261E" : "#4B1D6D";
     var details = change.type === "changed"
       ? (change.fields || []).map(function(field) {
-          return '<div style="margin-top:4px;"><strong>' + escapeAlertHtml(field.label) + ':</strong> <span style="color:#777;text-decoration:line-through;">' + escapeAlertHtml(field.from) + '</span> <span style="color:#4B1D6D;font-weight:700;">→ ' + escapeAlertHtml(field.to) + '</span></div>';
+          var from = field.label === "Data" ? formatCalendarEmailDate(field.from) : field.from;
+          var to = field.label === "Data" ? formatCalendarEmailDate(field.to) : field.to;
+          return '<div style="margin-top:4px;"><strong>' + escapeAlertHtml(field.label) + ':</strong> <span style="color:#777;text-decoration:line-through;">' + escapeAlertHtml(from) + '</span> <span style="color:#4B1D6D;font-weight:700;">→ ' + escapeAlertHtml(to) + '</span></div>';
         }).join("")
       : '<div style="margin-top:4px;color:#555;">' + escapeAlertHtml(change.type === "added" ? "Afegit al calendari." : "Eliminat del calendari.") + '</div>';
     return '<tr>' +
       '<td style="padding:13px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' +
         '<div style="font-weight:700;color:#4B1D6D;font-size:15px;">' + escapeAlertHtml(matchup) + '</div>' +
-        '<div style="color:#666;font-size:12px;margin-top:3px;">' + escapeAlertHtml((game.date || "sense data") + " · " + (game.time || "sense hora")) + '</div>' +
+        '<div style="color:#666;font-size:12px;margin-top:3px;">' + escapeAlertHtml(formatCalendarEmailDate(game.date) + " · " + (game.time || "sense hora")) + '</div>' +
       '</td>' +
       '<td style="padding:13px 10px;border-bottom:1px solid #E5E5E5;color:#333;line-height:1.45;vertical-align:top;">' +
         '<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:#F9F6FC;color:' + kindColor + ';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">' + escapeAlertHtml(kind) + '</span>' + details +

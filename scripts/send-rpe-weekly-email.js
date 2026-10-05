@@ -441,7 +441,8 @@ async function sendGroupedRecipient({ recipient, selectedWeek, status }){
   const today = isoFromDate(dateInMadrid());
   const weekLabel = recipient.teams[0] && recipient.teams[0].weekLabel || weekRangeLabel(selectedWeek);
   const recipientsStatus = status.__recipients || {};
-  const previous = recipientsStatus[recipient.key] || {};
+  const legacyKey = recipient.key.endsWith("_1") ? recipient.key.slice(0, -2) : "";
+  const previous = recipientsStatus[recipient.key] || recipientsStatus[legacyKey] || {};
   if(previous.lastSentWeek === selectedWeek && !FORCE_SEND){
     console.log(`Correu ERP ja enviat a ${recipient.name} per la setmana ${selectedWeek}.`);
     return { recipient: recipient.email, status: "already_sent" };

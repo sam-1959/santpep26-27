@@ -252,13 +252,39 @@ function valuesFor(group, dates, field){
 
 function alertLabels(group){
   const labels = [];
-  if(group.rpe !== null && group.rpe >= 8) labels.push("RPE");
+  if(group.rpe !== null && group.rpe >= 7) labels.push("RPE");
   if(group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
   if(group.sleep !== null && group.sleep <= 6) labels.push("Son");
   return labels;
 }
 
-function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients }){
+function weekKey(value){
+  const date = dateFromISO(value);
+  return date ? isoFromDate(mondayOf(date)) : "";
+}
+
+function weeklyLoadAverage(records){
+  if(!records.length) return null;
+  return records.reduce((sum, record) => sum + numeric(record.load), 0) / records.length;
+}
+
+function loadTrend(group, teamKey, allRecords){
+  const selectedWeekAverage = weeklyLoadAverage(group.records);
+  if(selectedWeekAverage === null) return null;
+  const playerRecords = allRecords.filter(record =>
+    record.teamKey === teamKey && normalizeName(record.player) === normalizeName(group.player)
+  );
+  const weeks = [...new Set(playerRecords.map(record => weekKey(record.trainingDate)).filter(Boolean))];
+  const averages = weeks
+    .map(key => weeklyLoadAverage(playerRecords.filter(record => weekKey(record.trainingDate) === key)))
+    .filter(value => value !== null);
+  if(!averages.length) return null;
+  const seasonAverage = averages.reduce((sum, value) => sum + value, 0) / averages.length;
+  if(!seasonAverage) return null;
+  return { value: (selectedWeekAverage - seasonAverage) / seasonAverage * 100, seasonAverage };
+}
+
+function buildPayload({ teamKey, team, selectedWeek, dates, records, allRecords, recipients }){
   const groups = new Map();
   records.forEach(record => {
     const key = record.player || "Sense nom";
@@ -267,13 +293,19 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
   });
 
   const players = [...groups.values()]
-    .map(group => ({
-      ...group,
-      load: group.records.reduce((sum, record) => sum + numeric(record.load), 0),
-      rpe: average(group.records, "rpe"),
-      fatigue: average(group.records, "muscleFatigue"),
-      sleep: average(group.records, "sleepHours")
-    }))
+    .map(group => {
+      const load = group.records.reduce((sum, record) => sum + numeric(record.load), 0);
+      return {
+        ...group,
+        load,
+        weeklyLoad: load,
+        loadAverage: weeklyLoadAverage(group.records),
+        rpe: average(group.records, "rpe"),
+        fatigue: average(group.records, "muscleFatigue"),
+        sleep: average(group.records, "sleepHours"),
+        trend: loadTrend(group, teamKey, allRecords)
+      };
+    })
     .sort((a, b) => {
       const aNumber = rosterNumber(team, a.player) || a.records.find(record => record.playerNumber)?.playerNumber;
       const bNumber = rosterNumber(team, b.player) || b.records.find(record => record.playerNumber)?.playerNumber;
@@ -313,11 +345,13 @@ function buildPayload({ teamKey, team, selectedWeek, dates, records, recipients 
         fatigue: valuesFor(group, dates, record => record.muscleFatigue),
         sleep: valuesFor(group, dates, record => record.sleepHours),
         load: valuesFor(group, dates, record => record.load).map(value => value === "" ? "" : Math.round(value)),
+        weeklyLoad: Math.round(group.weeklyLoad),
+        trend: group.trend,
         averages: {
           rpe: formatNumber(group.rpe),
           fatigue: formatNumber(group.fatigue),
           sleep: formatNumber(group.sleep),
-          load: Math.round(group.load).toLocaleString("ca-ES")
+          load: formatNumber(group.loadAverage)
         }
       };
     })
@@ -406,7 +440,7 @@ async function processTeam({ teamKey, selectedWeek, dates, allRecords, contacts,
 
   try {
     const recipients = loadRecipients(teamKey, contacts);
-    const payload = buildPayload({ teamKey, team, selectedWeek, dates, records, recipients });
+    const payload = buildPayload({ teamKey, team, selectedWeek, dates, records, allRecords, recipients });
     recipients.contacts.forEach(contact => addRecipientPayload(recipientMap, contact, payload));
     status[teamKey] = {
       ...status[teamKey],

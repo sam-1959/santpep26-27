@@ -106,6 +106,7 @@ function construirHtmlAgrupat(weekLabel, teams) {
 }
 
 function construirBlocEquipHtml(team, summary, dates, players) {
+  var alertes = resumAlertesJugadors(players);
   return `
     <div style="margin: 0 0 28px; padding-bottom: 22px; border-bottom: 3px solid #F1E8F7;">
       <h2 style="color: #4B1D6D; margin: 0 0 14px; font-size: 20px;">${escaparHtml(team)}</h2>
@@ -120,7 +121,7 @@ function construirBlocEquipHtml(team, summary, dates, players) {
         </tr>
       </table>
 
-      ${blocAlertes(summary.alerts)}
+      ${blocAlertes(alertes)}
 
       ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
       ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
@@ -131,6 +132,7 @@ function construirBlocEquipHtml(team, summary, dates, players) {
 }
 
 function construirTextPla(team, weekLabel, summary, players) {
+  var alertes = resumAlertesJugadors(players);
   var lines = [
     "CB SANT JOSEP BADALONA",
     "",
@@ -144,6 +146,9 @@ function construirTextPla(team, weekLabel, summary, players) {
     "- Fatiga mitjana: " + valor(summary.fatigue),
     "- Hores de son mitjana: " + valor(summary.sleep),
     "- Càrrega total: " + valor(summary.load),
+    "- Alertes RPE: " + alertesResum(alertes.rpe),
+    "- Alertes fatiga: " + alertesResum(alertes.fatigue),
+    "- Alertes son: " + alertesResum(alertes.sleep),
     "",
     "Detall per jugador/a:"
   ];
@@ -151,11 +156,11 @@ function construirTextPla(team, weekLabel, summary, players) {
   players.forEach(function(player) {
     lines.push(
       (player.number ? "#" + player.number + " " : "") + valor(player.player),
-      "  Alertes: " + alertesText(player.alerts),
+      "  Alertes: " + alertesText(alertesJugador(player)),
       "  RPE: " + valors(player.rpe).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.rpe),
       "  Fatiga: " + valors(player.fatigue).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.fatigue),
       "  Hores de son: " + valors(player.sleep).join(" | ") + " · Mitjana: " + valor(player.averages && player.averages.sleep),
-      "  Càrrega: " + valors(player.load).join(" | ") + " · Total: " + valor(player.averages && player.averages.load),
+      "  Càrrega: " + valors(player.load).join(" | ") + " · Setmana: " + valor(player.weeklyLoad) + " · Mitjana: " + valor(player.averages && player.averages.load) + " · Tendència: " + tendenciaText(player.trend),
       ""
     );
   });
@@ -164,6 +169,7 @@ function construirTextPla(team, weekLabel, summary, players) {
 }
 
 function construirHtml(team, weekLabel, summary, dates, players) {
+  var alertes = resumAlertesJugadors(players);
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; max-width: 900px; margin: 0 auto; border: 1px solid #E5E5E5; border-radius: 8px; overflow: hidden;">
       <div style="background-color: #4B1D6D; padding: 24px; text-align: center; border-bottom: 4px solid #FFC72C;">
@@ -185,7 +191,7 @@ function construirHtml(team, weekLabel, summary, dates, players) {
           </tr>
         </table>
 
-        ${blocAlertes(summary.alerts)}
+        ${blocAlertes(alertes)}
 
         ${taulaMetrica("RPE", dates, players, "rpe", "rpe")}
         ${taulaMetrica("Fatiga", dates, players, "fatigue", "fatigue")}
@@ -237,6 +243,7 @@ function kpi(label, value) {
 }
 
 function taulaMetrica(title, dates, players, field, averageField) {
+  var isLoad = field === "load";
   var headerDates = dates.map(function(date) {
     return '<th style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center;">' + escaparHtml(date.label || date.iso) + '</th>';
   }).join("");
@@ -247,9 +254,11 @@ function taulaMetrica(title, dates, players, field, averageField) {
     return `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; font-weight: bold; color: #4B1D6D; white-space: nowrap;">${player.number ? "#" + escaparHtml(player.number) + " " : ""}${escaparHtml(valor(player.player))}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: left;">${alertesHtml(player.alerts)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: left;">${alertesHtml(alertesJugador(player))}</td>
         ${values}
+        ${isLoad ? '<td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center; font-weight: bold;">' + escaparHtml(valor(player.weeklyLoad)) + '</td>' : ''}
         <td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center; font-weight: bold;">${escaparHtml(valor(player.averages && player.averages[averageField]))}</td>
+        ${isLoad ? '<td style="padding: 8px; border-bottom: 1px solid #E5E5E5; text-align: center;">' + tendenciaHtml(player.trend) + '</td>' : ''}
       </tr>
     `;
   }).join("");
@@ -262,16 +271,70 @@ function taulaMetrica(title, dates, players, field, averageField) {
           <th style="padding: 8px; text-align: left;">Jugador/a</th>
           <th style="padding: 8px; text-align: left;">Alertes</th>
           ${headerDates}
+          ${isLoad ? '<th style="padding: 8px; text-align: center;">Setmana</th>' : ''}
           <th style="padding: 8px; text-align: center;">Mitjana</th>
+          ${isLoad ? '<th style="padding: 8px; text-align: center;">Tendència</th>' : ''}
         </tr>
       </thead>
-      <tbody>${rows || '<tr><td style="padding: 10px;" colspan="' + (dates.length + 3) + '">No hi ha dades.</td></tr>'}</tbody>
+      <tbody>${rows || '<tr><td style="padding: 10px;" colspan="' + (dates.length + 3 + (isLoad ? 2 : 0)) + '">No hi ha dades.</td></tr>'}</tbody>
     </table>
   `;
 }
 
+function tendenciaText(trend) {
+  if (!trend || typeof trend.value !== "number" || !isFinite(trend.value)) return "—";
+  var rounded = Math.round(trend.value);
+  return (rounded > 0 ? "+" : "") + rounded + "%";
+}
+
+function tendenciaHtml(trend) {
+  if (!trend || typeof trend.value !== "number" || !isFinite(trend.value)) return "—";
+  var rounded = Math.round(trend.value);
+  var color = rounded > 10 ? "#B71C1C" : rounded >= 1 ? "#A15C00" : rounded <= -1 ? "#2E7D32" : "#666666";
+  var background = rounded > 10 ? "#FDECEC" : rounded >= 1 ? "#FFF1DB" : rounded <= -1 ? "#EAF7EE" : "#F4F4F4";
+  var value = (rounded > 0 ? "+" : "") + rounded + "%";
+  var title = "Variació respecte a la mitjana de totes les setmanes (" + Math.round(trend.seasonAverage || 0) + ").";
+  return '<span title="' + escaparHtml(title) + '" style="display:inline-block; padding:3px 7px; border-radius:999px; background:' + background + '; color:' + color + '; font-size:11px; font-weight:bold;">' + escaparHtml(value) + '</span>';
+}
+
 function alertesText(alerts) {
   return alerts && alerts.length ? alerts.join(", ") : "Sense alertes";
+}
+
+function nombre(input) {
+  if (typeof input === "number") return isFinite(input) ? input : null;
+  var text = String(input == null ? "" : input).trim().replace(",", ".");
+  var match = text.match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}
+
+function mitjanaValors(values) {
+  var nums = (values || []).map(nombre).filter(function(value) { return value !== null && value > 0; });
+  if (!nums.length) return null;
+  return nums.reduce(function(sum, value) { return sum + value; }, 0) / nums.length;
+}
+
+function alertesJugador(player) {
+  var rpe = mitjanaValors(player && player.rpe);
+  var fatigue = mitjanaValors(player && player.fatigue);
+  var sleep = mitjanaValors(player && player.sleep);
+  var alerts = [];
+  if (rpe !== null && rpe >= 7) alerts.push("RPE");
+  if (fatigue !== null && fatigue >= 4) alerts.push("Fatiga");
+  if (sleep !== null && sleep <= 6) alerts.push("Son");
+  return alerts;
+}
+
+function resumAlertesJugadors(players) {
+  var summary = { rpe: [], fatigue: [], sleep: [] };
+  (players || []).forEach(function(player) {
+    var alerts = alertesJugador(player);
+    var name = valor(player && player.player);
+    if (alerts.indexOf("RPE") !== -1) summary.rpe.push(name);
+    if (alerts.indexOf("Fatiga") !== -1) summary.fatigue.push(name);
+    if (alerts.indexOf("Son") !== -1) summary.sleep.push(name);
+  });
+  return summary;
 }
 
 function alertesHtml(alerts) {

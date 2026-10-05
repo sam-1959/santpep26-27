@@ -48,6 +48,9 @@
     </section>
   </main><footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>
+    const JERSEY_NUMBERS={'ABRIL GOMEZ PERIAGO':'12','MARINA DURAN FLORIDO':'9','LARA LOPEZ AUÑON':'10','EMMA DILLUNÉ UTGES':'33','HOULEY DIALLO DIALLO':'5'};
+    function addJerseyNumbers(){const panel=[...document.querySelectorAll('.panel')].find(x=>x.querySelector('h3')?.textContent==='Jugadores clau');const table=panel?.querySelector('table');if(!table)return;table.tHead.rows[0].insertCell(0).outerHTML='<th>#</th>';[...table.tBodies[0].rows].forEach(row=>{const name=row.cells[0]?.textContent.trim();row.insertCell(0).textContent=JERSEY_NUMBERS[name]||'—'});}
+    addJerseyNumbers();
     const BASE='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app', PATH='scoutingResources/season-26-27/jbf/cb-blanes-a';
     const video=document.querySelector('#video'),notes=document.querySelector('#notes'),status=document.querySelector('#status'),openVideo=document.querySelector('#openVideo');
     const url=path=>BASE+'/'+path.split('/').map(encodeURIComponent).join('/')+'.json';

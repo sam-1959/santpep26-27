@@ -233,7 +233,7 @@ function parseCalendar(ics) {
 
     var rival = cleanText(parts[ownSide === 0 ? 1 : 0] || "");
     var loc = cleanLoc(field(block, "LOCATION"));
-    var home = /LA COLINA|GRAN BRETANYA/i.test(field(block, "LOCATION"));
+    var home = /LA COLINA|GRAN BRETANYA|MONTIGAL[ÀA]/i.test(field(block, "LOCATION"));
     var M = madrid(start.d);
     var info = OWN[sigla];
     var ov = VENUE_OVERRIDES[M.date + "|" + sigla];

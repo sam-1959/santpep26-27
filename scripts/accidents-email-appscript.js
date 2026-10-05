@@ -178,7 +178,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
 
   destinataris.forEach(function(correu) {
     GmailApp.sendEmail(correu, assumpte, cosText, {
-      cc: "info@cbsantjosep.cat,dtecnic@cbsantjosep.cat,siniestros.baloncesto@aon.es,basquetcatala@digglo.eu",
+      cc: "info@cbsantjosep.cat,dtecnic@cbsantjosep.cat,basquetcatala@digglo.eu",
       attachments: [pdfAdjunt],
       htmlBody: cosHTML,
       name: "CB Sant Josep Badalona"

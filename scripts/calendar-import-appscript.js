@@ -19,11 +19,11 @@ var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // les regles de Firebase.
 var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
 var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
-// Contactes d'entrenadors principals, gestionats des de l'aplicació.
-var HEAD_COACHES_CONTACTS_PATH = "seasonContacts/" + SEASON + "/headCoaches";
-// Direcció Tècnica rep sempre una còpia dels avisos de calendari.
-var CALENDAR_CHANGE_CC_EMAIL = "dtecnic@cbsantjosep.cat";
-// Per al JBF, Direcció Tècnica ja és el destinatari operatiu de l'avís.
+// Contactes gestionats des de l'aplicació.
+var SEASON_CONTACTS_PATH = "seasonContacts/" + SEASON;
+var HEAD_COACHES_CONTACTS_PATH = SEASON_CONTACTS_PATH + "/headCoaches";
+var GENERAL_COORDINATION_EMAIL_CACHE;
+// Per al JBF, Coordinació general ja és el destinatari operatiu de l'avís.
 var CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL = { JBF: true };
 
 var CALENDARS = [
@@ -754,6 +754,24 @@ function headCoachEmailForTeam(teamKey) {
   }
 }
 
+function generalCoordinationEmail() {
+  if (GENERAL_COORDINATION_EMAIL_CACHE !== undefined) return GENERAL_COORDINATION_EMAIL_CACHE;
+  try {
+    var contacts = readFirebase(SEASON_CONTACTS_PATH) || {};
+    var coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
+    var contact = coordinators.filter(function(item) {
+      return item && item.role === "general" && item.receivesTeamEmails !== false && isValidEmail(item.email);
+    })[0];
+    GENERAL_COORDINATION_EMAIL_CACHE = contact ? String(contact.email).trim() : "";
+    if (!GENERAL_COORDINATION_EMAIL_CACHE) Logger.log("No s'ha trobat cap contacte de Coordinació general per als avisos de calendari.");
+    return GENERAL_COORDINATION_EMAIL_CACHE;
+  } catch (error) {
+    Logger.log("Error consultant Coordinació general per als avisos de calendari: " + error);
+    GENERAL_COORDINATION_EMAIL_CACHE = "";
+    return "";
+  }
+}
+
 function formatCalendarEmailDate(value) {
   var iso = String(value || "").trim();
   var match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -825,6 +843,7 @@ function notifyCalendarChangesByTeam(latestChanges) {
   });
   var groups = Object.keys(grouped).map(function(key) { return grouped[key]; });
   var emailed = 0;
+  var coordinationEmail = generalCoordinationEmail();
   groups.forEach(function(group) {
     var subject = "Canvi de calendari · " + group.label;
     var body = [
@@ -837,15 +856,19 @@ function notifyCalendarChangesByTeam(latestChanges) {
     var coachEmail = CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL[group.teamKey]
       ? ""
       : headCoachEmailForTeam(group.teamKey);
-    var recipient = coachEmail || CALENDAR_CHANGE_CC_EMAIL;
+    var recipient = coachEmail || coordinationEmail;
     var options = {
       htmlBody: calendarChangeEmailHtml(group.label, group.changes),
       name: "CB Sant Josep Badalona"
     };
-    if (coachEmail && coachEmail.toLowerCase() !== CALENDAR_CHANGE_CC_EMAIL) {
-      options.cc = CALENDAR_CHANGE_CC_EMAIL;
+    if (coachEmail && coordinationEmail && coachEmail.toLowerCase() !== coordinationEmail.toLowerCase()) {
+      options.cc = coordinationEmail;
     } else if (!coachEmail && !CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL[group.teamKey]) {
-      Logger.log("No s'ha trobat correu d'entrenador per a " + group.teamKey + "; l'avís s'envia a Direcció Tècnica.");
+      Logger.log("No s'ha trobat correu d'entrenador per a " + group.teamKey + "; l'avís s'envia a Coordinació general.");
+    }
+    if (!recipient) {
+      Logger.log("No s'envia l'avís de calendari de " + group.teamKey + ": no hi ha entrenador/a ni Coordinació general configurada.");
+      return;
     }
     MailApp.sendEmail(recipient, subject, body, options);
     emailed += 1;

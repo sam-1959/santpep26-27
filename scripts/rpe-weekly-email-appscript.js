@@ -20,7 +20,7 @@ function doPost(e) {
 }
 
 function enviarCorreuRpeSetmanal(request) {
-  var destinataris = normalitzarCorreus([request.recipient || "ricard.fuste@gmail.com"]);
+  var destinataris = normalitzarCorreus([request.recipient || ""]);
   if (!destinataris.length) {
     throw new Error("No hi ha destinatari configurat.");
   }

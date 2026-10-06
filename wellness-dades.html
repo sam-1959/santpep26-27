@@ -194,12 +194,6 @@
     const ROSTERS_PATH = "rpeRosters/season-26-27";
     const CONTACTS_PATH = "seasonContacts/season-26-27";
     const RPE_EMAIL_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDAD6TMxQh_fb5hRuv8o2NA1bdZaknBoEsICDz1fGX75DqdOu_PKrorXZ4Bu3TuSzBuA/exec";
-    const RPE_TEST_EMAIL = "ricard.fuste@gmail.com";
-    const RPE_COORDINATION_EMAILS = {
-      masculi: { name:"Xavi Riera", email:"xavirieracoach@gmail.com" },
-      femeni: { name:"Jessica García", email:"jessicagucero@gmail.com" },
-      fallback: { name:"Ricard Fusté", email:RPE_TEST_EMAIL }
-    };
     const TEAM_NAMES_BY_KEY = {
       CBM: "Cadet B M",
       CAM: "Cadet A M",
@@ -282,21 +276,17 @@
         return true;
       });
     }
-    function fallbackCoordinatorForTeamKey(key){
-      if(!key) return [RPE_COORDINATION_EMAILS.femeni, RPE_COORDINATION_EMAILS.masculi];
-      return [key.endsWith("F") ? RPE_COORDINATION_EMAILS.femeni : RPE_COORDINATION_EMAILS.masculi];
-    }
     function coordinatorsForTeamKey(key){
       const coordinators = Array.isArray(state.contacts?.coordinators) ? state.contacts.coordinators : [];
       if(!key){
         const contacts = [
-          coordinators.find(contact => String(contact.role || "") === "femeni") || RPE_COORDINATION_EMAILS.femeni,
-          coordinators.find(contact => String(contact.role || "") === "masculi") || RPE_COORDINATION_EMAILS.masculi
+          coordinators.find(contact => String(contact.role || "") === "femeni"),
+          coordinators.find(contact => String(contact.role || "") === "masculi")
         ];
         return uniqueContacts(contacts.filter(contact => contact && contact.receivesTeamEmails !== false));
       }
       const role = key.endsWith("F") ? "femeni" : "masculi";
-      return uniqueContacts([coordinators.find(contact => String(contact.role || "") === role), ...fallbackCoordinatorForTeamKey(key)].filter(contact => contact && contact.receivesTeamEmails !== false));
+      return uniqueContacts([coordinators.find(contact => String(contact.role || "") === role)].filter(contact => contact && contact.receivesTeamEmails !== false));
     }
     function prepasForTeamKey(key){
       if(!key) return [];
@@ -859,6 +849,11 @@
       const payload = buildWeeklyEmailPayload();
       if(!payload.players.length){
         statusEl.textContent = "No hi ha dades setmanals per enviar.";
+        updateEmailButtonState();
+        return;
+      }
+      if(!payload.recipient){
+        statusEl.textContent = "No hi ha contactes configurats per enviar aquest correu RPE.";
         updateEmailButtonState();
         return;
       }

@@ -13,8 +13,8 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
+var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
-var ACCIDENT_TEST_EMAIL = "dtecnic@cbsantjosep.cat";
 
 function doPost(e) {
   try {
@@ -223,13 +223,15 @@ function enviarCorreuProvaPdf(request) {
     expedientHTML +
     '<p style="margin:20px 0;padding:12px;background:#F9F6FC;border-left:4px solid #4B1D6D;border-radius:6px;">Trobareu el comunicat adjunt a aquest correu.</p></div></div>';
 
-  GmailApp.sendEmail(ACCIDENT_TEST_EMAIL, assumpte, cosText, {
+  var testRecipient = correuCoordinacioGeneral();
+  if (!testRecipient) throw new Error("No hi ha cap contacte de Coordinació general configurat per enviar la prova.");
+  GmailApp.sendEmail(testRecipient, assumpte, cosText, {
     attachments: [pdfAdjunt],
     htmlBody: cosHTML,
     name: "CB Sant Josep Badalona"
   });
-  Logger.log("Prova de comunicat enviada exclusivament a: " + ACCIDENT_TEST_EMAIL);
-  return { ok: true, sentTo: [ACCIDENT_TEST_EMAIL] };
+  Logger.log("Prova de comunicat enviada exclusivament a: " + testRecipient);
+  return { ok: true, sentTo: [testRecipient] };
 }
 
 function eliminarPdfComunicat(request) {
@@ -392,13 +394,7 @@ function normalitzarCorreus(llistaCorreus) {
 // Els destinataris permanents es gestionen a Contactes. L'avís del formulari
 // és per a Pere i Coordinació general; el PDF adjunt inclou Digglo.
 function destinatarisComunicatsAccident(tipus) {
-  var base = FIREBASE_DB_URL.replace(/\/$/, "");
-  var url = base + "/" + SEASON_CONTACTS_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
-  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-  if (response.getResponseCode() !== 200) {
-    throw new Error("No s'han pogut llegir els destinataris de comunicats: Firebase " + response.getResponseCode());
-  }
-  var contacts = JSON.parse(response.getContentText() || "null") || {};
+  var contacts = obtenirContactesTemporada();
   var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
   var externs = avisos.filter(function(contact) {
     if (!Array.isArray(contact.notifications) || contact.notifications.indexOf("accidents") === -1) return false;
@@ -411,6 +407,26 @@ function destinatarisComunicatsAccident(tipus) {
       }).map(function(contact) { return contact.email; })
     : [];
   return normalitzarCorreus(externs.concat(coordinacioGeneral));
+}
+
+function obtenirContactesTemporada() {
+  if (SEASON_CONTACTS_CACHE !== undefined) return SEASON_CONTACTS_CACHE;
+  var base = FIREBASE_DB_URL.replace(/\/$/, "");
+  var url = base + "/" + SEASON_CONTACTS_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("No s'han pogut llegir els destinataris de comunicats: Firebase " + response.getResponseCode());
+  }
+  SEASON_CONTACTS_CACHE = JSON.parse(response.getContentText() || "null") || {};
+  return SEASON_CONTACTS_CACHE;
+}
+
+function correuCoordinacioGeneral() {
+  var coordinators = Array.isArray(obtenirContactesTemporada().coordinators) ? obtenirContactesTemporada().coordinators : [];
+  var contact = coordinators.filter(function(item) {
+    return item && item.role === "general" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(item.email || "").trim());
+  })[0];
+  return contact ? String(contact.email).trim() : "";
 }
 
 function formatarDataHora(value) {

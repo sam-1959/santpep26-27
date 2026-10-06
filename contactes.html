@@ -66,7 +66,6 @@
     const FIREBASE_CONFIG = { apiKey:"AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU", authDomain:"coord-fa09e.firebaseapp.com", databaseURL:"https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app", projectId:"coord-fa09e", storageBucket:"coord-fa09e.firebasestorage.app", messagingSenderId:"509431001997", appId:"1:509431001997:web:561fa966029d873131c3c4" };
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const CONTACTS_PATH = "seasonContacts/season-26-27";
-    const COORDINATION_EMAILS = new Set(["albgrau@gmail.com", "victorfurones@gmail.com", "jessicagucero@gmail.com", "ricard.fuste@gmail.com", "dtecnic@cbsantjosep.cat", "xavirieracoach@gmail.com", "info@cbsantjosep.cat"]);
     const state = { contacts:{ coordinators:[], headCoaches:{}, notificationRecipients:[] }, user:null, auth:null };
     const els = { status:document.getElementById("status"), authTitle:document.getElementById("authTitle"), authText:document.getElementById("authText"), login:document.getElementById("loginButton"), logout:document.getElementById("logoutButton"), content:document.getElementById("contactsContent"), search:document.getElementById("contactSearch"), searchSummary:document.getElementById("searchSummary"), coaches:document.getElementById("headCoachesBody"), coordination:document.getElementById("coordinationBody"), recipients:document.getElementById("recipientsBody"), staff:document.getElementById("staffBody"), coachDialog:document.getElementById("coachDialog"), coordinatorDialog:document.getElementById("coordinatorDialog"), recipientDialog:document.getElementById("recipientDialog") };
 
@@ -89,7 +88,7 @@
       const coordinators = Array.isArray(state.contacts.coordinators) ? state.contacts.coordinators : [];
       const coordinatorRow = (contact, index, showTeams) => '<tr><td class="person">' + escapeHtml(contact.name || "—") + '</td><td><a class="mail" href="mailto:' + encodeURIComponent(contact.email || "") + '">' + escapeHtml(contact.email || "—") + '</a></td><td><span class="tag">' + escapeHtml(roleLabel(contact.role)) + '</span></td>' + (showTeams ? '<td class="teams">' + escapeHtml(Array.isArray(contact.teams) ? contact.teams.join(", ") : "—") + '</td>' : "") + '<td>' + emailStatus(contact) + '</td><td><button class="secondary edit-coordinator" data-index="' + index + '" type="button">Editar</button> <button class="secondary danger delete-coordinator" data-index="' + index + '" type="button">Eliminar</button></td></tr>';
       const indexed = coordinators.map((contact, index) => ({ contact, index })).filter(({contact}) => matchesSearch(contact));
-      const isCoordination = contact => COORDINATION_EMAILS.has(String(contact.email || "").trim().toLowerCase()) || String(contact.role || "") === "coordinador_fisio";
+      const isCoordination = contact => String(contact.role || "") !== "prepa";
       const coordination = indexed.filter(({contact}) => isCoordination(contact));
       const staff = indexed.filter(({contact}) => !isCoordination(contact));
       els.coordination.innerHTML = coordination.length ? coordination.map(({contact,index}) => coordinatorRow(contact, index, false)).join("") : '<tr><td class="empty" colspan="5">No hi ha resultats.</td></tr>';

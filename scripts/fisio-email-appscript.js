@@ -11,9 +11,9 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON_CONTACTS_ROOT_PATH = "seasonContacts/season-26-27";
 var SEASON_CONTACTS_PATH = SEASON_CONTACTS_ROOT_PATH + "/headCoaches";
+var SEASON_CONTACTS_CACHE;
 var NOTIFIED_REQUEST_IDS_KEY = "fisioNotifiedRequestIds";
 var MAX_NOTIFIED_REQUEST_IDS = 500;
-var FIXED_RECIPIENT_COVERED_TEAM_KEYS = { "JBF": true };
 var TEAM_KEYS_BY_NAME = {
   "Premini A M": "PAM",
   "Premini B M": "PBM",
@@ -159,12 +159,7 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
 }
 
 function correusBaseFisio() {
-  var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_ROOT_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
-  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-  if (response.getResponseCode() !== 200) {
-    throw new Error("No s'han pogut llegir els contactes de fisioteràpia: Firebase " + response.getResponseCode());
-  }
-  var contacts = JSON.parse(response.getContentText() || "null") || {};
+  var contacts = obtenirContactesTemporada();
   var roles = { general: true, coordinador_fisio: true, dt: true, coordinador_prepa: true };
   var selected = (Array.isArray(contacts.coordinators) ? contacts.coordinators : []).filter(function(contact) {
     return contact && roles[String(contact.role || "")] && contact.receivesTeamEmails !== false;
@@ -178,16 +173,30 @@ function correusBaseFisio() {
   return selected.map(function(contact) { return contact.email; });
 }
 
+function obtenirContactesTemporada() {
+  if (SEASON_CONTACTS_CACHE !== undefined) return SEASON_CONTACTS_CACHE;
+  var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_ROOT_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("No s'han pogut llegir els contactes de fisioteràpia: Firebase " + response.getResponseCode());
+  }
+  SEASON_CONTACTS_CACHE = JSON.parse(response.getContentText() || "null") || {};
+  return SEASON_CONTACTS_CACHE;
+}
+
 function correuCoordinacioPerGenere(generes) {
   var genere = valor(generes && generes[0]).toUpperCase();
-  if (genere === "F" || genere === "FEMENI" || genere === "FEMENÍ") {
-    return "jessicagucero@gmail.com";
+  var role = (genere === "F" || genere === "FEMENI" || genere === "FEMENÍ") ? "femeni"
+    : (genere === "M" || genere === "MASCULI" || genere === "MASCULÍ") ? "masculi" : "";
+  if (!role) {
+    Logger.log("No s'ha pogut identificar el gènere de la petició de fisio: " + genere);
+    return "";
   }
-  if (genere === "M" || genere === "MASCULI" || genere === "MASCULÍ") {
-    return "xavirieracoach@gmail.com";
-  }
-  Logger.log("No s'ha pogut identificar el gènere de la petició de fisio: " + genere);
-  return "";
+  var coordinators = Array.isArray(obtenirContactesTemporada().coordinators) ? obtenirContactesTemporada().coordinators : [];
+  var contact = coordinators.filter(function(item) {
+    return item && item.role === role && item.receivesTeamEmails !== false;
+  })[0];
+  return valor(contact && contact.email) === "—" ? "" : valor(contact.email);
 }
 
 function correuEntrenadorEquip(teamName) {
@@ -196,11 +205,6 @@ function correuEntrenadorEquip(teamName) {
     Logger.log("No s'ha trobat cap clau d'equip per a la petició de fisio: " + valor(teamName));
     return "";
   }
-  if (FIXED_RECIPIENT_COVERED_TEAM_KEYS[teamKey]) {
-    Logger.log("L'avís de fisio de " + teamKey + " ja queda cobert per un destinatari fix.");
-    return "";
-  }
-
   try {
     var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_PATH + "/" + encodeURIComponent(teamKey) + ".json";
     var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });

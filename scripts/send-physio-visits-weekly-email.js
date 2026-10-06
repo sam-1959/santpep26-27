@@ -15,7 +15,6 @@ const RECIPIENT_OVERRIDE = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_OVER
 const RECIPIENT_NAMES_OVERRIDE = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE || "").trim();
 const DEFAULT_RECIPIENTS = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENTS || "").trim();
 const DEFAULT_RECIPIENT_NAMES = String(process.env.PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES || "").trim();
-const FIXED_RECIPIENTS = [{ email: "dtecnic@cbsantjosep.cat", name: "Direcció tècnica" }];
 
 function firebaseUrl(pathName){
   const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -136,12 +135,9 @@ function contactName(contact){
 function weeklyRecipientsFromContacts(contacts){
   if(RECIPIENT_OVERRIDE) return recipients();
   const coordinators = Array.isArray(contacts && contacts.coordinators) ? contacts.coordinators : [];
-  const includedRoles = new Set(["masculi", "femeni", "coordinador_prepa", "dt", "prepa"]);
+  const includedRoles = new Set(["general", "masculi", "femeni", "coordinador_prepa", "dt", "prepa"]);
   const contactsRecipients = coordinators.filter(contact => includedRoles.has(String(contact.role || "").trim()));
-  const allContacts = [
-    ...contactsRecipients,
-    ...FIXED_RECIPIENTS
-  ];
+  const allContacts = contactsRecipients;
   const byEmail = new Map();
   allContacts.forEach(contact => {
     const email = String(contact.email || "").trim();

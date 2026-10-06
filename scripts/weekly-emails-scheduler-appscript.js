@@ -26,10 +26,6 @@ var WELLNESS_RESPONSES_PATH = "wellnessResponses/" + SEASON;
 var RPE_ROSTERS_PATH = "rpeRosters/" + SEASON;
 var CONTACTS_PATH = "seasonContacts/" + SEASON;
 
-var FIXED_PHYSIO_VISITS_RECIPIENTS = [
-  { email: "dtecnic@cbsantjosep.cat", name: "Direcció tècnica" }
-];
-
 var DEFAULT_TEAM_ORDER = ["CBM", "CAM", "CF", "JBM", "JAM", "JBF", "JAF", "SBM", "SAM", "SAF"];
 var DEFAULT_TEAM_NAMES_BY_KEY = {
   CBM: "Cadet B M",
@@ -506,10 +502,10 @@ function normalizeVisit(row, id) {
 
 function weeklyPhysioRecipients(contacts) {
   var coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
-  var includedRoles = { masculi: true, femeni: true, coordinador_prepa: true, dt: true, prepa: true };
+  var includedRoles = { general: true, masculi: true, femeni: true, coordinador_prepa: true, dt: true, prepa: true };
   var all = coordinators.filter(function(contact) {
     return includedRoles[String(contact.role || "").trim()];
-  }).concat(FIXED_PHYSIO_VISITS_RECIPIENTS);
+  });
   return contactsToRecipients(all, "No hi ha destinataris vàlids per al resum setmanal de Visites Fisio.");
 }
 

@@ -80,8 +80,9 @@
       const coordinators = Array.isArray(state.contacts.coordinators) ? state.contacts.coordinators : [];
       const coordinatorRow = (contact, index, showTeams) => '<tr><td class="person">' + escapeHtml(contact.name || "—") + '</td><td><a class="mail" href="mailto:' + encodeURIComponent(contact.email || "") + '">' + escapeHtml(contact.email || "—") + '</a></td><td><span class="tag">' + escapeHtml(roleLabel(contact.role)) + '</span></td>' + (showTeams ? '<td class="teams">' + escapeHtml(Array.isArray(contact.teams) ? contact.teams.join(", ") : "—") + '</td>' : "") + '<td>' + emailStatus(contact) + '</td><td><button class="secondary edit-coordinator" data-index="' + index + '" type="button">Editar</button> <button class="secondary danger delete-coordinator" data-index="' + index + '" type="button">Eliminar</button></td></tr>';
       const indexed = coordinators.map((contact, index) => ({ contact, index }));
-      const coordination = indexed.filter(({contact}) => COORDINATION_EMAILS.has(String(contact.email || "").trim().toLowerCase()));
-      const staff = indexed.filter(({contact}) => !COORDINATION_EMAILS.has(String(contact.email || "").trim().toLowerCase()));
+      const isCoordination = contact => COORDINATION_EMAILS.has(String(contact.email || "").trim().toLowerCase()) || String(contact.role || "") === "coordinador_fisio";
+      const coordination = indexed.filter(({contact}) => isCoordination(contact));
+      const staff = indexed.filter(({contact}) => !isCoordination(contact));
       els.coordination.innerHTML = coordination.length ? coordination.map(({contact,index}) => coordinatorRow(contact, index, false)).join("") : '<tr><td class="empty" colspan="5">No hi ha contactes de coordinació.</td></tr>';
       els.staff.innerHTML = staff.length ? staff.map(({contact,index}) => coordinatorRow(contact, index, true)).join("") : '<tr><td class="empty" colspan="6">No hi ha contactes d’staff especialitzat.</td></tr>';
     }

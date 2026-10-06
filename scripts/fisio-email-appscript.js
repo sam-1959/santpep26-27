@@ -9,7 +9,8 @@
 // 6. Copia la URL /exec i posa-la a APP_SCRIPT_NOTIFY_URL dins fisio.html.
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
-var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27/headCoaches";
+var SEASON_CONTACTS_ROOT_PATH = "seasonContacts/season-26-27";
+var SEASON_CONTACTS_PATH = SEASON_CONTACTS_ROOT_PATH + "/headCoaches";
 var NOTIFIED_REQUEST_IDS_KEY = "fisioNotifiedRequestIds";
 var MAX_NOTIFIED_REQUEST_IDS = 500;
 var FIXED_RECIPIENT_COVERED_TEAM_KEYS = { "JBF": true };
@@ -72,14 +73,10 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
     return;
   }
 
-  // Destinataris de notificació: servei de fisio i Direcció Tècnica.
-  // La coordinació es limita a la branca femenina o masculina corresponent.
-  var llistaCorreus = [
-    "dtecnic@cbsantjosep.cat",
-    "polammu@gmail.com",
-    "victorfurones@gmail.com",
-    "albgrau@gmail.com"
-  ];
+  // Destinataris base de Contactes: Coordinació general, fisioteràpia,
+  // Direcció tècnica i Coordinació de preparació física.
+  // La coordinació femenina o masculina es manté segons el gènere.
+  var llistaCorreus = correusBaseFisio();
   var correuCoordinacio = correuCoordinacioPerGenere(e.namedValues["Gènere"]);
   if (correuCoordinacio) llistaCorreus.push(correuCoordinacio);
   var correuEntrenador = correuEntrenadorEquip(teamName);
@@ -159,6 +156,26 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
 
   Logger.log("Correus enviats amb disseny Sant Pep a: " + destinataris.join(", "));
   return { sentTo: destinataris };
+}
+
+function correusBaseFisio() {
+  var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_ROOT_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("No s'han pogut llegir els contactes de fisioteràpia: Firebase " + response.getResponseCode());
+  }
+  var contacts = JSON.parse(response.getContentText() || "null") || {};
+  var roles = { general: true, coordinador_fisio: true, dt: true, coordinador_prepa: true };
+  var selected = (Array.isArray(contacts.coordinators) ? contacts.coordinators : []).filter(function(contact) {
+    return contact && roles[String(contact.role || "")] && contact.receivesTeamEmails !== false;
+  });
+  var presentRoles = {};
+  selected.forEach(function(contact) { presentRoles[String(contact.role || "")] = true; });
+  var missing = Object.keys(roles).filter(function(role) { return !presentRoles[role]; });
+  if (missing.length) {
+    throw new Error("Falten rols de Contactes per avisar una petició de fisio: " + missing.join(", "));
+  }
+  return selected.map(function(contact) { return contact.email; });
 }
 
 function correuCoordinacioPerGenere(generes) {

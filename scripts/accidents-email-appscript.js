@@ -177,7 +177,7 @@ function enviarCorreuDocumentFamilia(request, pdf) {
     </div>
   `;
 
-  var copiaAccidents = destinatarisComunicatsAccident().filter(function(correu) {
+  var copiaAccidents = destinatarisComunicatsAccident("pdf").filter(function(correu) {
     return correu.toLowerCase() !== String(request.recipientEmail || request.email || "").trim().toLowerCase();
   });
   destinataris.forEach(function(correu) {
@@ -316,7 +316,7 @@ function enviarCorreuComunicatsAccident(e) {
     return;
   }
 
-  var destinataris = destinatarisComunicatsAccident();
+  var destinataris = destinatarisComunicatsAccident("avis");
 
   if (!destinataris.length) {
     throw new Error("No hi ha destinataris configurats.");
@@ -389,9 +389,9 @@ function normalitzarCorreus(llistaCorreus) {
     });
 }
 
-// Els destinataris permanents es gestionen a Contactes. Per als comunicats
-// hi entren els marcats amb «Accidents» i la Coordinació general (dtecnic).
-function destinatarisComunicatsAccident() {
+// Els destinataris permanents es gestionen a Contactes. L'avís del formulari
+// és per a Pere i Coordinació general; el PDF adjunt inclou Digglo.
+function destinatarisComunicatsAccident(tipus) {
   var base = FIREBASE_DB_URL.replace(/\/$/, "");
   var url = base + "/" + SEASON_CONTACTS_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
   var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
@@ -401,11 +401,15 @@ function destinatarisComunicatsAccident() {
   var contacts = JSON.parse(response.getContentText() || "null") || {};
   var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
   var externs = avisos.filter(function(contact) {
-    return Array.isArray(contact.notifications) && contact.notifications.indexOf("accidents") !== -1;
+    if (!Array.isArray(contact.notifications) || contact.notifications.indexOf("accidents") === -1) return false;
+    var esDigglo = String(contact.email || "").trim().toLowerCase() === "basquetcatala@digglo.eu";
+    return tipus === "pdf" ? true : !esDigglo;
   }).map(function(contact) { return contact.email; });
-  var coordinacioGeneral = (Array.isArray(contacts.coordinators) ? contacts.coordinators : [])
-    .filter(function(contact) { return contact && contact.role === "general"; })
-    .map(function(contact) { return contact.email; });
+  var coordinacioGeneral = tipus === "pdf" || tipus === "avis"
+    ? (Array.isArray(contacts.coordinators) ? contacts.coordinators : []).filter(function(contact) {
+        return contact && contact.role === "general";
+      }).map(function(contact) { return contact.email; })
+    : [];
   return normalitzarCorreus(externs.concat(coordinacioGeneral));
 }
 

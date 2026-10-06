@@ -217,7 +217,8 @@ function loadRecipients(teamKey, contacts){
   if(!isValidEmail(technicalDirector && technicalDirector.email)) missing.push("director tècnic");
   if(!prepas.some(contact => isValidEmail(contact.email))) missing.push(`prepa ${teamKey}`);
   if(missing.length) throw new Error(`Falten destinataris del correu RPE ${teamKey}: ${missing.join(", ")}.`);
-  const contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector, ...prepas];
+  const contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector, ...prepas]
+    .filter(contact => contact && contact.receivesTeamEmails !== false);
   return {
     contacts: contactsList.filter(contact => isValidEmail(contact && contact.email)),
     emails: uniqueEmails(contactsList.map(contact => contact && contact.email)),

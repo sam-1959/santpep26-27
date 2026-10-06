@@ -751,7 +751,9 @@ function rpeRecipientsForTeam(teamKey, contacts) {
       Array.isArray(contact.teams) &&
       contact.teams.map(function(team) { return String(team || "").trim().toUpperCase(); }).indexOf(teamKey) !== -1;
   });
-  var contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector].concat(prepas);
+  var contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector].concat(prepas).filter(function(contact) {
+    return contact && contact.receivesTeamEmails !== false;
+  });
   return { contacts: uniqueContacts(contactsList) };
 }
 

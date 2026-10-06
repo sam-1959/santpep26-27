@@ -293,16 +293,17 @@
           coordinators.find(contact => String(contact.role || "") === "femeni") || RPE_COORDINATION_EMAILS.femeni,
           coordinators.find(contact => String(contact.role || "") === "masculi") || RPE_COORDINATION_EMAILS.masculi
         ];
-        return uniqueContacts(contacts);
+        return uniqueContacts(contacts.filter(contact => contact && contact.receivesTeamEmails !== false));
       }
       const role = key.endsWith("F") ? "femeni" : "masculi";
-      return uniqueContacts([coordinators.find(contact => String(contact.role || "") === role), ...fallbackCoordinatorForTeamKey(key)]);
+      return uniqueContacts([coordinators.find(contact => String(contact.role || "") === role), ...fallbackCoordinatorForTeamKey(key)].filter(contact => contact && contact.receivesTeamEmails !== false));
     }
     function prepasForTeamKey(key){
       if(!key) return [];
       const coordinators = Array.isArray(state.contacts?.coordinators) ? state.contacts.coordinators : [];
       return uniqueContacts(coordinators.filter(contact =>
         String(contact.role || "") === "prepa" &&
+        contact.receivesTeamEmails !== false &&
         Array.isArray(contact.teams) &&
         contact.teams.map(team => String(team || "").trim().toUpperCase()).includes(key)
       ));

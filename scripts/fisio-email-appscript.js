@@ -192,6 +192,10 @@ function correuEntrenadorEquip(teamName) {
       return "";
     }
     var coach = JSON.parse(response.getContentText() || "null");
+    if (coach && coach.receivesTeamEmails === false) {
+      Logger.log("L'entrenador de l'equip " + teamKey + " ha desactivat les comunicacions per correu.");
+      return "";
+    }
     var email = valor(coach && coach.email);
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
   } catch (error) {

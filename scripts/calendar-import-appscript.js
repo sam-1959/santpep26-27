@@ -742,6 +742,10 @@ function headCoachEmailForTeam(teamKey) {
       return "";
     }
     var coach = JSON.parse(response.getContentText() || "null");
+    if (coach && coach.receivesTeamEmails === false) {
+      Logger.log("L'entrenador de l'equip " + teamKey + " ha desactivat les comunicacions per correu.");
+      return "";
+    }
     var email = String(coach && coach.email || "").trim();
     return isValidEmail(email) ? email : "";
   } catch (error) {

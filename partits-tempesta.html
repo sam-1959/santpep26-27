@@ -183,7 +183,7 @@
       closeButton.type = 'button';
       closeButton.textContent = 'Tancar';
       closeButton.addEventListener('click', function() { toggleClosedGame(row); });
-      row.querySelector('.recovery-fields').append(closeButton);
+      row.querySelector('.recovery-fields').insertBefore(closeButton, row.querySelector('.recovery-status'));
     });
     loadRecoveryDates();
   </script>

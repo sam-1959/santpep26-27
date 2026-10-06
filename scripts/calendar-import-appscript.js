@@ -12,6 +12,7 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON = "season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/" + SEASON;
+var CALENDAR_GAME_EDITS_FIREBASE_PATH = CALENDAR_FIREBASE_PATH + "/manualEdits";
 var TABLE_ASSIGNMENTS_FIREBASE_PATH = "miniTablesAssignments/" + SEASON;
 var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // Es desa dins del calendari perquè aquest node ja està autoritzat per a la
@@ -882,6 +883,55 @@ function notifyCalendarChangesByTeam(latestChanges) {
   return { emailed: emailed, teams: groups.length };
 }
 
+// Els canvis fets des de Calendaris de partits es desen com a ajustos manuals
+// separats de la importació. A cada importació comprovem si n'hi ha algun
+// pendent d'avisar i fem servir el mateix circuit de correu (entrenador/a
+// principal + Coordinació general en còpia).
+function manualCalendarEditChange(edit) {
+  var before = edit.previous || {};
+  var fields = [
+    { label: "Data", from: before.date, to: edit.date },
+    { label: "Hora", from: before.time, to: edit.time },
+    { label: "Rival", from: before.rival, to: edit.rival },
+    { label: "Lloc", from: before.loc || "", to: edit.loc || "" },
+    { label: "Casa/fora", from: before.home ? "casa" : "fora", to: edit.home ? "casa" : "fora" },
+    { label: "Amistós", from: before.friendly ? "sí" : "no", to: edit.friendly ? "sí" : "no" }
+  ].filter(function(field) { return String(field.from || "") !== String(field.to || ""); });
+  return {
+    type: "changed",
+    game: {
+      date: edit.date,
+      time: edit.time,
+      team: edit.team,
+      sex: edit.sex,
+      rival: edit.rival,
+      home: !!edit.home,
+      loc: edit.loc || "",
+      friendly: !!edit.friendly
+    },
+    fields: fields
+  };
+}
+
+function notifyManualCalendarEdits() {
+  var edits = readFirebase(CALENDAR_GAME_EDITS_FIREBASE_PATH) || {};
+  var queued = Object.keys(edits).filter(function(key) {
+    var notification = edits[key] && edits[key].notification;
+    return notification && notification.requestedAt && notification.sentAt !== notification.requestedAt;
+  });
+  var emailed = 0;
+  queued.forEach(function(key) {
+    var edit = edits[key];
+    if (!edit.team || !edit.sex || !edit.date || !edit.time || !edit.rival) return;
+    var result = notifyCalendarChangesByTeam([manualCalendarEditChange(edit)]);
+    edit.notification.sentAt = edit.notification.requestedAt;
+    edit.notification.sentAtIso = new Date().toISOString();
+    writeFirebase(CALENDAR_GAME_EDITS_FIREBASE_PATH + "/" + key, edit);
+    emailed += result.emailed || 0;
+  });
+  return { queued: queued.length, emailed: emailed };
+}
+
 function importarCalendarisPartits() {
   var oldData = readFirebase(CALENDAR_FIREBASE_PATH);
   var oldHasWeeks = oldData && Array.isArray(oldData.weeks) && oldData.weeks.length;
@@ -889,6 +939,9 @@ function importarCalendarisPartits() {
     return { sex: c.sex, ics: fetchText(c.url) };
   });
   var data = buildData(calendars);
+  // Conservem els ajustos manuals (i la seva marca d'avís enviat) quan la
+  // importació substitueix el calendari sencer.
+  if (oldData && oldData.manualEdits) data.manualEdits = oldData.manualEdits;
   var now = new Date().toISOString();
   var latestChanges = oldHasWeeks ? buildChangeList(oldData, data) : [];
   data.latestChanges = oldHasWeeks
@@ -901,10 +954,16 @@ function importarCalendarisPartits() {
   } catch (error) {
     Logger.log("No s'han pogut enviar els avisos de canvis de calendari: " + error);
   }
+  var manualCalendarNotifications = { queued: 0, emailed: 0 };
+  try {
+    manualCalendarNotifications = notifyManualCalendarEdits();
+  } catch (error) {
+    Logger.log("No s'han pogut enviar els avisos dels canvis manuals de calendari: " + error);
+  }
   var restrictions = verifyTableRestrictionsAndAlert(data, latestChanges, now);
   var total = allGames(data).length;
   Logger.log("Calendaris importats: " + data.weeks.length + " setmanes, " + total + " partits, " + latestChanges.length + " canvi(s) nous. Restriccions: " + restrictions.issues + ".");
-  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, calendarNotifications: calendarNotifications, restrictions: restrictions };
+  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, calendarNotifications: calendarNotifications, manualCalendarNotifications: manualCalendarNotifications, restrictions: restrictions };
 }
 
 function crearTriggerImportacioCalendaris() {

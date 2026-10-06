@@ -12,6 +12,7 @@
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
+var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 var ACCIDENT_TEST_EMAIL = "dtecnic@cbsantjosep.cat";
 
@@ -176,9 +177,12 @@ function enviarCorreuDocumentFamilia(request, pdf) {
     </div>
   `;
 
+  var copiaAccidents = destinatarisComunicatsAccident().filter(function(correu) {
+    return correu.toLowerCase() !== String(request.recipientEmail || request.email || "").trim().toLowerCase();
+  });
   destinataris.forEach(function(correu) {
     GmailApp.sendEmail(correu, assumpte, cosText, {
-      cc: "info@cbsantjosep.cat,dtecnic@cbsantjosep.cat,basquetcatala@digglo.eu",
+      cc: copiaAccidents.join(","),
       attachments: [pdfAdjunt],
       htmlBody: cosHTML,
       name: "CB Sant Josep Badalona"
@@ -312,11 +316,7 @@ function enviarCorreuComunicatsAccident(e) {
     return;
   }
 
-  var llistaCorreus = [
-    "info@cbsantjosep.cat",
-    "dtecnic@cbsantjosep.cat"
-  ];
-  var destinataris = normalitzarCorreus(llistaCorreus);
+  var destinataris = destinatarisComunicatsAccident();
 
   if (!destinataris.length) {
     throw new Error("No hi ha destinataris configurats.");
@@ -387,6 +387,26 @@ function normalitzarCorreus(llistaCorreus) {
     .filter(function(correu) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correu);
     });
+}
+
+// Els destinataris permanents es gestionen a Contactes. Per als comunicats
+// hi entren els marcats amb «Accidents» i la Coordinació general (dtecnic).
+function destinatarisComunicatsAccident() {
+  var base = FIREBASE_DB_URL.replace(/\/$/, "");
+  var url = base + "/" + SEASON_CONTACTS_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
+  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("No s'han pogut llegir els destinataris de comunicats: Firebase " + response.getResponseCode());
+  }
+  var contacts = JSON.parse(response.getContentText() || "null") || {};
+  var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
+  var externs = avisos.filter(function(contact) {
+    return Array.isArray(contact.notifications) && contact.notifications.indexOf("accidents") !== -1;
+  }).map(function(contact) { return contact.email; });
+  var coordinacioGeneral = (Array.isArray(contacts.coordinators) ? contacts.coordinators : [])
+    .filter(function(contact) { return contact && contact.role === "general"; })
+    .map(function(contact) { return contact.email; });
+  return normalitzarCorreus(externs.concat(coordinacioGeneral));
 }
 
 function formatarDataHora(value) {

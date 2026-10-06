@@ -17,7 +17,7 @@
     .back { display:inline-flex; margin-bottom:14px; color:var(--brand); font-weight:800; font-size:.86rem; text-decoration:none; }
     .notice { display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:center; padding:18px; border:1px solid #e7c96c; border-left:6px solid #e4a500; border-radius:var(--radius); background:#fff8d6; box-shadow:var(--shadow); }
     .notice-icon { font-size:2.2rem; } .notice h2 { margin:0 0 4px; color:#5f4a00; font-size:1.2rem; } .notice p { margin:0; color:#625220; font-size:.9rem; }
-    .summary { margin:20px 0 12px; color:var(--muted); font-size:.88rem; font-weight:700; }
+    .summary { margin:20px 0 12px; color:var(--muted); font-size:.88rem; font-weight:700; }.status-filter { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:-2px 0 14px; }.status-filter span { color:var(--muted); font-size:.78rem; font-weight:800; }.status-filter button { border:1px solid var(--line); border-radius:999px; padding:6px 10px; background:#fff; color:var(--brand-dark); cursor:pointer; font:800 .76rem inherit; }.status-filter button.active { border-color:var(--brand); background:var(--brand); color:#fff; }
     .grid { display:grid; grid-template-columns:1fr; gap:16px; }
     section { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
     h3 { margin:0; padding:13px 16px; color:#fff; font-size:1rem; } .home h3 { background:#2e7d32; } .away h3 { background:#e57d00; }
@@ -52,7 +52,8 @@
       <div class="notice-icon" aria-hidden="true">⛈️</div>
       <div><h2>Partits ajornats per tempesta</h2><p>S'han ajornat tots els partits compresos entre dissabte 3 d'octubre a les 17:00 i diumenge 4 d'octubre a les 14:00.</p></div>
     </div>
-    <p class="summary">8 partits afectats: 4 a casa i 4 a fora.</p>
+    <p id="summary" class="summary">8 partits afectats: 4 a casa i 4 a fora.</p>
+    <div class="status-filter" role="group" aria-label="Filtra per estat"><span>Mostra:</span><button class="active" type="button" data-status-filter="all">Tots</button><button type="button" data-status-filter="pending">Pendents</button><button type="button" data-status-filter="closed">Tancats</button></div>
     <div class="grid">
       <section class="home"><h3>Partits a casa · 4</h3><table><thead><tr><th>Dia i hora</th><th>Partit</th><th>Proposta de recuperació</th><th>Contacte</th><th>Data i hora per disputar</th></tr></thead><tbody>
         <tr data-game-id="cadet-a-m-barca"><td class="time">Ds. 03/10 · 17:45</td><td>Cadet A M vs BARÇA<div class="status">⛈️ Ajornat</div></td><td><span class="dates">5 o 6 de desembre</span><br><span class="place">Doble jornada: ds. 31/10 (juga dg. 1/11)</span><br><span class="place">Alternativa: ds. 7/11 (juga dg. 8/11)</span></td><td><div class="recovery-fields"><input class="recovery-date" type="date" aria-label="Data de recuperació" /><input class="recovery-time" type="time" aria-label="Hora de recuperació" /><button class="save-recovery" type="button">Desar</button><span class="recovery-status">Pendent de confirmar</span></div></td><td><div class="contact-fields"><input class="contact" type="text" aria-label="Contacte" placeholder="Nom, telèfon o correu" /><button class="save-contact" type="button">Desar</button><span class="contact-status"></span></div></td></tr>
@@ -74,6 +75,7 @@
   <script>
     const FIREBASE_DB_URL = 'https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
     const POSTPONED_GAMES_PATH = 'postponedGames/season-26-27';
+    let statusFilter = 'all';
     function firebaseUrl(path) {
       return FIREBASE_DB_URL.replace(/\/$/, '') + '/' + path.split('/').map(encodeURIComponent).join('/') + '.json';
     }
@@ -120,6 +122,25 @@
       const button = row.querySelector('.close-game');
       if (button) button.textContent = closed ? 'Reobrir' : 'Tancar';
       if (closed) setStatus(row, '✅ Tancat', 'ok');
+      applyStatusFilter();
+    }
+    function applyStatusFilter() {
+      const rows = Array.from(document.querySelectorAll('tr[data-game-id]'));
+      let visible = 0;
+      rows.forEach(function(row) {
+        const closed = row.dataset.closed === 'true';
+        const show = statusFilter === 'all' || (statusFilter === 'closed' ? closed : !closed);
+        row.hidden = !show;
+        if (show) visible += 1;
+      });
+      document.querySelectorAll('[data-status-filter]').forEach(function(button) {
+        button.classList.toggle('active', button.dataset.statusFilter === statusFilter);
+      });
+      const total = rows.length;
+      const closed = rows.filter(function(row) { return row.dataset.closed === 'true'; }).length;
+      const pending = total - closed;
+      const shown = statusFilter === 'all' ? total + ' partits afectats' : visible + ' partits ' + (statusFilter === 'closed' ? 'tancats' : 'pendents');
+      document.getElementById('summary').textContent = shown + ' · ' + pending + ' pendents i ' + closed + ' tancats.';
     }
     async function toggleClosedGame(row) {
       const date = row.querySelector('.recovery-date').value;
@@ -185,7 +206,11 @@
       closeButton.addEventListener('click', function() { toggleClosedGame(row); });
       row.querySelector('.recovery-fields').insertBefore(closeButton, row.querySelector('.recovery-status'));
     });
+    document.querySelectorAll('[data-status-filter]').forEach(function(button) {
+      button.addEventListener('click', function() { statusFilter = button.dataset.statusFilter; applyStatusFilter(); });
+    });
     loadRecoveryDates();
+    applyStatusFilter();
   </script>
 </body>
 </html>

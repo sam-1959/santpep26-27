@@ -18,7 +18,6 @@ var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // importació d'Apps Script; el node independent de taules està protegit per
 // les regles de Firebase.
 var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
-var TABLE_RESTRICTIONS_ALERT_EMAIL = "dtecnic@cbsantjosep.cat";
 // Contactes gestionats des de l'aplicació.
 var SEASON_CONTACTS_PATH = "seasonContacts/" + SEASON;
 var HEAD_COACHES_CONTACTS_PATH = SEASON_CONTACTS_PATH + "/headCoaches";
@@ -701,7 +700,14 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt,
     "",
     "Revisa Planificació de taules: https://sam-1959.github.io/santpep26-27/taules-planificacio.html"
   ]).join("\n");
-  MailApp.sendEmail(TABLE_RESTRICTIONS_ALERT_EMAIL, subject, body, {
+  var tableRestrictionsRecipient = generalCoordinationEmail();
+  if (!tableRestrictionsRecipient) {
+    Logger.log("No s'envia l'alerta de restriccions de taules: falta el contacte de Coordinació general.");
+    status.lastError = "Falta el contacte de Coordinació general.";
+    writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
+    return { checked: true, issues: issues.length, emailed: false, error: "missing_general_coordination" };
+  }
+  MailApp.sendEmail(tableRestrictionsRecipient, subject, body, {
     htmlBody: restrictionAlertEmailHtml(issues, forceCheck, latestChanges.length),
     name: "CB Sant Josep Badalona"
   });

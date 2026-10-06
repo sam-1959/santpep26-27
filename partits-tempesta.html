@@ -28,14 +28,14 @@
     .dates { color:#356b39; font-weight:800; }
     .recovery-fields { display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:235px; }
     .recovery-fields input { min-height:32px; padding:4px 6px; border:1px solid #cfc6db; border-radius:6px; background:#fff; color:var(--ink); font:inherit; font-size:.78rem; }
-    .recovery-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }
+    .recovery-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }.recovery-fields .close-game { background:#267331; }
     .recovery-status { display:block; width:100%; color:var(--muted); font-size:.72rem; }
     .recovery-status.ok { color:#267331; font-weight:700; }.recovery-status.error { color:#b3261e; font-weight:700; }
     .contact-fields { display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:190px; }
     .contact-fields input { flex:1 1 110px; min-width:0; min-height:32px; padding:4px 6px; border:1px solid #cfc6db; border-radius:6px; background:#fff; color:var(--ink); font:inherit; font-size:.78rem; }
     .contact-fields button { min-height:32px; padding:5px 9px; border:0; border-radius:6px; background:var(--brand); color:#fff; cursor:pointer; font:800 .75rem inherit; }
     .contact-status { display:block; width:100%; color:var(--muted); font-size:.72rem; }.contact-status.ok { color:#267331; font-weight:700; }.contact-status.error { color:#b3261e; font-weight:700; }
-    .proposal-empty { color:var(--muted); text-align:center; }
+    tr.closed td { background:#f3fbf4; } tr.closed .status { color:#267331; }.proposal-empty { color:var(--muted); text-align:center; }
     .calendar-link { display:inline-flex; margin-top:20px; padding:9px 14px; border-radius:999px; background:var(--brand); color:#fff; text-decoration:none; font-size:.86rem; font-weight:900; }
     footer { padding:18px; text-align:center; color:var(--muted); font-size:.75rem; }
     @media (max-width:760px) { main { width:min(100% - 24px,1100px); } .grid { grid-template-columns:1fr; } th, td { padding:9px; } }
@@ -102,7 +102,7 @@
       try {
         const response = await fetch(firebaseUrl(POSTPONED_GAMES_PATH + '/' + row.dataset.gameId), {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date: date, time: time, contact: contact, updatedAt: new Date().toISOString() })
+          body: JSON.stringify({ date: date, time: time, contact: contact, closed: row.dataset.closed === 'true', updatedAt: new Date().toISOString() })
         });
         if (!response.ok) throw new Error('No s’ha pogut desar.');
         if (source === 'recovery') setStatus(row, date && time ? 'Desat i compartit' : 'Pendent de confirmar', date && time ? 'ok' : '');
@@ -110,6 +110,39 @@
       } catch (error) {
         if (source === 'recovery') setStatus(row, 'No s’ha pogut desar.', 'error');
         else setContactStatus(row, 'No s’ha pogut desar.', 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
+    function applyClosedState(row, closed) {
+      row.dataset.closed = closed ? 'true' : 'false';
+      row.classList.toggle('closed', closed);
+      const button = row.querySelector('.close-game');
+      if (button) button.textContent = closed ? 'Reobrir' : 'Tancar';
+      if (closed) setStatus(row, '✅ Tancat', 'ok');
+    }
+    async function toggleClosedGame(row) {
+      const date = row.querySelector('.recovery-date').value;
+      const time = row.querySelector('.recovery-time').value;
+      const contact = row.querySelector('.contact').value.trim();
+      const nextClosed = row.dataset.closed !== 'true';
+      if (nextClosed && (!date || !time)) {
+        setStatus(row, 'Desa data i hora abans de tancar.', 'error');
+        return;
+      }
+      const button = row.querySelector('.close-game');
+      button.disabled = true;
+      setStatus(row, nextClosed ? 'Tancant…' : 'Reobrint…');
+      try {
+        const response = await fetch(firebaseUrl(POSTPONED_GAMES_PATH + '/' + row.dataset.gameId), {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: date, time: time, contact: contact, closed: nextClosed, updatedAt: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error('No s’ha pogut desar.');
+        applyClosedState(row, nextClosed);
+        if (!nextClosed) setStatus(row, date && time ? 'Desat i compartit' : 'Pendent de confirmar', date && time ? 'ok' : '');
+      } catch (error) {
+        setStatus(row, 'No s’ha pogut desar.', 'error');
       } finally {
         button.disabled = false;
       }
@@ -125,7 +158,8 @@
           row.querySelector('.recovery-date').value = saved.date || '';
           row.querySelector('.recovery-time').value = saved.time || '';
           row.querySelector('.contact').value = saved.contact || '';
-          setStatus(row, saved.date && saved.time ? 'Desat i compartit' : 'Pendent de confirmar', saved.date && saved.time ? 'ok' : '');
+          applyClosedState(row, saved.closed === true);
+          if (!saved.closed) setStatus(row, saved.date && saved.time ? 'Desat i compartit' : 'Pendent de confirmar', saved.date && saved.time ? 'ok' : '');
           if (saved.contact) setContactStatus(row, 'Desat i compartit', 'ok');
         });
       } catch (error) {
@@ -144,6 +178,12 @@
       }
       row.querySelector('.save-recovery').addEventListener('click', function() { saveGame(row, 'recovery'); });
       row.querySelector('.save-contact').addEventListener('click', function() { saveGame(row, 'contact'); });
+      const closeButton = document.createElement('button');
+      closeButton.className = 'close-game';
+      closeButton.type = 'button';
+      closeButton.textContent = 'Tancar';
+      closeButton.addEventListener('click', function() { toggleClosedGame(row); });
+      row.querySelector('.recovery-fields').append(closeButton);
     });
     loadRecoveryDates();
   </script>

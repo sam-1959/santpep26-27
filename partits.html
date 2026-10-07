@@ -856,7 +856,7 @@
     const gameEditOtherLocationField=document.getElementById('gameEditOtherLocationField');
     const HOME_VENUES=["Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
     function knownHomeVenue(location){
-      const value=normalize(location);
+      const value=String(location || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
       if(!value) return "";
       if(value.includes("colina")) return HOME_VENUES[0];
       if(value.includes("montigala")) return HOME_VENUES[1];

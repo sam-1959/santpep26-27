@@ -5,7 +5,8 @@
 // 2. Deploy > New deployment > Web app.
 // 3. Execute as: Me.
 // 4. Who has access: Anyone.
-// 5. Autoritza MailApp i UrlFetchApp.
+// 5. Executa `autoritzarAvisosCanvisManualsCalendar()` des de l'editor i
+//    autoritza MailApp i UrlFetchApp (no envia cap correu).
 // 6. Copia la URL acabada en /exec a CALENDAR_MANUAL_NOTIFY_URL de partits.html.
 //
 // El servei valida el token de Firebase de l'usuari que desa el canvi i només
@@ -21,7 +22,7 @@ function doGet() {
 
 function doPost(e) {
   try {
-    var request = JSON.parse((e.postData && e.postData.contents) || "{}");
+    var request = JSON.parse(((e && e.postData && e.postData.contents) || "{}"));
     if (request.action !== "manualCalendarEdit") {
       throw new Error("Acció no permesa.");
     }
@@ -53,6 +54,14 @@ function doPost(e) {
     Logger.log("Error enviant l'avís manual de calendari: " + error);
     return respostaJson({ ok: false, error: String(error) });
   }
+}
+
+// Executa aquesta funció una vegada des de l'editor d'Apps Script per
+// autoritzar MailApp i UrlFetchApp. No envia cap correu.
+function autoritzarAvisosCanvisManualsCalendar() {
+  var quota = MailApp.getRemainingDailyQuota();
+  var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { muteHttpExceptions: true });
+  return { ok: true, mailQuota: quota, firebaseStatus: response.getResponseCode() };
 }
 
 function validarUsuariFirebase(idToken) {

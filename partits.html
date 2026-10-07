@@ -545,19 +545,13 @@
     }
 
     function iconLegend(){
-      const importStatus = renderImportStatus();
       return '<div class="legend" aria-label="Llegenda d&apos;icones">' +
         '<span class="legend-item"><span class="friendly" title="Partit amistós">🤝</span> Amistós</span>' +
         '<span class="legend-item"><span class="mini-mark" title="Partit de Mini">🍼</span> Mini</span>' +
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
         '<span class="legend-item"><span class="storm-mark" title="Partit ajornat per tempesta">⛈️</span> Ajornat per tempesta</span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
-        importStatus +
         '</div>';
-    }
-    function renderImportStatus(){
-      const checkedAt = fmtImportDate(DATA.latestChanges && (DATA.latestChanges.checkedAt || DATA.latestChanges.importedAt));
-      return checkedAt ? '<div class="import-status">Calendari comprovat: ' + checkedAt + '</div>' : '';
     }
 
     function miniMark(g){

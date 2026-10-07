@@ -28,10 +28,12 @@ var CALENDAR_CHANGE_TEAMS_WITHOUT_COACH_EMAIL = { JBF: true };
 var CALENDARS = [
   {
     sex: "M",
+    id: "e6e366d49523bee10af33b961767a8c3228b60cb30066e3fdc04704077f65a9f@group.calendar.google.com",
     url: "https://calendar.google.com/calendar/ical/e6e366d49523bee10af33b961767a8c3228b60cb30066e3fdc04704077f65a9f%40group.calendar.google.com/public/basic.ics",
   },
   {
     sex: "F",
+    id: "6vssihbaio24d4s1220h8km6v8@group.calendar.google.com",
     url: "https://calendar.google.com/calendar/ical/6vssihbaio24d4s1220h8km6v8%40group.calendar.google.com/public/basic.ics",
   },
 ];
@@ -204,7 +206,7 @@ function friendlyCost(sigla, rival) {
   return null;
 }
 
-function parseCalendar(ics) {
+function parseCalendar(ics, calendarId) {
   var raw = String(ics || "").replace(/\r?\n[ \t]/g, "");
   var events = [];
   var re = /BEGIN:VEVENT([\s\S]*?)END:VEVENT/g;
@@ -253,6 +255,8 @@ function parseCalendar(ics) {
       rival: rival,
       home: home,
       loc: loc,
+      calendarId: calendarId || "",
+      icalUid: cleanText(field(block, "UID")),
     };
     if (friendly) game.friendly = true;
     if (cost != null) game.cost = cost;
@@ -264,7 +268,7 @@ function parseCalendar(ics) {
 function buildData(calendars) {
   var games = [];
   calendars.forEach(function(calendar) {
-    games = games.concat(parseCalendar(calendar.ics));
+    games = games.concat(parseCalendar(calendar.ics, calendar.id));
   });
   games.sort(function(a, b) {
     if (a.date !== b.date) return a.date < b.date ? -1 : 1;

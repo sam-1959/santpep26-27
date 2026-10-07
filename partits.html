@@ -925,7 +925,8 @@
         showMonth(monthIndex, weekIndex);
         notifyManualCalendarEdit({
           date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival,
-          home:edit.home, loc:edit.loc, friendly:edit.friendly
+          home:edit.home, loc:edit.loc, friendly:edit.friendly,
+          calendarId:game.calendarId || '', icalUid:game.icalUid || ''
         }, changes, token);
       }catch(err){
         console.error('No s\'han pogut desar els canvis del partit.',err);

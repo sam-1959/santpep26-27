@@ -15,6 +15,13 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var FIREBASE_API_KEY = "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
+var OWN_TEAM_CODES = {
+  "Infantil A|M": "IAM", "Infantil B|M": "IBM", "Premini B|M": "PBM", "Premini A|M": "PAM",
+  "Mini A|M": "MAM", "Mini B|M": "MBM", "Cadet A|M": "CAM", "Cadet B|M": "CBM",
+  "Júnior A|M": "JAM", "Júnior B|M": "JBM", "Sènior A|M": "SAM", "Sènior B|M": "SBM",
+  "Infantil|F": "IF", "Mini|F": "MF", "Cadet|F": "CF", "Cadet B|F": "CBF",
+  "Júnior A|F": "JAF", "Júnior B|F": "JBF", "Sènior A|F": "SAF"
+};
 
 function doGet() {
   return respostaJson({ ok: true, service: "calendar-manual-notify" });
@@ -42,6 +49,7 @@ function doPost(e) {
     }) : [];
     if (!changes.length) return respostaJson({ ok: true, skipped: true, reason: "without_changes" });
 
+    var googleSync = sincronitzarPartitGoogleCalendar(game);
     var teamLabel = String(game.team) + " " + String(game.sex);
     var change = { type: "changed", game: game, fields: changes };
     var subject = "Canvi de calendari · " + teamLabel;
@@ -49,7 +57,7 @@ function doPost(e) {
       htmlBody: calendarChangeEmailHtml(teamLabel, [change]),
       name: "CB Sant Josep Badalona"
     });
-    return respostaJson({ ok: true, sentTo: destinatari });
+    return respostaJson({ ok: true, sentTo: destinatari, googleSync: googleSync });
   } catch (error) {
     Logger.log("Error enviant l'avís manual de calendari: " + error);
     return respostaJson({ ok: false, error: String(error) });
@@ -62,6 +70,54 @@ function autoritzarAvisosCanvisManualsCalendar() {
   var quota = MailApp.getRemainingDailyQuota();
   var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { muteHttpExceptions: true });
   return { ok: true, mailQuota: quota, firebaseStatus: response.getResponseCode() };
+}
+
+// Requereix habilitar el servei avançat "Google Calendar API" al projecte
+// d'Apps Script. Cerca l'esdeveniment per iCalUID i en manté la durada.
+function sincronitzarPartitGoogleCalendar(game) {
+  if (!game.calendarId || !game.icalUid) {
+    throw new Error("Falta l'identificador de Google Calendar del partit. Torna a importar els calendaris abans d'editar-lo.");
+  }
+  var result = Calendar.Events.list(game.calendarId, { iCalUID: game.icalUid, maxResults: 2 });
+  var event = result.items && result.items[0];
+  if (!event) throw new Error("No s'ha trobat l'esdeveniment original de Google Calendar.");
+
+  var durationMinutes = 90;
+  if (event.start && event.start.dateTime && event.end && event.end.dateTime) {
+    var duration = new Date(event.end.dateTime).getTime() - new Date(event.start.dateTime).getTime();
+    if (duration > 0) durationMinutes = Math.round(duration / 60000);
+  }
+  var startDate = new Date(game.date + "T" + game.time + ":00");
+  var endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+  var teamCode = OWN_TEAM_CODES[String(game.team) + "|" + String(game.sex)];
+  if (!teamCode) throw new Error("No s'ha identificat el codi de l'equip.");
+  var markers = String(event.summary || "").match(/[🏀🤝🍼]/g);
+  var summary = (markers && markers.length ? markers.join("") + " " : "") +
+    (game.home ? teamCode + " Vs " + game.rival : game.rival + " Vs " + teamCode);
+  var patch = {
+    summary: summary,
+    location: game.loc || "",
+    start: { dateTime: formatCalendarDateTime(startDate), timeZone: "Europe/Madrid" },
+    end: { dateTime: formatCalendarDateTime(endDate), timeZone: "Europe/Madrid" }
+  };
+  Calendar.Events.patch(patch, game.calendarId, event.id);
+  return { ok: true, calendarId: game.calendarId, eventId: event.id };
+}
+
+function formatCalendarDateTime(date) {
+  return Utilities.formatDate(date, "Europe/Madrid", "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+// Executa aquesta funció per autoritzar i comprovar l'accés als dos calendaris.
+function comprovarPermisosCalendarisGoogle() {
+  var calendars = [
+    "e6e366d49523bee10af33b961767a8c3228b60cb30066e3fdc04704077f65a9f@group.calendar.google.com",
+    "6vssihbaio24d4s1220h8km6v8@group.calendar.google.com"
+  ];
+  return calendars.map(function(calendarId) {
+    var calendar = Calendar.Calendars.get(calendarId);
+    return { id: calendar.id, summary: calendar.summary, accessRole: calendar.accessRole };
+  });
 }
 
 function validarUsuariFirebase(idToken) {

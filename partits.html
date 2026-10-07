@@ -277,6 +277,7 @@
     const calendarAuthReady=new Promise(function(resolve){ onAuthStateChanged(calendarAuth,function(user){ calendarUser=user; resolve(user); }); });
     const CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
     const GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
+    const MANUAL_CHANGES_FIREBASE_PATH = "calendarGames/season-26-27/manualChanges";
     const content = document.getElementById('content');
     const CHANGES_PER_PAGE = 3;
     let changesPage = 0;
@@ -330,6 +331,7 @@
     }
     function gameEditDataAttribute(g){ return encodeURIComponent(gameEditKey(g)); }
     let gameEdits={};
+    let manualChanges=[];
 
     const changedGames=new Set();
     const STORM_CANCELLED_FROM='2026-10-03T17:00';
@@ -342,6 +344,9 @@
         changedGames.add(changedGameKey(c.game));
         });
       }
+      manualChanges.forEach(function(change){
+        if(change && change.game) changedGames.add(changedGameKey(change.game));
+      });
     }
     rebuildChangedGames();
 
@@ -377,6 +382,7 @@
         const remote = await response.json();
         if(remote && Array.isArray(remote.weeks) && remote.weeks.length){
           DATA = remote;
+          manualChanges=Object.keys(remote.manualChanges || {}).map(function(id){ return remote.manualChanges[id]; }).filter(Boolean);
         }
       }catch(err){
         console.warn("No s'han pogut carregar els calendaris de Firebase; s'utilitzen les dades incrustades.", err);
@@ -390,7 +396,9 @@
         const response=await fetch(firebaseDataUrl(GAME_EDITS_FIREBASE_PATH, token), { cache:'no-store' });
         if(!response.ok) return;
         const saved=await response.json();
-        gameEdits=saved && typeof saved==='object' ? saved : {};
+        const allEdits=saved && typeof saved==='object' ? saved : {};
+        gameEdits={};
+        Object.keys(allEdits).forEach(function(key){ gameEdits[key]=allEdits[key]; });
         DATA.weeks.forEach(function(week){ week.games.forEach(function(game){
           const key=gameEditKey(game);
           game._editKey=key;
@@ -400,6 +408,15 @@
       }catch(err){
         console.warn("No s'han pogut carregar els ajustos manuals dels partits.", err);
       }
+    }
+
+    async function saveManualChange(change, token){
+      const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+      const response=await fetch(firebaseDataUrl(MANUAL_CHANGES_FIREBASE_PATH+'/'+id, token), {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(change)
+      });
+      if(!response.ok) throw new Error('Firebase historial '+response.status);
+      manualChanges.unshift(change);
     }
 
     function weekdayForDate(iso){ return new Date(iso+'T12:00:00').getDay(); }
@@ -739,10 +756,16 @@
       const cutoff=reference.getTime() - (7 * 24 * 60 * 60 * 1000);
       // Firebase conserva un historial recent: només exposem l'última setmana,
       // que continua paginada quan supera les tres entrades.
-      const changes=((latest && latest.changes) || []).filter(function(change){
+      const importedChanges=((latest && latest.changes) || []).filter(function(change){
         const importedAt=new Date(changeImportDate(change, fallback)).getTime();
         return Number.isFinite(importedAt) && importedAt >= cutoff;
       });
+      const manualCutoff=Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentManualChanges=manualChanges.filter(function(change){
+        const changedAt=new Date(change && change.importedAt).getTime();
+        return Number.isFinite(changedAt) && changedAt >= manualCutoff;
+      });
+      const changes=importedChanges.concat(recentManualChanges);
       return changes.map(function(change,index){
         return {change:change,index:index};
       }).sort(function(a,b){
@@ -757,7 +780,7 @@
 
     function renderLatestChanges(){
       const latest=DATA.latestChanges;
-      if(!latest) return '';
+      if(!latest && !manualChanges.length) return '';
       const changes=orderedLatestChanges(latest);
       const total=changes.length;
       if(!total) return '<section class="changes"><div class="changes-head"><div><h3>Últims canvis</h3></div></div></section>';
@@ -883,6 +906,15 @@
         });
         if(!response.ok) throw new Error('Firebase '+response.status);
         gameEdits[key]=edit;
+        if(changes.length){
+          const manualChange={
+            type:'changed', manual:true, importedAt:new Date().toISOString(),
+            game:{ date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival, home:edit.home, loc:edit.loc, friendly:edit.friendly },
+            fields:changes
+          };
+          try{ await saveManualChange(manualChange, token); }
+          catch(historyError){ console.warn("No s'ha pogut registrar el canvi manual a l'historial.", historyError); }
+        }
         Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date)});
         moveGameToItsWeek(game);
         rebuildChangedGames();

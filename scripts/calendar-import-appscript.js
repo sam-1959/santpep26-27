@@ -889,6 +889,9 @@ function importarCalendarisPartits() {
     return { sex: c.sex, ics: fetchText(c.url) };
   });
   var data = buildData(calendars);
+  // L'historial de canvis manuals és públic a la vista de calendaris i no
+  // s'ha de perdre quan l'importador substitueix el calendari complet.
+  if (oldData && oldData.manualChanges) data.manualChanges = oldData.manualChanges;
   var now = new Date().toISOString();
   var latestChanges = oldHasWeeks ? buildChangeList(oldData, data) : [];
   data.latestChanges = oldHasWeeks

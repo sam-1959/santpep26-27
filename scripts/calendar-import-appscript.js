@@ -927,6 +927,20 @@ function crearTriggerImportacioCalendaris() {
     .create();
 }
 
+// Atura només la importació automàtica. La funció
+// importarCalendarisPartits() continua disponible per executar-la manualment.
+function aturarImportacioAutomaticaCalendaris() {
+  var removed = 0;
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === "importarCalendarisPartits") {
+      ScriptApp.deleteTrigger(trigger);
+      removed += 1;
+    }
+  });
+  Logger.log("Triggers d'importació automàtica eliminats: " + removed);
+  return { ok: true, removed: removed };
+}
+
 function doGet() {
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true, service: "calendar-import", path: CALENDAR_FIREBASE_PATH }))

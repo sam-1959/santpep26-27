@@ -269,6 +269,9 @@
     let DATA = JSON.parse(document.getElementById('partitsData').textContent);
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_CONFIG = { apiKey:"AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU", authDomain:"coord-fa09e.firebaseapp.com", databaseURL:FIREBASE_DB_URL, projectId:"coord-fa09e", storageBucket:"coord-fa09e.firebasestorage.app", messagingSenderId:"509431001997", appId:"1:509431001997:web:561fa966029d873131c3c4" };
+    // URL /exec del nou Apps Script calendar-manual-notify-appscript.js.
+    // Es completarà després del seu desplegament com a aplicació web.
+    const CALENDAR_MANUAL_NOTIFY_URL = "";
     const calendarAuth=getAuth(initializeApp(FIREBASE_CONFIG));
     let calendarUser=null;
     const calendarAuthReady=new Promise(function(resolve){ onAuthStateChanged(calendarAuth,function(user){ calendarUser=user; resolve(user); }); });
@@ -354,6 +357,17 @@
         calendarUser=result.user;
       }
       return calendarUser ? calendarUser.getIdToken() : '';
+    }
+    async function notifyManualCalendarEdit(game, changes, token){
+      if(!CALENDAR_MANUAL_NOTIFY_URL || !changes.length || !token) return;
+      try{
+        await fetch(CALENDAR_MANUAL_NOTIFY_URL, {
+          method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({ action:'manualCalendarEdit', idToken:token, game:game, changes:changes })
+        });
+      }catch(error){
+        console.warn("No s'ha pogut enviar l'avís del canvi manual de calendari.", error);
+      }
     }
 
     async function loadRemoteCalendarData(){
@@ -839,6 +853,7 @@
       const key=document.getElementById('gameEditKey').value;
       const game=findGameByEditKey(key);
       if(!game) return;
+      const previous={ date:game.date, time:game.time, rival:game.rival, loc:game.loc || '', home:!!game.home, friendly:!!game.friendly };
       const edit={
         date:document.getElementById('gameEditDate').value,
         time:document.getElementById('gameEditTime').value,
@@ -849,6 +864,14 @@
         updatedAt:new Date().toISOString()
       };
       if(!edit.date || !edit.time || !edit.rival) return;
+      const changes=[
+        {label:'Data', from:previous.date, to:edit.date},
+        {label:'Hora', from:previous.time, to:edit.time},
+        {label:'Rival', from:previous.rival, to:edit.rival},
+        {label:'Lloc', from:previous.loc, to:edit.loc},
+        {label:'Casa/fora', from:previous.home?'casa':'fora', to:edit.home?'casa':'fora'},
+        {label:'Amistós', from:previous.friendly?'sí':'no', to:edit.friendly?'sí':'no'}
+      ].filter(function(change){ return change.from !== change.to; });
       const submit=gameEditForm.querySelector('button[type="submit"]');
       submit.disabled=true;
       gameEditStatus.textContent='Desant…';
@@ -869,6 +892,10 @@
         const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
         closeGameEditor();
         showMonth(monthIndex, weekIndex);
+        notifyManualCalendarEdit({
+          date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival,
+          home:edit.home, loc:edit.loc, friendly:edit.friendly
+        }, changes, token);
       }catch(err){
         console.error('No s\'han pogut desar els canvis del partit.',err);
         gameEditStatus.textContent='No s\'ha pogut desar. Comprova que tens permís.';

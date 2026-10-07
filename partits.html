@@ -206,6 +206,7 @@
     .edit-field.full { grid-column:1 / -1; }
     .edit-field[hidden] { display:none; }
     .edit-field input, .edit-field select { width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 9px; color:var(--ink); font:inherit; font-size:.9rem; background:#fff; }
+    .edit-checks { grid-column:1 / -1; display:flex; align-items:center; gap:22px; min-height:36px; }
     .edit-check { display:flex; align-items:center; gap:7px; color:var(--ink); font-size:.84rem; font-weight:700; }
     .edit-actions { display:flex; justify-content:flex-end; align-items:center; gap:9px; margin-top:18px; }
     .edit-status { margin-right:auto; color:var(--muted); font-size:.76rem; font-weight:700; }
@@ -263,8 +264,10 @@
           </select>
         </label>
         <label class="edit-field" id="gameEditOtherLocationField" hidden>Indica la instal·lació<input id="gameEditOtherLocation" type="text" /></label>
-        <label class="edit-check"><input id="gameEditHome" type="checkbox" /> Partit a casa</label>
-        <label class="edit-check"><input id="gameEditFriendly" type="checkbox" /> Partit amistós</label>
+        <div class="edit-checks">
+          <label class="edit-check"><input id="gameEditHome" type="checkbox" /> Partit a casa</label>
+          <label class="edit-check"><input id="gameEditFriendly" type="checkbox" /> Partit amistós</label>
+        </div>
       </div>
       <div class="edit-actions"><span class="edit-status" id="gameEditStatus"></span><button class="edit-button" type="button" id="gameEditCancel">Cancel·lar</button><button class="edit-button primary" type="submit">Desar canvis</button></div>
     </form>

@@ -12,7 +12,6 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON = "season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/" + SEASON;
-var CALENDAR_GAME_EDITS_FIREBASE_PATH = CALENDAR_FIREBASE_PATH + "/manualEdits";
 var TABLE_ASSIGNMENTS_FIREBASE_PATH = "miniTablesAssignments/" + SEASON;
 var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/" + SEASON;
 // Es desa dins del calendari perquè aquest node ja està autoritzat per a la
@@ -883,71 +882,6 @@ function notifyCalendarChangesByTeam(latestChanges) {
   return { emailed: emailed, teams: groups.length };
 }
 
-// Els canvis desats manualment a Calendaris de partits queden en una cua dins
-// del mateix calendari. Temporalment només s'avisa Coordinació general; no
-// s'envia cap correu a l'entrenador/a de l'equip.
-function manualCalendarEditChange(edit) {
-  var before = edit.previous || {};
-  var fields = [
-    { label: "Data", from: before.date, to: edit.date },
-    { label: "Hora", from: before.time, to: edit.time },
-    { label: "Rival", from: before.rival, to: edit.rival },
-    { label: "Lloc", from: before.loc || "", to: edit.loc || "" },
-    { label: "Casa/fora", from: before.home ? "casa" : "fora", to: edit.home ? "casa" : "fora" },
-    { label: "Amistós", from: before.friendly ? "sí" : "no", to: edit.friendly ? "sí" : "no" }
-  ].filter(function(field) { return String(field.from || "") !== String(field.to || ""); });
-  return {
-    type: "changed",
-    game: {
-      date: edit.date,
-      time: edit.time,
-      team: edit.team,
-      sex: edit.sex,
-      rival: edit.rival,
-      home: !!edit.home,
-      loc: edit.loc || "",
-      friendly: !!edit.friendly
-    },
-    fields: fields
-  };
-}
-
-function notifyManualCalendarEditsToCoordination() {
-  var edits = readFirebase(CALENDAR_GAME_EDITS_FIREBASE_PATH) || {};
-  var coordinationEmail = generalCoordinationEmail();
-  if (!coordinationEmail) {
-    Logger.log("No s'envien avisos manuals de calendari: falta el contacte de Coordinació general.");
-    return { queued: 0, emailed: 0 };
-  }
-  var queued = Object.keys(edits).filter(function(key) {
-    var notification = edits[key] && edits[key].notification;
-    return notification && notification.requestedAt && notification.sentAt !== notification.requestedAt;
-  });
-  var emailed = 0;
-  queued.forEach(function(key) {
-    var edit = edits[key];
-    if (!edit.team || !edit.sex || !edit.date || !edit.time || !edit.rival) return;
-    var change = manualCalendarEditChange(edit);
-    var label = teamLabelForGame(change.game);
-    var body = [
-      "S'ha desat un canvi manual en el calendari de " + label + ".",
-      "",
-      calendarChangeDescription(change),
-      "",
-      "Calendari de partits: https://sam-1959.github.io/santpep26-27/partits.html"
-    ].join("\n");
-    MailApp.sendEmail(coordinationEmail, "Canvi manual de calendari · " + label, body, {
-      htmlBody: calendarChangeEmailHtml(label, [change]),
-      name: "CB Sant Josep Badalona"
-    });
-    edit.notification.sentAt = edit.notification.requestedAt;
-    edit.notification.sentAtIso = new Date().toISOString();
-    writeFirebase(CALENDAR_GAME_EDITS_FIREBASE_PATH + "/" + key, edit);
-    emailed += 1;
-  });
-  return { queued: queued.length, emailed: emailed };
-}
-
 function importarCalendarisPartits() {
   var oldData = readFirebase(CALENDAR_FIREBASE_PATH);
   var oldHasWeeks = oldData && Array.isArray(oldData.weeks) && oldData.weeks.length;
@@ -955,9 +889,6 @@ function importarCalendarisPartits() {
     return { sex: c.sex, ics: fetchText(c.url) };
   });
   var data = buildData(calendars);
-  // L'importador substitueix el calendari complet: preservem els ajustos
-  // manuals i l'estat dels seus avisos pendents.
-  if (oldData && oldData.manualEdits) data.manualEdits = oldData.manualEdits;
   var now = new Date().toISOString();
   var latestChanges = oldHasWeeks ? buildChangeList(oldData, data) : [];
   data.latestChanges = oldHasWeeks
@@ -970,16 +901,10 @@ function importarCalendarisPartits() {
   } catch (error) {
     Logger.log("No s'han pogut enviar els avisos de canvis de calendari: " + error);
   }
-  var manualCalendarNotifications = { queued: 0, emailed: 0 };
-  try {
-    manualCalendarNotifications = notifyManualCalendarEditsToCoordination();
-  } catch (error) {
-    Logger.log("No s'han pogut enviar els avisos manuals de calendari: " + error);
-  }
   var restrictions = verifyTableRestrictionsAndAlert(data, latestChanges, now);
   var total = allGames(data).length;
   Logger.log("Calendaris importats: " + data.weeks.length + " setmanes, " + total + " partits, " + latestChanges.length + " canvi(s) nous. Restriccions: " + restrictions.issues + ".");
-  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, calendarNotifications: calendarNotifications, manualCalendarNotifications: manualCalendarNotifications, restrictions: restrictions };
+  return { ok: true, checkedAt: now, weeks: data.weeks.length, games: total, changes: latestChanges.length, calendarNotifications: calendarNotifications, restrictions: restrictions };
 }
 
 function crearTriggerImportacioCalendaris() {

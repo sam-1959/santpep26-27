@@ -273,9 +273,7 @@
     let calendarUser=null;
     const calendarAuthReady=new Promise(function(resolve){ onAuthStateChanged(calendarAuth,function(user){ calendarUser=user; resolve(user); }); });
     const CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
-    // El procés d'importació llegeix aquest node per enviar l'avís pendent
-    // de cada ajust manual, sense que l'ajust es perdi en importar de nou.
-    const GAME_EDITS_FIREBASE_PATH = "calendarGames/season-26-27/manualEdits";
+    const GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
     const content = document.getElementById('content');
     const CHANGES_PER_PAGE = 3;
     let changesPage = 0;
@@ -841,7 +839,6 @@
       const key=document.getElementById('gameEditKey').value;
       const game=findGameByEditKey(key);
       if(!game) return;
-      const previous={ date:game.date, time:game.time, rival:game.rival, loc:game.loc || '', home:!!game.home, friendly:!!game.friendly };
       const edit={
         date:document.getElementById('gameEditDate').value,
         time:document.getElementById('gameEditTime').value,
@@ -849,16 +846,9 @@
         loc:document.getElementById('gameEditLocation').value.trim(),
         home:document.getElementById('gameEditHome').checked,
         friendly:document.getElementById('gameEditFriendly').checked,
-        team:game.team,
-        sex:game.sex,
-        fam:game.fam,
-        previous:previous,
         updatedAt:new Date().toISOString()
       };
       if(!edit.date || !edit.time || !edit.rival) return;
-      const changed=['date','time','rival','loc','home','friendly'].some(function(field){ return edit[field]!==previous[field]; });
-      if(changed) edit.notification={ requestedAt:new Date().toISOString() };
-      else if(game.notification) edit.notification=game.notification;
       const submit=gameEditForm.querySelector('button[type="submit"]');
       submit.disabled=true;
       gameEditStatus.textContent='Desant…';

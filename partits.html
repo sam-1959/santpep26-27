@@ -204,7 +204,7 @@
     .edit-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .edit-field { display:flex; flex-direction:column; gap:4px; font-size:.75rem; color:var(--muted); font-weight:800; }
     .edit-field.full { grid-column:1 / -1; }
-    .edit-field input { width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 9px; color:var(--ink); font:inherit; font-size:.9rem; }
+    .edit-field input, .edit-field select { width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 9px; color:var(--ink); font:inherit; font-size:.9rem; background:#fff; }
     .edit-check { display:flex; align-items:center; gap:7px; color:var(--ink); font-size:.84rem; font-weight:700; }
     .edit-actions { display:flex; justify-content:flex-end; align-items:center; gap:9px; margin-top:18px; }
     .edit-status { margin-right:auto; color:var(--muted); font-size:.76rem; font-weight:700; }
@@ -252,7 +252,16 @@
         <label class="edit-field">Data<input id="gameEditDate" type="date" required /></label>
         <label class="edit-field">Hora<input id="gameEditTime" type="time" required /></label>
         <label class="edit-field full">Rival<input id="gameEditRival" type="text" required /></label>
-        <label class="edit-field full">Instal·lació<input id="gameEditLocation" type="text" /></label>
+        <label class="edit-field full">Instal·lació
+          <select id="gameEditVenue">
+            <option value="">Sense especificar</option>
+            <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
+            <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
+            <option value="Poliesportiu Bufalà">Poliesportiu Bufalà</option>
+            <option value="Altres">Altres</option>
+          </select>
+        </label>
+        <label class="edit-field full" id="gameEditOtherLocationField" hidden>Indica la instal·lació<input id="gameEditOtherLocation" type="text" /></label>
         <label class="edit-check"><input id="gameEditHome" type="checkbox" /> Partit a casa</label>
         <label class="edit-check"><input id="gameEditFriendly" type="checkbox" /> Partit amistós</label>
       </div>
@@ -842,6 +851,33 @@
     const gameEditDialog=document.getElementById('gameEditDialog');
     const gameEditForm=document.getElementById('gameEditForm');
     const gameEditStatus=document.getElementById('gameEditStatus');
+    const gameEditVenue=document.getElementById('gameEditVenue');
+    const gameEditOtherLocation=document.getElementById('gameEditOtherLocation');
+    const gameEditOtherLocationField=document.getElementById('gameEditOtherLocationField');
+    const HOME_VENUES=["Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
+    function knownHomeVenue(location){
+      const value=normalize(location);
+      if(!value) return "";
+      if(value.includes("colina")) return HOME_VENUES[0];
+      if(value.includes("montigala")) return HOME_VENUES[1];
+      if(value.includes("bufala")) return HOME_VENUES[2];
+      return "";
+    }
+    function updateOtherLocationField(){
+      const isOther=gameEditVenue.value === "Altres";
+      gameEditOtherLocationField.hidden=!isOther;
+      gameEditOtherLocation.required=isOther;
+      if(!isOther) gameEditOtherLocation.value='';
+    }
+    function setGameEditLocation(location){
+      const known=knownHomeVenue(location);
+      gameEditVenue.value=known || (location ? "Altres" : "");
+      gameEditOtherLocation.value=known ? "" : (location || "");
+      updateOtherLocationField();
+    }
+    function selectedGameLocation(){
+      return gameEditVenue.value === "Altres" ? gameEditOtherLocation.value.trim() : gameEditVenue.value;
+    }
     function findGameByEditKey(key){
       for(let i=0;i<DATA.weeks.length;i++){
         const game=DATA.weeks[i].games.find(function(item){ return gameEditKey(item)===key; });
@@ -856,7 +892,7 @@
       document.getElementById('gameEditDate').value=game.date || '';
       document.getElementById('gameEditTime').value=game.time || '';
       document.getElementById('gameEditRival').value=game.rival || '';
-      document.getElementById('gameEditLocation').value=game.loc || '';
+      setGameEditLocation(game.loc || '');
       document.getElementById('gameEditHome').checked=!!game.home;
       document.getElementById('gameEditFriendly').checked=!!game.friendly;
       document.getElementById('gameEditSubtitle').textContent=game.team+' '+(game.sex==='F'?'F':'M');
@@ -871,6 +907,7 @@
     function closeGameEditor(){ gameEditDialog.close(); }
     document.getElementById('gameEditClose').onclick=closeGameEditor;
     document.getElementById('gameEditCancel').onclick=closeGameEditor;
+    gameEditVenue.onchange=updateOtherLocationField;
     gameEditDialog.addEventListener('click', function(event){ if(event.target===gameEditDialog) closeGameEditor(); });
     gameEditForm.addEventListener('submit', async function(event){
       event.preventDefault();
@@ -882,7 +919,7 @@
         date:document.getElementById('gameEditDate').value,
         time:document.getElementById('gameEditTime').value,
         rival:document.getElementById('gameEditRival').value.trim(),
-        loc:document.getElementById('gameEditLocation').value.trim(),
+        loc:selectedGameLocation(),
         home:document.getElementById('gameEditHome').checked,
         friendly:document.getElementById('gameEditFriendly').checked,
         updatedAt:new Date().toISOString()

@@ -363,15 +363,17 @@
       return calendarUser ? calendarUser.getIdToken() : '';
     }
     async function notifyManualCalendarEdit(game, changes, token){
-      if(!CALENDAR_MANUAL_NOTIFY_URL || !changes.length || !token) return;
-      try{
-        await fetch(CALENDAR_MANUAL_NOTIFY_URL, {
-          method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({ action:'manualCalendarEdit', idToken:token, game:game, changes:changes })
-        });
-      }catch(error){
-        console.warn("No s'ha pogut enviar l'avís del canvi manual de calendari.", error);
-      }
+      if(!CALENDAR_MANUAL_NOTIFY_URL || !changes.length) return { ok:true, skipped:true };
+      if(!token) throw new Error("No s'ha pogut autenticar l'usuari per avisar del canvi.");
+      const response=await fetch(CALENDAR_MANUAL_NOTIFY_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({ action:'manualCalendarEdit', idToken:token, game:game, changes:changes })
+      });
+      let result={};
+      try{ result=await response.json(); }
+      catch(error){ throw new Error("L'endpoint d'avisos no ha retornat una resposta vàlida."); }
+      if(!response.ok || !result.ok) throw new Error(result.error || `L'avís no s'ha pogut enviar (${response.status}).`);
+      return result;
     }
 
     async function loadRemoteCalendarData(){
@@ -897,6 +899,7 @@
       const submit=gameEditForm.querySelector('button[type="submit"]');
       submit.disabled=true;
       gameEditStatus.textContent='Desant…';
+      let gameSaved=false;
       try{
         const token=await getCalendarToken(true);
         if(!token) throw new Error('No autenticat');
@@ -904,6 +907,7 @@
           method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(edit)
         });
         if(!response.ok) throw new Error('Firebase '+response.status);
+        gameSaved=true;
         gameEdits[key]=edit;
         if(changes.length){
           const manualChange={
@@ -921,16 +925,26 @@
         rebuildMonths();
         const weekIndex=DATA.weeks.findIndex(function(week){ return week.games.indexOf(game)>=0; });
         const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
-        closeGameEditor();
-        showMonth(monthIndex, weekIndex);
-        notifyManualCalendarEdit({
+        const notification=await notifyManualCalendarEdit({
           date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival,
           home:edit.home, loc:edit.loc, friendly:edit.friendly,
           calendarId:game.calendarId || '', icalUid:game.icalUid || ''
         }, changes, token);
+        closeGameEditor();
+        showMonth(monthIndex, weekIndex);
+        if(notification.googleSync && notification.googleSync.ok === false){
+          alert("El canvi s'ha desat i s'ha enviat el correu a Coordinació, però no s'ha pogut actualitzar Google Calendar: " + (notification.googleSync.error || "error desconegut"));
+        }
       }catch(err){
         console.error('No s\'han pogut desar els canvis del partit.',err);
-        gameEditStatus.textContent='No s\'ha pogut desar. Comprova que tens permís.';
+        if(gameSaved){
+          closeGameEditor();
+          const savedWeekIndex=DATA.weeks.findIndex(function(week){ return week.games.indexOf(game)>=0; });
+          showMonth(monthKeys.indexOf(monthKeyOf(DATA.weeks[savedWeekIndex])), savedWeekIndex);
+          alert("El canvi s'ha desat, però no s'ha pogut enviar l'avís ni sincronitzar Google Calendar: " + (err.message || err));
+        }else{
+          gameEditStatus.textContent='No s\'ha pogut desar. Comprova que tens permís.';
+        }
       }finally{
         submit.disabled=false;
       }

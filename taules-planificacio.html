@@ -313,8 +313,6 @@
       "Mini F",
       "Infantil A M",
       "Infantil B M",
-      "Infantil A F",
-      "Infantil B F",
       "Infantil F",
       "Cadet A M",
       "Cadet B M",
@@ -489,12 +487,7 @@
       const values = [
         ...BASE_TEAM_OPTIONS,
         ...Object.keys(TEAM_COACHES),
-        ...games.map(teamLabel),
-        ...Object.values(tablePeopleProfiles).flatMap(profile => [
-          ...(profile.playerTeams || []),
-          ...(profile.assistantTeams || []),
-          ...(profile.siblingTeams || [])
-        ])
+        ...allGames.map(teamLabel)
       ];
       return [...new Map(values
         .map(canonicalTeamName)
@@ -1023,6 +1016,18 @@
       const profiles = {};
       const rows = els.peopleProfiles.querySelectorAll("tbody tr");
       if (!rows.length) return;
+      const validTeams = new Map(teamOptions().map(team => {
+        const canonical = canonicalTeamName(team);
+        return [normalize(canonical), canonical];
+      }));
+      function profileTeams(value, fieldLabel, personName){
+        const entered = splitTeams(value).map(canonicalTeamName);
+        const invalid = entered.filter(team => !validTeams.has(normalize(team)));
+        if (invalid.length) {
+          throw new Error(`${personName}: ${fieldLabel} no és un equip vàlid (${invalid.join(", ")}). Selecciona un equip del club.`);
+        }
+        return entered.map(team => validTeams.get(normalize(team)));
+      }
       rows.forEach(row => {
         const key = row.dataset.personKey;
         const name = row.children[0].textContent.trim();
@@ -1030,9 +1035,9 @@
           name,
           active: row.querySelector('[data-field="active"]').checked,
           experienced: row.querySelector('[data-field="experienced"]').checked,
-          playerTeams: splitTeams(row.querySelector('[data-field="playerTeams"]').value),
-          assistantTeams: splitTeams(row.querySelector('[data-field="assistantTeams"]').value),
-          siblingTeams: splitTeams(row.querySelector('[data-field="siblingTeams"]').value)
+          playerTeams: profileTeams(row.querySelector('[data-field="playerTeams"]').value, "Juga a", name),
+          assistantTeams: profileTeams(row.querySelector('[data-field="assistantTeams"]').value, "Ajuda a", name),
+          siblingTeams: profileTeams(row.querySelector('[data-field="siblingTeams"]').value, "Equip germà", name)
         };
       });
       tablePeopleProfiles = profiles;
@@ -1878,9 +1883,9 @@
     });
 
     els.savePeopleProfiles.addEventListener("click", async () => {
-      collectPeopleProfiles();
-      setStatus("Guardant perfils...");
       try {
+        collectPeopleProfiles();
+        setStatus("Guardant perfils...");
         await savePeopleProfiles();
         setStatus("Perfils guardats.");
       } catch (error) {
@@ -1890,10 +1895,10 @@
     });
 
     els.generateProposal.addEventListener("click", async () => {
-      collectPeopleProfiles();
-      validationIssues = {};
-      setStatus("Generant proposta...");
       try {
+        collectPeopleProfiles();
+        validationIssues = {};
+        setStatus("Generant proposta...");
         await generateMonthlyProposal();
       } catch (error) {
         console.error(error);
@@ -1902,15 +1907,20 @@
     });
 
     els.verifyRestrictions.addEventListener("click", () => {
-      collectPeopleProfiles();
-      validationIssues = computeCurrentPeriodValidationIssues();
-      lastProposalLog = null;
-      render();
-      const issueCount = validationIssueCount();
-      if (issueCount) {
-        setStatus(`Restriccions verificades: ${issueCount} incidència(es). Revisa les files marcades en vermell.`, "error");
-      } else {
-        setStatus("Restriccions verificades: cap incidència al període seleccionat.");
+      try {
+        collectPeopleProfiles();
+        validationIssues = computeCurrentPeriodValidationIssues();
+        lastProposalLog = null;
+        render();
+        const issueCount = validationIssueCount();
+        if (issueCount) {
+          setStatus(`Restriccions verificades: ${issueCount} incidència(es). Revisa les files marcades en vermell.`, "error");
+        } else {
+          setStatus("Restriccions verificades: cap incidència al període seleccionat.");
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || "No s'han pogut validar els perfils.", "error");
       }
     });
 

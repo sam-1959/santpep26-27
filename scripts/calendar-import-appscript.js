@@ -890,7 +890,7 @@ function importarCalendarisPartits() {
   var oldData = readFirebase(CALENDAR_FIREBASE_PATH);
   var oldHasWeeks = oldData && Array.isArray(oldData.weeks) && oldData.weeks.length;
   var calendars = CALENDARS.map(function(c) {
-    return { sex: c.sex, ics: fetchText(c.url) };
+    return { id: c.id, sex: c.sex, ics: fetchText(c.url) };
   });
   var data = buildData(calendars);
   // L'historial de canvis manuals és públic a la vista de calendaris i no

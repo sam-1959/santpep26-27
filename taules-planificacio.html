@@ -171,7 +171,8 @@
     .people-table { width:100%; border-collapse:collapse; min-width:980px; font-size:0.84rem; }
     .people-table th, .people-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
     .people-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
-    .people-table input { width:100%; min-height:36px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; font:inherit; }
+    .people-table input, .people-table select { width:100%; min-height:36px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; font:inherit; }
+    .people-table select[multiple] { min-height:88px; }
     .people-table .active-cell { text-align:center; }
     .active-toggle { position:relative; display:inline-flex; align-items:center; justify-content:center; width:46px; height:26px; cursor:pointer; }
     .active-toggle input { position:absolute; opacity:0; width:1px; height:1px; min-height:0; padding:0; border:0; }
@@ -997,9 +998,9 @@
         row.dataset.personKey = key;
         row.innerHTML =
           `<td>${escapeHtml(name)}</td>` +
-          `<td><input data-field="playerTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.playerTeams || []).join(", "))}" placeholder="Equip on juga" /></td>` +
-          `<td><input data-field="assistantTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.assistantTeams || []).join(", "))}" placeholder="Equip on ajuda" /></td>` +
-          `<td><input data-field="siblingTeams" list="tableTeamOptions" autocomplete="off" value="${escapeHtml((profile.siblingTeams || []).join(", "))}" placeholder="Equip germà" /></td>` +
+          `<td>${profileTeamSelectHtml("playerTeams", profile.playerTeams, "Equips on juga")}</td>` +
+          `<td>${profileTeamSelectHtml("assistantTeams", profile.assistantTeams, "Equips on ajuda")}</td>` +
+          `<td>${profileTeamSelectHtml("siblingTeams", profile.siblingTeams, "Equips germans")}</td>` +
           `<td class="active-cell"><label class="active-toggle" title="Ja feia taula l'any passat"><input data-field="experienced" type="checkbox" ${profile.experienced === true ? "checked" : ""} /><span aria-hidden="true"></span></label></td>` +
           `<td class="active-cell"><label class="active-toggle" title="Activa per a noves assignacions"><input data-field="active" type="checkbox" ${profile.active === false ? "" : "checked"} /><span aria-hidden="true"></span></label></td>`;
         body.appendChild(row);
@@ -1008,8 +1009,16 @@
       wrap.className = "people-table-wrap";
       wrap.appendChild(table);
       els.peopleProfiles.innerHTML = "";
-      els.peopleProfiles.appendChild(renderTeamOptionsDatalist());
       els.peopleProfiles.appendChild(wrap);
+    }
+
+    function profileTeamSelectHtml(field, selectedTeams, label){
+      const selected = new Set((selectedTeams || []).map(canonicalTeamName).map(normalize));
+      const options = teamOptions().map(team => {
+        const canonical = canonicalTeamName(team);
+        return `<option value="${escapeHtml(canonical)}"${selected.has(normalize(canonical)) ? " selected" : ""}>${escapeHtml(canonical)}</option>`;
+      }).join("");
+      return `<select data-field="${field}" multiple size="4" aria-label="${escapeHtml(label)}" title="Pots seleccionar més d'un equip amb Ctrl o Cmd">${options}</select>`;
     }
 
     function collectPeopleProfiles(){
@@ -1020,8 +1029,8 @@
         const canonical = canonicalTeamName(team);
         return [normalize(canonical), canonical];
       }));
-      function profileTeams(value, fieldLabel, personName){
-        const entered = splitTeams(value).map(canonicalTeamName);
+      function profileTeams(field, fieldLabel, personName){
+        const entered = Array.from(field.selectedOptions || []).map(option => canonicalTeamName(option.value));
         const invalid = entered.filter(team => !validTeams.has(normalize(team)));
         if (invalid.length) {
           throw new Error(`${personName}: ${fieldLabel} no és un equip vàlid (${invalid.join(", ")}). Selecciona un equip del club.`);
@@ -1035,9 +1044,9 @@
           name,
           active: row.querySelector('[data-field="active"]').checked,
           experienced: row.querySelector('[data-field="experienced"]').checked,
-          playerTeams: profileTeams(row.querySelector('[data-field="playerTeams"]').value, "Juga a", name),
-          assistantTeams: profileTeams(row.querySelector('[data-field="assistantTeams"]').value, "Ajuda a", name),
-          siblingTeams: profileTeams(row.querySelector('[data-field="siblingTeams"]').value, "Equip germà", name)
+          playerTeams: profileTeams(row.querySelector('[data-field="playerTeams"]'), "Juga a", name),
+          assistantTeams: profileTeams(row.querySelector('[data-field="assistantTeams"]'), "Ajuda a", name),
+          siblingTeams: profileTeams(row.querySelector('[data-field="siblingTeams"]'), "Equip germà", name)
         };
       });
       tablePeopleProfiles = profiles;

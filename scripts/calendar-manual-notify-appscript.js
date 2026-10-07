@@ -151,10 +151,15 @@ function llegirContactes() {
 
 function usuariAutoritzat(email) {
   var contacts = llegirContactes();
+  function contactList(group) {
+    if (Array.isArray(group)) return group;
+    if (group && typeof group === "object") return Object.keys(group).map(function(key) { return group[key]; });
+    return [];
+  }
   var authorized = []
-    .concat(contacts.coordinators || [])
-    .concat(contacts.headCoaches || [])
-    .concat(contacts.physicalTrainers || []);
+    .concat(contactList(contacts.coordinators))
+    .concat(contactList(contacts.headCoaches))
+    .concat(contactList(contacts.physicalTrainers));
   return authorized.some(function(contact) {
     return contact && String(contact.email || "").trim().toLowerCase() === email;
   });

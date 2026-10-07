@@ -37,9 +37,6 @@ function doPost(e) {
     if (!usuariAutoritzat(user.email)) {
       throw new Error("Aquest usuari no té permís per enviar avisos de calendari.");
     }
-    var destinatari = correuCoordinacioGeneral();
-    if (!destinatari) throw new Error("No hi ha correu de Coordinació general configurat.");
-
     var game = request.game || {};
     if (!game.team || !game.sex || !game.date || !game.time || !game.rival) {
       throw new Error("Falten dades del partit.");
@@ -52,10 +49,18 @@ function doPost(e) {
     var teamLabel = String(game.team) + " " + String(game.sex);
     var change = { type: "changed", game: game, fields: changes };
     var subject = "Canvi de calendari · " + teamLabel;
-    MailApp.sendEmail(destinatari, subject, construirTextCanvisCalendar(teamLabel, [change]), {
+    var coachEmail = correuPrimerEntrenador(game);
+    var coordinationEmail = correuCoordinacioGeneral();
+    var destinatari = coachEmail || coordinationEmail;
+    if (!destinatari) throw new Error("No hi ha correu de primer entrenador/a ni de Coordinació general configurat.");
+    var mailOptions = {
       htmlBody: calendarChangeEmailHtml(teamLabel, [change]),
       name: "CB Sant Josep Badalona"
-    });
+    };
+    if (coachEmail && coordinationEmail && coachEmail.toLowerCase() !== coordinationEmail.toLowerCase()) {
+      mailOptions.cc = coordinationEmail;
+    }
+    MailApp.sendEmail(destinatari, subject, construirTextCanvisCalendar(teamLabel, [change]), mailOptions);
 
     // L'avís intern no pot dependre de Calendar: si la sincronització falla,
     // Coordinació igualment ha de conèixer el canvi i poder actuar.
@@ -66,7 +71,7 @@ function doPost(e) {
       Logger.log("No s'ha pogut sincronitzar el canvi manual amb Google Calendar: " + syncError);
       googleSync = { ok: false, error: String(syncError) };
     }
-    return respostaJson({ ok: true, sentTo: destinatari, googleSync: googleSync });
+    return respostaJson({ ok: true, sentTo: destinatari, cc: mailOptions.cc || "", googleSync: googleSync });
   } catch (error) {
     Logger.log("Error enviant l'avís manual de calendari: " + error);
     return respostaJson({ ok: false, error: String(error) });
@@ -171,6 +176,16 @@ function correuCoordinacioGeneral() {
     return item && item.role === "general" && item.receivesTeamEmails !== false && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(item.email || "").trim());
   })[0];
   return contact ? String(contact.email).trim() : "";
+}
+
+function correuPrimerEntrenador(game) {
+  var teamCode = OWN_TEAM_CODES[String(game.team || "") + "|" + String(game.sex || "")];
+  if (!teamCode) return "";
+  var contacts = llegirContactes();
+  var contact = contacts.headCoaches && contacts.headCoaches[teamCode];
+  var email = contact && String(contact.email || "").trim();
+  if (!contact || contact.receivesTeamEmails === false || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "";
+  return email;
 }
 
 function formatCalendarEmailDate(value) {

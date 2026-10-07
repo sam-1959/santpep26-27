@@ -49,7 +49,6 @@ function doPost(e) {
     }) : [];
     if (!changes.length) return respostaJson({ ok: true, skipped: true, reason: "without_changes" });
 
-    var googleSync = sincronitzarPartitGoogleCalendar(game);
     var teamLabel = String(game.team) + " " + String(game.sex);
     var change = { type: "changed", game: game, fields: changes };
     var subject = "Canvi de calendari · " + teamLabel;
@@ -57,6 +56,16 @@ function doPost(e) {
       htmlBody: calendarChangeEmailHtml(teamLabel, [change]),
       name: "CB Sant Josep Badalona"
     });
+
+    // L'avís intern no pot dependre de Calendar: si la sincronització falla,
+    // Coordinació igualment ha de conèixer el canvi i poder actuar.
+    var googleSync;
+    try {
+      googleSync = sincronitzarPartitGoogleCalendar(game);
+    } catch (syncError) {
+      Logger.log("No s'ha pogut sincronitzar el canvi manual amb Google Calendar: " + syncError);
+      googleSync = { ok: false, error: String(syncError) };
+    }
     return respostaJson({ ok: true, sentTo: destinatari, googleSync: googleSync });
   } catch (error) {
     Logger.log("Error enviant l'avís manual de calendari: " + error);

@@ -204,6 +204,7 @@
     .edit-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .edit-field { display:flex; flex-direction:column; gap:4px; font-size:.75rem; color:var(--muted); font-weight:800; }
     .edit-field.full { grid-column:1 / -1; }
+    .edit-field[hidden] { display:none; }
     .edit-field input, .edit-field select { width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 9px; color:var(--ink); font:inherit; font-size:.9rem; background:#fff; }
     .edit-check { display:flex; align-items:center; gap:7px; color:var(--ink); font-size:.84rem; font-weight:700; }
     .edit-actions { display:flex; justify-content:flex-end; align-items:center; gap:9px; margin-top:18px; }

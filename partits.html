@@ -970,6 +970,9 @@
         if(notification.googleSync && notification.googleSync.ok === false){
           alert("El canvi s'ha desat i s'ha enviat el correu a Coordinació, però no s'ha pogut actualitzar Google Calendar: " + (notification.googleSync.error || "error desconegut"));
         }
+        if(notification.tableRestrictions && notification.tableRestrictions.checked === false){
+          alert("El canvi s'ha desat, però no s'han pogut verificar les restriccions de taules: " + (notification.tableRestrictions.error || "error desconegut"));
+        }
       }catch(err){
         console.error('No s\'han pogut desar els canvis del partit.',err);
         if(gameSaved){

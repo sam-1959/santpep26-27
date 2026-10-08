@@ -291,7 +291,7 @@
     const GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
     const MANUAL_CHANGES_FIREBASE_PATH = "calendarGames/season-26-27/manualChanges";
     const content = document.getElementById('content');
-    const CHANGES_PER_PAGE = 3;
+    const CHANGES_PER_PAGE = 2;
     let changesPage = 0;
     const MONTHS = ['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
     function fmtDate(iso){
@@ -763,7 +763,7 @@
       const reference=new Date((latest && (latest.checkedAt || latest.importedAt)) || 0);
       const cutoff=reference.getTime() - (7 * 24 * 60 * 60 * 1000);
       // Firebase conserva un historial recent: només exposem l'última setmana,
-      // que continua paginada quan supera les tres entrades.
+      // que continua paginada quan supera les dues entrades.
       const importedChanges=((latest && latest.changes) || []).filter(function(change){
         const importedAt=new Date(changeImportDate(change, fallback)).getTime();
         return Number.isFinite(importedAt) && importedAt >= cutoff;

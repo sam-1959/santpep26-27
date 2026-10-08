@@ -1,8 +1,8 @@
 {
   "incidenciesPavellonsBadalona": {
     "entries": {
+      ".read": true,
       "$entryId": {
-        ".read": true,
         ".write": "!data.exists() && newData.hasChildren(['id', 'createdAt', 'status', 'entity', 'contactName', 'email', 'venue', 'type', 'priority', 'description'])"
       }
     }

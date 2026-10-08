@@ -66,10 +66,7 @@
           <label><span class="label-title">Entitat <span class="required">*</span></span><input id="entity" maxlength="120" required autocomplete="organization" placeholder="Nom de l'entitat" /></label>
           <label><span class="label-title">Persona de contacte <span class="required">*</span></span><input id="contactName" maxlength="120" required autocomplete="name" placeholder="Nom i cognoms" /></label>
         </div>
-        <div class="grid-2">
-          <label><span class="label-title">Correu electrònic <span class="required">*</span></span><input id="email" type="email" maxlength="160" required autocomplete="email" placeholder="correu@exemple.cat" /></label>
-          <label><span class="label-title">Telèfon</span><input id="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Opcional" /></label>
-        </div>
+        <label><span class="label-title">Correu electrònic <span class="required">*</span></span><input id="email" type="email" maxlength="160" required autocomplete="email" placeholder="correu@exemple.cat" /></label>
         <div class="grid-2">
           <label><span class="label-title">Pavelló o instal·lació <span class="required">*</span></span>
             <select id="venue" required>
@@ -156,7 +153,6 @@
         entity: document.getElementById('entity').value.trim(),
         contactName: document.getElementById('contactName').value.trim(),
         email: document.getElementById('email').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
         venue: selectedVenue,
         venueSelection: venue.value,
         type: document.getElementById('type').value,

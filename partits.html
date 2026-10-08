@@ -483,6 +483,10 @@
       return normalized;
     }
 
+    function samePlace(first, second){
+      return canonicalPlace(first)===canonicalPlace(second);
+    }
+
     function placeTimeKey(g){
       const place=canonicalPlace(g.loc);
       return place ? [g.date,g.time,place].join('|') : '';
@@ -927,10 +931,10 @@
         {label:'Data', from:previous.date, to:edit.date},
         {label:'Hora', from:previous.time, to:edit.time},
         {label:'Rival', from:previous.rival, to:edit.rival},
-        {label:'Lloc', from:previous.loc, to:edit.loc},
+        {label:'Lloc', from:previous.loc, to:edit.loc, unchanged:samePlace(previous.loc, edit.loc)},
         {label:'Casa/fora', from:previous.home?'casa':'fora', to:edit.home?'casa':'fora'},
         {label:'Amistós', from:previous.friendly?'sí':'no', to:edit.friendly?'sí':'no'}
-      ].filter(function(change){ return change.from !== change.to; });
+      ].filter(function(change){ return !change.unchanged && change.from !== change.to; });
       const submit=gameEditForm.querySelector('button[type="submit"]');
       submit.disabled=true;
       gameEditStatus.textContent='Desant…';

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <title>Incidències als pavellons municipals · Badalona</title>
+  <style>
+    :root { --blue:#075985; --blue-dark:#0c4a6e; --sky:#e0f2fe; --bg:#f4f7f9; --card:#fff; --ink:#172033; --muted:#64748b; --line:#dbe4ea; --ok:#166534; --ok-bg:#dcfce7; --err:#b91c1c; --err-bg:#fee2e2; --radius:16px; --shadow:0 3px 16px rgba(15,41,61,.08); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.4; }
+    header { background:linear-gradient(120deg,var(--blue-dark),var(--blue)); color:#fff; padding:28px 18px; }
+    .header-inner, main, footer { width:min(760px,calc(100% - 28px)); margin:0 auto; }
+    .eyebrow { margin:0 0 5px; font-size:.76rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; opacity:.82; }
+    h1 { margin:0; font-size:clamp(1.45rem,4vw,2rem); line-height:1.15; }
+    header p { max-width:620px; margin:8px 0 0; font-size:.95rem; opacity:.92; }
+    main { padding:24px 0 44px; }
+    .panel { padding:22px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
+    h2 { margin:0 0 5px; color:var(--blue-dark); font-size:1.25rem; }
+    .intro { margin:0 0 20px; color:var(--muted); font-size:.9rem; }
+    form { display:grid; gap:15px; }
+    label { display:grid; gap:6px; color:var(--blue-dark); font-size:.78rem; font-weight:800; letter-spacing:.02em; }
+    input, select, textarea { width:100%; border:1px solid #b9c9d3; border-radius:10px; padding:10px 11px; color:var(--ink); background:#fff; font:inherit; font-size:.95rem; outline:none; }
+    textarea { min-height:130px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(7,89,133,.14); }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    .required { color:#dc2626; }
+    .hint { margin:-2px 0 0; color:var(--muted); font-size:.78rem; }
+    .actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:3px; }
+    button { border:0; border-radius:10px; padding:11px 16px; color:#fff; background:var(--blue); font:inherit; font-weight:800; cursor:pointer; }
+    button:hover { background:var(--blue-dark); }
+    button:disabled { opacity:.6; cursor:wait; }
+    .status { display:none; border-radius:10px; padding:10px 12px; font-size:.87rem; font-weight:700; }
+    .status.ok { display:block; color:var(--ok); background:var(--ok-bg); }
+    .status.err { display:block; color:var(--err); background:var(--err-bg); }
+    .success { display:none; text-align:center; padding:18px 0 4px; }
+    .success.show { display:block; }
+    .success-icon { display:grid; place-items:center; width:54px; height:54px; margin:0 auto 12px; border-radius:50%; background:var(--ok-bg); color:var(--ok); font-size:1.6rem; font-weight:900; }
+    .success p { color:var(--muted); }
+    footer { padding:0 0 26px; color:var(--muted); text-align:center; font-size:.76rem; }
+    @media (max-width:560px) { .grid-2 { grid-template-columns:1fr; } .panel { padding:18px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <p class="eyebrow">Badalona · Pavellons municipals</p>
+      <h1>Registre d'incidències</h1>
+      <p>Espai per comunicar incidències, necessitats o propostes de millora dels pavellons municipals de Badalona.</p>
+    </div>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Envia una petició</h2>
+      <p class="intro">Indica les dades de contacte per poder fer seguiment de la incidència. Els camps marcats amb <span class="required">*</span> són obligatoris.</p>
+      <form id="incidentForm">
+        <div class="grid-2">
+          <label>Entitat <span class="required">*</span><input id="entity" maxlength="120" required autocomplete="organization" placeholder="Nom de l'entitat" /></label>
+          <label>Persona de contacte <span class="required">*</span><input id="contactName" maxlength="120" required autocomplete="name" placeholder="Nom i cognoms" /></label>
+        </div>
+        <div class="grid-2">
+          <label>Correu electrònic <span class="required">*</span><input id="email" type="email" maxlength="160" required autocomplete="email" placeholder="correu@exemple.cat" /></label>
+          <label>Telèfon <input id="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Opcional" /></label>
+        </div>
+        <div class="grid-2">
+          <label>Pavelló o instal·lació <span class="required">*</span>
+            <select id="venue" required>
+              <option value="">Selecciona una instal·lació</option>
+              <option>Poliesportiu La Colina</option>
+              <option>Poliesportiu Montigalà</option>
+              <option>Poliesportiu Bufalà</option>
+              <option>Poliesportiu de Pomar</option>
+              <option>CEM Besòs</option>
+              <option value="Altres">Altres</option>
+            </select>
+          </label>
+          <label>Tipus d'incidència <span class="required">*</span>
+            <select id="type" required>
+              <option value="">Selecciona una opció</option>
+              <option>Manteniment i instal·lacions</option>
+              <option>Neteja</option>
+              <option>Seguretat</option>
+              <option>Accessibilitat</option>
+              <option>Material esportiu</option>
+              <option>Horaris o ús de la instal·lació</option>
+              <option>Altres</option>
+            </select>
+          </label>
+        </div>
+        <label id="otherVenueField" hidden>Indica la instal·lació <span class="required">*</span><input id="otherVenue" maxlength="160" placeholder="Nom de la instal·lació" /></label>
+        <div class="grid-2">
+          <label>Data en què s'ha detectat <input id="detectedOn" type="date" /></label>
+          <label>Prioritat <span class="required">*</span>
+            <select id="priority" required>
+              <option value="Normal" selected>Normal</option>
+              <option>Baixa</option>
+              <option>Alta</option>
+              <option>Urgent</option>
+            </select>
+          </label>
+        </div>
+        <label>Descripció de la incidència <span class="required">*</span><textarea id="description" maxlength="3000" required placeholder="Explica què ha passat, on es troba exactament i, si cal, quina afectació té."></textarea></label>
+        <p class="hint">No incloguis dades personals de terceres persones que no siguin necessàries per gestionar la incidència.</p>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <div class="actions"><button id="submitButton" type="submit">Enviar incidència</button></div>
+      </form>
+      <div id="success" class="success" aria-live="polite">
+        <div class="success-icon">✓</div>
+        <h2>Incidència enviada</h2>
+        <p>Gràcies per comunicar-la. Conservarem les dades de contacte només per poder-ne fer seguiment.</p>
+        <button id="newIncident" type="button">Enviar una altra incidència</button>
+      </div>
+    </section>
+  </main>
+  <footer>Registre d'incidències de pavellons municipals de Badalona</footer>
+  <script>
+    const FIREBASE_DB_URL = 'https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
+    const INCIDENTS_PATH = 'incidenciesPavellonsBadalona/entries';
+    const form = document.getElementById('incidentForm');
+    const venue = document.getElementById('venue');
+    const otherVenueField = document.getElementById('otherVenueField');
+    const otherVenue = document.getElementById('otherVenue');
+    const status = document.getElementById('status');
+    const submitButton = document.getElementById('submitButton');
+
+    function firebaseUrl(path, id){
+      const encoded = path.split('/').map(encodeURIComponent).join('/');
+      return FIREBASE_DB_URL.replace(/\/$/, '') + '/' + encoded + (id ? '/' + encodeURIComponent(id) : '') + '.json';
+    }
+    function entryId(){ return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
+    function setStatus(kind, message){ status.className = 'status ' + kind; status.textContent = message; }
+    function updateOtherVenue(){
+      const show = venue.value === 'Altres';
+      otherVenueField.hidden = !show;
+      otherVenue.required = show;
+      if(!show) otherVenue.value = '';
+    }
+    venue.addEventListener('change', updateOtherVenue);
+    form.addEventListener('submit', async function(event){
+      event.preventDefault();
+      const selectedVenue = venue.value === 'Altres' ? otherVenue.value.trim() : venue.value;
+      if(!selectedVenue){ otherVenue.focus(); return; }
+      const id = entryId();
+      const payload = {
+        id,
+        createdAt: new Date().toISOString(),
+        status: 'Pendent',
+        entity: document.getElementById('entity').value.trim(),
+        contactName: document.getElementById('contactName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        venue: selectedVenue,
+        venueSelection: venue.value,
+        type: document.getElementById('type').value,
+        detectedOn: document.getElementById('detectedOn').value,
+        priority: document.getElementById('priority').value,
+        description: document.getElementById('description').value.trim()
+      };
+      submitButton.disabled = true;
+      setStatus('ok', 'Enviant incidència…');
+      try {
+        const response = await fetch(firebaseUrl(INCIDENTS_PATH, id), { method:'PUT', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(payload) });
+        if(!response.ok) throw new Error('Firebase ' + response.status);
+        form.reset(); updateOtherVenue(); status.className = 'status'; status.textContent = '';
+        form.style.display = 'none'; document.getElementById('success').classList.add('show');
+      } catch(error) {
+        setStatus('err', "No s'ha pogut enviar la incidència. Torna-ho a provar d'aquí a uns instants.");
+      } finally { submitButton.disabled = false; }
+    });
+    document.getElementById('newIncident').addEventListener('click', function(){
+      document.getElementById('success').classList.remove('show'); form.style.display = 'grid'; status.className = 'status'; status.textContent = '';
+      document.getElementById('entity').focus();
+    });
+  </script>
+</body>
+</html>

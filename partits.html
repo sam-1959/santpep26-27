@@ -944,14 +944,13 @@
         if(!response.ok) throw new Error('Firebase '+response.status);
         gameSaved=true;
         gameEdits[key]=edit;
+        let manualChange=null;
         if(changes.length){
-          const manualChange={
+          manualChange={
             type:'changed', manual:true, importedAt:new Date().toISOString(),
             game:{ date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival, home:edit.home, loc:edit.loc, friendly:edit.friendly },
             fields:changes
           };
-          try{ await saveManualChange(manualChange, token); }
-          catch(historyError){ console.warn("No s'ha pogut registrar el canvi manual a l'historial.", historyError); }
         }
         Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date)});
         moveGameToItsWeek(game);
@@ -960,19 +959,32 @@
         rebuildMonths();
         const weekIndex=DATA.weeks.findIndex(function(week){ return week.games.indexOf(game)>=0; });
         const monthIndex=monthKeys.indexOf(monthKeyOf(DATA.weeks[weekIndex]));
-        const notification=await notifyManualCalendarEdit({
+        const notificationGame={
           date:edit.date, time:edit.time, team:game.team, sex:game.sex, rival:edit.rival,
           home:edit.home, loc:edit.loc, friendly:edit.friendly,
           calendarId:game.calendarId || '', icalUid:game.icalUid || ''
-        }, changes, token);
+        };
         closeGameEditor();
         showMonth(monthIndex, weekIndex);
-        if(notification.googleSync && notification.googleSync.ok === false){
-          alert("El canvi s'ha desat i s'ha enviat el correu a Coordinació, però no s'ha pogut actualitzar Google Calendar: " + (notification.googleSync.error || "error desconegut"));
+        if(manualChange){
+          saveManualChange(manualChange, token).then(function(){
+            rebuildChangedGames();
+            renderContent();
+          }).catch(function(historyError){
+            console.warn("No s'ha pogut registrar el canvi manual a l'historial.", historyError);
+          });
         }
-        if(notification.tableRestrictions && notification.tableRestrictions.checked === false){
-          alert("El canvi s'ha desat, però no s'han pogut verificar les restriccions de taules: " + (notification.tableRestrictions.error || "error desconegut"));
-        }
+        notifyManualCalendarEdit(notificationGame, changes, token).then(function(notification){
+          if(notification.googleSync && notification.googleSync.ok === false){
+            alert("El canvi s'ha desat i s'ha enviat el correu a Coordinació, però no s'ha pogut actualitzar Google Calendar: " + (notification.googleSync.error || "error desconegut"));
+          }
+          if(notification.tableRestrictions && notification.tableRestrictions.checked === false){
+            alert("El canvi s'ha desat, però no s'han pogut verificar les restriccions de taules: " + (notification.tableRestrictions.error || "error desconegut"));
+          }
+        }).catch(function(notificationError){
+          console.error("No s'ha pogut enviar l'avís del canvi manual de calendari.", notificationError);
+          alert("El canvi s'ha desat, però no s'ha pogut enviar l'avís ni sincronitzar Google Calendar: " + (notificationError.message || notificationError));
+        });
       }catch(err){
         console.error('No s\'han pogut desar els canvis del partit.',err);
         if(gameSaved){

@@ -23,6 +23,7 @@
     .intro { margin:0 0 20px; color:var(--muted); font-size:.9rem; }
     form { display:grid; gap:15px; }
     label { display:grid; gap:6px; color:var(--blue-dark); font-size:.78rem; font-weight:800; letter-spacing:.02em; }
+    .label-title { display:block; }
     #otherVenueField[hidden] { display:none; }
     input, select, textarea { width:100%; border:1px solid #b9c9d3; border-radius:10px; padding:10px 11px; color:var(--ink); background:#fff; font:inherit; font-size:.95rem; outline:none; }
     textarea { min-height:130px; resize:vertical; }
@@ -62,15 +63,15 @@
       <p class="intro">Indica les dades de contacte per poder fer seguiment de la incidència. Els camps marcats amb <span class="required">*</span> són obligatoris.</p>
       <form id="incidentForm">
         <div class="grid-2">
-          <label>Entitat <span class="required">*</span><input id="entity" maxlength="120" required autocomplete="organization" placeholder="Nom de l'entitat" /></label>
-          <label>Persona de contacte <span class="required">*</span><input id="contactName" maxlength="120" required autocomplete="name" placeholder="Nom i cognoms" /></label>
+          <label><span class="label-title">Entitat <span class="required">*</span></span><input id="entity" maxlength="120" required autocomplete="organization" placeholder="Nom de l'entitat" /></label>
+          <label><span class="label-title">Persona de contacte <span class="required">*</span></span><input id="contactName" maxlength="120" required autocomplete="name" placeholder="Nom i cognoms" /></label>
         </div>
         <div class="grid-2">
-          <label>Correu electrònic <span class="required">*</span><input id="email" type="email" maxlength="160" required autocomplete="email" placeholder="correu@exemple.cat" /></label>
-          <label>Telèfon <input id="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Opcional" /></label>
+          <label><span class="label-title">Correu electrònic <span class="required">*</span></span><input id="email" type="email" maxlength="160" required autocomplete="email" placeholder="correu@exemple.cat" /></label>
+          <label><span class="label-title">Telèfon</span><input id="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Opcional" /></label>
         </div>
         <div class="grid-2">
-          <label>Pavelló o instal·lació <span class="required">*</span>
+          <label><span class="label-title">Pavelló o instal·lació <span class="required">*</span></span>
             <select id="venue" required>
               <option value="">Selecciona una instal·lació</option>
               <option>Poliesportiu La Colina</option>
@@ -81,7 +82,7 @@
               <option value="Altres">Altres</option>
             </select>
           </label>
-          <label>Tipus d'incidència <span class="required">*</span>
+          <label><span class="label-title">Tipus d'incidència <span class="required">*</span></span>
             <select id="type" required>
               <option value="">Selecciona una opció</option>
               <option>Manteniment i instal·lacions</option>
@@ -94,10 +95,10 @@
             </select>
           </label>
         </div>
-        <label id="otherVenueField" hidden>Indica la instal·lació <span class="required">*</span><input id="otherVenue" maxlength="160" placeholder="Nom de la instal·lació" /></label>
+        <label id="otherVenueField" hidden><span class="label-title">Indica la instal·lació <span class="required">*</span></span><input id="otherVenue" maxlength="160" placeholder="Nom de la instal·lació" /></label>
         <div class="grid-2">
-          <label>Data en què s'ha detectat <input id="detectedOn" type="date" /></label>
-          <label>Prioritat <span class="required">*</span>
+          <label><span class="label-title">Data en què s'ha detectat</span><input id="detectedOn" type="date" /></label>
+          <label><span class="label-title">Prioritat <span class="required">*</span></span>
             <select id="priority" required>
               <option value="Normal" selected>Normal</option>
               <option>Baixa</option>
@@ -106,7 +107,7 @@
             </select>
           </label>
         </div>
-        <label>Descripció de la incidència <span class="required">*</span><textarea id="description" maxlength="3000" required placeholder="Explica què ha passat, on es troba exactament i, si cal, quina afectació té."></textarea></label>
+        <label><span class="label-title">Descripció de la incidència <span class="required">*</span></span><textarea id="description" maxlength="3000" required placeholder="Explica què ha passat, on es troba exactament i, si cal, quina afectació té."></textarea></label>
         <p class="hint">No incloguis dades personals de terceres persones que no siguin necessàries per gestionar la incidència.</p>
         <div id="status" class="status" role="status" aria-live="polite"></div>
         <div class="actions"><button id="submitButton" type="submit">Enviar incidència</button></div>

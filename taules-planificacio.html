@@ -188,6 +188,8 @@
     select.validation-invalid { border-color:var(--danger); background:#fff1f2; color:#7f1d1d; box-shadow:0 0 0 2px rgba(214,69,69,0.15); }
     .assign-control { display:flex; align-items:center; gap:6px; }
     .assign-control select { min-width:0; }
+    .replace-assignment { display:inline-grid; place-items:center; width:28px; height:28px; flex:0 0 28px; border:1px solid #a4c77a; border-radius:50%; background:#eef8df; color:#456d1c; font:900 1rem/1 Arial,sans-serif; cursor:pointer; padding:0; box-shadow:0 1px 2px rgba(69,109,28,0.16); }
+    .replace-assignment:hover { background:#dcefc3; transform:scale(1.06); }
     .reject-assignment { display:inline-grid; place-items:center; width:28px; height:28px; flex:0 0 28px; border:0; border-radius:50%; background:#ff1e4b; color:#fff; font:900 1.5rem/1 Arial,sans-serif; cursor:pointer; padding:0; box-shadow:0 1px 2px rgba(159,29,29,0.25); }
     .reject-assignment:hover { background:#dc1237; transform:scale(1.06); }
     .undo-rejection { border:1px solid #f3b4b4; border-radius:9px; background:#fff1f2; color:#9f1d1d; font:inherit; font-size:0.72rem; font-weight:850; cursor:pointer; padding:7px 8px; white-space:nowrap; }
@@ -971,6 +973,15 @@
       wrap.className = "assign-control";
       wrap.appendChild(makeSelect(game, slot, value));
       if (value && !isPastGame(game)) {
+        const replacementButton = document.createElement("button");
+        replacementButton.type = "button";
+        replacementButton.className = "replace-assignment";
+        replacementButton.dataset.replaceGameId = game.id;
+        replacementButton.dataset.replaceSlot = slot;
+        replacementButton.textContent = "↻";
+        replacementButton.title = "Proposa una altra persona";
+        replacementButton.setAttribute("aria-label", "Proposa una altra persona");
+        wrap.appendChild(replacementButton);
         const button = document.createElement("button");
         button.type = "button";
         button.className = "reject-assignment";
@@ -1190,6 +1201,77 @@
           const loadB = totalAssignmentCountsByPerson(periodEndDate(periods[activePeriodIndex])).get(assignment[b]) || 0;
           return loadB - loadA || b.localeCompare(a);
         })[0];
+    }
+
+    function replacementCandidateFor(game, slot){
+      const current = assignmentFor(game.id);
+      const currentPerson = current[slot] || "";
+      const otherSlot = slot === "table1" ? "table2" : "table1";
+      const otherPerson = current[otherSlot] || "";
+      if (!currentPerson) return null;
+
+      const activeProfiles = activeTableProfiles();
+      const counts = totalAssignmentCountsByPerson(periodEndDate(periods[activePeriodIndex]));
+      counts.set(currentPerson, Math.max(0, (counts.get(currentPerson) || 0) - 1));
+      const minimumLoad = activeProfiles.length
+        ? Math.min(...activeProfiles.map(profile => counts.get(profile.name) || 0))
+        : 0;
+      const targetMax = activeProfiles.length
+        ? minimumLoad + Math.ceil(monthlyAssignableSlotCount(gamesForActivePeriod()) / activeProfiles.length)
+        : 0;
+      const needsExperience = needsExperiencedTable(game) && !personHasExperience(otherPerson);
+      const candidates = activeProfiles
+        .filter(profile => profile.name !== currentPerson && profile.name !== otherPerson)
+        .filter(profile => !isRejectedForGame(profile.name, game, current))
+        .filter(profile => personCanTakeGame(profile, game));
+      const requiredCandidates = needsExperience
+        ? candidates.filter(profile => profile.experienced === true)
+        : candidates;
+      const balancedCandidates = requiredCandidates.filter(profile =>
+        !targetMax || (counts.get(profile.name) || 0) < targetMax
+      );
+      const siblingCandidates = requiredCandidates.filter(profile => hasSiblingInGame(profile, game));
+      const balancedSiblingCandidates = siblingCandidates.filter(profile =>
+        !targetMax || (counts.get(profile.name) || 0) < targetMax
+      );
+      const preferredCandidates = balancedSiblingCandidates.length
+        ? balancedSiblingCandidates
+        : balancedCandidates.length
+          ? balancedCandidates
+          : siblingCandidates.length
+            ? siblingCandidates
+            : requiredCandidates;
+      return preferredCandidates
+        .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"))[0] || null;
+    }
+
+    async function proposeReplacement(game, slot){
+      if (isPastGame(game)) return;
+      const previousAssignment = { ...assignmentFor(game.id) };
+      const assignment = { ...previousAssignment };
+      const currentPerson = assignment[slot] || "";
+      const candidate = replacementCandidateFor(game, slot);
+      if (!currentPerson) return;
+      if (!candidate) {
+        setStatus(`No hi ha cap alternativa disponible per a ${currentPerson} segons les restriccions.`, "error");
+        return;
+      }
+      assignment[slot] = candidate.name;
+      assignments[game.id] = assignment;
+      const issues = validateGameRestrictions(game.id);
+      render();
+      setStatus(`Guardant proposta alternativa: ${candidate.name}...`);
+      try {
+        await saveAssignment(game.id);
+        render();
+        const extra = issues.length ? " Revisa les restriccions marcades." : "";
+        setStatus(`${candidate.name} proposada en lloc de ${currentPerson}.${extra}`, issues.length ? "error" : "");
+      } catch (error) {
+        console.error(error);
+        assignments[game.id] = previousAssignment;
+        render();
+        setStatus(error.message || "No s'ha pogut guardar la proposta alternativa.", "error");
+      }
     }
 
     function monthlyAssignableSlotCount(periodGames){
@@ -1947,6 +2029,13 @@
       if (infoButton) {
         const game = games.find(item => item.id === infoButton.dataset.rejectionsInfoGameId);
         if (game) openRejectionsDialog(game);
+        return;
+      }
+      const replaceButton = event.target.closest("[data-replace-game-id]");
+      if (replaceButton) {
+        const game = games.find(item => item.id === replaceButton.dataset.replaceGameId);
+        const slot = replaceButton.dataset.replaceSlot;
+        if (game && slot) await proposeReplacement(game, slot);
         return;
       }
       const rejectButton = event.target.closest("[data-reject-game-id]");

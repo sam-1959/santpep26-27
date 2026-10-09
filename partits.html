@@ -339,7 +339,11 @@
     // La clau es calcula amb les dades importades. Així els ajustos manuals
     // persisteixen en un node separat i no els esborra una importació posterior.
     function gameEditKey(g){
-      return g._editKey || [g.date,g.time,g.team,g.sex,g.rival].join('|');
+      const raw=g._editKey || [g.date,g.time,g.team,g.sex,g.rival].join('|');
+      // Firebase RTDB no admet . # $ [ ] ni / en els segments del camí.
+      // Poden aparèixer dins del nom d'un rival, així que els neutralitzem
+      // només per construir l'identificador intern de l'edició.
+      return String(raw).replace(/[.#$\[\]/]/g, '_');
     }
     function gameEditDataAttribute(g){ return encodeURIComponent(gameEditKey(g)); }
     let gameEdits={};

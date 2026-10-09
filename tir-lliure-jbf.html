@@ -61,6 +61,7 @@
     const entryBody = document.getElementById('entryBody'), entryFoot = document.getElementById('entryFoot');
     const statusEl = document.getElementById('status'), saveButton = document.getElementById('saveButton'), historyEl = document.getElementById('history');
     let entries = [], editingId = '';
+    const DEFAULT_EXCLUDED_PLAYERS = new Set(['Núria Navarrete']);
     const numberSort = value => Number(String(value || '').replace(/\D/g,'')) || 999;
     const safeKey = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
     const pct = (made, attempts) => attempts ? (made / attempts * 100).toFixed(1) + '%' : '—';
@@ -69,7 +70,7 @@
     const requestId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     function todayISO(){ const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,10); }
     function setStatus(text, type = ''){ statusEl.textContent = text; statusEl.className = 'status ' + type; }
-    function playerRows(){
+    function playerRows(useDefaultExclusions = true){
       entryBody.innerHTML = PLAYERS.slice().sort((a,b) => numberSort(a[0]) - numberSort(b[0])).map(([number,name]) =>
         `<tr data-player="${safeKey(name)}"><td>${number}</td><td class="rank-name">${name}</td><td class="num"><input class="shot-input made" type="number" min="0" step="1" inputmode="numeric" aria-label="Tirs anotats de ${name}" value="0" /></td><td class="num"><input class="shot-input attempts" type="number" min="0" step="1" inputmode="numeric" aria-label="Tirs intentats de ${name}" value="0" /></td><td class="num percent">—</td><td><button class="exclude-player" type="button" aria-pressed="false">Treure</button></td></tr>`
       ).join('');
@@ -79,6 +80,9 @@
         setPlayerExcluded(row, !row.classList.contains('session-player-excluded'));
         updateEntryTotals();
       }));
+      if(useDefaultExclusions) [...entryBody.querySelectorAll('tr')].forEach(row => {
+        if(DEFAULT_EXCLUDED_PLAYERS.has(row.children[1].textContent.trim())) setPlayerExcluded(row, true);
+      });
       updateEntryTotals();
     }
     function setPlayerExcluded(row, excluded){
@@ -97,7 +101,7 @@
       editingId = entry.id;
       document.getElementById('trainingDate').value = entry.trainingDate || todayISO();
       document.getElementById('attemptsForAll').value = '';
-      playerRows();
+      playerRows(false);
       const byName = new Map(Object.values(entry.players || {}).map(row => [row.name, row]));
       const excludedNames = new Set(Object.values(entry.excludedPlayers || {}).map(player => typeof player === 'string' ? player : player.name));
       [...entryBody.querySelectorAll('tr')].forEach(row => {

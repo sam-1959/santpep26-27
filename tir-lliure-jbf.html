@@ -160,6 +160,11 @@
       if(!trainingDate) return setStatus("Indica la data de l'entrenament.",'err');
       if(!rows.length) return setStatus('Indica almenys un tir intentat.','err');
       if(invalid) return setStatus(`${invalid.name} no pot tenir més anotats que intentats.`,'err');
+      const sameDateEntry = entries.find(entry => entry.trainingDate === trainingDate && entry.id !== editingId);
+      if(sameDateEntry){
+        loadTraining(sameDateEntry.id);
+        return setStatus(`Ja hi ha un entrenament desat el ${trainingDate}. S'ha carregat per modificar-lo.`, 'err');
+      }
       const existing = editingId ? entries.find(entry => entry.id === editingId) : null;
       const id = editingId || requestId(); const players = {};
       rows.forEach(row => { players[safeKey(row.name)] = row; });

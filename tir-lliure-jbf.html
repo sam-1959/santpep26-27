@@ -45,6 +45,10 @@
       <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th class="rank">#</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
     </section>
     <section class="panel">
+      <div class="panel-head"><div><h2>Totals per setmana</h2><p class="sub">Acumulat de tirs lliures de cada setmana d’entrenaments.</p></div></div>
+      <div id="weeklyTotals"></div>
+    </section>
+    <section class="panel">
       <div class="panel-head"><div><h2>Entrenaments registrats</h2><p class="sub">Resum de cada entrada desada.</p></div></div>
       <div id="history"></div>
     </section>
@@ -148,12 +152,37 @@
       }));
       return [...totals.values()];
     }
+    function weekStartISO(dateISO){
+      const date = new Date(`${dateISO}T12:00:00`);
+      date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+      return date.toISOString().slice(0,10);
+    }
+    function formatDate(dateISO){
+      const [year,month,day] = String(dateISO || '').split('-');
+      return year && month && day ? `${day}/${month}/${year}` : '—';
+    }
+    function weeklyLabel(weekStart){
+      const end = new Date(`${weekStart}T12:00:00`); end.setDate(end.getDate() + 6);
+      return `${formatDate(weekStart)} – ${end.toISOString().slice(0,10).split('-').reverse().join('/')}`;
+    }
+    function renderWeeklyTotals(){
+      const weeks = new Map();
+      entries.filter(entry => entry.trainingDate).forEach(entry => {
+        const week = weekStartISO(entry.trainingDate), totals = entryTotals(entry);
+        const current = weeks.get(week) || { sessions:0, made:0, attempts:0 };
+        current.sessions += 1; current.made += totals.made; current.attempts += totals.attempts;
+        weeks.set(week, current);
+      });
+      const ordered = [...weeks.entries()].sort(([a],[b]) => b.localeCompare(a));
+      document.getElementById('weeklyTotals').innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Setmana</th><th class="num">Entrenaments</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>${ordered.map(([week,total]) => `<tr><td>${weeklyLabel(week)}</td><td class="num">${total.sessions}</td><td class="num">${total.made}</td><td class="num">${total.attempts}</td><td class="num percent">${pct(total.made,total.attempts)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
+    }
     function renderSummary(){
       const totals = allPlayerTotals(); const team = totals.reduce((sum,row) => ({ made:sum.made + row.made, attempts:sum.attempts + row.attempts }),{made:0,attempts:0});
       document.getElementById('seasonMetrics').innerHTML = `<div class="metric"><span>Entrenaments</span><strong>${entries.length}</strong></div><div class="metric"><span>Tirs anotats</span><strong>${team.made}</strong></div><div class="metric"><span>% d'equip</span><strong>${pct(team.made,team.attempts)}</strong></div>`;
       const ranked = totals.filter(row => row.attempts > 0).sort((a,b) => (b.made/b.attempts) - (a.made/a.attempts) || b.attempts-a.attempts || a.name.localeCompare(b.name,'ca'));
       const medals = ['🥇','🥈','🥉'];
       document.getElementById('rankingBody').innerHTML = ranked.length ? ranked.map((row,index) => `<tr><td class="rank${index < 3 ? ' rank-medal' : ''}" aria-label="Posició ${index+1}">${medals[index] || index+1}</td><td class="rank-name">${escapeHtml(row.number ? row.number + ' · ' : '')}${escapeHtml(row.name)}</td><td class="num">${row.made}</td><td class="num">${row.attempts}</td><td class="num percent">${pct(row.made,row.attempts)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Encara no hi ha tirs lliures registrats.</td></tr>';
+      renderWeeklyTotals();
     }
     function renderHistory(){
       const ordered = entries.slice().sort((a,b) => String(b.trainingDate || '').localeCompare(String(a.trainingDate || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));

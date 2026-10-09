@@ -16,11 +16,10 @@
     .panel { margin-bottom:15px; padding:16px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); } .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; } h2 { margin:0; color:var(--brand-dark); font-size:1.08rem; } .sub { margin:3px 0 0; color:var(--muted); font-size:.82rem; }
     .session-fields { display:grid; grid-template-columns:minmax(170px,230px) minmax(260px,1fr); gap:12px; align-items:end; margin-bottom:12px; } label { display:grid; gap:4px; color:var(--brand-dark); font-size:.7rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; } input { width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; font:inherit; } input:focus { outline:0; border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,.12); }
     .attempts-init { display:flex; align-items:end; gap:8px; } .attempts-init label { flex:1; } .attempts-init p { margin:0 0 7px; color:var(--muted); font-size:.77rem; } button.secondary { color:var(--brand-dark); background:#fff; border:1px solid var(--line); }
-    .saved-session { display:flex; align-items:end; gap:8px; flex-wrap:wrap; margin:0 0 12px; padding:10px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; } .saved-session label { flex:1 1 260px; } .saved-session select { width:100%; min-height:37px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; font:inherit; }
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; } table { width:100%; border-collapse:collapse; } th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; } th { color:var(--brand-dark); background:#faf8fd; font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; } th.num, td.num { text-align:right; } tbody tr:last-child td { border-bottom:0; } .shot-input { width:78px; min-width:64px; text-align:center; } .percent { font-weight:900; color:var(--brand-dark); } .exclude-player { border:1px solid #e5c5c9; border-radius:999px; padding:5px 8px; color:#9d2631; background:#fff7f7; font-size:.72rem; font-weight:850; cursor:pointer; } .session-player-excluded { opacity:.52; background:#fafafa; } .session-player-excluded .rank-name { text-decoration:line-through; } .session-player-excluded .exclude-player { color:var(--brand-dark); border-color:#d8c9e6; background:#faf6ff; } .empty { padding:19px; color:var(--muted); text-align:center; }
     .total-row td { color:#4a3800; background:#fff8d8; font-weight:900; } .actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; } button { border:0; border-radius:999px; padding:9px 15px; color:#fff; background:var(--brand); font:inherit; font-size:.84rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); } button:disabled { opacity:.58; cursor:not-allowed; } .status { min-height:1.2em; color:var(--muted); font-size:.82rem; font-weight:750; } .status.ok { color:var(--ok); } .status.err { color:var(--err); }
     .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; } .metric { padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; } .metric span { display:block; color:var(--muted); font-size:.68rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; } .metric strong { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; }
-    .rank { width:45px; color:var(--muted); text-align:right; } .rank-name { font-weight:850; } .history-note { color:var(--muted); font-size:.78rem; } footer { padding:0 16px 24px; color:var(--muted); text-align:center; font-size:.73rem; }
+    .rank { width:45px; color:var(--muted); text-align:right; } .rank-name { font-weight:850; } .load-training { border:1px solid #d8c9e6; padding:5px 9px; color:var(--brand-dark); background:#faf6ff; font-size:.72rem; font-weight:850; box-shadow:none; } footer { padding:0 16px 24px; color:var(--muted); text-align:center; font-size:.73rem; }
     @media(max-width:620px) { main { width:min(100% - 16px,1040px); padding-top:14px; } .session-fields, .summary-grid { grid-template-columns:1fr; } th,td { padding:8px 7px; } .shot-input { width:62px; min-width:56px; } }
   </style>
 </head>
@@ -37,13 +36,8 @@
         <label>Data de l'entrenament <input id="trainingDate" type="date" required /></label>
         <div class="attempts-init"><label>Intentats per jugadora <input id="attemptsForAll" type="number" min="0" step="1" inputmode="numeric" placeholder="Ex.: 10" /></label><button id="applyAttemptsForAll" class="secondary" type="button">Aplicar a totes</button></div>
       </div>
-      <div class="saved-session">
-        <label>Entrenament desat <select id="savedTraining"><option value="">Selecciona un entrenament per modificar</option></select></label>
-        <button id="loadTraining" class="secondary" type="button">Carregar</button>
-        <button id="newTraining" class="secondary" type="button">Nou entrenament</button>
-      </div>
       <div class="table-wrap"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th>Sessió</th></tr></thead><tbody id="entryBody"></tbody><tfoot id="entryFoot"></tfoot></table></div>
-      <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
+      <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><button id="newTraining" class="secondary" type="button">Nou entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
     </section>
     <section class="panel">
       <div class="panel-head"><div><h2>Acumulat de la temporada</h2><p class="sub">Classificació per percentatge, amb el volum de tirs registrat.</p></div></div>
@@ -65,8 +59,7 @@
       ['16','Joana Pla'], ['18','Ainhoa Espinal'], ['30','Caterina Figueras'], ['77','Noa Ambel']
     ];
     const entryBody = document.getElementById('entryBody'), entryFoot = document.getElementById('entryFoot');
-    const statusEl = document.getElementById('status'), saveButton = document.getElementById('saveButton');
-    const savedTraining = document.getElementById('savedTraining');
+    const statusEl = document.getElementById('status'), saveButton = document.getElementById('saveButton'), historyEl = document.getElementById('history');
     let entries = [], editingId = '';
     const numberSort = value => Number(String(value || '').replace(/\D/g,'')) || 999;
     const safeKey = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
@@ -93,27 +86,17 @@
     function entryTotals(entry){
       return Object.values(entry.players || {}).reduce((sum,row) => ({ made:sum.made + (Number(row.made) || 0), attempts:sum.attempts + (Number(row.attempts) || 0) }), { made:0, attempts:0 });
     }
-    function renderSavedTrainingOptions(){
-      const selected = editingId || savedTraining.value;
-      const ordered = entries.slice().sort((a,b) => String(b.trainingDate || '').localeCompare(String(a.trainingDate || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-      savedTraining.innerHTML = '<option value="">Selecciona un entrenament per modificar</option>' + ordered.map(entry => {
-        const total = entryTotals(entry);
-        return `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.trainingDate || 'Sense data')} · ${total.made}/${total.attempts} (${pct(total.made,total.attempts)})</option>`;
-      }).join('');
-      savedTraining.value = entries.some(entry => entry.id === selected) ? selected : '';
-    }
     function resetTraining(){
       editingId = '';
       document.getElementById('trainingDate').value = todayISO();
       document.getElementById('attemptsForAll').value = '';
       playerRows();
-      savedTraining.value = '';
       saveButton.textContent = 'Desar entrenament';
       setStatus('');
     }
-    function loadTraining(){
-      const entry = entries.find(item => item.id === savedTraining.value);
-      if(!entry) return setStatus('Selecciona un entrenament desat.', 'err');
+    function loadTraining(id){
+      const entry = entries.find(item => item.id === id);
+      if(!entry) return setStatus("No s'ha trobat l'entrenament seleccionat.", 'err');
       editingId = entry.id;
       document.getElementById('trainingDate').value = entry.trainingDate || todayISO();
       document.getElementById('attemptsForAll').value = '';
@@ -157,12 +140,12 @@
     }
     function renderHistory(){
       const ordered = entries.slice().sort((a,b) => String(b.trainingDate || '').localeCompare(String(a.trainingDate || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-      document.getElementById('history').innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Jugadores</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>${ordered.map(entry => { const players = Object.values(entry.players || {}), made = players.reduce((sum,row) => sum + (Number(row.made)||0),0), attempts = players.reduce((sum,row) => sum + (Number(row.attempts)||0),0); return `<tr><td>${escapeHtml(entry.trainingDate || '—')}</td><td class="num">${players.length}</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num percent">${pct(made,attempts)}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
+      historyEl.innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Jugadores</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th></th></tr></thead><tbody>${ordered.map(entry => { const players = Object.values(entry.players || {}), made = players.reduce((sum,row) => sum + (Number(row.made)||0),0), attempts = players.reduce((sum,row) => sum + (Number(row.attempts)||0),0); return `<tr><td>${escapeHtml(entry.trainingDate || '—')}</td><td class="num">${players.length}</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num percent">${pct(made,attempts)}</td><td><button class="load-training" type="button" data-entry-id="${escapeHtml(entry.id)}">Carregar</button></td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
     }
     async function loadEntries(){
       try { const response = await fetch(firebaseUrl(ENTRIES_PATH),{cache:'no-store'}); if(!response.ok) throw new Error('Firebase '+response.status); const data = await response.json(); entries = Object.values(data || {}).filter(Boolean); }
       catch(error) { entries = []; setStatus("No s'han pogut carregar els registres encara.",'err'); }
-      renderSummary(); renderHistory(); renderSavedTrainingOptions();
+      renderSummary(); renderHistory();
     }
     async function saveSession(){
       const trainingDate = document.getElementById('trainingDate').value; const rows = sessionRows().filter(row => row.attempts > 0);
@@ -181,7 +164,7 @@
         const currentIndex = entries.findIndex(entry => entry.id === id);
         if(currentIndex >= 0) entries[currentIndex] = payload; else entries.push(payload);
         editingId = id;
-        renderSummary(); renderHistory(); renderSavedTrainingOptions();
+        renderSummary(); renderHistory();
         saveButton.textContent = 'Desar canvis';
         setStatus(existing ? 'Canvis desats correctament.' : 'Entrenament desat correctament.','ok');
       }
@@ -190,8 +173,8 @@
     }
     document.getElementById('trainingDate').value = todayISO();
     saveButton.addEventListener('click', saveSession);
-    document.getElementById('loadTraining').addEventListener('click', loadTraining);
     document.getElementById('newTraining').addEventListener('click', resetTraining);
+    historyEl.addEventListener('click', function(event){ const button = event.target.closest('[data-entry-id]'); if(button) loadTraining(button.dataset.entryId); });
     document.getElementById('applyAttemptsForAll').addEventListener('click', function(){
       const value = Number(document.getElementById('attemptsForAll').value);
       if(!Number.isInteger(value) || value < 0) return setStatus('Indica un nombre enter d\'intents per aplicar a totes.', 'err');

@@ -15,6 +15,7 @@
     main { width:min(1040px,calc(100% - 24px)); margin:0 auto; padding:20px 0 48px; } .back { display:inline-flex; margin:0 0 14px; padding:7px 11px; border:1px solid var(--line); border-radius:999px; color:var(--brand-dark); background:#fff; font-size:.8rem; font-weight:900; text-decoration:none; box-shadow:var(--shadow); }
     .panel { margin-bottom:15px; padding:16px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); } .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; } h2 { margin:0; color:var(--brand-dark); font-size:1.08rem; } .sub { margin:3px 0 0; color:var(--muted); font-size:.82rem; }
     .session-fields { display:grid; grid-template-columns:minmax(170px,230px) 1fr; gap:12px; align-items:end; margin-bottom:12px; } label { display:grid; gap:4px; color:var(--brand-dark); font-size:.7rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; } input, textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink); background:#fff; font:inherit; } input:focus, textarea:focus { outline:0; border-color:var(--brand); box-shadow:0 0 0 3px rgba(113,63,151,.12); } textarea { min-height:39px; resize:vertical; }
+    .quick-attempts { display:flex; align-items:end; gap:8px; flex-wrap:wrap; margin:0 0 12px; padding:10px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; } .quick-attempts label { width:180px; } .quick-attempts p { margin:0 0 7px; color:var(--muted); font-size:.77rem; } button.secondary { color:var(--brand-dark); background:#fff; border:1px solid var(--line); }
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; } table { width:100%; border-collapse:collapse; } th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; } th { color:var(--brand-dark); background:#faf8fd; font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; } th.num, td.num { text-align:right; } tbody tr:last-child td { border-bottom:0; } .shot-input { width:78px; min-width:64px; text-align:center; } .percent { font-weight:900; color:var(--brand-dark); } .empty { padding:19px; color:var(--muted); text-align:center; }
     .total-row td { color:#4a3800; background:#fff8d8; font-weight:900; } .actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; } button { border:0; border-radius:999px; padding:9px 15px; color:#fff; background:var(--brand); font:inherit; font-size:.84rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); } button:disabled { opacity:.58; cursor:not-allowed; } .status { min-height:1.2em; color:var(--muted); font-size:.82rem; font-weight:750; } .status.ok { color:var(--ok); } .status.err { color:var(--err); }
     .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; } .metric { padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; } .metric span { display:block; color:var(--muted); font-size:.68rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; } .metric strong { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; }
@@ -34,6 +35,11 @@
       <div class="session-fields">
         <label>Data de l'entrenament <input id="trainingDate" type="date" required /></label>
         <label>Observacions <textarea id="notes" placeholder="Opcional"></textarea></label>
+      </div>
+      <div class="quick-attempts">
+        <label>Intentats per jugadora <input id="attemptsForAll" type="number" min="0" step="1" inputmode="numeric" placeholder="Ex.: 10" /></label>
+        <button id="applyAttemptsForAll" class="secondary" type="button">Aplicar a totes</button>
+        <p>Omple la mateixa quantitat d'intents per a tota la plantilla; després pots ajustar cada fila.</p>
       </div>
       <div class="table-wrap"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody id="entryBody"></tbody><tfoot id="entryFoot"></tfoot></table></div>
       <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
@@ -126,6 +132,13 @@
     }
     document.getElementById('trainingDate').value = todayISO();
     saveButton.addEventListener('click', saveSession);
+    document.getElementById('applyAttemptsForAll').addEventListener('click', function(){
+      const value = Number(document.getElementById('attemptsForAll').value);
+      if(!Number.isInteger(value) || value < 0) return setStatus('Indica un nombre enter d\'intents per aplicar a totes.', 'err');
+      entryBody.querySelectorAll('.attempts').forEach(input => { input.value = value; });
+      updateEntryTotals();
+      setStatus(`${value} intents aplicats a totes les jugadores.`);
+    });
     playerRows(); loadEntries();
   </script>
 </body>

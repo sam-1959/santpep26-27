@@ -75,13 +75,18 @@
       ).join('');
       entryBody.querySelectorAll('input').forEach(input => input.addEventListener('input', updateEntryTotals));
       entryBody.querySelectorAll('.exclude-player').forEach(button => button.addEventListener('click', function(){
-        const row = button.closest('tr'), excluded = row.classList.toggle('session-player-excluded');
-        row.querySelectorAll('input').forEach(input => { input.disabled = excluded; if(excluded) input.value = 0; });
-        button.textContent = excluded ? 'Incloure' : 'Treure';
-        button.setAttribute('aria-pressed', String(excluded));
+        const row = button.closest('tr');
+        setPlayerExcluded(row, !row.classList.contains('session-player-excluded'));
         updateEntryTotals();
       }));
       updateEntryTotals();
+    }
+    function setPlayerExcluded(row, excluded){
+      row.classList.toggle('session-player-excluded', excluded);
+      row.querySelectorAll('input').forEach(input => { input.disabled = excluded; if(excluded) input.value = 0; });
+      const button = row.querySelector('.exclude-player');
+      button.textContent = excluded ? 'Incloure' : 'Treure';
+      button.setAttribute('aria-pressed', String(excluded));
     }
     function entryTotals(entry){
       return Object.values(entry.players || {}).reduce((sum,row) => ({ made:sum.made + (Number(row.made) || 0), attempts:sum.attempts + (Number(row.attempts) || 0) }), { made:0, attempts:0 });
@@ -94,11 +99,14 @@
       document.getElementById('attemptsForAll').value = '';
       playerRows();
       const byName = new Map(Object.values(entry.players || {}).map(row => [row.name, row]));
+      const excludedNames = new Set(Object.values(entry.excludedPlayers || {}).map(player => typeof player === 'string' ? player : player.name));
       [...entryBody.querySelectorAll('tr')].forEach(row => {
         const name = row.children[1].textContent.trim(), saved = byName.get(name);
-        if(!saved) return;
-        row.querySelector('.made').value = Number(saved.made) || 0;
-        row.querySelector('.attempts').value = Number(saved.attempts) || 0;
+        if(saved){
+          row.querySelector('.made').value = Number(saved.made) || 0;
+          row.querySelector('.attempts').value = Number(saved.attempts) || 0;
+        }
+        if(excludedNames.has(name)) setPlayerExcluded(row, true);
       });
       updateEntryTotals();
       saveButton.textContent = 'Desar canvis';
@@ -120,7 +128,7 @@
       return [...entryBody.querySelectorAll('tr')].map(row => {
         const number = row.children[0].textContent.trim(), name = row.children[1].textContent.trim();
         const made = Math.max(0, Number(row.querySelector('.made').value) || 0), attempts = Math.max(0, Number(row.querySelector('.attempts').value) || 0);
-        return { number, name, made, attempts };
+        return { number, name, made, attempts, excluded:row.classList.contains('session-player-excluded') };
       });
     }
     function updateEntryTotals(){
@@ -152,7 +160,9 @@
       renderSummary(); renderHistory();
     }
     async function saveSession(){
-      const trainingDate = document.getElementById('trainingDate').value; const rows = sessionRows().filter(row => row.attempts > 0);
+      const trainingDate = document.getElementById('trainingDate').value;
+      const allRows = sessionRows();
+      const rows = allRows.filter(row => !row.excluded && row.attempts > 0);
       const invalid = rows.find(row => row.made > row.attempts);
       if(!trainingDate) return setStatus("Indica la data de l'entrenament.",'err');
       if(!rows.length) return setStatus('Indica almenys un tir intentat.','err');
@@ -163,9 +173,10 @@
         return setStatus(`Ja hi ha un entrenament desat el ${trainingDate}. S'ha carregat per modificar-lo.`, 'err');
       }
       const existing = editingId ? entries.find(entry => entry.id === editingId) : null;
-      const id = editingId || requestId(); const players = {};
-      rows.forEach(row => { players[safeKey(row.name)] = row; });
-      const payload = { id, teamKey:'JBF', team:'Júnior B F', trainingDate, players, createdAt:existing?.createdAt || new Date().toISOString(), updatedAt:new Date().toISOString() };
+      const id = editingId || requestId(), players = {}, excludedPlayers = {};
+      rows.forEach(row => { players[safeKey(row.name)] = { number:row.number, name:row.name, made:row.made, attempts:row.attempts }; });
+      allRows.filter(row => row.excluded).forEach(row => { excludedPlayers[safeKey(row.name)] = { number:row.number, name:row.name }; });
+      const payload = { id, teamKey:'JBF', team:'Júnior B F', trainingDate, players, excludedPlayers, createdAt:existing?.createdAt || new Date().toISOString(), updatedAt:new Date().toISOString() };
       saveButton.disabled = true; setStatus('Desant entrenament...');
       try {
         const response = await fetch(firebaseUrl(ENTRIES_PATH,id), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });

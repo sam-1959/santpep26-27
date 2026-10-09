@@ -199,9 +199,11 @@
       historyEl.innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Jugadores</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th></th></tr></thead><tbody>${ordered.map(entry => { const players = Object.values(entry.players || {}), made = players.reduce((sum,row) => sum + (Number(row.made)||0),0), attempts = players.reduce((sum,row) => sum + (Number(row.attempts)||0),0); return `<tr><td>${escapeHtml(entry.trainingDate || '—')}</td><td class="num">${players.length}</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num percent">${pct(made,attempts)}</td><td><button class="load-training" type="button" data-entry-id="${escapeHtml(entry.id)}">Carregar</button></td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
     }
     async function loadEntries(){
-      try { const response = await fetch(firebaseUrl(ENTRIES_PATH),{cache:'no-store'}); if(!response.ok) throw new Error('Firebase '+response.status); const data = await response.json(); entries = Object.values(data || {}).filter(Boolean); }
+      let loaded = false;
+      try { const response = await fetch(firebaseUrl(ENTRIES_PATH),{cache:'no-store'}); if(!response.ok) throw new Error('Firebase '+response.status); const data = await response.json(); entries = Object.values(data || {}).filter(Boolean); loaded = true; }
       catch(error) { entries = []; setStatus("No s'han pogut carregar els registres encara.",'err'); }
       renderSummary(); renderHistory();
+      if(loaded) loadTrainingForSelectedDate();
     }
     async function saveSession(){
       const trainingDate = document.getElementById('trainingDate').value;

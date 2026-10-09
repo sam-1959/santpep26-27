@@ -112,6 +112,13 @@
       saveButton.textContent = 'Desar canvis';
       setStatus(`Entrenament del ${entry.trainingDate} carregat. Modifica les dades i desa els canvis.`);
     }
+    function loadTrainingForSelectedDate(){
+      const date = document.getElementById('trainingDate').value;
+      const entry = entries
+        .filter(item => item.trainingDate === date)
+        .sort((a,b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
+      if(entry) loadTraining(entry.id);
+    }
     function sessionRows(){
       return [...entryBody.querySelectorAll('tr')].map(row => {
         const number = row.children[0].textContent.trim(), name = row.children[1].textContent.trim();
@@ -172,6 +179,7 @@
       finally { saveButton.disabled = false; }
     }
     document.getElementById('trainingDate').value = todayISO();
+    document.getElementById('trainingDate').addEventListener('change', loadTrainingForSelectedDate);
     saveButton.addEventListener('click', saveSession);
     document.getElementById('newTraining').addEventListener('click', resetTraining);
     historyEl.addEventListener('click', function(event){ const button = event.target.closest('[data-entry-id]'); if(button) loadTraining(button.dataset.entryId); });

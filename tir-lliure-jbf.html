@@ -37,7 +37,7 @@
         <div class="attempts-init"><label>Intentats per jugadora <input id="attemptsForAll" type="number" min="0" step="1" inputmode="numeric" placeholder="Ex.: 10" /></label><button id="applyAttemptsForAll" class="secondary" type="button">Aplicar a totes</button></div>
       </div>
       <div class="table-wrap"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th>Sessió</th></tr></thead><tbody id="entryBody"></tbody><tfoot id="entryFoot"></tfoot></table></div>
-      <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><button id="newTraining" class="secondary" type="button">Nou entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
+      <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
     </section>
     <section class="panel">
       <div class="panel-head"><div><h2>Acumulat de la temporada</h2><p class="sub">Classificació per percentatge, amb el volum de tirs registrat.</p></div></div>
@@ -86,14 +86,6 @@
     function entryTotals(entry){
       return Object.values(entry.players || {}).reduce((sum,row) => ({ made:sum.made + (Number(row.made) || 0), attempts:sum.attempts + (Number(row.attempts) || 0) }), { made:0, attempts:0 });
     }
-    function resetTraining(){
-      editingId = '';
-      document.getElementById('trainingDate').value = todayISO();
-      document.getElementById('attemptsForAll').value = '';
-      playerRows();
-      saveButton.textContent = 'Desar entrenament';
-      setStatus('');
-    }
     function loadTraining(id){
       const entry = entries.find(item => item.id === id);
       if(!entry) return setStatus("No s'ha trobat l'entrenament seleccionat.", 'err');
@@ -117,7 +109,12 @@
       const entry = entries
         .filter(item => item.trainingDate === date)
         .sort((a,b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
-      if(entry) loadTraining(entry.id);
+      if(entry) return loadTraining(entry.id);
+      editingId = '';
+      document.getElementById('attemptsForAll').value = '';
+      playerRows();
+      saveButton.textContent = 'Desar entrenament';
+      setStatus('Data nova: pots entrar un nou entrenament.');
     }
     function sessionRows(){
       return [...entryBody.querySelectorAll('tr')].map(row => {
@@ -186,7 +183,6 @@
     document.getElementById('trainingDate').value = todayISO();
     document.getElementById('trainingDate').addEventListener('change', loadTrainingForSelectedDate);
     saveButton.addEventListener('click', saveSession);
-    document.getElementById('newTraining').addEventListener('click', resetTraining);
     historyEl.addEventListener('click', function(event){ const button = event.target.closest('[data-entry-id]'); if(button) loadTraining(button.dataset.entryId); });
     document.getElementById('applyAttemptsForAll').addEventListener('click', function(){
       const value = Number(document.getElementById('attemptsForAll').value);

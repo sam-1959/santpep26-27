@@ -19,7 +19,7 @@
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; } table { width:100%; border-collapse:collapse; } th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; } th { color:var(--brand-dark); background:#faf8fd; font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; } th.num, td.num { text-align:right; } tbody tr:last-child td { border-bottom:0; } .shot-input { width:78px; min-width:64px; text-align:center; } .percent { font-weight:900; color:var(--brand-dark); } .exclude-player { border:1px solid #e5c5c9; border-radius:999px; padding:5px 8px; color:#9d2631; background:#fff7f7; font-size:.72rem; font-weight:850; cursor:pointer; } .session-player-excluded { opacity:.52; background:#fafafa; } .session-player-excluded .rank-name { text-decoration:line-through; } .session-player-excluded .exclude-player { color:var(--brand-dark); border-color:#d8c9e6; background:#faf6ff; } .empty { padding:19px; color:var(--muted); text-align:center; }
     .total-row td { color:#4a3800; background:#fff8d8; font-weight:900; } .actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; } button { border:0; border-radius:999px; padding:9px 15px; color:#fff; background:var(--brand); font:inherit; font-size:.84rem; font-weight:900; cursor:pointer; box-shadow:var(--shadow); } button:disabled { opacity:.58; cursor:not-allowed; } .status { min-height:1.2em; color:var(--muted); font-size:.82rem; font-weight:750; } .status.ok { color:var(--ok); } .status.err { color:var(--err); }
     .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; } .metric { padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf8fd; } .metric span { display:block; color:var(--muted); font-size:.68rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; } .metric strong { display:block; margin-top:3px; color:var(--brand-dark); font-size:1.35rem; }
-    .rank { width:45px; color:var(--muted); text-align:right; } .rank-medal { font-size:1.1rem; } .rank-name { font-weight:850; } .weekly-block + .weekly-block { margin-top:16px; } .weekly-title { margin:0 0 8px; color:var(--brand-dark); font-size:.94rem; } .weekly-title span { color:var(--muted); font-size:.76rem; font-weight:700; } .load-training { border:1px solid #d8c9e6; padding:5px 9px; color:var(--brand-dark); background:#faf6ff; font-size:.72rem; font-weight:850; box-shadow:none; } footer { padding:0 16px 24px; color:var(--muted); text-align:center; font-size:.73rem; }
+    .summary-switch { display:flex; overflow:hidden; border:1px solid var(--line); border-radius:10px; } .summary-switch button { padding:7px 11px; border:0; border-radius:0; color:var(--muted); background:#fff; box-shadow:none; font-size:.76rem; } .summary-switch button + button { border-left:1px solid var(--line); } .summary-switch button.active { color:#fff; background:var(--brand); } .rank { width:45px; color:var(--muted); text-align:right; } .rank-medal { font-size:1.1rem; } .rank-name { font-weight:850; } .load-training { border:1px solid #d8c9e6; padding:5px 9px; color:var(--brand-dark); background:#faf6ff; font-size:.72rem; font-weight:850; box-shadow:none; } footer { padding:0 16px 24px; color:var(--muted); text-align:center; font-size:.73rem; }
     @media(max-width:620px) { main { width:min(100% - 16px,1040px); padding-top:14px; } .session-fields, .summary-grid { grid-template-columns:1fr; } th,td { padding:8px 7px; } .shot-input { width:62px; min-width:56px; } }
   </style>
 </head>
@@ -40,13 +40,9 @@
       <div class="actions"><button id="saveButton" type="button">Desar entrenament</button><span id="status" class="status" role="status" aria-live="polite"></span></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><div><h2>Acumulat de la temporada</h2><p class="sub">Classificació per percentatge, amb el volum de tirs registrat.</p></div></div>
+      <div class="panel-head"><div><h2 id="summaryTitle">Acumulat de la setmana</h2><p class="sub" id="summarySub">Classificació per percentatge, amb el volum de tirs registrat.</p></div><div class="summary-switch" role="group" aria-label="Període de l’acumulat"><button class="active" type="button" data-summary-scope="week">Setmana</button><button type="button" data-summary-scope="season">Temporada</button></div></div>
       <div class="summary-grid" id="seasonMetrics"></div>
       <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th class="rank">#</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><div><h2>Acumulat per setmana</h2><p class="sub">Classificació de cada jugadora dins de cada setmana d’entrenaments.</p></div></div>
-      <div id="weeklyTotals"></div>
     </section>
     <section class="panel">
       <div class="panel-head"><div><h2>Entrenaments registrats</h2><p class="sub">Resum de cada entrada desada.</p></div></div>
@@ -64,7 +60,7 @@
     ];
     const entryBody = document.getElementById('entryBody'), entryFoot = document.getElementById('entryFoot');
     const statusEl = document.getElementById('status'), saveButton = document.getElementById('saveButton'), historyEl = document.getElementById('history');
-    let entries = [], editingId = '';
+    let entries = [], editingId = '', summaryScope = 'week';
     const DEFAULT_EXCLUDED_PLAYERS = new Set(['Núria Navarrete']);
     const numberSort = value => Number(String(value || '').replace(/\D/g,'')) || 999;
     const safeKey = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
@@ -144,9 +140,9 @@
       rows.forEach((row,index) => { made += row.made; attempts += row.attempts; entryBody.children[index].querySelector('.percent').textContent = pct(row.made,row.attempts); });
       entryFoot.innerHTML = `<tr class="total-row"><td colspan="2">Total d'equip</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num">${pct(made,attempts)}</td><td></td></tr>`;
     }
-    function allPlayerTotals(){
+    function allPlayerTotals(sourceEntries = entries){
       const totals = new Map(PLAYERS.map(([number,name]) => [name,{number,name,made:0,attempts:0}]));
-      entries.forEach(entry => Object.values(entry.players || {}).forEach(row => {
+      sourceEntries.forEach(entry => Object.values(entry.players || {}).forEach(row => {
         if(!totals.has(row.name)) totals.set(row.name,{number:row.number || '',name:row.name,made:0,attempts:0});
         const total = totals.get(row.name); total.made += Number(row.made) || 0; total.attempts += Number(row.attempts) || 0;
       }));
@@ -165,34 +161,17 @@
       const end = new Date(`${weekStart}T12:00:00`); end.setDate(end.getDate() + 6);
       return `${formatDate(weekStart)} – ${end.toISOString().slice(0,10).split('-').reverse().join('/')}`;
     }
-    function renderWeeklyTotals(){
-      const weeks = new Map();
-      entries.filter(entry => entry.trainingDate).forEach(entry => {
-        const week = weekStartISO(entry.trainingDate);
-        const current = weeks.get(week) || { sessions:0, players:new Map() };
-        current.sessions += 1;
-        Object.values(entry.players || {}).forEach(row => {
-          const player = current.players.get(row.name) || { number:row.number || '', name:row.name, made:0, attempts:0 };
-          player.made += Number(row.made) || 0; player.attempts += Number(row.attempts) || 0;
-          current.players.set(row.name, player);
-        });
-        weeks.set(week, current);
-      });
-      const ordered = [...weeks.entries()].sort(([a],[b]) => b.localeCompare(a));
-      const medals = ['🥇','🥈','🥉'];
-      document.getElementById('weeklyTotals').innerHTML = ordered.length ? ordered.map(([week,total]) => {
-        const players = [...total.players.values()].filter(row => row.attempts > 0).sort((a,b) => (b.made/b.attempts) - (a.made/a.attempts) || b.attempts-a.attempts || a.name.localeCompare(b.name,'ca'));
-        const team = players.reduce((sum,row) => ({ made:sum.made + row.made, attempts:sum.attempts + row.attempts }), {made:0,attempts:0});
-        return `<div class="weekly-block"><h3 class="weekly-title">Setmana del ${weeklyLabel(week)} <span>· ${total.sessions} entrenament${total.sessions === 1 ? '' : 's'}</span></h3><div class="table-wrap"><table><thead><tr><th class="rank">#</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>${players.map((row,index) => `<tr><td class="rank${index < 3 ? ' rank-medal' : ''}" aria-label="Posició ${index+1}">${medals[index] || index+1}</td><td class="rank-name">${escapeHtml(row.number ? row.number + ' · ' : '')}${escapeHtml(row.name)}</td><td class="num">${row.made}</td><td class="num">${row.attempts}</td><td class="num percent">${pct(row.made,row.attempts)}</td></tr>`).join('')}</tbody><tfoot><tr class="total-row"><td colspan="2">Total d’equip</td><td class="num">${team.made}</td><td class="num">${team.attempts}</td><td class="num">${pct(team.made,team.attempts)}</td></tr></tfoot></table></div></div>`;
-      }).join('') : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
-    }
     function renderSummary(){
-      const totals = allPlayerTotals(); const team = totals.reduce((sum,row) => ({ made:sum.made + row.made, attempts:sum.attempts + row.attempts }),{made:0,attempts:0});
-      document.getElementById('seasonMetrics').innerHTML = `<div class="metric"><span>Entrenaments</span><strong>${entries.length}</strong></div><div class="metric"><span>Tirs anotats</span><strong>${team.made}</strong></div><div class="metric"><span>% d'equip</span><strong>${pct(team.made,team.attempts)}</strong></div>`;
+      const currentWeek = weekStartISO(todayISO());
+      const scopedEntries = summaryScope === 'week' ? entries.filter(entry => entry.trainingDate && weekStartISO(entry.trainingDate) === currentWeek) : entries;
+      const totals = allPlayerTotals(scopedEntries); const team = totals.reduce((sum,row) => ({ made:sum.made + row.made, attempts:sum.attempts + row.attempts }),{made:0,attempts:0});
+      document.getElementById('summaryTitle').textContent = summaryScope === 'week' ? `Acumulat · setmana del ${weeklyLabel(currentWeek)}` : 'Acumulat de la temporada';
+      document.getElementById('summarySub').textContent = summaryScope === 'week' ? 'Classificació de la setmana actual.' : 'Classificació per percentatge, amb el volum de tirs registrat.';
+      document.querySelectorAll('[data-summary-scope]').forEach(button => button.classList.toggle('active', button.dataset.summaryScope === summaryScope));
+      document.getElementById('seasonMetrics').innerHTML = `<div class="metric"><span>Entrenaments</span><strong>${scopedEntries.length}</strong></div><div class="metric"><span>Tirs anotats</span><strong>${team.made}</strong></div><div class="metric"><span>% d'equip</span><strong>${pct(team.made,team.attempts)}</strong></div>`;
       const ranked = totals.filter(row => row.attempts > 0).sort((a,b) => (b.made/b.attempts) - (a.made/a.attempts) || b.attempts-a.attempts || a.name.localeCompare(b.name,'ca'));
       const medals = ['🥇','🥈','🥉'];
       document.getElementById('rankingBody').innerHTML = ranked.length ? ranked.map((row,index) => `<tr><td class="rank${index < 3 ? ' rank-medal' : ''}" aria-label="Posició ${index+1}">${medals[index] || index+1}</td><td class="rank-name">${escapeHtml(row.number ? row.number + ' · ' : '')}${escapeHtml(row.name)}</td><td class="num">${row.made}</td><td class="num">${row.attempts}</td><td class="num percent">${pct(row.made,row.attempts)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Encara no hi ha tirs lliures registrats.</td></tr>';
-      renderWeeklyTotals();
     }
     function renderHistory(){
       const ordered = entries.slice().sort((a,b) => String(b.trainingDate || '').localeCompare(String(a.trainingDate || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
@@ -240,6 +219,10 @@
     document.getElementById('trainingDate').value = todayISO();
     document.getElementById('trainingDate').addEventListener('change', loadTrainingForSelectedDate);
     saveButton.addEventListener('click', saveSession);
+    document.querySelectorAll('[data-summary-scope]').forEach(button => button.addEventListener('click', function(){
+      summaryScope = this.dataset.summaryScope;
+      renderSummary();
+    }));
     historyEl.addEventListener('click', function(event){ const button = event.target.closest('[data-entry-id]'); if(button) loadTraining(button.dataset.entryId); });
     document.getElementById('applyAttemptsForAll').addEventListener('click', function(){
       const value = Number(document.getElementById('attemptsForAll').value);

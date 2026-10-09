@@ -880,6 +880,15 @@
     function selectedGameLocation(){
       return gameEditVenue.value === "Altres" ? gameEditOtherLocation.value.trim() : gameEditVenue.value;
     }
+    function gameEditErrorMessage(error){
+      const code=String(error && error.code || '');
+      const message=String(error && error.message || error || 'Error desconegut');
+      if(code==='auth/popup-closed-by-user') return "No s'ha iniciat sessió: torna a desar i completa l'accés amb Google.";
+      if(code==='auth/popup-blocked') return "El navegador ha bloquejat la finestra d'accés amb Google. Permet les finestres emergents i torna-ho a provar.";
+      if(/No autenticat/i.test(message)) return "No s'ha iniciat sessió amb Google. Torna a desar i completa l'accés.";
+      if(/Firebase (401|403)|Permission denied/i.test(message)) return "Firebase ha rebutjat el desat ("+message+"). Comprova el permís de calendarGameEdits per a aquest usuari autenticat.";
+      return "No s'ha pogut desar: "+message;
+    }
     function findGameByEditKey(key){
       for(let i=0;i<DATA.weeks.length;i++){
         const game=DATA.weeks[i].games.find(function(item){ return gameEditKey(item)===key; });
@@ -945,7 +954,10 @@
         const response=await fetch(firebaseDataUrl(GAME_EDITS_FIREBASE_PATH+'/'+key, token), {
           method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(edit)
         });
-        if(!response.ok) throw new Error('Firebase '+response.status);
+        if(!response.ok){
+          const detail=await response.text();
+          throw new Error('Firebase '+response.status+(detail ? ': '+detail : ''));
+        }
         gameSaved=true;
         gameEdits[key]=edit;
         let manualChange=null;
@@ -997,7 +1009,7 @@
           showMonth(monthKeys.indexOf(monthKeyOf(DATA.weeks[savedWeekIndex])), savedWeekIndex);
           alert("El canvi s'ha desat, però no s'ha pogut enviar l'avís ni sincronitzar Google Calendar: " + (err.message || err));
         }else{
-          gameEditStatus.textContent='No s\'ha pogut desar. Comprova que tens permís.';
+          gameEditStatus.textContent=gameEditErrorMessage(err);
         }
       }finally{
         submit.disabled=false;

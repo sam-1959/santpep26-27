@@ -157,6 +157,11 @@
       const [year,month,day] = String(dateISO || '').split('-');
       return year && month && day ? `${day}/${month}/${year}` : '—';
     }
+    function formatWeekdayDate(dateISO){
+      const weekdays = ['diumenge','dilluns','dimarts','dimecres','dijous','divendres','dissabte'];
+      const date = new Date(`${dateISO}T12:00:00`);
+      return Number.isNaN(date.getTime()) ? '—' : `${weekdays[date.getDay()]}, ${formatDate(dateISO)}`;
+    }
     function weeklyLabel(weekStart){
       const end = new Date(`${weekStart}T12:00:00`); end.setDate(end.getDate() + 6);
       return `${formatDate(weekStart)} – ${end.toISOString().slice(0,10).split('-').reverse().join('/')}`;
@@ -175,7 +180,7 @@
     }
     function renderHistory(){
       const ordered = entries.slice().sort((a,b) => String(b.trainingDate || '').localeCompare(String(a.trainingDate || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-      historyEl.innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Jugadores</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th></th></tr></thead><tbody>${ordered.map(entry => { const players = Object.values(entry.players || {}), made = players.reduce((sum,row) => sum + (Number(row.made)||0),0), attempts = players.reduce((sum,row) => sum + (Number(row.attempts)||0),0); return `<tr><td>${escapeHtml(entry.trainingDate || '—')}</td><td class="num">${players.length}</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num percent">${pct(made,attempts)}</td><td><button class="load-training" type="button" data-entry-id="${escapeHtml(entry.id)}">Carregar</button></td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
+      historyEl.innerHTML = ordered.length ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th class="num">Jugadores</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th><th></th></tr></thead><tbody>${ordered.map(entry => { const players = Object.values(entry.players || {}), made = players.reduce((sum,row) => sum + (Number(row.made)||0),0), attempts = players.reduce((sum,row) => sum + (Number(row.attempts)||0),0); return `<tr><td>${escapeHtml(formatWeekdayDate(entry.trainingDate))}</td><td class="num">${players.length}</td><td class="num">${made}</td><td class="num">${attempts}</td><td class="num percent">${pct(made,attempts)}</td><td><button class="load-training" type="button" data-entry-id="${escapeHtml(entry.id)}">Carregar</button></td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Encara no hi ha entrenaments registrats.</div>';
     }
     async function loadEntries(){
       let loaded = false;

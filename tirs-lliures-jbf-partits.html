@@ -59,5 +59,12 @@
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+  <script>
+    const totalsBody = document.querySelector('.combined tbody');
+    const percentage = row => parseFloat((row.cells[6].textContent.match(/([\d,]+)%/) || ['','-1'])[1].replace(',', '.')) || -1;
+    [...totalsBody.rows]
+      .sort((a, b) => percentage(b) - percentage(a))
+      .forEach(row => totalsBody.appendChild(row));
+  </script>
 </body>
 </html>

@@ -1,13 +1,6 @@
 name: Envia resum setmanal Visites Fisio
 
 on:
-  schedule:
-    # Dilluns al matí. Les execucions repetides són de seguretat: l'script
-    # conserva l'estat i evita reenviar el resum de la mateixa setmana.
-    - cron: "17 7 * * 1"
-    - cron: "47 7 * * 1"
-    - cron: "17 8 * * 1"
-    - cron: "47 8 * * 1"
   workflow_dispatch:
     inputs:
       dry_run:

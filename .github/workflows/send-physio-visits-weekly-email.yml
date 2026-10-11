@@ -1,6 +1,13 @@
 name: Envia resum setmanal Visites Fisio
 
 on:
+  schedule:
+    # Dilluns al matí. Les execucions repetides són de seguretat: l'script
+    # conserva l'estat i evita reenviar el resum de la mateixa setmana.
+    - cron: "17 7 * * 1"
+    - cron: "47 7 * * 1"
+    - cron: "17 8 * * 1"
+    - cron: "47 8 * * 1"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -50,7 +57,7 @@ jobs:
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.recipient_override || 'Direcció tècnica' }}
           PHYSIO_VISITS_EMAIL_RECIPIENTS: ""
           PHYSIO_VISITS_EMAIL_RECIPIENT_NAMES: ""
-          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzScJtQ9R5NMFw2ZAUAnZyWq52OL6Ds1waJ_4XYRTzL36x354opt6Kdh1IojkmdordO/exec"
+          PHYSIO_VISITS_EMAIL_APP_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxpF6Jym7L_lPwBTX1W8ozSEx3h9ytdQrSUOC3tywVvPLkJdgQnpUhVJrokDcucNo3G/exec"
         run: |
           for intent in 1 2 3; do
             echo "Intent ${intent}/3 d'enviament del resum setmanal de Visites Fisio..."

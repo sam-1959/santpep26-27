@@ -220,7 +220,7 @@ function enviarSetmanalRpe(options) {
       return;
     }
     var recipients = rpeRecipientsForTeam(teamKey, contacts);
-    var teamPayload = buildRpeTeamPayload(teamKey, teamName, selectedWeek, dates, records, rosterInfo);
+    var teamPayload = buildRpeTeamPayload(teamKey, teamName, selectedWeek, dates, records, rosterInfo, allRecords);
     recipients.teamContacts.forEach(function(contact) {
       addRecipientTeamPayload(teamRecipientMap, contact, teamPayload);
     });
@@ -300,7 +300,7 @@ function enviarResumRpeDtecnic() {
       return record.teamKey === teamKey && dates.indexOf(record.trainingDate) !== -1;
     });
     if (!records.length) return null;
-    return buildRpeTeamPayload(teamKey, rosterInfo.teamNamesByKey[teamKey] || teamKey, selectedWeek, dates, records, rosterInfo);
+    return buildRpeTeamPayload(teamKey, rosterInfo.teamNamesByKey[teamKey] || teamKey, selectedWeek, dates, records, rosterInfo, allRecords);
   }).filter(function(team) { return team; });
 
   if (!teams.length) {
@@ -839,7 +839,8 @@ function addRecipientTeamPayload(map, contact, teamPayload) {
   }
 }
 
-function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, rosterInfo) {
+function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, rosterInfo, allRecords) {
+  allRecords = allRecords || records;
   var groups = {};
   records.forEach(function(record) {
     var key = record.player || "Sense nom";
@@ -852,6 +853,10 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
     var fatigueAvg = average(group.records, "muscleFatigue");
     var sleepAvg = average(group.records, "sleepHours");
     var loadTotal = group.records.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
+    var playerHistory = allRecords.filter(function(record) {
+      return record.teamKey === teamKey && normalize(record.player) === normalize(group.player);
+    });
+    var loadSummary = loadSummaryForRecords(group.records, playerHistory);
     var numberedRecord = group.records.filter(function(record) { return record.playerNumber; })[0];
     var number = rosterNumber(rosterInfo, team, group.player) || (numberedRecord ? numberedRecord.playerNumber : "") || "";
     return {
@@ -862,12 +867,16 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
       rpe: rpeAvg,
       fatigue: fatigueAvg,
       sleep: sleepAvg,
-      load: loadTotal
+      load: loadTotal,
+      loadAverage: loadSummary.average,
+      loadTrend: loadSummary.trend
     };
   }).sort(function(a, b) {
     return numberSortValue(a.number) - numberSortValue(b.number) || a.player.localeCompare(b.player, "ca");
   });
   var totalLoad = records.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
+  var teamHistory = allRecords.filter(function(record) { return record.teamKey === teamKey; });
+  var teamLoadSummary = loadSummaryForRecords(records, teamHistory);
   var rpeHigh = players.filter(function(group) { return alertLabels(group).indexOf("RPE") !== -1; }).map(function(group) { return group.player; });
   var fatigueHigh = players.filter(function(group) { return alertLabels(group).indexOf("Fatiga") !== -1; }).map(function(group) { return group.player; });
   var sleepLow = players.filter(function(group) { return alertLabels(group).indexOf("Son") !== -1; }).map(function(group) { return group.player; });
@@ -882,6 +891,8 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
       fatigue: formatNumber(average(records, "muscleFatigue")),
       sleep: formatNumber(average(records, "sleepHours")),
       load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
+      loadAverage: formatNumber(teamLoadSummary.average, 0),
+      loadTrend: formatPercentage(teamLoadSummary.trend),
       alerts: { rpe: rpeHigh, fatigue: fatigueHigh, sleep: sleepLow }
     },
     dates: dates.map(function(date) { return { iso: date, label: formatDate(date).slice(0, 5) }; }),
@@ -898,11 +909,46 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
           rpe: formatNumber(group.rpe),
           fatigue: formatNumber(group.fatigue),
           sleep: formatNumber(group.sleep),
-          load: Math.round(group.load).toLocaleString("ca-ES")
-        }
+          load: formatNumber(group.loadAverage, 0)
+        },
+        weeklyLoad: Math.round(group.load).toLocaleString("ca-ES"),
+        loadTrend: formatPercentage(group.loadTrend)
       };
     })
   };
+}
+
+function loadSummaryForRecords(currentRecords, historyRecords) {
+  var current = currentRecords || [];
+  var history = historyRecords || [];
+  var currentTotal = current.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
+  var currentAverage = current.length ? currentTotal / current.length : null;
+  var weeks = {};
+  history.forEach(function(record) {
+    var date = dateFromISO(record.trainingDate);
+    if (!date) return;
+    var key = isoFromDate(mondayOf(date));
+    if (!weeks[key]) weeks[key] = [];
+    weeks[key].push(record);
+  });
+  var weeklyAverages = Object.keys(weeks).map(function(key) {
+    var weekRecords = weeks[key];
+    return weekRecords.reduce(function(sum, record) { return sum + numeric(record.load); }, 0) / weekRecords.length;
+  }).filter(function(value) { return value > 0; });
+  var seasonAverage = weeklyAverages.length
+    ? weeklyAverages.reduce(function(sum, value) { return sum + value; }, 0) / weeklyAverages.length
+    : null;
+  return {
+    total: currentTotal,
+    average: currentAverage,
+    trend: currentAverage !== null && seasonAverage ? (currentAverage - seasonAverage) / seasonAverage * 100 : null
+  };
+}
+
+function formatPercentage(value) {
+  if (value === null || value === undefined || isNaN(value)) return "—";
+  var rounded = Math.round(value);
+  return (rounded > 0 ? "+" : "") + rounded.toLocaleString("ca-ES") + "%";
 }
 
 function valuesFor(group, dates, fieldFn) {
@@ -930,7 +976,9 @@ function buildRpeGroupedText(payload) {
     lines.push("RPE mitjà: " + team.summary.rpe);
     lines.push("Fatiga mitjana: " + team.summary.fatigue);
     lines.push("Hores de son mitjana: " + team.summary.sleep);
-    lines.push("Càrrega total: " + team.summary.load);
+    lines.push("Càrrega setmana: " + team.summary.load);
+    lines.push("Càrrega mitjana: " + team.summary.loadAverage);
+    lines.push("Tendència de càrrega: " + team.summary.loadTrend);
     lines.push("Alertes RPE: " + alertesResum(team.summary.alerts.rpe));
     lines.push("Alertes Fatiga: " + alertesResum(team.summary.alerts.fatigue));
     lines.push("Alertes Son: " + alertesResum(team.summary.alerts.sleep));
@@ -942,7 +990,7 @@ function buildRpeGroupedText(payload) {
 function buildRpeCoordinatorText(payload) {
   var lines = ["CB SANT JOSEP BADALONA", "", "Resum RPE setmanal", "Setmana: " + payload.weekLabel, ""];
   payload.teams.forEach(function(team) {
-    lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega " + team.summary.load);
+    lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega setmana " + team.summary.load + " · Mitjana " + team.summary.loadAverage + " · Tendència " + team.summary.loadTrend);
     lines.push("  Alertes — RPE: " + alertesResum(team.summary.alerts.rpe) + " | Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " | Son: " + alertesResum(team.summary.alerts.sleep));
   });
   lines.push("", "Vista Global RPE: " + RPE_GLOBAL_URL);
@@ -953,13 +1001,15 @@ function buildRpeCoordinatorHtml(payload) {
   var rows = payload.teams.map(function(team) {
     var alerts = "RPE: " + alertesResum(team.summary.alerts.rpe) + " · Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " · Son: " + alertesResum(team.summary.alerts.sleep);
     return '<tr>' +
-      emailCell(team.team, "20%", true, false, false) +
-      emailCell(team.summary.records, "9%", false, true, true) +
-      emailCell(team.summary.rpe, "9%", false, true, true) +
-      emailCell(team.summary.fatigue, "11%", false, true, true) +
-      emailCell(team.summary.sleep, "10%", false, true, true) +
-      emailCell(team.summary.load, "12%", false, true, true) +
-      emailCell(alerts, "29%", false, false, true) +
+      emailCell(team.team, "18%", true, false, false) +
+      emailCell(team.summary.records, "7%", false, true, true) +
+      emailCell(team.summary.rpe, "7%", false, true, true) +
+      emailCell(team.summary.fatigue, "9%", false, true, true) +
+      emailCell(team.summary.sleep, "9%", false, true, true) +
+      emailCell(team.summary.load, "10%", false, true, true) +
+      emailCell(team.summary.loadAverage, "10%", false, true, true) +
+      emailCell(team.summary.loadTrend, "10%", false, true, true) +
+      emailCell(alerts, "20%", false, false, true) +
     '</tr>';
   }).join("");
   return emailShell(
@@ -967,7 +1017,7 @@ function buildRpeCoordinatorHtml(payload) {
     '<p style="margin:0 0 18px;color:#666;font-weight:bold;">Setmana ' + escaparHtml(payload.weekLabel) + '</p>' +
     '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
       '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
-        emailHead("Equip") + emailHead("Reg.", true) + emailHead("RPE", true) + emailHead("Fatiga", true) + emailHead("Son", true) + emailHead("Càrrega", true) + emailHead("Alertes", true) +
+        emailHead("Equip") + emailHead("Reg.", true) + emailHead("RPE", true) + emailHead("Fatiga", true) + emailHead("Son", true) + emailHead("Setmana", true) + emailHead("Mitjana", true) + emailHead("Tendència", true) + emailHead("Alertes", true) +
       '</tr></thead><tbody>' + rows + '</tbody></table>' +
     '<p style="margin:22px 0 0;text-align:center;"><a href="' + escaparHtml(RPE_GLOBAL_URL) + '" style="display:inline-block;padding:11px 18px;background:#4B1D6D;color:#FFC72C;text-decoration:none;border-radius:6px;font-weight:bold;">Obrir Vista Global RPE</a></p>'
   );
@@ -1009,6 +1059,7 @@ function rpeAlertsBlock(alerts) {
 }
 
 function rpeMetricTable(title, dates, players, field, averageField) {
+  var isLoad = field === "load";
   var headerDates = dates.map(function(date) {
     return '<th style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;">' + escaparHtml(date.label || date.iso) + '</th>';
   }).join("");
@@ -1016,17 +1067,22 @@ function rpeMetricTable(title, dates, players, field, averageField) {
     var values = (player[field] || []).map(function(value) {
       return '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;">' + escaparHtml(value === "" || value == null ? "—" : value) + '</td>';
     }).join("");
+    var loadSummaryCells = isLoad
+      ? '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.weeklyLoad || "—") + '</td>' +
+        '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.averages && player.averages[averageField]) + '</td>' +
+        '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.loadTrend || "—") + '</td>'
+      : '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.averages && player.averages[averageField]) + '</td>';
     return '<tr>' +
       '<td style="padding:8px;border-bottom:1px solid #E5E5E5;font-weight:bold;color:#4B1D6D;white-space:nowrap;">' + (player.number ? "#" + escaparHtml(player.number) + " " : "") + escaparHtml(player.player) + '</td>' +
       '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:left;">' + alertesHtml(player.alerts) + '</td>' +
       values +
-      '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.averages && player.averages[averageField]) + '</td>' +
+      loadSummaryCells +
       '</tr>';
   }).join("");
   return '<h3 style="color:#4B1D6D;margin:20px 0 8px;font-size:16px;">' + escaparHtml(title) + '</h3>' +
     '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;">' +
     '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
-    head("Jugador/a") + head("Alertes") + headerDates + '<th style="padding:8px;text-align:center;">Mitjana</th>' +
+    head("Jugador/a") + head("Alertes") + headerDates + (isLoad ? '<th style="padding:8px;text-align:center;">Setmana</th>' : '') + '<th style="padding:8px;text-align:center;">Mitjana</th>' + (isLoad ? '<th style="padding:8px;text-align:center;">Tendència</th>' : '') +
     '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 

@@ -20,6 +20,7 @@ var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedat
 var SEASON = "season-26-27";
 var TIMEZONE = "Europe/Madrid";
 var WEEK_OFFSET_DAYS = 7;
+var RPE_GLOBAL_URL = "https://sam-1959.github.io/santpep26-27/wellness-dades.html";
 
 var PHYSIO_VISITS_PATH = "physioVisits/" + SEASON;
 var WELLNESS_RESPONSES_PATH = "wellnessResponses/" + SEASON;
@@ -944,6 +945,7 @@ function buildRpeCoordinatorText(payload) {
     lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega " + team.summary.load);
     lines.push("  Alertes — RPE: " + alertesResum(team.summary.alerts.rpe) + " | Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " | Son: " + alertesResum(team.summary.alerts.sleep));
   });
+  lines.push("", "Vista Global RPE: " + RPE_GLOBAL_URL);
   return lines.join("\n");
 }
 
@@ -966,7 +968,8 @@ function buildRpeCoordinatorHtml(payload) {
     '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
       '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
         emailHead("Equip") + emailHead("Reg.", true) + emailHead("RPE", true) + emailHead("Fatiga", true) + emailHead("Son", true) + emailHead("Càrrega", true) + emailHead("Alertes", true) +
-      '</tr></thead><tbody>' + rows + '</tbody></table>'
+      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p style="margin:22px 0 0;text-align:center;"><a href="' + escaparHtml(RPE_GLOBAL_URL) + '" style="display:inline-block;padding:11px 18px;background:#4B1D6D;color:#FFC72C;text-decoration:none;border-radius:6px;font-weight:bold;">Obrir Vista Global RPE</a></p>'
   );
 }
 

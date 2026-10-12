@@ -439,7 +439,7 @@
         const latest = saved[saved.length - 1];
         button.classList.toggle("saved", Boolean(latest));
         button.textContent = latest
-          ? (latest.label || period) + " " + whole(latest.teamScore) + "-" + whole(latest.oppScore)
+          ? (latest.label || period) + " (" + whole(latest.teamScore) + "-" + whole(latest.oppScore) + ")"
           : period;
         button.title = latest
           ? "Parcial guardat: " + whole(latest.teamScore) + "-" + whole(latest.oppScore)

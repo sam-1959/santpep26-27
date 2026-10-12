@@ -238,17 +238,19 @@ function enviarSetmanalRpe(options) {
 
   recipientKeys.forEach(function(key) {
     var recipient = recipientMap[key];
-    var payload = {
-      week: selectedWeek,
-      weekLabel: weekRangeLabel(selectedWeek),
-      teams: recipient.teams
-    };
-    sendEmailToRecipients(
-      [recipient.email],
-      "Seguiment RPE setmanal - " + payload.weekLabel,
-      buildRpeGroupedText(payload),
-      buildRpeGroupedHtml(payload)
-    );
+    recipient.teams.forEach(function(team) {
+      var payload = {
+        week: selectedWeek,
+        weekLabel: weekRangeLabel(selectedWeek),
+        teams: [team]
+      };
+      sendEmailToRecipients(
+        [recipient.email],
+        "Seguiment RPE setmanal - " + team.team + " - " + payload.weekLabel,
+        buildRpeGroupedText(payload),
+        buildRpeGroupedHtml(payload)
+      );
+    });
   });
 
   setState(stateKey, {

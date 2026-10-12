@@ -204,7 +204,8 @@ function enviarSetmanalRpe(options) {
   var allRecords = Object.keys(responses).map(function(id) {
     return normalizeRpeRecord(responses[id] || {}, id, rosterInfo);
   });
-  var recipientMap = {};
+  var teamRecipientMap = {};
+  var summaryRecipientMap = {};
   var teamResults = [];
 
   selectedTeamKeys(rosterInfo.teamNamesByKey).forEach(function(teamKey) {
@@ -219,25 +220,31 @@ function enviarSetmanalRpe(options) {
     }
     var recipients = rpeRecipientsForTeam(teamKey, contacts);
     var teamPayload = buildRpeTeamPayload(teamKey, teamName, selectedWeek, dates, records, rosterInfo);
-    recipients.contacts.forEach(function(contact) {
-      addRecipientTeamPayload(recipientMap, contact, teamPayload);
+    recipients.teamContacts.forEach(function(contact) {
+      addRecipientTeamPayload(teamRecipientMap, contact, teamPayload);
+    });
+    recipients.summaryContacts.forEach(function(contact) {
+      addRecipientTeamPayload(summaryRecipientMap, contact, teamPayload);
     });
     teamResults.push({ teamKey: teamKey, status: "prepared", records: records.length });
   });
 
-  var recipientKeys = Object.keys(recipientMap);
+  var recipientKeys = Object.keys(teamRecipientMap).concat(Object.keys(summaryRecipientMap)).filter(function(key, index, keys) { return keys.indexOf(key) === index; });
   if (!recipientKeys.length) {
     setState(stateKey, { status: "skipped_no_data", week: selectedWeek, at: nowIso(), teams: teamResults });
     return { status: "skipped_no_data", week: selectedWeek };
   }
 
   if (options.dryRun) {
-    Logger.log("[DRY_RUN] ERP destinataris: " + recipientKeys.map(function(key) { return recipientMap[key].name; }).join(", "));
+    Logger.log("[DRY_RUN] ERP destinataris: " + recipientKeys.map(function(key) {
+      return (teamRecipientMap[key] || summaryRecipientMap[key]).name;
+    }).join(", "));
     return { status: "dry_run", recipients: recipientKeys.length, teams: teamResults };
   }
 
   recipientKeys.forEach(function(key) {
-    var recipient = recipientMap[key];
+    var recipient = teamRecipientMap[key];
+    if (!recipient) return;
     recipient.teams.forEach(function(team) {
       var payload = {
         week: selectedWeek,
@@ -253,13 +260,24 @@ function enviarSetmanalRpe(options) {
     });
   });
 
+  Object.keys(summaryRecipientMap).forEach(function(key) {
+    var recipient = summaryRecipientMap[key];
+    var payload = { week: selectedWeek, weekLabel: weekRangeLabel(selectedWeek), teams: recipient.teams };
+    sendEmailToRecipients(
+      [recipient.email],
+      "Resum RPE setmanal - " + payload.weekLabel,
+      buildRpeCoordinatorText(payload),
+      buildRpeCoordinatorHtml(payload)
+    );
+  });
+
   setState(stateKey, {
     status: "sent",
     week: selectedWeek,
     weekLabel: weekRangeLabel(selectedWeek),
     at: nowIso(),
-    recipients: recipientKeys.map(function(key) { return recipientMap[key].email; }),
-    recipientNames: recipientKeys.map(function(key) { return recipientMap[key].name; }),
+    recipients: recipientKeys.map(function(key) { return (teamRecipientMap[key] || summaryRecipientMap[key]).email; }),
+    recipientNames: recipientKeys.map(function(key) { return (teamRecipientMap[key] || summaryRecipientMap[key]).name; }),
     teams: teamResults
   });
   return { status: "sent", recipients: recipientKeys.length, teams: teamResults };
@@ -749,10 +767,18 @@ function rpeRecipientsForTeam(teamKey, contacts) {
       Array.isArray(contact.teams) &&
       contact.teams.map(function(team) { return String(team || "").trim().toUpperCase(); }).indexOf(teamKey) !== -1;
   });
-  var contactsList = [coordinator, headCoach, prepaCoordinator, technicalDirector].concat(prepas).filter(function(contact) {
-    return contact && contact.receivesTeamEmails !== false;
+  var prepasAmbMesDUnEquip = prepas.filter(function(contact) {
+    var teams = (contact.teams || []).map(function(team) { return String(team || "").trim().toUpperCase(); }).filter(Boolean);
+    return teams.filter(function(team, index) { return teams.indexOf(team) === index; }).length > 1;
   });
-  return { contacts: uniqueContacts(contactsList) };
+  var prepasDUnEquip = prepas.filter(function(contact) {
+    return prepasAmbMesDUnEquip.indexOf(contact) === -1;
+  });
+  var enabled = function(contact) { return contact && contact.receivesTeamEmails !== false; };
+  return {
+    teamContacts: uniqueContacts([headCoach, prepaCoordinator].concat(prepasDUnEquip).filter(enabled)),
+    summaryContacts: uniqueContacts([coordinator, technicalDirector].concat(prepasAmbMesDUnEquip).filter(enabled))
+  };
 }
 
 function uniqueContacts(contacts) {
@@ -874,6 +900,38 @@ function buildRpeGroupedText(payload) {
     lines.push("");
   });
   return lines.join("\n");
+}
+
+function buildRpeCoordinatorText(payload) {
+  var lines = ["CB SANT JOSEP BADALONA", "", "Resum RPE setmanal", "Setmana: " + payload.weekLabel, ""];
+  payload.teams.forEach(function(team) {
+    lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega " + team.summary.load);
+    lines.push("  Alertes — RPE: " + alertesResum(team.summary.alerts.rpe) + " | Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " | Son: " + alertesResum(team.summary.alerts.sleep));
+  });
+  return lines.join("\n");
+}
+
+function buildRpeCoordinatorHtml(payload) {
+  var rows = payload.teams.map(function(team) {
+    var alerts = "RPE: " + alertesResum(team.summary.alerts.rpe) + " · Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " · Son: " + alertesResum(team.summary.alerts.sleep);
+    return '<tr>' +
+      emailCell(team.team, "20%", true, false, false) +
+      emailCell(team.summary.records, "9%", false, true, true) +
+      emailCell(team.summary.rpe, "9%", false, true, true) +
+      emailCell(team.summary.fatigue, "11%", false, true, true) +
+      emailCell(team.summary.sleep, "10%", false, true, true) +
+      emailCell(team.summary.load, "12%", false, true, true) +
+      emailCell(alerts, "29%", false, false, true) +
+    '</tr>';
+  }).join("");
+  return emailShell(
+    "Resum RPE setmanal",
+    '<p style="margin:0 0 18px;color:#666;font-weight:bold;">Setmana ' + escaparHtml(payload.weekLabel) + '</p>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+      '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
+        emailHead("Equip") + emailHead("Reg.", true) + emailHead("RPE", true) + emailHead("Fatiga", true) + emailHead("Son", true) + emailHead("Càrrega", true) + emailHead("Alertes", true) +
+      '</tr></thead><tbody>' + rows + '</tbody></table>'
+  );
 }
 
 function buildRpeGroupedHtml(payload) {

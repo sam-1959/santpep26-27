@@ -73,7 +73,10 @@
       entryBody.innerHTML = PLAYERS.slice().sort((a,b) => numberSort(a[0]) - numberSort(b[0])).map(([number,name]) =>
         `<tr data-player="${safeKey(name)}"><td>${number}</td><td class="rank-name">${name}</td><td class="num"><input class="shot-input made" type="number" min="0" step="1" inputmode="numeric" aria-label="Tirs anotats de ${name}" value="0" /></td><td class="num"><input class="shot-input attempts" type="number" min="0" step="1" inputmode="numeric" aria-label="Tirs intentats de ${name}" value="0" /></td><td class="num percent">—</td><td><button class="exclude-player" type="button" aria-pressed="false">Treure</button></td></tr>`
       ).join('');
-      entryBody.querySelectorAll('input').forEach(input => input.addEventListener('input', updateEntryTotals));
+      entryBody.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function(){ if(this.value === '0') this.value = ''; });
+        input.addEventListener('input', updateEntryTotals);
+      });
       entryBody.querySelectorAll('.exclude-player').forEach(button => button.addEventListener('click', function(){
         const row = button.closest('tr');
         setPlayerExcluded(row, !row.classList.contains('session-player-excluded'));

@@ -75,6 +75,7 @@
       ).join('');
       entryBody.querySelectorAll('input').forEach(input => {
         input.addEventListener('focus', function(){ if(this.value === '0') this.value = ''; });
+        input.addEventListener('blur', function(){ if(this.value === '') { this.value = '0'; updateEntryTotals(); } });
         input.addEventListener('input', updateEntryTotals);
       });
       entryBody.querySelectorAll('.exclude-player').forEach(button => button.addEventListener('click', function(){

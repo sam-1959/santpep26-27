@@ -758,6 +758,7 @@ function coordinatorRoleForTeam(teamKey) {
 function rpeRecipientsForTeam(teamKey, contacts) {
   var role = coordinatorRoleForTeam(teamKey);
   var coordinators = Array.isArray(contacts.coordinators) ? contacts.coordinators : [];
+  var generalCoordinator = coordinators.filter(function(contact) { return String(contact.role || "") === "general"; })[0];
   var coordinator = coordinators.filter(function(contact) { return String(contact.role || "") === role; })[0];
   var prepaCoordinator = coordinators.filter(function(contact) { return String(contact.role || "") === "coordinador_prepa"; })[0];
   var technicalDirector = coordinators.filter(function(contact) { return String(contact.role || "") === "dt"; })[0];
@@ -777,7 +778,7 @@ function rpeRecipientsForTeam(teamKey, contacts) {
   var enabled = function(contact) { return contact && contact.receivesTeamEmails !== false; };
   return {
     teamContacts: uniqueContacts([headCoach, prepaCoordinator].concat(prepasDUnEquip).filter(enabled)),
-    summaryContacts: uniqueContacts([coordinator, technicalDirector].concat(prepasAmbMesDUnEquip).filter(enabled))
+    summaryContacts: uniqueContacts([generalCoordinator, coordinator, technicalDirector].concat(prepasAmbMesDUnEquip).filter(enabled))
   };
 }
 

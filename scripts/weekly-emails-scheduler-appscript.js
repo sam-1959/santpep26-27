@@ -1019,7 +1019,10 @@ function buildRpeCoordinatorHtml(payload) {
       '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
         emailHead("Equip") + emailHead("Reg.", true) + emailHead("RPE", true) + emailHead("Fatiga", true) + emailHead("Son", true) + emailHead("Setmana", true) + emailHead("Mitjana", true) + emailHead("Tendència", true) + emailHead("Alertes", true) +
       '</tr></thead><tbody>' + rows + '</tbody></table>' +
-    '<p style="margin:22px 0 0;text-align:center;"><a href="' + escaparHtml(RPE_GLOBAL_URL) + '" style="display:inline-block;padding:11px 18px;background:#4B1D6D;color:#FFC72C;text-decoration:none;border-radius:6px;font-weight:bold;">Obrir Vista Global RPE</a></p>'
+    '<div style="text-align:center;margin:30px 0 10px;padding:20px;background:#F9F6FC;border-radius:6px;border:1px dashed #4B1D6D;">' +
+      '<p style="margin:0 0 15px;font-weight:bold;color:#4B1D6D;font-size:15px;">Vista Global RPE:</p>' +
+      '<a href="' + escaparHtml(RPE_GLOBAL_URL) + '" target="_blank" style="background-color:#4B1D6D;color:#FFC72C;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;font-size:14px;border:2px solid #FFC72C;">Accedir a la Vista Global RPE</a>' +
+    '</div>'
   );
 }
 

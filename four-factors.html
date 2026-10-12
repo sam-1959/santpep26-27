@@ -224,10 +224,10 @@
     <nav class="page-nav" id="backNav" hidden><a class="back" href="equips-4factors.html">← Tornar</a></nav>
     <div class="toolbar">
       <button class="btn primary" type="button" id="saveGameBtn">Guardar</button>
-      <button class="btn quarter" type="button" data-quarter="Q1" title="Guarda el marcador de final del primer quart">Q1</button>
-      <button class="btn quarter" type="button" data-quarter="Q2" title="Guarda el marcador de mitja part">Q2</button>
-      <button class="btn quarter" type="button" data-quarter="Q3" title="Guarda el marcador de final del tercer quart">Q3</button>
-      <button class="btn quarter" type="button" data-quarter="Q4" title="Guarda el marcador de final del partit o pròrroga">Q4</button>
+      <button class="btn quarter" type="button" data-quarter="Q1" title="Guarda el parcial del primer quart">Q1</button>
+      <button class="btn quarter" type="button" data-quarter="Q2" title="Guarda el parcial del segon quart">Q2</button>
+      <button class="btn quarter" type="button" data-quarter="Q3" title="Guarda el parcial del tercer quart">Q3</button>
+      <button class="btn quarter" type="button" data-quarter="Q4" title="Guarda el parcial del quart període o pròrroga">Q4</button>
       <button class="btn primary" type="button" id="closeGameBtn">Tancar partit</button>
       <button class="btn danger" type="button" id="resetBtn">Reinicia</button>
       <button class="btn primary" type="button" id="exampleBtn" hidden>Exemple</button>
@@ -634,13 +634,32 @@
       const q4Count = normalizeQuarterSnapshots(quarters).filter(item => item.period === "Q4").length;
       return q4Count === 0 ? "Q4" : "PR" + q4Count;
     }
+    function snapshotPoints(snapshot, side){
+      const counters = snapshot && snapshot[side + "Counters"];
+      if(!counters) return 0;
+      return (Number(counters.fg) || 0) * 2 + (Number(counters.tp) || 0) * 3 + (Number(counters.ft) || 0);
+    }
+    function previousQuarterSnapshot(period, quarters){
+      const snapshots = normalizeQuarterSnapshots(quarters);
+      const order = { Q1:1, Q2:2, Q3:3, Q4:4 };
+      const currentOrder = order[period] || 4;
+      const candidates = snapshots.filter(item => {
+        const itemOrder = order[item.period] || 4;
+        return itemOrder < currentOrder || (period === "Q4" && item.period === "Q4");
+      });
+      return candidates.sort((a, b) => {
+        const orderDiff = (order[b.period] || 4) - (order[a.period] || 4);
+        return orderDiff || String(b.savedAt || "").localeCompare(String(a.savedAt || ""));
+      })[0] || null;
+    }
     function collectQuarterSnapshot(period, quarters){
+      const previous = previousQuarterSnapshot(period, quarters);
       return {
         period,
         label: quarterLabel(period, quarters),
         savedAt: new Date().toISOString(),
-        teamScore: points("team"),
-        oppScore: points("opp"),
+        teamScore: Math.max(0, points("team") - snapshotPoints(previous, "team")),
+        oppScore: Math.max(0, points("opp") - snapshotPoints(previous, "opp")),
         teamCounters: collectCounters("team"),
         oppCounters: collectCounters("opp")
       };

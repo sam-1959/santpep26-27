@@ -283,6 +283,41 @@ function enviarSetmanalRpe(options) {
   return { status: "sent", recipients: recipientKeys.length, teams: teamResults };
 }
 
+// Enviament manual de prova: envia només el resum global a Direcció Tècnica.
+// No modifica l'estat setmanal i, per tant, no afecta l'enviament automàtic.
+function enviarResumRpeDtecnic() {
+  var selectedWeek = selectedWeekKey();
+  var dates = weekDates(selectedWeek);
+  var rostersData = readFirebase(RPE_ROSTERS_PATH) || {};
+  var rosterInfo = loadRosterInfo(rostersData);
+  var responses = readFirebase(WELLNESS_RESPONSES_PATH) || {};
+  var allRecords = Object.keys(responses).map(function(id) {
+    return normalizeRpeRecord(responses[id] || {}, id, rosterInfo);
+  });
+  var teams = selectedTeamKeys(rosterInfo.teamNamesByKey).map(function(teamKey) {
+    var records = allRecords.filter(function(record) {
+      return record.teamKey === teamKey && dates.indexOf(record.trainingDate) !== -1;
+    });
+    if (!records.length) return null;
+    return buildRpeTeamPayload(teamKey, rosterInfo.teamNamesByKey[teamKey] || teamKey, selectedWeek, dates, records, rosterInfo);
+  }).filter(function(team) { return team; });
+
+  if (!teams.length) {
+    Logger.log("No s'envia el resum RPE a Direcció Tècnica: sense dades.");
+    return { status: "skipped_no_data", week: selectedWeek };
+  }
+
+  var payload = { week: selectedWeek, weekLabel: weekRangeLabel(selectedWeek), teams: teams };
+  sendEmailToRecipients(
+    ["dtecnic@cbsantjosep.cat"],
+    "Resum RPE setmanal - " + payload.weekLabel,
+    buildRpeCoordinatorText(payload),
+    buildRpeCoordinatorHtml(payload)
+  );
+  Logger.log("Resum RPE enviat només a dtecnic@cbsantjosep.cat.");
+  return { status: "sent", recipients: ["dtecnic@cbsantjosep.cat"], teams: teams.length };
+}
+
 function readFirebase(path) {
   var url = FIREBASE_DB_URL.replace(/\/$/, "") + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json";
   var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });

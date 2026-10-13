@@ -202,6 +202,9 @@
     function escapeHtml(value){
       return String(value || "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
     }
+    function shortPlayerName(name){
+      return String(name || "").trim().split(/\s+/).slice(0, 2).join(" ");
+    }
     function visitType(appointment){
       return String(appointment.visitType || "").toLowerCase() === "readaptacio" || appointment.assignedPhysio === "Miquel Sánchez" ? "Readaptació" : "Fisioteràpia";
     }
@@ -349,7 +352,7 @@
         const items = visible.filter(item => item.date === date);
         const heading = new Intl.DateTimeFormat("ca-ES", { weekday:"short", day:"numeric" }).format(parseDate(date));
         return '<section class="week-day ' + (date === today ? 'today' : '') + '"><div class="week-day-head">' + escapeHtml(heading) + '</div>' +
-          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(item.player) + '</div><div class="time">' + escapeHtml(item.time) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
+          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(shortPlayerName(item.player)) + '</div><div class="time">' + escapeHtml(item.time) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
           '</section>';
       }).join("");
     }

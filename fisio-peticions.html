@@ -95,8 +95,15 @@
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
     .whatsapp-link.empty { background:#f1eef5; color:var(--muted); pointer-events:none; }
-    .edit-button { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font-size:0.92rem; cursor:pointer; }
-    .edit-button:hover { background:#faf8fd; border-color:var(--brand); }
+    .edit-button, .appointment-button { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font-size:0.92rem; cursor:pointer; }
+    .edit-button:hover, .appointment-button:hover { background:#faf8fd; border-color:var(--brand); }
+    .appointment-button { color:#0b6b46; border-color:#a9d8be; background:#f1fbf5; }
+    .appointment-button:hover { background:#e3f6ea; border-color:#0b6b46; }
+    .appointment-value { display:grid; gap:3px; min-width:145px; }
+    .appointment-value strong { color:var(--brand-dark); font-size:0.82rem; white-space:nowrap; }
+    .appointment-value span { color:var(--muted); font-size:0.73rem; font-weight:800; white-space:nowrap; }
+    .appointment-empty { color:var(--muted); font-size:0.8rem; }
+    .appointment-cancel { color:#a01831; border-color:#f1bac5; background:#fff5f6; }
     .col-actions { width:1%; white-space:nowrap; text-align:center; }
     .desc { color:var(--muted); min-width:420px; }
     .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; color:var(--muted); font-size:0.82rem; }
@@ -234,6 +241,46 @@
       </form>
     </div>
   </div>
+  <div class="modal-backdrop" id="appointmentModal" role="dialog" aria-modal="true" aria-labelledby="appointmentTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 id="appointmentTitle">Programar visita de fisioteràpia</h2>
+          <p id="appointmentSubtitle">La visita programada serà visible a la vista pública.</p>
+        </div>
+        <button class="modal-close" id="appointmentClose" type="button" aria-label="Tancar">×</button>
+      </div>
+      <form class="edit-form" id="appointmentForm">
+        <div class="form-grid">
+          <div class="form-field full">
+            <label>Jugador/a</label>
+            <input id="appointmentPlayer" type="text" readonly />
+          </div>
+          <div class="form-field">
+            <label for="appointmentDate">Dia</label>
+            <input id="appointmentDate" type="date" required />
+          </div>
+          <div class="form-field">
+            <label for="appointmentTime">Hora</label>
+            <input id="appointmentTime" type="time" required />
+          </div>
+          <div class="form-field full">
+            <label for="appointmentPhysio">Professional</label>
+            <select id="appointmentPhysio" required>
+              <option value="">Selecciona...</option>
+              <option value="Pol Amigó">Pol Amigó</option>
+              <option value="Eric Nicolàs">Eric Nicolàs</option>
+              <option value="Miquel Sánchez">Miquel Sánchez</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-button secondary" id="appointmentCancel" type="button">Cancel·lar</button>
+          <button class="modal-button primary" id="appointmentSave" type="submit">Guardar visita programada</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -270,6 +317,15 @@
     const editClose = document.getElementById("editClose");
     const editCancel = document.getElementById("editCancel");
     const editSave = document.getElementById("editSave");
+    const appointmentModal = document.getElementById("appointmentModal");
+    const appointmentForm = document.getElementById("appointmentForm");
+    const appointmentClose = document.getElementById("appointmentClose");
+    const appointmentCancel = document.getElementById("appointmentCancel");
+    const appointmentSave = document.getElementById("appointmentSave");
+    const appointmentPlayer = document.getElementById("appointmentPlayer");
+    const appointmentDate = document.getElementById("appointmentDate");
+    const appointmentTime = document.getElementById("appointmentTime");
+    const appointmentPhysio = document.getElementById("appointmentPhysio");
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU",
       authDomain: "coord-fa09e.firebaseapp.com",
@@ -309,6 +365,7 @@
     let quotaImportedAt = null;
     let latestGuidelinesByPlayer = new Map();
     let editingRequestId = "";
+    let schedulingRequestId = "";
 
     function canEditRequests(){
       return isPrivateView && !!currentUser;
@@ -429,6 +486,25 @@
       const label = visitTypeLabel(type);
       const icon = type === "readaptacio" ? "🏃" : "🩺";
       return '<span class="type-icon-badge ' + escapeHtml(type) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' + icon + '</span>';
+    }
+
+    function normalizeAppointment(value){
+      if(!value || typeof value !== "object" || !value.date || !value.time) return null;
+      return {
+        date: String(value.date),
+        time: String(value.time).slice(0, 5),
+        assignedPhysio: String(value.assignedPhysio || ""),
+        visitType: visitTypeValue(value.visitType, value.assignedPhysio || ""),
+        updatedAt: String(value.updatedAt || "")
+      };
+    }
+
+    function appointmentHtml(appointment){
+      if(!appointment) return '<span class="appointment-empty">—</span>';
+      const date = parseDateValue(appointment.date);
+      const professional = appointment.assignedPhysio || "Sense assignar";
+      return '<div class="appointment-value"><strong>' + escapeHtml(formatDate(date, false)) + ' · ' + escapeHtml(appointment.time) +
+        '</strong><span>' + visitTypeBadge(appointment.visitType, appointment.assignedPhysio) + ' ' + escapeHtml(professional) + '</span></div>';
     }
 
     // A Peticions fisio només és rellevant una visita feta a partir de la
@@ -567,7 +643,8 @@
         email: row.email,
         guardianName: row.guardianName,
         phone: row.phone,
-        fullDescription: row.fullDescription
+        fullDescription: row.fullDescription,
+        appointment: normalizeAppointment(row.appointment)
       })).sort((a, b) => {
         const at = a.createdAt ? a.createdAt.getTime() : 0;
         const bt = b.createdAt ? b.createdAt.getTime() : 0;
@@ -648,6 +725,80 @@
         render();
       } finally {
         editSave.disabled = false;
+      }
+    }
+
+    function openAppointmentModal(rowId){
+      const row = rows.find(item => item.id === rowId);
+      if(!row || !canEditRequests()) return;
+      schedulingRequestId = row.id;
+      const appointment = row.appointment;
+      appointmentPlayer.value = shortName(row.player);
+      appointmentDate.value = appointment ? appointment.date : "";
+      appointmentTime.value = appointment ? appointment.time : "";
+      appointmentPhysio.value = appointment ? appointment.assignedPhysio : "";
+      document.getElementById("appointmentTitle").textContent = appointment ? "Reprogramar visita de fisioteràpia" : "Programar visita de fisioteràpia";
+      appointmentModal.classList.add("open");
+      window.setTimeout(() => appointmentDate.focus(), 0);
+    }
+
+    function closeAppointmentModal(){
+      appointmentModal.classList.remove("open");
+      schedulingRequestId = "";
+      appointmentForm.reset();
+    }
+
+    async function saveAppointment(event){
+      event.preventDefault();
+      if(!schedulingRequestId || !canEditRequests() || !currentUser) return;
+      const date = appointmentDate.value;
+      const time = appointmentTime.value;
+      const assignedPhysio = appointmentPhysio.value;
+      if(!date || !time || !assignedPhysio) return;
+      appointmentSave.disabled = true;
+      statusMessage = "Guardant la visita programada...";
+      render();
+      try {
+        const token = await currentUser.getIdToken();
+        const now = new Date().toISOString();
+        const publicAppointment = {
+          date,
+          time,
+          assignedPhysio,
+          visitType: visitTypeValue("", assignedPhysio),
+          updatedAt: now
+        };
+        const privateAppointment = { ...publicAppointment, updatedBy: currentUser.email || "" };
+        await patchFirebase(PRIVATE_REQUESTS_PATH, schedulingRequestId, { appointment: privateAppointment }, token);
+        await patchFirebase(PUBLIC_REQUESTS_PATH, schedulingRequestId, { appointment: publicAppointment });
+        closeAppointmentModal();
+        await loadPrivateRequests(currentUser);
+        statusMessage = "Visita programada correctament.";
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut programar la visita. Revisa permisos de Firebase.";
+        render();
+      } finally {
+        appointmentSave.disabled = false;
+      }
+    }
+
+    async function clearAppointment(rowId){
+      if(!canEditRequests() || !currentUser) return;
+      const row = rows.find(item => item.id === rowId);
+      if(!row || !row.appointment || !confirm("Vols cancel·lar la visita programada de " + shortName(row.player) + "?")) return;
+      statusMessage = "Cancel·lant la visita programada...";
+      render();
+      try {
+        const token = await currentUser.getIdToken();
+        await patchFirebase(PRIVATE_REQUESTS_PATH, rowId, { appointment: null }, token);
+        await patchFirebase(PUBLIC_REQUESTS_PATH, rowId, { appointment: null });
+        await loadPrivateRequests(currentUser);
+        statusMessage = "Visita programada cancel·lada.";
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut cancel·lar la visita. Revisa permisos de Firebase.";
+        render();
       }
     }
 
@@ -808,7 +959,7 @@
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
       const actionsHead = canEditRequests() ? '<th class="col-actions">Accions</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Visita programada</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -836,7 +987,9 @@
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           const visitTypeHtml = latestGuidelines ? visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio) : '<span class="no-visit-badge">Sense visita</span>';
           const actionsCell = canEditRequests()
-            ? '<td class="col-actions"><button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button></td>'
+            ? '<td class="col-actions"><button class="appointment-button" type="button" title="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" aria-label="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" data-appointment-id="' + escapeHtml(row.id) + '">🗓</button>' +
+              (row.appointment ? '<button class="edit-button appointment-cancel" type="button" title="Cancel·lar visita programada" aria-label="Cancel·lar visita programada" data-cancel-appointment-id="' + escapeHtml(row.id) + '">×</button>' : '') +
+              '<button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button></td>'
             : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -847,6 +1000,7 @@
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
+          '<td>' + appointmentHtml(row.appointment) + '</td>' +
           '<td class="col-physio">' + latestPhysioHtml + '</td>' +
           '<td class="col-type">' + visitTypeHtml + '</td>' +
           '<td class="col-court">' + courtStatusHtml + '</td>' +
@@ -858,6 +1012,12 @@
       tableWrap.querySelectorAll("[data-edit-id]").forEach(button => {
         button.addEventListener("click", () => openEditModal(button.dataset.editId));
       });
+      tableWrap.querySelectorAll("[data-appointment-id]").forEach(button => {
+        button.addEventListener("click", () => openAppointmentModal(button.dataset.appointmentId));
+      });
+      tableWrap.querySelectorAll("[data-cancel-appointment-id]").forEach(button => {
+        button.addEventListener("click", () => clearAppointment(button.dataset.cancelAppointmentId));
+      });
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);
     }
@@ -867,6 +1027,12 @@
     editCancel.addEventListener("click", closeEditModal);
     editModal.addEventListener("click", event => {
       if(event.target === editModal) closeEditModal();
+    });
+    appointmentForm.addEventListener("submit", saveAppointment);
+    appointmentClose.addEventListener("click", closeAppointmentModal);
+    appointmentCancel.addEventListener("click", closeAppointmentModal);
+    appointmentModal.addEventListener("click", event => {
+      if(event.target === appointmentModal) closeAppointmentModal();
     });
 
     searchEl.addEventListener("input", () => {

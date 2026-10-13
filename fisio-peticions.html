@@ -343,6 +343,13 @@
     const QUOTA_DATA_URL = "data/fisio-quota.json";
     const PAGE_SIZE = 5;
     const REFRESH_INTERVAL_MS = 30000;
+    const TEAM_NAME_BY_KEY = {
+      "mini": "Mini", "mini f": "Mini F",
+      "infantil": "Infantil", "infantil a m": "Infantil A M", "infantil b m": "Infantil B M", "infantil f": "Infantil F",
+      "cadet": "Cadet", "cadet a m": "Cadet A M", "cadet b m": "Cadet B M", "cadet f": "Cadet F",
+      "junior": "Júnior", "junior a m": "Júnior A M", "junior b m": "Júnior B M", "junior a f": "Júnior A F", "junior b f": "Júnior B F",
+      "senior": "Sènior", "senior a m": "Sènior A M", "senior b m": "Sènior B M", "senior a f": "Sènior A F"
+    };
     let rows = [];
     let activeTeam = "TOTS";
     let activeGender = "TOTS";
@@ -429,6 +436,11 @@
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+    }
+
+    function normalizeTeamName(value){
+      const text = String(value || "").replace(/\s+/g, " ").trim();
+      return TEAM_NAME_BY_KEY[normalizeName(text)] || text;
     }
 
     async function loadPaidPlayers(){
@@ -641,7 +653,7 @@
         id: row.id,
         createdAt: parseDateValue(row.createdAt),
         injuryDate: parseDateValue(row.injuryDate),
-        team: row.team,
+        team: normalizeTeamName(row.team),
         gender: row.gender,
         player: row.player,
         quotaPaid: hasPaidQuota(row.player),
@@ -702,7 +714,7 @@
         const token = await currentUser.getIdToken();
         const privatePatch = {
           player: editForm.player.value.trim(),
-          team: editForm.team.value.trim(),
+          team: normalizeTeamName(editForm.team.value),
           gender: editForm.gender.value,
           injuryDate: editForm.injuryDate.value,
           guardianName: editForm.guardianName.value.trim(),

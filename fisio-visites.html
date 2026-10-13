@@ -338,6 +338,7 @@
     const VISITS_PATH = "physioVisits/season-26-27";
     const PUBLIC_VISITS_PATH = "physioVisitsPublic/season-26-27";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
+    const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
     const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 5;
     const REFRESH_INTERVAL_MS = 30000;
@@ -880,13 +881,54 @@
       els.linkedRequest.value = currentId;
     }
 
+    function linkedRequestForForm(){
+      const selected = requestOptions.find(request => request.id === els.linkedRequest.value);
+      if(selected) return selected;
+      const playerKey = shortPlayerKey(inputValue("playerName"));
+      const scheduledMatches = requestOptions.filter(request =>
+        request.appointment && shortPlayerKey(request.player) === playerKey
+      );
+      return scheduledMatches.length === 1 ? scheduledMatches[0] : null;
+    }
+
+    async function patchRequestLink(path, requestId, clinicalVisit, token){
+      if(!requestId) return;
+      const response = await fetch(firebaseUrl(path, requestId, token), {
+        method:"PATCH",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ clinicalVisit })
+      });
+      if(!response.ok) throw new Error("Firebase request link write failed");
+    }
+
+    async function syncRequestLinkForVisit(visit, previous){
+      const token = await authToken();
+      const previousRequestId = previous?.requestId || "";
+      if(previousRequestId && previousRequestId !== visit.requestId){
+        const oldResponse = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH, previousRequestId, token), { cache:"no-store" });
+        const oldRequest = oldResponse.ok ? await oldResponse.json() : null;
+        if(oldRequest?.clinicalVisit?.visitId === visit.id){
+          await Promise.all([
+            patchRequestLink(PRIVATE_REQUESTS_PATH, previousRequestId, null, token),
+            patchRequestLink(PUBLIC_REQUESTS_PATH, previousRequestId, null, token)
+          ]);
+        }
+      }
+      if(!visit.requestId) return;
+      const clinicalVisit = { visitId:visit.id, date:visit.date || "", updatedAt:new Date().toISOString() };
+      await Promise.all([
+        patchRequestLink(PRIVATE_REQUESTS_PATH, visit.requestId, clinicalVisit, token),
+        patchRequestLink(PUBLIC_REQUESTS_PATH, visit.requestId, clinicalVisit, token)
+      ]);
+    }
+
     async function loadRequestOptions(){
       try {
         const response = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase requests read failed");
         const data = await response.json();
         requestOptions = data && typeof data === "object"
-          ? Object.entries(data).map(([id, row]) => ({ id, player:String(row?.player || "").trim(), team:String(row?.team || "").trim(), gender:String(row?.gender || ""), createdAt:row?.createdAt || "" })).filter(row => row.player)
+          ? Object.entries(data).map(([id, row]) => ({ id, player:String(row?.player || "").trim(), team:String(row?.team || "").trim(), gender:String(row?.gender || ""), createdAt:row?.createdAt || "", appointment:row?.appointment || null, clinicalVisit:row?.clinicalVisit || null })).filter(row => row.player)
           : [];
         requestPlayerNames = requestOptions.map(row => row.player);
       } catch(error) {
@@ -1183,17 +1225,27 @@
       }
     }
 
-    async function deleteVisit(id){
+    async function deleteVisit(visit){
       if(!isFisio()) throw new Error("No permission");
       const token = await authToken();
-      const response = await fetch(firebaseUrl(VISITS_PATH, id, token), {
+      const response = await fetch(firebaseUrl(VISITS_PATH, visit.id, token), {
         method:"DELETE"
       });
       if(!response.ok) throw new Error("Firebase delete failed");
-      const publicResponse = await fetch(firebaseUrl(PUBLIC_VISITS_PATH, id, token), {
+      const publicResponse = await fetch(firebaseUrl(PUBLIC_VISITS_PATH, visit.id, token), {
         method:"DELETE"
       });
       if(!publicResponse.ok) throw new Error("Firebase public delete failed");
+      if(visit.requestId){
+        const requestResponse = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH, visit.requestId, token), { cache:"no-store" });
+        const request = requestResponse.ok ? await requestResponse.json() : null;
+        if(request?.clinicalVisit?.visitId === visit.id){
+          await Promise.all([
+            patchRequestLink(PRIVATE_REQUESTS_PATH, visit.requestId, null, token),
+            patchRequestLink(PUBLIC_REQUESTS_PATH, visit.requestId, null, token)
+          ]);
+        }
+      }
     }
 
     function setFormStatus(type, text){
@@ -1218,7 +1270,7 @@
       const id = existing && existing.id ? existing.id : requestId();
       const player = shortPlayerName(inputValue("playerName"));
       const nameParts = splitPlayerName(player);
-      const linkedRequest = requestOptions.find(request => request.id === els.linkedRequest.value);
+      const linkedRequest = linkedRequestForForm();
       return {
         ...(existing || {}),
         id,
@@ -1434,6 +1486,7 @@
       const visit = visitFromForm(existing);
       try {
         await saveVisit(visit);
+        await syncRequestLinkForVisit(visit, existing);
         rows = rows.filter(row => row.id !== visit.id).concat([visit])
           .sort((a, b) => dateKey(b.date) - dateKey(a.date) || String(a.name).localeCompare(String(b.name), "ca-ES"));
         seenVisitIds.add(visitIdentity(visit));
@@ -1553,7 +1606,7 @@
         markVisitHandled(row, button);
         button.disabled = true;
         try {
-          await deleteVisit(row.id);
+          await deleteVisit(row);
           rows = rows.filter(item => item.id !== row.id);
           seenVisitIds.delete(visitIdentity(row));
           newVisitIds.delete(visitIdentity(row));

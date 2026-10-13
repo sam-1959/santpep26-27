@@ -353,6 +353,7 @@
     let activeCourtStatus = "TOTS";
     let activeVisitType = "TOTS";
     let activePrepaFilter = "TOTS";
+    let activeRequestFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
     let feedbackVisitId = null;
@@ -775,6 +776,9 @@
       els.prepaFilters.innerHTML =
         (hasAccess()
           ? renderFilterGroup("physio", "👤 ÚLTIMA VISITA", PHYSIOS, activePhysio) +
+            renderFilterGroup("request", "Petició", [
+              { value:"SENSE_PETICIO", label:"Sense petició" }
+            ], activeRequestFilter) +
             renderFilterGroup("prepa", "Prepa", [
               { value:"NO_LLEGIDES", label:"Pendents prepa" },
               { value:"LLEGIDES", label:"Llegides" },
@@ -806,6 +810,14 @@
       els.prepaFilters.querySelectorAll("[data-filter='prepa']").forEach(button => {
         button.addEventListener("click", () => {
           activePrepaFilter = button.dataset.value;
+          currentPage = 1;
+          renderPrepaFilters();
+          render();
+        });
+      });
+      els.prepaFilters.querySelectorAll("[data-filter='request']").forEach(button => {
+        button.addEventListener("click", () => {
+          activeRequestFilter = button.dataset.value;
           currentPage = 1;
           renderPrepaFilters();
           render();
@@ -944,6 +956,7 @@
         if(hasAccess() && activePrepaFilter === "NO_LLEGIDES" && row.prepaRead) return false;
         if(hasAccess() && activePrepaFilter === "LLEGIDES" && !row.prepaRead) return false;
         if(hasAccess() && activePrepaFilter === "AMB_FEEDBACK" && !row.prepaFeedback?.text) return false;
+        if(hasAccess() && activeRequestFilter === "SENSE_PETICIO" && row.requestId) return false;
         if(!query) return true;
         const searchable = hasAccess()
           ? [row.date, row.name, row.team, teamCategory(row.team), row.structure, row.location, row.assignedPhysio, visitTypeLabel(row.visitType, row.assignedPhysio), courtStatusLabel(row.courtStatus), row.mechanism, row.assessment, row.treatment, row.guidelines, row.prepaFeedback?.text]

@@ -431,14 +431,16 @@
       return '<span class="type-icon-badge ' + escapeHtml(type) + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' + icon + '</span>';
     }
 
+    // A Peticions fisio només és rellevant una visita feta a partir de la
+    // sol·licitud actual. Així no es reutilitzen pautes d'una lesió anterior.
     function latestPhysioFilterValue(row){
-      const latest = latestGuidelinesFor(row.player);
+      const latest = latestGuidelinesFor(row.player, row.createdAt);
       if(!latest) return "NO_VISIT";
       return latest.assignedPhysio || "NO_PHYSIO";
     }
 
     function latestCourtFilterValue(row){
-      const latest = latestGuidelinesFor(row.player);
+      const latest = latestGuidelinesFor(row.player, row.createdAt);
       if(!latest) return "NO_VISIT";
       return ["red", "orange", "green", "pending"].includes(latest.courtStatus) ? latest.courtStatus : "pending";
     }
@@ -540,10 +542,14 @@
       }
     }
 
-    function latestGuidelinesFor(player){
+    function latestGuidelinesFor(player, since){
+      // Les visites i la petició del mateix dia també pertanyen al mateix cas.
+      const sinceTimestamp = since instanceof Date
+        ? new Date(since.getFullYear(), since.getMonth(), since.getDate()).getTime()
+        : 0;
       for(const key of playerLookupKeys(player)){
         const match = latestGuidelinesByPlayer.get(key);
-        if(match) return match;
+        if(match && match.timestamp >= sinceTimestamp) return match;
       }
       return null;
     }
@@ -690,7 +696,7 @@
     function renderFilters(){
       const teams = ["TOTS"].concat([...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
       const physios = [...new Set(rows
-        .map(row => latestGuidelinesFor(row.player)?.assignedPhysio)
+        .map(row => latestGuidelinesFor(row.player, row.createdAt)?.assignedPhysio)
         .filter(Boolean))]
         .sort((a,b) => a.localeCompare(b, "ca-ES"));
       const genders = [
@@ -781,8 +787,8 @@
           isPrivateView ? r.phone : "",
           r.description,
           r.fullDescription,
-          latestGuidelinesFor(r.player)?.guidelines,
-          latestGuidelinesFor(r.player)?.assignedPhysio
+          latestGuidelinesFor(r.player, r.createdAt)?.guidelines,
+          latestGuidelinesFor(r.player, r.createdAt)?.assignedPhysio
         ].join(" ")).includes(searchQuery))
       );
       totalEl.textContent = visible.length;
@@ -816,7 +822,7 @@
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
-          const latestGuidelines = latestGuidelinesFor(row.player);
+          const latestGuidelines = latestGuidelinesFor(row.player, row.createdAt);
           const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
           const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
           const guidelinesHtml = latestGuidelines

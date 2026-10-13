@@ -20,6 +20,7 @@
     main { max-width:1080px; margin:0 auto; padding:22px 18px 38px; }
     .back { display:inline-flex; margin:0 0 14px; color:var(--brand); font-size:.86rem; font-weight:850; text-decoration:none; }
     .panel { padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
+    .panel + .panel { margin-top:18px; }
     .head { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
     h2 { margin:0; color:var(--brand-dark); font-size:1.15rem; }
     .intro { margin:4px 0 0; color:var(--muted); font-size:.85rem; }
@@ -44,6 +45,21 @@
     .assigned { justify-self:end; color:var(--muted); font-size:.8rem; font-weight:750; text-align:right; }
     .type { display:inline-flex; align-items:center; gap:4px; margin-top:2px; color:var(--brand-dark); font-size:.72rem; font-weight:850; }
     .empty { padding:34px 18px; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:14px; }
+    .week-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .week-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:7px 11px; font:inherit; font-size:.78rem; font-weight:850; cursor:pointer; }
+    .week-button.today { background:#f6f1fa; }
+    .week-label { min-width:150px; color:var(--brand-dark); font-size:.8rem; font-weight:850; text-align:center; }
+    .week-scroll { overflow-x:auto; padding-bottom:3px; }
+    .week-grid { display:grid; min-width:840px; grid-template-columns:repeat(7, minmax(120px, 1fr)); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+    .week-day { min-height:190px; border-right:1px solid var(--line); background:#fff; }
+    .week-day:last-child { border-right:0; }
+    .week-day-head { padding:10px; background:#faf8fd; border-bottom:1px solid var(--line); color:var(--brand-dark); font-size:.75rem; font-weight:900; text-transform:capitalize; }
+    .week-day.today .week-day-head { background:#fff8d6; }
+    .week-entry { margin:8px; padding:8px; border-radius:10px; background:#f6effa; border-left:3px solid var(--brand); }
+    .week-entry .time { font-size:.84rem; }
+    .week-entry .player { margin-top:2px; font-size:.8rem; }
+    .week-entry .assigned { justify-self:auto; margin-top:4px; font-size:.7rem; text-align:left; }
+    .week-empty { padding:12px 8px; color:#aaa1af; font-size:.75rem; text-align:center; }
     footer { padding:0 18px 20px; text-align:center; color:var(--muted); font-size:.75rem; }
     @media (max-width:600px) { main { padding:16px 12px 28px; } .panel { padding:14px; } .appointment { grid-template-columns:62px 1fr; gap:8px 12px; } .assigned { grid-column:2; justify-self:start; text-align:left; } }
   </style>
@@ -65,6 +81,18 @@
       <p class="status" id="status">Carregant visites programades...</p>
       <div class="agenda" id="agenda"></div>
     </section>
+    <section class="panel">
+      <div class="head">
+        <div><h2>Calendari setmanal</h2><p class="intro">Les mateixes cites, distribuïdes per dies de la setmana.</p></div>
+        <div class="week-controls">
+          <button class="week-button" type="button" data-week="previous" aria-label="Setmana anterior">←</button>
+          <button class="week-button today" type="button" data-week="today">Aquesta setmana</button>
+          <button class="week-button" type="button" data-week="next" aria-label="Setmana següent">→</button>
+        </div>
+      </div>
+      <p class="week-label" id="weekLabel"></p>
+      <div class="week-scroll"><div class="week-grid" id="weekCalendar"></div></div>
+    </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>
@@ -75,8 +103,11 @@
     const filtersEl = document.getElementById("filters");
     const statusEl = document.getElementById("status");
     const agendaEl = document.getElementById("agenda");
+    const weekLabelEl = document.getElementById("weekLabel");
+    const weekCalendarEl = document.getElementById("weekCalendar");
     let appointments = [];
     let activePhysio = "TOTES";
+    let calendarWeekStart = "";
 
     function firebaseUrl(path){
       return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json";
@@ -98,6 +129,20 @@
     function formatDay(date){
       return new Intl.DateTimeFormat("ca-ES", { weekday:"long", day:"numeric", month:"long" }).format(date);
     }
+    function isoFromDate(date){
+      return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+    function mondayOf(isoDate){
+      const date = parseDate(isoDate);
+      const day = date.getDay() || 7;
+      date.setDate(date.getDate() - day + 1);
+      return isoFromDate(date);
+    }
+    function addDays(isoDate, amount){
+      const date = parseDate(isoDate);
+      date.setDate(date.getDate() + amount);
+      return isoFromDate(date);
+    }
     function normalize(data){
       const today = todayIso();
       return Object.entries(data || {}).map(([id, request]) => {
@@ -117,14 +162,32 @@
       const visible = appointments.filter(item => activePhysio === "TOTES" || item.assignedPhysio === activePhysio);
       totalEl.textContent = visible.length;
       renderFilters();
-      if(!visible.length){ agendaEl.innerHTML = '<div class="empty">No hi ha visites programades amb aquest filtre.</div>'; return; }
-      const byDay = visible.reduce((groups, item) => { (groups[item.date] ||= []).push(item); return groups; }, {});
-      agendaEl.innerHTML = Object.keys(byDay).map(date => {
-        const day = parseDate(date);
-        const items = byDay[date];
-        return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointments">' +
-          items.map(item => '<article class="appointment"><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '<div class="type">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + ' ' + visitType(item) + '</div></div></article>').join("") +
-          '</div></section>';
+      if(!visible.length) agendaEl.innerHTML = '<div class="empty">No hi ha visites programades amb aquest filtre.</div>';
+      else {
+        const byDay = visible.reduce((groups, item) => { (groups[item.date] ||= []).push(item); return groups; }, {});
+        agendaEl.innerHTML = Object.keys(byDay).map(date => {
+          const day = parseDate(date);
+          const items = byDay[date];
+          return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointments">' +
+            items.map(item => '<article class="appointment"><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '<div class="type">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + ' ' + visitType(item) + '</div></div></article>').join("") +
+            '</div></section>';
+        }).join("");
+      }
+      renderWeekCalendar(visible);
+    }
+    function renderWeekCalendar(visible){
+      if(!calendarWeekStart) calendarWeekStart = mondayOf(todayIso());
+      const start = parseDate(calendarWeekStart);
+      const end = parseDate(addDays(calendarWeekStart, 6));
+      weekLabelEl.textContent = new Intl.DateTimeFormat("ca-ES", { day:"numeric", month:"short" }).format(start) + " – " + new Intl.DateTimeFormat("ca-ES", { day:"numeric", month:"short", year:"numeric" }).format(end);
+      const today = todayIso();
+      weekCalendarEl.innerHTML = Array.from({ length:7 }, (_, index) => {
+        const date = addDays(calendarWeekStart, index);
+        const items = visible.filter(item => item.date === date);
+        const heading = new Intl.DateTimeFormat("ca-ES", { weekday:"short", day:"numeric" }).format(parseDate(date));
+        return '<section class="week-day ' + (date === today ? 'today' : '') + '"><div class="week-day-head">' + escapeHtml(heading) + '</div>' +
+          (items.length ? items.map(item => '<article class="week-entry"><div class="time">' + escapeHtml(item.time) + '</div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '</div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
+          '</section>';
       }).join("");
     }
     async function load(){
@@ -141,6 +204,11 @@
     }
     load();
     window.setInterval(load, REFRESH_INTERVAL_MS);
+    document.querySelectorAll("[data-week]").forEach(button => button.addEventListener("click", () => {
+      if(button.dataset.week === "today") calendarWeekStart = mondayOf(todayIso());
+      else calendarWeekStart = addDays(calendarWeekStart || mondayOf(todayIso()), button.dataset.week === "next" ? 7 : -7);
+      render();
+    }));
   </script>
 </body>
 </html>

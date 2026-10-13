@@ -207,12 +207,6 @@
             <input id="playerName" name="playerName" type="text" list="playerOptions" autocomplete="off" required />
             <datalist id="playerOptions"></datalist>
           </div>
-          <div class="field wide">
-            <label for="linkedRequest">Petició associada</label>
-            <select id="linkedRequest" name="linkedRequest">
-              <option value="">Sense associar</option>
-            </select>
-          </div>
           <div class="field">
             <label for="gender">Gènere</label>
             <select id="gender" name="gender" required>
@@ -355,6 +349,7 @@
     let activeRequestFilter = "TOTS";
     let currentPage = 1;
     let editingId = null;
+    let formRequestLink = null;
     let feedbackVisitId = null;
     let requestPlayerNames = [];
     let requestOptions = [];
@@ -391,7 +386,6 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
-      linkedRequest: document.getElementById("linkedRequest"),
       structureOptions: document.getElementById("structure"),
       locationOptions: document.getElementById("location"),
       feedbackModal: document.getElementById("feedbackModal"),
@@ -869,33 +863,6 @@
       });
     }
 
-    function requestDateLabel(value){
-      const iso = String(value || "").slice(0, 10);
-      return formatDate(iso) || "Sense data";
-    }
-
-    function requestOptionLabel(request){
-      return requestDateLabel(request.createdAt) + " · " + shortPlayerName(request.player) + " · " + (request.team || "Sense equip");
-    }
-
-    function renderLinkedRequestOptions(selectedId){
-      const currentId = selectedId || els.linkedRequest.value || "";
-      const playerKey = shortPlayerKey(inputValue("playerName"));
-      let options = playerKey
-        ? requestOptions.filter(request => shortPlayerKey(request.player) === playerKey)
-        : requestOptions;
-      const selected = requestOptions.find(request => request.id === currentId);
-      if(selected && !options.some(request => request.id === selected.id)) options = [selected].concat(options);
-      els.linkedRequest.innerHTML = '<option value="">Sense associar</option>' + options.map(request =>
-        '<option value="' + escapeHtml(request.id) + '">' + escapeHtml(requestOptionLabel(request)) + '</option>'
-      ).join("");
-      els.linkedRequest.value = currentId;
-    }
-
-    function linkedRequestForForm(){
-      return requestOptions.find(request => request.id === els.linkedRequest.value) || null;
-    }
-
     async function patchRequestLink(path, requestId, clinicalVisit, token){
       if(!requestId) return;
       const response = await fetch(firebaseUrl(path, requestId, token), {
@@ -1153,7 +1120,6 @@
         renderFilters();
         renderPrepaFilters();
         renderDatalistOptions();
-        renderLinkedRequestOptions();
         render();
       } catch(error) {
         els.status.textContent = "No s'han pogut carregar les visites.";
@@ -1176,7 +1142,6 @@
         renderFilters();
         renderPrepaFilters();
         renderDatalistOptions();
-        renderLinkedRequestOptions();
         render();
       } catch(error) {
         statusMessage = "No s'ha pogut actualitzar automàticament.";
@@ -1275,7 +1240,7 @@
       const id = existing && existing.id ? existing.id : requestId();
       const player = shortPlayerName(inputValue("playerName"));
       const nameParts = splitPlayerName(player);
-      const linkedRequest = linkedRequestForForm();
+      const linkedRequest = existing?.requestId ? existing : formRequestLink;
       return {
         ...(existing || {}),
         id,
@@ -1296,15 +1261,14 @@
         assessment: inputValue("assessment"),
         treatment: inputValue("treatment"),
         guidelines: inputValue("guidelines"),
-        requestId: linkedRequest ? linkedRequest.id : "",
-        requestSummary: linkedRequest ? { createdAt:linkedRequest.createdAt || "", player:linkedRequest.player || "", team:linkedRequest.team || "" } : null
+        requestId: linkedRequest?.requestId || "",
+        requestSummary: linkedRequest?.requestSummary || null
       };
     }
 
     function fillForm(row){
       setInputValue("date", row.date);
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
-      renderLinkedRequestOptions(row.requestId);
       setInputValue("gender", row.gender);
       setInputValue("assignedPhysio", row.assignedPhysio);
       syncVisitTypeFromPhysio();
@@ -1330,7 +1294,7 @@
         if(copyMode){
           editingId = null;
           // La nova visita continua vinculada a la mateixa petició d'origen.
-          renderLinkedRequestOptions(row.requestId);
+          formRequestLink = row.requestId ? { requestId:row.requestId, requestSummary:row.requestSummary || null } : null;
           document.getElementById("date").value = todayIso();
           setDefaultVisitOwner();
           setInputValue("mechanism", "");
@@ -1342,7 +1306,7 @@
         }
       } else {
         els.form.reset();
-        renderLinkedRequestOptions();
+        formRequestLink = null;
         document.getElementById("date").value = todayIso();
         setDefaultVisitOwner();
         setInputValue("courtStatus", "pending");
@@ -1358,6 +1322,7 @@
       els.modal.classList.remove("open");
       els.modal.setAttribute("aria-hidden", "true");
       editingId = null;
+      formRequestLink = null;
       els.form.reset();
       els.submit.textContent = "Guardar visita";
       els.modalTitle.textContent = "Nova visita";
@@ -1628,15 +1593,6 @@
     });
     els.openCreate.addEventListener("click", () => {
       if(isFisio()) openModal();
-    });
-    document.getElementById("playerName").addEventListener("input", () => renderLinkedRequestOptions());
-    els.linkedRequest.addEventListener("change", () => {
-      const request = requestOptions.find(item => item.id === els.linkedRequest.value);
-      if(!request) return;
-      setInputValue("playerName", shortPlayerName(request.player));
-      if(request.gender) setInputValue("gender", request.gender);
-      if(request.team) setInputValue("team", teamCategory(request.team));
-      renderLinkedRequestOptions(request.id);
     });
     document.getElementById("assignedPhysio").addEventListener("change", syncVisitTypeFromPhysio);
     document.getElementById("courtStatus").addEventListener("change", syncCourtStatusSelect);

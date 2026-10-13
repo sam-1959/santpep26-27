@@ -515,13 +515,13 @@
     // A Peticions fisio només és rellevant una visita feta a partir de la
     // sol·licitud actual. Així no es reutilitzen pautes d'una lesió anterior.
     function latestPhysioFilterValue(row){
-      const latest = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
+      const latest = latestGuidelinesFor(row.id, row.player, row.createdAt, row.clinicalVisit);
       if(!latest) return "NO_VISIT";
       return latest.assignedPhysio || "NO_PHYSIO";
     }
 
     function latestCourtFilterValue(row){
-      const latest = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
+      const latest = latestGuidelinesFor(row.id, row.player, row.createdAt, row.clinicalVisit);
       if(!latest) return "NO_VISIT";
       return ["red", "orange", "green", "pending"].includes(latest.courtStatus) ? latest.courtStatus : "pending";
     }
@@ -587,6 +587,7 @@
           const updatedDate = parseDateValue(visit.updatedAt || visit.createdAt);
           const updatedTimestamp = updatedDate ? updatedDate.getTime() : 0;
           const candidate = {
+            requestId: String(visit.requestId || ""),
             guidelines,
             courtStatus: visit.courtStatus || "pending",
             assignedPhysio: visit.assignedPhysio || "",
@@ -615,7 +616,11 @@
       }
     }
 
-    function latestGuidelinesFor(player, since, clinicalVisit){
+    function latestGuidelinesFor(requestId, player, since, clinicalVisit){
+      const linkedVisits = [...visitGuidelinesById.values()]
+        .filter(visit => visit.requestId && visit.requestId === String(requestId || ""))
+        .sort((a, b) => (b.timestamp - a.timestamp) || (b.createdTimestamp - a.createdTimestamp) || (b.updatedTimestamp - a.updatedTimestamp));
+      if(linkedVisits.length) return linkedVisits[0];
       const linkedVisitId = clinicalVisit && clinicalVisit.visitId ? String(clinicalVisit.visitId) : "";
       if(linkedVisitId) return visitGuidelinesById.get(linkedVisitId) || null;
       // Les visites i la petició del mateix dia també pertanyen al mateix cas.
@@ -625,7 +630,7 @@
       for(const key of playerLookupKeys(player)){
         const matches = (latestGuidelinesByPlayer.get(key) || [])
           .filter(visit => visit.timestamp >= sinceTimestamp)
-          .sort((a, b) => (b.createdTimestamp - a.createdTimestamp) || (b.updatedTimestamp - a.updatedTimestamp) || (b.timestamp - a.timestamp));
+        .sort((a, b) => (b.timestamp - a.timestamp) || (b.createdTimestamp - a.createdTimestamp) || (b.updatedTimestamp - a.updatedTimestamp));
         if(matches.length) return matches[0];
       }
       return null;
@@ -866,7 +871,7 @@
     function renderFilters(){
       const teams = ["TOTS"].concat([...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
       const physios = [...new Set(rows
-        .map(row => latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit)?.assignedPhysio)
+        .map(row => latestGuidelinesFor(row.id, row.player, row.createdAt, row.clinicalVisit)?.assignedPhysio)
         .filter(Boolean))]
         .sort((a,b) => a.localeCompare(b, "ca-ES"));
       const genders = [
@@ -957,8 +962,8 @@
           isPrivateView ? r.phone : "",
           r.description,
           r.fullDescription,
-          latestGuidelinesFor(r.player, r.createdAt, r.clinicalVisit)?.guidelines,
-          latestGuidelinesFor(r.player, r.createdAt, r.clinicalVisit)?.assignedPhysio
+          latestGuidelinesFor(r.id, r.player, r.createdAt, r.clinicalVisit)?.guidelines,
+          latestGuidelinesFor(r.id, r.player, r.createdAt, r.clinicalVisit)?.assignedPhysio
         ].join(" ")).includes(searchQuery))
       );
       totalEl.textContent = visible.length;
@@ -992,7 +997,7 @@
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
-          const latestGuidelines = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
+          const latestGuidelines = latestGuidelinesFor(row.id, row.player, row.createdAt, row.clinicalVisit);
           const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
           const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
           const guidelinesHtml = latestGuidelines

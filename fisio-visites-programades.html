@@ -68,8 +68,8 @@
     .week-day-head { padding:10px; background:#faf8fd; border-bottom:1px solid var(--line); color:var(--brand-dark); font-size:.75rem; font-weight:900; text-transform:capitalize; }
     .week-day.today .week-day-head { background:#fff8d6; }
     .week-entry { display:grid; grid-template-columns:minmax(0,1fr) 30px; gap:6px; margin:8px; padding:8px; border-radius:10px; background:#f6effa; border-left:3px solid var(--brand); }
-    .week-entry .professional-marker { display:grid; justify-items:start; gap:4px; grid-column:1; grid-row:1 / span 2; }
-    .week-entry .time { grid-column:2; font-size:.84rem; }
+    .week-entry .professional-marker { display:grid; justify-items:start; gap:4px; grid-column:1; }
+    .week-entry .professional-marker .time { font-size:.84rem; }
     .week-entry .player { margin-top:0; font-size:.8rem; }
     .week-entry .assigned { grid-column:2; justify-self:center; margin-top:0; font-size:.7rem; text-align:left; }
     .week-empty { padding:12px 8px; color:#aaa1af; font-size:.75rem; text-align:center; }
@@ -349,7 +349,7 @@
         const items = visible.filter(item => item.date === date);
         const heading = new Intl.DateTimeFormat("ca-ES", { weekday:"short", day:"numeric" }).format(parseDate(date));
         return '<section class="week-day ' + (date === today ? 'today' : '') + '"><div class="week-day-head">' + escapeHtml(heading) + '</div>' +
-          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="time">' + escapeHtml(item.time) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
+          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(item.player) + '</div><div class="time">' + escapeHtml(item.time) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
           '</section>';
       }).join("");
     }

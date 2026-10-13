@@ -133,6 +133,95 @@ function formatCalendarDateTime(date) {
   return Utilities.formatDate(date, "Europe/Madrid", "yyyy-MM-dd'T'HH:mm:ss");
 }
 
+// Auditoria de només lectura: compara data i hora entre Calendaris de partits
+// (amb els canvis manuals aplicats) i els dos Google Calendars del club.
+// No envia correus ni modifica Firebase ni Google Calendar.
+function comprovarCoherenciaCalendarisGoogle() {
+  var audited = calendariAmbCanvisManualsPerAuditoria();
+  var eventsByCalendar = {};
+  var calendarIds = [
+    "e6e366d49523bee10af33b961767a8c3228b60cb30066e3fdc04704077f65a9f@group.calendar.google.com",
+    "6vssihbaio24d4s1220h8km6v8@group.calendar.google.com"
+  ];
+  calendarIds.forEach(function(calendarId) {
+    eventsByCalendar[calendarId] = esdevenimentsGooglePerIcalUid(calendarId);
+  });
+
+  var result = { checked:0, matches:0, missing:[], mismatches:[], skipped:[], unresolvedManualChanges:audited.unresolved };
+  taulaTotsElsPartits(audited.data).forEach(function(game) {
+    if (!game.calendarId || !game.icalUid) {
+      result.skipped.push(descripcioPartitAuditoria(game, "sense identificador de Google Calendar"));
+      return;
+    }
+    result.checked++;
+    var event = eventsByCalendar[game.calendarId] && eventsByCalendar[game.calendarId][game.icalUid];
+    if (!event) {
+      result.missing.push(descripcioPartitAuditoria(game, "no trobat a Google Calendar"));
+      return;
+    }
+    var actual = dataHoraEsdevenimentGoogle(event);
+    if (actual.date !== game.date || actual.time !== game.time) {
+      result.mismatches.push({
+        team: taulaEtiquetaEquip(game), rival: game.rival || "rival pendent", calendarId: game.calendarId,
+        expected: game.date + " " + game.time, actual: actual.date + " " + actual.time, summary: event.summary || ""
+      });
+      return;
+    }
+    result.matches++;
+  });
+  Logger.log("Auditoria Calendar: " + result.checked + " revisats, " + result.matches + " correctes, " + result.missing.length + " absents, " + result.mismatches.length + " inconsistències.");
+  return result;
+}
+
+function calendariAmbCanvisManualsPerAuditoria() {
+  var data = JSON.parse(JSON.stringify(llegirFirebase(CALENDAR_FIREBASE_PATH) || { weeks:[] }));
+  var changes = Object.keys(data.manualChanges || {}).map(function(key) { return data.manualChanges[key]; }).filter(Boolean)
+    .sort(function(a, b) { return String(a.importedAt || "").localeCompare(String(b.importedAt || "")); });
+  var unresolved = [];
+  changes.forEach(function(change) {
+    if (!change || change.type !== "changed" || !change.manual || !change.game) return;
+    try {
+      aplicarCanviManualAlCalendari(data, change.game, change.fields || []);
+    } catch (error) {
+      unresolved.push({ game:change.game, error:String(error) });
+    }
+  });
+  return { data:data, unresolved:unresolved };
+}
+
+function esdevenimentsGooglePerIcalUid(calendarId) {
+  var byUid = {};
+  var pageToken = "";
+  do {
+    var options = {
+      timeMin: "2026-08-01T00:00:00+02:00",
+      timeMax: "2027-08-01T00:00:00+02:00",
+      singleEvents: true,
+      maxResults: 2500
+    };
+    if (pageToken) options.pageToken = pageToken;
+    var page = Calendar.Events.list(calendarId, options);
+    (page.items || []).forEach(function(event) {
+      if (event.iCalUID) byUid[event.iCalUID] = event;
+    });
+    pageToken = page.nextPageToken || "";
+  } while (pageToken);
+  return byUid;
+}
+
+function dataHoraEsdevenimentGoogle(event) {
+  var start = event && event.start || {};
+  if (start.dateTime) {
+    var date = new Date(start.dateTime);
+    return { date:Utilities.formatDate(date, "Europe/Madrid", "yyyy-MM-dd"), time:Utilities.formatDate(date, "Europe/Madrid", "HH:mm") };
+  }
+  return { date:start.date || "", time:"" };
+}
+
+function descripcioPartitAuditoria(game, reason) {
+  return { team:taulaEtiquetaEquip(game), rival:game.rival || "rival pendent", expected:(game.date || "") + " " + (game.time || ""), reason:reason };
+}
+
 // Executa-la una sola vegada per moure al final les icones de tots els
 // partits de la temporada als dos calendaris del club. No toca cap altra dada.
 function normalitzarIconesTitolsCalendaris() {

@@ -21,6 +21,7 @@
     .back { display:inline-flex; margin:0 0 14px; color:var(--brand); font-size:.86rem; font-weight:850; text-decoration:none; }
     .panel { padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
     .panel + .panel { margin-top:18px; }
+    .view-panel[hidden] { display:none; }
     .head { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
     h2 { margin:0; color:var(--brand-dark); font-size:1.15rem; }
     .intro { margin:4px 0 0; color:var(--muted); font-size:.85rem; }
@@ -28,6 +29,9 @@
     .kpi strong { color:var(--brand-dark); font-size:1.2rem; }
     .kpi span { color:var(--muted); font-size:.72rem; font-weight:850; text-transform:uppercase; }
     .filters { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0; }
+    .view-switch { display:flex; gap:6px; flex-wrap:wrap; }
+    .view-button { padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--brand); font:inherit; font-size:.8rem; font-weight:850; cursor:pointer; }
+    .view-button.active { border-color:var(--brand); background:var(--brand); color:#fff; }
     .chip { padding:7px 12px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font:inherit; font-size:.78rem; font-weight:850; cursor:pointer; }
     .chip.active { border-color:var(--accent); background:var(--accent); color:#4a3800; }
     .status { min-height:18px; margin:0 0 12px; color:var(--muted); font-size:.78rem; }
@@ -74,14 +78,22 @@
     <a class="back" href="fisio-visites.html">← Visites de fisio</a>
     <section class="panel">
       <div class="head">
-        <div><h2>Properes visites</h2><p class="intro">Només es mostren cites programades a partir d’avui.</p></div>
+        <div class="view-switch" role="group" aria-label="Vista del calendari">
+          <button class="view-button active" type="button" data-view="week" aria-pressed="true">Calendari setmanal</button>
+          <button class="view-button" type="button" data-view="agenda" aria-pressed="false">Properes visites</button>
+        </div>
         <div class="kpi"><strong id="total">—</strong><span>Visites</span></div>
       </div>
       <div class="filters" id="filters" aria-label="Filtra per professional"></div>
       <p class="status" id="status">Carregant visites programades...</p>
+    </section>
+    <section class="panel view-panel" id="agendaPanel" hidden>
+      <div class="head">
+        <div><h2>Properes visites</h2><p class="intro">Només es mostren cites programades a partir d’avui.</p></div>
+      </div>
       <div class="agenda" id="agenda"></div>
     </section>
-    <section class="panel">
+    <section class="panel view-panel" id="weekPanel">
       <div class="head">
         <div><h2>Calendari setmanal</h2><p class="intro">Les mateixes cites, distribuïdes per dies de la setmana.</p></div>
         <div class="week-controls">
@@ -103,11 +115,14 @@
     const filtersEl = document.getElementById("filters");
     const statusEl = document.getElementById("status");
     const agendaEl = document.getElementById("agenda");
+    const agendaPanelEl = document.getElementById("agendaPanel");
+    const weekPanelEl = document.getElementById("weekPanel");
     const weekLabelEl = document.getElementById("weekLabel");
     const weekCalendarEl = document.getElementById("weekCalendar");
     let appointments = [];
     let activePhysio = "TOTES";
     let calendarWeekStart = "";
+    let activeView = "week";
 
     function firebaseUrl(path){
       return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json";
@@ -157,6 +172,16 @@
         '<button class="chip ' + (filter.value === activePhysio ? "active" : "") + '" type="button" data-physio="' + escapeHtml(filter.value) + '">' + escapeHtml(filter.label) + '</button>'
       ).join("");
       filtersEl.querySelectorAll("[data-physio]").forEach(button => button.addEventListener("click", () => { activePhysio = button.dataset.physio; render(); }));
+    }
+    function setActiveView(view){
+      activeView = view === "agenda" ? "agenda" : "week";
+      agendaPanelEl.hidden = activeView !== "agenda";
+      weekPanelEl.hidden = activeView !== "week";
+      document.querySelectorAll("[data-view]").forEach(button => {
+        const active = button.dataset.view === activeView;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
     }
     function render(){
       const visible = appointments.filter(item => activePhysio === "TOTES" || item.assignedPhysio === activePhysio);
@@ -209,6 +234,8 @@
       else calendarWeekStart = addDays(calendarWeekStart || mondayOf(todayIso()), button.dataset.week === "next" ? 7 : -7);
       render();
     }));
+    document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => setActiveView(button.dataset.view)));
+    setActiveView(activeView);
   </script>
 </body>
 </html>

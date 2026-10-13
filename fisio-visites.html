@@ -882,13 +882,7 @@
     }
 
     function linkedRequestForForm(){
-      const selected = requestOptions.find(request => request.id === els.linkedRequest.value);
-      if(selected) return selected;
-      const playerKey = shortPlayerKey(inputValue("playerName"));
-      const scheduledMatches = requestOptions.filter(request =>
-        request.appointment && shortPlayerKey(request.player) === playerKey
-      );
-      return scheduledMatches.length === 1 ? scheduledMatches[0] : null;
+      return requestOptions.find(request => request.id === els.linkedRequest.value) || null;
     }
 
     async function patchRequestLink(path, requestId, clinicalVisit, token){

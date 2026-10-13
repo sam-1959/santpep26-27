@@ -263,15 +263,16 @@ function aplicarCanviManualAlCalendari(calendarData, game, changes) {
   var fallback = [];
   (calendarData.weeks || []).forEach(function(week) {
     (week.games || []).forEach(function(existing) {
-      if (existing.team === previous.team && existing.sex === previous.sex && existing.rival === previous.rival) fallback.push(existing);
+      if (taulaClauPartit(existing) === taulaClauPartit(previous)) fallback.push(existing);
       if (taulaIdPartit(existing) !== targetKey) return;
       ["date", "time", "rival", "loc", "home", "friendly"].forEach(function(field) { existing[field] = game[field]; });
       matched = true;
     });
   });
   // Les edicions manuals viuen en un node separat del calendari importat.
-  // Si aquest partit ja s'havia editat abans, la clau exacta pot no coincidir;
-  // l'equip, el sexe i el rival identifiquen el mateix enfrontament.
+  // Si aquest partit ja s'havia editat abans o canvia el text del pavelló,
+  // la clau exacta pot no coincidir. Equip, sexe, rival i casa/fora identifiquen
+  // l'enfrontament sense confondre una possible tornada contra el mateix rival.
   if (!matched && fallback.length === 1) {
     ["date", "time", "rival", "loc", "home", "friendly"].forEach(function(field) { fallback[0][field] = game[field]; });
     matched = true;

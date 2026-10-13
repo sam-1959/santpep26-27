@@ -227,13 +227,6 @@ function taulaEsPistaClub(game) {
   return !!game.home || loc.indexOf("la-colina") !== -1 || loc.indexOf("montigala") !== -1 || loc.indexOf("bufala") !== -1 || loc.indexOf("pomar") !== -1;
 }
 
-function taulaPotAfectarRestriccions(game) {
-  var team = taulaNormalitza(game && game.team || "");
-  var family = taulaNormalitza(game && game.fam || "");
-  var miniOrPremini = team.indexOf("mini") === 0 || team.indexOf("premini") === 0 || family === "mini" || family === "premini";
-  return taulaEsPistaClub(game || {}) && (miniOrPremini || !!(game && game.friendly));
-}
-
 function taulaNecessitaExperiencia(game) {
   return ["mini-a-m", "mini-b-m", "mini-f"].indexOf(taulaNormalitza(taulaEtiquetaEquip(game))) !== -1;
 }
@@ -249,7 +242,7 @@ function taulaTotsElsPartits(calendarData) {
 function taulaPartitAnterior(game, changes) {
   var previous = {
     date: game.date, time: game.time, rival: game.rival, loc: game.loc || "", home: !!game.home, friendly: !!game.friendly,
-    team: game.team, sex: game.sex
+    team: game.team, sex: game.sex, calendarId: game.calendarId || "", icalUid: game.icalUid || ""
   };
   (changes || []).forEach(function(change) {
     if (!change) return;
@@ -271,7 +264,8 @@ function aplicarCanviManualAlCalendari(calendarData, game, changes) {
   (calendarData.weeks || []).forEach(function(week) {
     (week.games || []).forEach(function(existing) {
       if (taulaClauPartit(existing) === taulaClauPartit(previous)) fallback.push(existing);
-      if (taulaIdPartit(existing) !== targetKey) return;
+      var sameSourceEvent = previous.icalUid && existing.icalUid === previous.icalUid && (!previous.calendarId || existing.calendarId === previous.calendarId);
+      if (!sameSourceEvent && taulaIdPartit(existing) !== targetKey) return;
       ["date", "time", "rival", "loc", "home", "friendly"].forEach(function(field) { existing[field] = game[field]; });
       matched = true;
     });
@@ -345,10 +339,6 @@ function htmlRestriccionsTaules(issues) {
 }
 
 function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
-  var previous = taulaPartitAnterior(game, changes);
-  if (!taulaPotAfectarRestriccions(game) && !taulaPotAfectarRestriccions(previous)) {
-    return { checked:true, skipped:true, reason:"not_table_game", issues:0, emailed:false };
-  }
   var calendarData = aplicarCanviManualAlCalendari(llegirFirebase(CALENDAR_FIREBASE_PATH), game, changes);
   var issues = incidenciesRestriccionsTaules(calendarData, llegirFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {}, llegirFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {});
   var signature = issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");

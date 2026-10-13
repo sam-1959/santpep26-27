@@ -123,6 +123,9 @@
     .col-prepa { width:1%; white-space:nowrap; }
     .col-court, .col-type { width:1%; white-space:nowrap; text-align:center; }
     .col-feedback { min-width:180px; max-width:260px; }
+    .col-request { min-width:130px; }
+    .request-link { color:var(--brand-dark); font-size:.76rem; font-weight:850; }
+    .request-link span { display:block; color:var(--muted); font-size:.7rem; font-weight:700; }
     .col-actions { width:1%; white-space:nowrap; text-align:center; }
     .col-actions .table-actions { justify-content:center; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
@@ -204,6 +207,12 @@
             <label for="playerName">Nom i cognoms jugador/a</label>
             <input id="playerName" name="playerName" type="text" list="playerOptions" autocomplete="off" required />
             <datalist id="playerOptions"></datalist>
+          </div>
+          <div class="field wide">
+            <label for="linkedRequest">Petició associada</label>
+            <select id="linkedRequest" name="linkedRequest">
+              <option value="">Sense associar</option>
+            </select>
           </div>
           <div class="field">
             <label for="gender">Gènere</label>
@@ -347,6 +356,7 @@
     let editingId = null;
     let feedbackVisitId = null;
     let requestPlayerNames = [];
+    let requestOptions = [];
     let auth = null;
     let authReady = false;
     let currentUser = null;
@@ -380,6 +390,7 @@
       closeCreate: document.getElementById("closeCreateButton"),
       cancelCreate: document.getElementById("cancelCreateButton"),
       playerOptions: document.getElementById("playerOptions"),
+      linkedRequest: document.getElementById("linkedRequest"),
       structureOptions: document.getElementById("structure"),
       locationOptions: document.getElementById("location"),
       feedbackModal: document.getElementById("feedbackModal"),
@@ -647,6 +658,8 @@
         treatment: row.treatment || "",
         guidelines: row.guidelines || "",
         courtStatus: row.courtStatus || "pending",
+        requestId: row.requestId || "",
+        requestSummary: row.requestSummary && typeof row.requestSummary === "object" ? row.requestSummary : null,
         prepaRead: Boolean(row.prepaRead),
         prepaReadAt: row.prepaReadAt || "",
         prepaReadByName: row.prepaReadByName || row.prepaReadBy?.name || row.prepaFeedback?.byName || "",
@@ -844,17 +857,42 @@
       });
     }
 
-    async function loadRequestPlayerNames(){
+    function requestDateLabel(value){
+      const iso = String(value || "").slice(0, 10);
+      return formatDate(iso) || "Sense data";
+    }
+
+    function requestOptionLabel(request){
+      return requestDateLabel(request.createdAt) + " · " + shortPlayerName(request.player) + " · " + (request.team || "Sense equip");
+    }
+
+    function renderLinkedRequestOptions(selectedId){
+      const currentId = selectedId || els.linkedRequest.value || "";
+      const playerKey = shortPlayerKey(inputValue("playerName"));
+      let options = playerKey
+        ? requestOptions.filter(request => shortPlayerKey(request.player) === playerKey)
+        : requestOptions;
+      const selected = requestOptions.find(request => request.id === currentId);
+      if(selected && !options.some(request => request.id === selected.id)) options = [selected].concat(options);
+      els.linkedRequest.innerHTML = '<option value="">Sense associar</option>' + options.map(request =>
+        '<option value="' + escapeHtml(request.id) + '">' + escapeHtml(requestOptionLabel(request)) + '</option>'
+      ).join("");
+      els.linkedRequest.value = currentId;
+    }
+
+    async function loadRequestOptions(){
       try {
         const response = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase requests read failed");
         const data = await response.json();
-        requestPlayerNames = data && typeof data === "object"
-          ? Object.values(data).map(row => String(row?.player || "").trim()).filter(Boolean)
+        requestOptions = data && typeof data === "object"
+          ? Object.entries(data).map(([id, row]) => ({ id, player:String(row?.player || "").trim(), team:String(row?.team || "").trim(), gender:String(row?.gender || ""), createdAt:row?.createdAt || "" })).filter(row => row.player)
           : [];
+        requestPlayerNames = requestOptions.map(row => row.player);
       } catch(error) {
+        requestOptions = [];
         requestPlayerNames = [];
-        console.warn("No s'han pogut carregar els noms de peticions.", error);
+        console.warn("No s'han pogut carregar les peticions.", error);
       }
     }
 
@@ -974,6 +1012,7 @@
         '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
         '<th class="col-name">Jugador/a</th>' +
+        '<th class="col-request">Petició</th>' +
         '<th class="col-physio">👤 VISITA</th>' +
         '<th class="col-type">Tipus</th>' +
         '<th class="col-team">Equip</th>' +
@@ -1000,10 +1039,15 @@
             ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' +
               (feedbackMeta ? '<div class="action-meta">' + escapeHtml(feedbackMeta) + '</div>' : '')
             : '<span class="feedback-preview">—</span>';
+          const requestSummary = row.requestSummary || {};
+          const requestHtml = row.requestId
+            ? '<div class="request-link">Petició associada<span>' + escapeHtml(requestDateLabel(requestSummary.createdAt)) + '</span></div>'
+            : '—';
           return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
+            '<td class="col-request">' + requestHtml + '</td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +
               '<option value="">Sense assignar</option>' +
               PHYSIOS.map(name => '<option value="' + escapeHtml(name) + '" ' + (name === row.assignedPhysio ? "selected" : "") + '>' + escapeHtml(name) + '</option>').join("") +
@@ -1053,8 +1097,8 @@
     async function load(){
       try {
         const token = hasAccess() ? await authToken() : "";
-        if(hasAccess()) await loadRequestPlayerNames();
-        else requestPlayerNames = [];
+        if(hasAccess()) await loadRequestOptions();
+        else { requestPlayerNames = []; requestOptions = []; }
         const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
         rows = applyVisitMarkers(normalizeRows(await response.json()), true);
@@ -1062,6 +1106,7 @@
         renderFilters();
         renderPrepaFilters();
         renderDatalistOptions();
+        renderLinkedRequestOptions();
         render();
       } catch(error) {
         els.status.textContent = "No s'han pogut carregar les visites.";
@@ -1074,8 +1119,8 @@
       isRefreshing = true;
       try {
         const token = hasAccess() ? await authToken() : "";
-        if(hasAccess()) await loadRequestPlayerNames();
-        else requestPlayerNames = [];
+        if(hasAccess()) await loadRequestOptions();
+        else { requestPlayerNames = []; requestOptions = []; }
         const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
         rows = applyVisitMarkers(normalizeRows(await response.json()), false);
@@ -1084,6 +1129,7 @@
         renderFilters();
         renderPrepaFilters();
         renderDatalistOptions();
+        renderLinkedRequestOptions();
         render();
       } catch(error) {
         statusMessage = "No s'ha pogut actualitzar automàticament.";
@@ -1172,6 +1218,7 @@
       const id = existing && existing.id ? existing.id : requestId();
       const player = shortPlayerName(inputValue("playerName"));
       const nameParts = splitPlayerName(player);
+      const linkedRequest = requestOptions.find(request => request.id === els.linkedRequest.value);
       return {
         ...(existing || {}),
         id,
@@ -1191,13 +1238,16 @@
         mechanism: inputValue("mechanism"),
         assessment: inputValue("assessment"),
         treatment: inputValue("treatment"),
-        guidelines: inputValue("guidelines")
+        guidelines: inputValue("guidelines"),
+        requestId: linkedRequest ? linkedRequest.id : "",
+        requestSummary: linkedRequest ? { createdAt:linkedRequest.createdAt || "", player:linkedRequest.player || "", team:linkedRequest.team || "" } : null
       };
     }
 
     function fillForm(row){
       setInputValue("date", row.date);
       setInputValue("playerName", shortPlayerName(row.name || [row.firstName, row.lastName].filter(Boolean).join(" ")));
+      renderLinkedRequestOptions(row.requestId);
       setInputValue("gender", row.gender);
       setInputValue("assignedPhysio", row.assignedPhysio);
       syncVisitTypeFromPhysio();
@@ -1233,6 +1283,7 @@
         }
       } else {
         els.form.reset();
+        renderLinkedRequestOptions();
         document.getElementById("date").value = todayIso();
         setDefaultVisitOwner();
         setInputValue("courtStatus", "pending");
@@ -1301,6 +1352,7 @@
       seenVisitIds = new Set();
       newVisitIds = new Set();
       requestPlayerNames = [];
+      requestOptions = [];
       els.authTitle.textContent = "Vista pública anonimitzada";
       els.authText.textContent = message || "Inicia sessió amb un compte autoritzat per veure la vista completa.";
       els.loginButton.hidden = false;
@@ -1343,6 +1395,7 @@
               currentRole = "";
               rows = [];
               requestPlayerNames = [];
+              requestOptions = [];
               els.authTitle.textContent = "Vista pública anonimitzada";
               els.authText.textContent = user.email + " no té un rol assignat. Es mostra la vista pública.";
               els.loginButton.hidden = true;
@@ -1357,6 +1410,7 @@
             currentRole = "";
             rows = [];
             requestPlayerNames = [];
+            requestOptions = [];
             els.authTitle.textContent = "Vista pública anonimitzada";
             els.authText.textContent = "No s'ha pogut carregar el rol de " + user.email + ". Es mostra la vista pública.";
             els.loginButton.hidden = true;
@@ -1514,6 +1568,15 @@
     });
     els.openCreate.addEventListener("click", () => {
       if(isFisio()) openModal();
+    });
+    document.getElementById("playerName").addEventListener("input", () => renderLinkedRequestOptions());
+    els.linkedRequest.addEventListener("change", () => {
+      const request = requestOptions.find(item => item.id === els.linkedRequest.value);
+      if(!request) return;
+      setInputValue("playerName", shortPlayerName(request.player));
+      if(request.gender) setInputValue("gender", request.gender);
+      if(request.team) setInputValue("team", teamCategory(request.team));
+      renderLinkedRequestOptions(request.id);
     });
     document.getElementById("assignedPhysio").addEventListener("change", syncVisitTypeFromPhysio);
     document.getElementById("courtStatus").addEventListener("change", syncCourtStatusSelect);

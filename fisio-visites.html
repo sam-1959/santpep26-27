@@ -123,9 +123,8 @@
     .col-prepa { width:1%; white-space:nowrap; }
     .col-court, .col-type { width:1%; white-space:nowrap; text-align:center; }
     .col-feedback { min-width:180px; max-width:260px; }
-    .col-request { min-width:130px; }
-    .request-link { color:var(--brand-dark); font-size:.76rem; font-weight:850; }
-    .request-link span { display:block; color:var(--muted); font-size:.7rem; font-weight:700; }
+    .col-request { width:1%; white-space:nowrap; text-align:center; }
+    .request-linked { font-size:1rem; }
     .col-actions { width:1%; white-space:nowrap; text-align:center; }
     .col-actions .table-actions { justify-content:center; }
     .prepa-badge { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 9px; font-size:0.72rem; font-weight:900; border:1px solid var(--line); background:#faf8fd; color:var(--muted); }
@@ -1088,9 +1087,8 @@
             ? '<div class="feedback-preview">' + escapeHtml(feedbackText) + '</div>' +
               (feedbackMeta ? '<div class="action-meta">' + escapeHtml(feedbackMeta) + '</div>' : '')
             : '<span class="feedback-preview">—</span>';
-          const requestSummary = row.requestSummary || {};
           const requestHtml = row.requestId
-            ? '<div class="request-link">Petició associada<span>' + escapeHtml(requestDateLabel(requestSummary.createdAt)) + '</span></div>'
+            ? '<span class="request-linked" title="Petició associada" aria-label="Petició associada">🔗</span>'
             : '—';
           return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +

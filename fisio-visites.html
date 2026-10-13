@@ -1324,6 +1324,8 @@
         fillForm(row);
         if(copyMode){
           editingId = null;
+          // La nova visita continua vinculada a la mateixa petició d'origen.
+          renderLinkedRequestOptions(row.requestId);
           document.getElementById("date").value = todayIso();
           setDefaultVisitOwner();
           setInputValue("mechanism", "");

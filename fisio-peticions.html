@@ -575,47 +575,35 @@
       try {
         const path = token ? VISITS_PATH : "physioVisitsPublic/season-26-27";
         const visits = await fetchFirebaseRequests(path, token);
-        const latest = new Map();
+        const visitsByPlayer = new Map();
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
           const visitDate = parseDateValue(visit.date);
           const timestamp = visitDate ? visitDate.getTime() : 0;
+          const createdDate = parseDateValue(visit.createdAt);
+          const createdTimestamp = createdDate ? createdDate.getTime() : timestamp;
           const updatedDate = parseDateValue(visit.updatedAt || visit.createdAt);
           const updatedTimestamp = updatedDate ? updatedDate.getTime() : 0;
           playerLookupKeys(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" "))
             .forEach(key => {
-              const current = latest.get(key);
               const candidate = {
                 guidelines,
                 courtStatus: visit.courtStatus || "pending",
                 assignedPhysio: visit.assignedPhysio || "",
                 visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
                 timestamp,
+                createdTimestamp,
                 updatedTimestamp,
                 date: visit.date || "",
                 createdAt: visit.createdAt || "",
                 updatedAt: visit.updatedAt || ""
               };
-              if(!current || timestamp > current.timestamp){
-                latest.set(key, candidate);
-              } else if(timestamp === current.timestamp){
-                const candidateIsNewer = updatedTimestamp >= (current.updatedTimestamp || 0);
-                const primary = candidateIsNewer ? candidate : current;
-                const secondary = candidateIsNewer ? current : candidate;
-                latest.set(key, {
-                  ...primary,
-                  guidelines: primary.guidelines || secondary.guidelines,
-                  courtStatus: primary.courtStatus && primary.courtStatus !== "pending" ? primary.courtStatus : secondary.courtStatus,
-                  assignedPhysio: primary.assignedPhysio || secondary.assignedPhysio,
-                  visitType: primary.visitType || secondary.visitType,
-                  createdAt: primary.createdAt || secondary.createdAt,
-                  updatedAt: primary.updatedAt || secondary.updatedAt,
-                  updatedTimestamp: Math.max(primary.updatedTimestamp || 0, secondary.updatedTimestamp || 0)
-                });
-              }
+              const playerVisits = visitsByPlayer.get(key) || [];
+              playerVisits.push(candidate);
+              visitsByPlayer.set(key, playerVisits);
             });
         });
-        latestGuidelinesByPlayer = latest;
+        latestGuidelinesByPlayer = visitsByPlayer;
       } catch(error) {
         latestGuidelinesByPlayer = new Map();
         console.warn("No s'han pogut carregar les pautes de visites.", error);
@@ -628,8 +616,10 @@
         ? new Date(since.getFullYear(), since.getMonth(), since.getDate()).getTime()
         : 0;
       for(const key of playerLookupKeys(player)){
-        const match = latestGuidelinesByPlayer.get(key);
-        if(match && match.timestamp >= sinceTimestamp) return match;
+        const matches = (latestGuidelinesByPlayer.get(key) || [])
+          .filter(visit => visit.timestamp >= sinceTimestamp)
+          .sort((a, b) => (b.createdTimestamp - a.createdTimestamp) || (b.updatedTimestamp - a.updatedTimestamp) || (b.timestamp - a.timestamp));
+        if(matches.length) return matches[0];
       }
       return null;
     }

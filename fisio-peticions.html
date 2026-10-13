@@ -995,12 +995,10 @@
           const latestGuidelines = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
           const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
           const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
-          const linkedVisitDate = latestGuidelines && row.clinicalVisit ? parseDateValue(latestGuidelines.date) : null;
-          const linkedVisitText = linkedVisitDate ? '<div class="guidelines-meta">Visita associada: ' + escapeHtml(formatDate(linkedVisitDate, false)) + '</div>' : '';
           const guidelinesHtml = latestGuidelines
             ? (latestGuidelines.guidelines
-              ? escapeHtml(latestGuidelines.guidelines) + linkedVisitText + (guidelinesDateText ? '<div class="guidelines-meta">Última pauta: ' + escapeHtml(guidelinesDateText) + '</div>' : '')
-              : '<span class="no-guidelines-badge">Sense pauta</span>' + linkedVisitText)
+              ? escapeHtml(latestGuidelines.guidelines) + (guidelinesDateText ? '<div class="guidelines-meta">Última pauta: ' + escapeHtml(guidelinesDateText) + '</div>' : '')
+              : '<span class="no-guidelines-badge">Sense pauta</span>')
             : '<span class="no-visit-badge">Sense visita</span>';
           const courtStatusHtml = latestGuidelines ? courtStatusBadge(latestGuidelines.courtStatus) : '<span class="no-visit-badge">Sense visita</span>';
           const latestPhysioHtml = latestGuidelines && latestGuidelines.assignedPhysio

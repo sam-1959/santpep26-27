@@ -406,6 +406,10 @@
       return `${year}-${month}-${day}`;
     }
 
+    function todayInputDate(){
+      return inputDateValue(new Date());
+    }
+
     function escapeHtml(value){
       return String(value).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
     }
@@ -734,6 +738,7 @@
       schedulingRequestId = row.id;
       const appointment = row.appointment;
       appointmentPlayer.value = shortName(row.player);
+      appointmentDate.min = todayInputDate();
       appointmentDate.value = appointment ? appointment.date : "";
       appointmentTime.value = appointment ? appointment.time : "";
       appointmentPhysio.value = appointment ? appointment.assignedPhysio : "";
@@ -754,7 +759,13 @@
       const date = appointmentDate.value;
       const time = appointmentTime.value;
       const assignedPhysio = appointmentPhysio.value;
+      appointmentDate.setCustomValidity("");
       if(!date || !time || !assignedPhysio) return;
+      if(date < todayInputDate()){
+        appointmentDate.setCustomValidity("La visita no pot ser anterior a avui.");
+        appointmentDate.reportValidity();
+        return;
+      }
       appointmentSave.disabled = true;
       statusMessage = "Guardant la visita programada...";
       render();

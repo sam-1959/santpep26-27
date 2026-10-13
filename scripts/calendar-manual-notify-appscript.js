@@ -117,8 +117,8 @@ function sincronitzarPartitGoogleCalendar(game) {
   var teamCode = OWN_TEAM_CODES[String(game.team) + "|" + String(game.sex)];
   if (!teamCode) throw new Error("No s'ha identificat el codi de l'equip.");
   var markers = String(event.summary || "").match(/[🏀🤝🍼]/g);
-  var summary = (markers && markers.length ? markers.join("") + " " : "") +
-    (game.home ? teamCode + " Vs " + game.rival : game.rival + " Vs " + teamCode);
+  var summary = (game.home ? teamCode + " Vs " + game.rival : game.rival + " Vs " + teamCode) +
+    (markers && markers.length ? " " + markers.join("") : "");
   var patch = {
     summary: summary,
     location: game.loc || "",

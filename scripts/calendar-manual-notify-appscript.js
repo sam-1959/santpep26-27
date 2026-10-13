@@ -170,6 +170,12 @@ function comprovarCoherenciaCalendarisGoogle() {
     result.matches++;
   });
   Logger.log("Auditoria Calendar: " + result.checked + " revisats, " + result.matches + " correctes, " + result.missing.length + " absents, " + result.mismatches.length + " inconsistències.");
+  result.mismatches.forEach(function(item) {
+    Logger.log("INCONSISTÈNCIA · " + item.team + " vs " + item.rival + " · web: " + item.expected + " · Google: " + item.actual);
+  });
+  result.missing.forEach(function(item) {
+    Logger.log("ABSENT A GOOGLE · " + item.team + " vs " + item.rival + " · web: " + item.expected);
+  });
   return result;
 }
 

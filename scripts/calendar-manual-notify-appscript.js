@@ -133,6 +133,55 @@ function formatCalendarDateTime(date) {
   return Utilities.formatDate(date, "Europe/Madrid", "yyyy-MM-dd'T'HH:mm:ss");
 }
 
+// Executa-la una sola vegada per moure al final les icones de tots els
+// partits de la temporada als dos calendaris del club. No toca cap altra dada.
+function normalitzarIconesTitolsCalendaris() {
+  var calendars = [
+    "e6e366d49523bee10af33b961767a8c3228b60cb30066e3fdc04704077f65a9f@group.calendar.google.com",
+    "6vssihbaio24d4s1220h8km6v8@group.calendar.google.com"
+  ];
+  var result = { scanned:0, changed:0, unchanged:0, calendars:{} };
+  calendars.forEach(function(calendarId) {
+    var pageToken = "";
+    var calendarResult = { scanned:0, changed:0, unchanged:0 };
+    do {
+      var options = {
+        timeMin: "2026-08-01T00:00:00+02:00",
+        timeMax: "2027-08-01T00:00:00+02:00",
+        singleEvents: true,
+        maxResults: 2500
+      };
+      if (pageToken) options.pageToken = pageToken;
+      var page = Calendar.Events.list(calendarId, options);
+      (page.items || []).forEach(function(event) {
+        calendarResult.scanned++;
+        var summary = String(event.summary || "");
+        var normalized = titolCalendarAmbIconesAlFinal(summary);
+        if (normalized === summary) {
+          calendarResult.unchanged++;
+          return;
+        }
+        Calendar.Events.patch({ summary: normalized }, calendarId, event.id);
+        calendarResult.changed++;
+      });
+      pageToken = page.nextPageToken || "";
+    } while (pageToken);
+    result.calendars[calendarId] = calendarResult;
+    result.scanned += calendarResult.scanned;
+    result.changed += calendarResult.changed;
+    result.unchanged += calendarResult.unchanged;
+  });
+  Logger.log("Títols revisats: " + result.scanned + "; actualitzats: " + result.changed + ".");
+  return result;
+}
+
+function titolCalendarAmbIconesAlFinal(summary) {
+  var markers = String(summary || "").match(/[🏀🤝🍼]/g);
+  if (!markers || !markers.length) return String(summary || "");
+  var text = String(summary || "").replace(/[🏀🤝🍼]/g, "").replace(/\s+/g, " ").trim();
+  return text + " " + markers.join("");
+}
+
 // Executa aquesta funció per autoritzar i comprovar l'accés als dos calendaris.
 function comprovarPermisosCalendarisGoogle() {
   var calendars = [

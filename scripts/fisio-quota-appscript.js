@@ -18,11 +18,7 @@ function actualitzarQuotaFisio() {
   var previous = llegirFirebase(QUOTA_FIREBASE_PATH) || {};
   var previousNames = Array.isArray(previous.paidNames) ? previous.paidNames.slice().sort() : [];
 
-  if (JSON.stringify(previousNames) === JSON.stringify(paidNames)) {
-    Logger.log("Quota de fisioteràpia sense canvis (" + paidNames.length + " claus).");
-    return { ok: true, changed: false, count: paidNames.length, updatedAt: previous.updatedAt || "" };
-  }
-
+  var changed = JSON.stringify(previousNames) !== JSON.stringify(paidNames);
   var payload = {
     paidNames: paidNames,
     updatedAt: new Date().toISOString(),
@@ -30,8 +26,8 @@ function actualitzarQuotaFisio() {
     count: paidNames.length
   };
   escriureFirebase(QUOTA_FIREBASE_PATH, payload);
-  Logger.log("Quota de fisioteràpia actualitzada a Firebase: " + paidNames.length + " claus.");
-  return { ok: true, changed: true, count: paidNames.length, updatedAt: payload.updatedAt };
+  Logger.log("Quota de fisioteràpia " + (changed ? "actualitzada" : "comprovada") + " a Firebase: " + paidNames.length + " claus.");
+  return { ok: true, changed: changed, count: paidNames.length, updatedAt: payload.updatedAt };
 }
 
 function extreureNomsAmbQuota(values) {

@@ -17,6 +17,7 @@
     .htext h1 span { display:block; font-size:.72rem; font-weight:500; opacity:.85; letter-spacing:.04em; text-transform:uppercase; }
     .htext p { margin:2px 0 0; font-size:.8rem; opacity:.9; }
     .logo { display:grid; place-items:center; width:48px; height:48px; border-radius:10px; background:#fff; color:var(--brand); font-size:1.55rem; }
+    .auth-button { border:1px solid rgba(255,255,255,.55); border-radius:999px; background:#fff; color:var(--brand); padding:8px 11px; font:inherit; font-size:.78rem; font-weight:850; cursor:pointer; }
     main { max-width:1080px; margin:0 auto; padding:22px 18px 38px; }
     .back { display:inline-flex; margin:0 0 14px; color:var(--brand); font-size:.86rem; font-weight:850; text-decoration:none; }
     .panel { padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
@@ -64,6 +65,22 @@
     .week-entry .player { margin-top:2px; font-size:.8rem; }
     .week-entry .assigned { justify-self:auto; margin-top:4px; font-size:.7rem; text-align:left; }
     .week-empty { padding:12px 8px; color:#aaa1af; font-size:.75rem; text-align:center; }
+    .modal-backdrop { display:none; position:fixed; inset:0; z-index:10; padding:20px; background:rgba(31,20,43,.45); align-items:center; justify-content:center; }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(100%, 460px); padding:20px; border-radius:var(--radius); background:#fff; box-shadow:0 18px 56px rgba(31,20,43,.28); }
+    .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .modal-head h2 { margin:0; }
+    .modal-head p { margin:4px 0 0; color:var(--muted); font-size:.82rem; }
+    .modal-close { border:0; background:transparent; color:var(--muted); font-size:1.5rem; line-height:1; cursor:pointer; }
+    .edit-form { display:grid; gap:12px; margin-top:16px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-field { display:grid; gap:5px; }
+    .form-field.full { grid-column:1 / -1; }
+    .form-field label { color:var(--muted); font-size:.76rem; font-weight:850; }
+    .form-field input, .form-field select { width:100%; border:1px solid var(--line); border-radius:9px; padding:9px; font:inherit; color:var(--ink); }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+    .modal-button { border:1px solid var(--brand); border-radius:9px; background:var(--brand); color:#fff; padding:9px 12px; font:inherit; font-weight:850; cursor:pointer; }
+    .modal-button.secondary { background:#fff; color:var(--brand); }
     footer { padding:0 18px 20px; text-align:center; color:var(--muted); font-size:.75rem; }
     @media (max-width:600px) { main { padding:16px 12px 28px; } .panel { padding:14px; } .appointment { grid-template-columns:62px 1fr; gap:8px 12px; } .assigned { grid-column:2; justify-self:start; text-align:left; } }
   </style>
@@ -72,6 +89,8 @@
   <header>
     <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
     <div class="htext"><h1><span>CB Sant Josep de Badalona</span>Visites de fisio programades</h1><p>Agenda de les properes cites del servei</p></div>
+    <button class="auth-button" id="loginButton" type="button">Entrar per editar</button>
+    <button class="auth-button" id="logoutButton" type="button" hidden>Sortir</button>
     <div class="logo" aria-hidden="true">🗓</div>
   </header>
   <main>
@@ -106,10 +125,36 @@
       <div class="week-scroll"><div class="week-grid" id="weekCalendar"></div></div>
     </section>
   </main>
+  <div class="modal-backdrop" id="appointmentModal" role="dialog" aria-modal="true" aria-labelledby="appointmentTitle">
+    <div class="modal">
+      <div class="modal-head"><div><h2 id="appointmentTitle">Reprogramar visita</h2><p>Canvia el dia, l’hora o el/la professional.</p></div><button class="modal-close" id="appointmentClose" type="button" aria-label="Tancar">×</button></div>
+      <form class="edit-form" id="appointmentForm">
+        <div class="form-grid">
+          <div class="form-field full"><label>Jugador/a</label><input id="appointmentPlayer" type="text" readonly /></div>
+          <div class="form-field"><label for="appointmentDate">Dia</label><input id="appointmentDate" type="date" required /></div>
+          <div class="form-field"><label for="appointmentTime">Hora</label><input id="appointmentTime" type="time" required /></div>
+          <div class="form-field full"><label for="appointmentPhysio">Visita per</label><select id="appointmentPhysio" required><option value="">Selecciona...</option><option value="Pol Amigó">Pol Amigó</option><option value="Eric Nicolàs">Eric Nicolàs</option><option value="Miquel Sánchez">Miquel Sánchez</option></select></div>
+        </div>
+        <div class="modal-actions"><button class="modal-button secondary" id="appointmentCancel" type="button">Cancel·lar</button><button class="modal-button" id="appointmentSave" type="submit">Guardar canvis</button></div>
+      </form>
+    </div>
+  </div>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU",
+      authDomain: "coord-fa09e.firebaseapp.com",
+      databaseURL: FIREBASE_DB_URL,
+      projectId: "coord-fa09e",
+      storageBucket: "coord-fa09e.firebasestorage.app",
+      messagingSenderId: "509431001997",
+      appId: "1:509431001997:web:561fa966029d873131c3c4"
+    };
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
+    const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
     const REFRESH_INTERVAL_MS = 30000;
     const totalEl = document.getElementById("total");
     const filtersEl = document.getElementById("filters");
@@ -119,13 +164,24 @@
     const weekPanelEl = document.getElementById("weekPanel");
     const weekLabelEl = document.getElementById("weekLabel");
     const weekCalendarEl = document.getElementById("weekCalendar");
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const appointmentModal = document.getElementById("appointmentModal");
+    const appointmentForm = document.getElementById("appointmentForm");
+    const appointmentPlayer = document.getElementById("appointmentPlayer");
+    const appointmentDate = document.getElementById("appointmentDate");
+    const appointmentTime = document.getElementById("appointmentTime");
+    const appointmentPhysio = document.getElementById("appointmentPhysio");
     let appointments = [];
     let activePhysio = "TOTES";
     let calendarWeekStart = "";
     let activeView = "week";
+    let auth = null;
+    let currentUser = null;
+    let editingAppointmentId = "";
 
-    function firebaseUrl(path){
-      return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json";
+    function firebaseUrl(path, token){
+      return FIREBASE_DB_URL.replace(/\/$/, "") + "/" + path.split("/").map(encodeURIComponent).join("/") + ".json" + (token ? "?auth=" + encodeURIComponent(token) : "");
     }
     function todayIso(){
       const now = new Date();
@@ -183,6 +239,71 @@
         button.setAttribute("aria-pressed", String(active));
       });
     }
+    function setAuthState(user){
+      currentUser = user || null;
+      loginButton.hidden = Boolean(currentUser);
+      logoutButton.hidden = !currentUser;
+      loginButton.textContent = currentUser ? "Entrar per editar" : "Entrar per editar";
+    }
+    function configureAuth(){
+      const app = initializeApp(FIREBASE_CONFIG);
+      auth = getAuth(app);
+      onAuthStateChanged(auth, setAuthState);
+    }
+    function openAppointmentEditor(id){
+      if(!currentUser){
+        alert("Inicia sessió amb un compte autoritzat per modificar una visita programada.");
+        return;
+      }
+      const appointment = appointments.find(item => item.id === id);
+      if(!appointment) return;
+      editingAppointmentId = id;
+      appointmentPlayer.value = appointment.player || "";
+      appointmentDate.value = appointment.date || "";
+      appointmentDate.min = todayIso();
+      appointmentTime.value = appointment.time || "";
+      appointmentPhysio.value = appointment.assignedPhysio || "";
+      appointmentModal.classList.add("open");
+      window.setTimeout(() => appointmentDate.focus(), 0);
+    }
+    function closeAppointmentEditor(){
+      editingAppointmentId = "";
+      appointmentModal.classList.remove("open");
+      appointmentForm.reset();
+    }
+    async function saveAppointment(event){
+      event.preventDefault();
+      if(!editingAppointmentId || !currentUser) return;
+      const date = appointmentDate.value;
+      const time = appointmentTime.value;
+      const assignedPhysio = appointmentPhysio.value;
+      appointmentDate.setCustomValidity("");
+      if(date < todayIso()){
+        appointmentDate.setCustomValidity("La visita no pot ser anterior a avui.");
+        appointmentDate.reportValidity();
+        return;
+      }
+      const saveButton = document.getElementById("appointmentSave");
+      saveButton.disabled = true;
+      try {
+        const token = await currentUser.getIdToken();
+        const now = new Date().toISOString();
+        const publicAppointment = { date, time, assignedPhysio, visitType: assignedPhysio === "Miquel Sánchez" ? "readaptacio" : "fisio", updatedAt:now };
+        const privateAppointment = { ...publicAppointment, updatedBy:currentUser.email || "" };
+        const patch = async (path, body, authToken) => {
+          const response = await fetch(firebaseUrl(path + "/" + editingAppointmentId, authToken), { method:"PATCH", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ appointment:body }) });
+          if(!response.ok) throw new Error("No s'ha pogut desar la visita programada.");
+        };
+        await patch(PRIVATE_REQUESTS_PATH, privateAppointment, token);
+        await patch(PUBLIC_REQUESTS_PATH, publicAppointment, "");
+        closeAppointmentEditor();
+        await load();
+      } catch(error) {
+        alert(error.message || "No s'ha pogut modificar la visita programada.");
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
     function render(){
       const visible = appointments.filter(item => activePhysio === "TOTES" || item.assignedPhysio === activePhysio);
       totalEl.textContent = visible.length;
@@ -194,7 +315,7 @@
           const day = parseDate(date);
           const items = byDay[date];
           return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointments">' +
-            items.map(item => '<article class="appointment"><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '<div class="type">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + ' ' + visitType(item) + '</div></div></article>').join("") +
+            items.map(item => '<article class="appointment" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span></div><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '<div class="type">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + ' ' + visitType(item) + '</div></div></article>').join("") +
             '</div></section>';
         }).join("");
       }
@@ -211,7 +332,7 @@
         const items = visible.filter(item => item.date === date);
         const heading = new Intl.DateTimeFormat("ca-ES", { weekday:"short", day:"numeric" }).format(parseDate(date));
         return '<section class="week-day ' + (date === today ? 'today' : '') + '"><div class="week-day-head">' + escapeHtml(heading) + '</div>' +
-          (items.length ? items.map(item => '<article class="week-entry"><div class="time">' + escapeHtml(item.time) + '</div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '</div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
+          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="time">' + escapeHtml(item.time) + '</div><div class="player">' + escapeHtml(item.player) + '</div><span class="team">' + escapeHtml(item.team) + '</span><div class="assigned">Visita per ' + escapeHtml(item.assignedPhysio || '—') + '</div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
           '</section>';
       }).join("");
     }
@@ -227,6 +348,7 @@
       }
       render();
     }
+    configureAuth();
     load();
     window.setInterval(load, REFRESH_INTERVAL_MS);
     document.querySelectorAll("[data-week]").forEach(button => button.addEventListener("click", () => {
@@ -235,6 +357,23 @@
       render();
     }));
     document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => setActiveView(button.dataset.view)));
+    document.addEventListener("dblclick", event => {
+      const appointment = event.target.closest("[data-appointment-id]");
+      if(appointment) openAppointmentEditor(appointment.dataset.appointmentId);
+    });
+    appointmentForm.addEventListener("submit", saveAppointment);
+    document.getElementById("appointmentClose").addEventListener("click", closeAppointmentEditor);
+    document.getElementById("appointmentCancel").addEventListener("click", closeAppointmentEditor);
+    appointmentModal.addEventListener("click", event => { if(event.target === appointmentModal) closeAppointmentEditor(); });
+    loginButton.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch(error) {
+        if(["auth/popup-blocked", "auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(error?.code)) await signInWithRedirect(auth, new GoogleAuthProvider());
+        else alert("No s'ha pogut iniciar sessió amb Google.");
+      }
+    });
+    logoutButton.addEventListener("click", () => signOut(auth));
     setActiveView(activeView);
   </script>
 </body>

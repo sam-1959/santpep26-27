@@ -364,6 +364,7 @@
     let paidPlayersLoaded = false;
     let quotaImportedAt = null;
     let latestGuidelinesByPlayer = new Map();
+    let visitGuidelinesById = new Map();
     let editingRequestId = "";
     let schedulingRequestId = "";
 
@@ -514,13 +515,13 @@
     // A Peticions fisio només és rellevant una visita feta a partir de la
     // sol·licitud actual. Així no es reutilitzen pautes d'una lesió anterior.
     function latestPhysioFilterValue(row){
-      const latest = latestGuidelinesFor(row.player, row.createdAt);
+      const latest = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
       if(!latest) return "NO_VISIT";
       return latest.assignedPhysio || "NO_PHYSIO";
     }
 
     function latestCourtFilterValue(row){
-      const latest = latestGuidelinesFor(row.player, row.createdAt);
+      const latest = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
       if(!latest) return "NO_VISIT";
       return ["red", "orange", "green", "pending"].includes(latest.courtStatus) ? latest.courtStatus : "pending";
     }
@@ -576,6 +577,7 @@
         const path = token ? VISITS_PATH : "physioVisitsPublic/season-26-27";
         const visits = await fetchFirebaseRequests(path, token);
         const visitsByPlayer = new Map();
+        const visitsById = new Map();
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
           const visitDate = parseDateValue(visit.date);
@@ -584,33 +586,38 @@
           const createdTimestamp = createdDate ? createdDate.getTime() : timestamp;
           const updatedDate = parseDateValue(visit.updatedAt || visit.createdAt);
           const updatedTimestamp = updatedDate ? updatedDate.getTime() : 0;
+          const candidate = {
+            guidelines,
+            courtStatus: visit.courtStatus || "pending",
+            assignedPhysio: visit.assignedPhysio || "",
+            visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
+            timestamp,
+            createdTimestamp,
+            updatedTimestamp,
+            date: visit.date || "",
+            createdAt: visit.createdAt || "",
+            updatedAt: visit.updatedAt || ""
+          };
+          if(visit.id) visitsById.set(String(visit.id), candidate);
           playerLookupKeys(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" "))
             .forEach(key => {
-              const candidate = {
-                guidelines,
-                courtStatus: visit.courtStatus || "pending",
-                assignedPhysio: visit.assignedPhysio || "",
-                visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
-                timestamp,
-                createdTimestamp,
-                updatedTimestamp,
-                date: visit.date || "",
-                createdAt: visit.createdAt || "",
-                updatedAt: visit.updatedAt || ""
-              };
               const playerVisits = visitsByPlayer.get(key) || [];
               playerVisits.push(candidate);
               visitsByPlayer.set(key, playerVisits);
             });
         });
         latestGuidelinesByPlayer = visitsByPlayer;
+        visitGuidelinesById = visitsById;
       } catch(error) {
         latestGuidelinesByPlayer = new Map();
+        visitGuidelinesById = new Map();
         console.warn("No s'han pogut carregar les pautes de visites.", error);
       }
     }
 
-    function latestGuidelinesFor(player, since){
+    function latestGuidelinesFor(player, since, clinicalVisit){
+      const linkedVisitId = clinicalVisit && clinicalVisit.visitId ? String(clinicalVisit.visitId) : "";
+      if(linkedVisitId) return visitGuidelinesById.get(linkedVisitId) || null;
       // Les visites i la petició del mateix dia també pertanyen al mateix cas.
       const sinceTimestamp = since instanceof Date
         ? new Date(since.getFullYear(), since.getMonth(), since.getDate()).getTime()
@@ -638,6 +645,7 @@
         guardianName: row.guardianName,
         phone: row.phone,
         fullDescription: row.fullDescription,
+        clinicalVisit: row.clinicalVisit && typeof row.clinicalVisit === "object" ? row.clinicalVisit : null,
         appointment: normalizeAppointment(row.appointment)
       })).sort((a, b) => {
         const at = a.createdAt ? a.createdAt.getTime() : 0;
@@ -858,7 +866,7 @@
     function renderFilters(){
       const teams = ["TOTS"].concat([...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
       const physios = [...new Set(rows
-        .map(row => latestGuidelinesFor(row.player, row.createdAt)?.assignedPhysio)
+        .map(row => latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit)?.assignedPhysio)
         .filter(Boolean))]
         .sort((a,b) => a.localeCompare(b, "ca-ES"));
       const genders = [
@@ -949,8 +957,8 @@
           isPrivateView ? r.phone : "",
           r.description,
           r.fullDescription,
-          latestGuidelinesFor(r.player, r.createdAt)?.guidelines,
-          latestGuidelinesFor(r.player, r.createdAt)?.assignedPhysio
+          latestGuidelinesFor(r.player, r.createdAt, r.clinicalVisit)?.guidelines,
+          latestGuidelinesFor(r.player, r.createdAt, r.clinicalVisit)?.assignedPhysio
         ].join(" ")).includes(searchQuery))
       );
       totalEl.textContent = visible.length;
@@ -984,7 +992,7 @@
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
           const description = isPrivateView ? (row.fullDescription || row.description) : row.description;
-          const latestGuidelines = latestGuidelinesFor(row.player, row.createdAt);
+          const latestGuidelines = latestGuidelinesFor(row.player, row.createdAt, row.clinicalVisit);
           const guidelinesDate = latestGuidelines ? parseDateValue(latestGuidelines.updatedAt || latestGuidelines.createdAt || latestGuidelines.date) : null;
           const guidelinesDateText = guidelinesDate ? formatDate(guidelinesDate, Boolean(latestGuidelines.updatedAt || latestGuidelines.createdAt)) : "";
           const guidelinesHtml = latestGuidelines

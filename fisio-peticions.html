@@ -340,7 +340,7 @@
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
     const VISITS_PATH = "physioVisits/season-26-27";
-    const QUOTA_DATA_URL = "data/fisio-quota.json";
+    const QUOTA_FIREBASE_PATH = "physioQuota/season-26-27";
     const PAGE_SIZE = 5;
     const REFRESH_INTERVAL_MS = 30000;
     let rows = [];
@@ -446,8 +446,8 @@
       if(paidPlayersLoaded) return;
       paidPlayersLoaded = true;
       try {
-        const response = await fetch(QUOTA_DATA_URL, { cache:"no-store" });
-        if(!response.ok) throw new Error("Quota JSON read failed");
+        const response = await fetch(firebaseUrl(QUOTA_FIREBASE_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("Quota Firebase read failed");
         const data = await response.json();
         paidPlayerNames = new Set(Array.isArray(data?.paidNames) ? data.paidNames.map(normalizeName).filter(Boolean) : []);
         quotaImportedAt = parseDateValue(data?.updatedAt);

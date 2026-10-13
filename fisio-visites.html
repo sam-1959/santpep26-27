@@ -664,6 +664,16 @@
       ].join("|"));
     }
 
+    function markVisitHandled(row, source){
+      if(!row || !row.isNew) return;
+      newVisitIds.delete(visitIdentity(row));
+      row.isNew = false;
+      if(source){
+        const visitRow = source.closest("tr");
+        if(visitRow) visitRow.querySelectorAll(".new-badge").forEach(badge => badge.remove());
+      }
+    }
+
     function applyVisitMarkers(nextRows, resetSeen){
       if(resetSeen || !hasInitializedSeenVisits){
         seenVisitIds = new Set(nextRows.map(visitIdentity));
@@ -1431,6 +1441,7 @@
       }
       const row = rows.find(item => item.id === select.dataset.id);
       if(!row) return;
+      markVisitHandled(row, select);
       select.disabled = true;
       const patch = {
         assignedPhysio: select.value.trim(),
@@ -1455,6 +1466,7 @@
       const row = rows.find(item => item.id === button.dataset.id);
       if(!row) return;
       if(button.dataset.action === "read"){
+        markVisitHandled(row, button);
         button.disabled = true;
         try {
           await markPrepaRead(row);
@@ -1465,22 +1477,26 @@
         return;
       }
       if(button.dataset.action === "feedback"){
+        markVisitHandled(row, button);
         openFeedbackModal(row);
         return;
       }
       if(button.dataset.action === "edit"){
         if(!isFisio()) return;
+        markVisitHandled(row, button);
         openModal(row);
         return;
       }
       if(button.dataset.action === "copy"){
         if(!isFisio()) return;
+        markVisitHandled(row, button);
         openModal(row, "copy");
         return;
       }
       if(button.dataset.action === "delete"){
         if(!isFisio()) return;
         if(!confirm("Vols eliminar aquesta visita? Aquesta acció no es pot desfer.")) return;
+        markVisitHandled(row, button);
         button.disabled = true;
         try {
           await deleteVisit(row.id);

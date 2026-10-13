@@ -822,6 +822,16 @@
       ].join("|"));
     }
 
+    function markRequestHandled(row, source){
+      if(!row || !row.isNew) return;
+      newRequestIds.delete(requestIdentity(row));
+      row.isNew = false;
+      if(source){
+        const requestRow = source.closest("tr");
+        if(requestRow) requestRow.querySelectorAll(".new-badge").forEach(badge => badge.remove());
+      }
+    }
+
     function applyRequestMarkers(nextRows, resetSeen){
       if(resetSeen || !hasInitializedSeenRequests){
         seenRequestIds = new Set(nextRows.map(requestIdentity));
@@ -975,7 +985,7 @@
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
           const phoneCell = whatsapp
-            ? '<a class="whatsapp-link" href="' + escapeHtml(whatsapp) + '" target="_blank" rel="noopener">' + escapeHtml(row.phone || "—") + '</a>'
+            ? '<a class="whatsapp-link" href="' + escapeHtml(whatsapp) + '" target="_blank" rel="noopener" data-whatsapp-id="' + escapeHtml(row.id) + '">' + escapeHtml(row.phone || "—") + '</a>'
             : '<span class="whatsapp-link empty">—</span>';
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
@@ -1021,13 +1031,27 @@
         }).join("") +
         '</tbody></table>';
       tableWrap.querySelectorAll("[data-edit-id]").forEach(button => {
-        button.addEventListener("click", () => openEditModal(button.dataset.editId));
+        button.addEventListener("click", () => {
+          markRequestHandled(rows.find(row => row.id === button.dataset.editId), button);
+          openEditModal(button.dataset.editId);
+        });
       });
       tableWrap.querySelectorAll("[data-appointment-id]").forEach(button => {
-        button.addEventListener("click", () => openAppointmentModal(button.dataset.appointmentId));
+        button.addEventListener("click", () => {
+          markRequestHandled(rows.find(row => row.id === button.dataset.appointmentId), button);
+          openAppointmentModal(button.dataset.appointmentId);
+        });
       });
       tableWrap.querySelectorAll("[data-cancel-appointment-id]").forEach(button => {
-        button.addEventListener("click", () => clearAppointment(button.dataset.cancelAppointmentId));
+        button.addEventListener("click", () => {
+          markRequestHandled(rows.find(row => row.id === button.dataset.cancelAppointmentId), button);
+          clearAppointment(button.dataset.cancelAppointmentId);
+        });
+      });
+      tableWrap.querySelectorAll("[data-whatsapp-id]").forEach(link => {
+        link.addEventListener("click", () => {
+          markRequestHandled(rows.find(row => row.id === link.dataset.whatsappId), link);
+        });
       });
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);

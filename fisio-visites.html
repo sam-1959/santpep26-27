@@ -1058,7 +1058,7 @@
           const requestTooltip = "Petició associada" + (requestDate ? " · " + formatDate(requestDate) : "");
           const requestHtml = row.requestId
             ? '<span class="request-linked" title="' + escapeHtml(requestTooltip) + '" aria-label="' + escapeHtml(requestTooltip) + '">🔗</span>'
-            : '—';
+            : '<span title="Sense petició associada" aria-label="Sense petició associada">—</span>';
           return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +

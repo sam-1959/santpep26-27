@@ -132,7 +132,7 @@
         const response = await fetch(firebaseUrl(PUBLIC_REQUESTS_PATH), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
         appointments = normalize(await response.json());
-        statusEl.textContent = appointments.length ? "Agenda actualitzada automàticament." : "No hi ha visites programades.";
+        statusEl.textContent = "Agenda actualitzada automàticament.";
       } catch(error) {
         appointments = [];
         statusEl.textContent = "No s'ha pogut carregar l'agenda de visites.";

@@ -227,6 +227,13 @@ function taulaEsPistaClub(game) {
   return !!game.home || loc.indexOf("la-colina") !== -1 || loc.indexOf("montigala") !== -1 || loc.indexOf("bufala") !== -1 || loc.indexOf("pomar") !== -1;
 }
 
+function taulaPotAfectarRestriccions(game) {
+  var team = taulaNormalitza(game && game.team || "");
+  var family = taulaNormalitza(game && game.fam || "");
+  var miniOrPremini = team.indexOf("mini") === 0 || team.indexOf("premini") === 0 || family === "mini" || family === "premini";
+  return taulaEsPistaClub(game || {}) && (miniOrPremini || !!(game && game.friendly));
+}
+
 function taulaNecessitaExperiencia(game) {
   return ["mini-a-m", "mini-b-m", "mini-f"].indexOf(taulaNormalitza(taulaEtiquetaEquip(game))) !== -1;
 }
@@ -338,6 +345,10 @@ function htmlRestriccionsTaules(issues) {
 }
 
 function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
+  var previous = taulaPartitAnterior(game, changes);
+  if (!taulaPotAfectarRestriccions(game) && !taulaPotAfectarRestriccions(previous)) {
+    return { checked:true, skipped:true, reason:"not_table_game", issues:0, emailed:false };
+  }
   var calendarData = aplicarCanviManualAlCalendari(llegirFirebase(CALENDAR_FIREBASE_PATH), game, changes);
   var issues = incidenciesRestriccionsTaules(calendarData, llegirFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {}, llegirFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {});
   var signature = issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");

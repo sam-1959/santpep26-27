@@ -348,6 +348,7 @@
     let activeGender = "TOTS";
     let activePhysio = "TOTS";
     let activeCourtStatus = "TOTS";
+    let activeAppointment = "TOTES";
     let searchQuery = "";
     let currentPage = 1;
     let statusMessage = "";
@@ -902,6 +903,11 @@
         { value: "orange", label: "! Condicionada" },
         { value: "green", label: "✓ Normal" }
       ];
+      const appointmentFilters = [
+        { value: "TOTES", label: "Totes" },
+        { value: "PROGRAMADES", label: "Programades" },
+        { value: "SENSE_VISITA", label: "Sense visita" }
+      ];
       genderFiltersEl.innerHTML =
         '<div class="filter-group"><div class="filter-label">Gènere</div>' +
         genders.map(gender =>
@@ -918,6 +924,12 @@
         '<div class="filter-group"><div class="filter-label">👤 ÚLTIMA VISITA</div>' +
         physioFilters.map(filter =>
           '<button class="chip ' + (filter.value === activePhysio ? "active" : "") + '" type="button" data-physio="' + escapeHtml(filter.value) + '">' +
+          escapeHtml(filter.label) + '</button>'
+        ).join("") +
+        '</div>' +
+        '<div class="filter-group"><div class="filter-label">Visita programada</div>' +
+        appointmentFilters.map(filter =>
+          '<button class="chip ' + (filter.value === activeAppointment ? "active" : "") + '" type="button" data-appointment-filter="' + escapeHtml(filter.value) + '">' +
           escapeHtml(filter.label) + '</button>'
         ).join("") +
         '</div>' +
@@ -954,6 +966,13 @@
           render();
         });
       });
+      filtersEl.querySelectorAll("[data-appointment-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeAppointment = button.dataset.appointmentFilter;
+          currentPage = 1;
+          render();
+        });
+      });
     }
 
     function render(){
@@ -963,6 +982,7 @@
         (activeGender === "TOTS" || r.gender === activeGender) &&
         (activePhysio === "TOTS" || latestPhysioFilterValue(r) === activePhysio) &&
         (activeCourtStatus === "TOTS" || latestCourtFilterValue(r) === activeCourtStatus) &&
+        (activeAppointment === "TOTES" || (activeAppointment === "PROGRAMADES" ? Boolean(r.appointment) : !r.appointment)) &&
         (!searchQuery || normalizeName([
           r.createdAt,
           r.player,

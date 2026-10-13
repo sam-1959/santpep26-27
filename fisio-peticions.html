@@ -443,6 +443,16 @@
       return TEAM_NAME_BY_KEY[normalizeName(text)] || text;
     }
 
+    function teamCategory(value){
+      const code = normalizeName(value).toUpperCase();
+      if(code.startsWith("I")) return "INFANTIL";
+      if(code.startsWith("M")) return "MINI";
+      if(code.startsWith("C")) return "CADET";
+      if(code.startsWith("J")) return "JÚNIOR";
+      if(code.startsWith("S")) return "SÉNIOR";
+      return value || "—";
+    }
+
     async function loadPaidPlayers(){
       if(paidPlayersLoaded) return;
       paidPlayersLoaded = true;
@@ -881,7 +891,7 @@
     }
 
     function renderFilters(){
-      const teams = ["TOTS"].concat([...new Set(rows.map(r => r.team).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
+      const teams = ["TOTS"].concat([...new Set(rows.map(r => teamCategory(r.team)).filter(Boolean))].sort((a,b) => a.localeCompare(b, "ca-ES")));
       const physios = [...new Set(rows
         .map(row => latestGuidelinesFor(row.id, row.player, row.createdAt, row.clinicalVisit)?.assignedPhysio)
         .filter(Boolean))]
@@ -961,7 +971,7 @@
     function render(){
       searchQuery = normalizeName(searchEl.value);
       const visible = rows.filter(r =>
-        (activeTeam === "TOTS" || r.team === activeTeam) &&
+        (activeTeam === "TOTS" || teamCategory(r.team) === activeTeam) &&
         (activeGender === "TOTS" || r.gender === activeGender) &&
         (activePhysio === "TOTS" || latestPhysioFilterValue(r) === activePhysio) &&
         (activeCourtStatus === "TOTS" || latestCourtFilterValue(r) === activeCourtStatus) &&

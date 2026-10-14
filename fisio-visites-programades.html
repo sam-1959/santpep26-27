@@ -44,7 +44,7 @@
     .appointments { display:grid; }
     .appointment-columns, .appointment { display:grid; grid-template-columns:32px 66px minmax(160px,1fr) minmax(130px,auto) minmax(32px,auto); gap:12px; align-items:center; padding:12px 14px; }
     .appointment-columns { padding-top:7px; padding-bottom:7px; background:#faf8fd; color:var(--muted); font-size:.67rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
-    .appointment-columns .status-head { grid-column:4; justify-self:end; }
+    .appointment-columns .status-head { grid-column:4; justify-self:center; }
     .appointment-columns .type-head { grid-column:5; justify-self:center; }
     .appointment { border-bottom:1px solid var(--line); }
     .appointment:last-child { border-bottom:0; }
@@ -57,7 +57,7 @@
     .team.female { background:#fce4ec; color:#880e4f; }
     .visit-created-label { display:inline-flex; align-items:center; gap:4px; margin-top:4px; color:#137a3a; font-size:.68rem; font-weight:900; }
     .visit-created-label::before { content:"✓"; display:inline-grid; place-items:center; width:14px; height:14px; border-radius:999px; background:#19a653; color:#fff; font-size:.62rem; }
-    .appointment-status { justify-self:end; }
+    .appointment-status { justify-self:center; }
     .status-badge { display:inline-flex; align-items:center; justify-content:center; min-width:124px; border-radius:999px; padding:4px 8px; font-size:.7rem; font-weight:900; white-space:nowrap; }
     .status-badge.created { background:#e8f7ed; color:#137a3a; }
     .status-badge.pending { background:#f1eef5; color:var(--muted); }

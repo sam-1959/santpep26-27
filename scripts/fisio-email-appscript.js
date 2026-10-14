@@ -76,15 +76,18 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
   // Destinataris base de Contactes: Coordinació general, fisioteràpia,
   // Direcció tècnica i Coordinació de preparació física.
   // La coordinació femenina o masculina es manté segons el gènere.
+  var destinatariPrincipal = correuCoordinadorFisio();
   var llistaCorreus = correusBaseFisio();
   var correuCoordinacio = correuCoordinacioPerGenere(e.namedValues["Gènere"]);
   if (correuCoordinacio) llistaCorreus.push(correuCoordinacio);
   var correuEntrenador = correuEntrenadorEquip(teamName);
   if (correuEntrenador) llistaCorreus.push(correuEntrenador);
-  var destinataris = normalitzarCorreus(llistaCorreus);
+  var destinatarisCopia = normalitzarCorreus(llistaCorreus).filter(function(correu) {
+    return correu !== destinatariPrincipal;
+  });
 
-  if (!destinataris.length) {
-    throw new Error("No hi ha destinataris configurats.");
+  if (!destinatariPrincipal) {
+    throw new Error("No hi ha cap correu de Coordinació de Fisio configurat.");
   }
 
   var filesResumHTML = "";
@@ -146,16 +149,29 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
     </div>
   `;
 
-  destinataris.forEach(function(correu) {
-    GmailApp.sendEmail(correu, assumpte, cosText, {
-      htmlBody: cosHTML,
-      name: "CB Sant Josep Badalona"
-    });
-    Logger.log("Correu enviat a: " + correu);
-  });
+  var opcionsCorreu = {
+    htmlBody: cosHTML,
+    name: "CB Sant Josep Badalona"
+  };
+  if (destinatarisCopia.length) {
+    opcionsCorreu.cc = destinatarisCopia.join(",");
+  }
+  GmailApp.sendEmail(destinatariPrincipal, assumpte, cosText, opcionsCorreu);
 
-  Logger.log("Correus enviats amb disseny Sant Pep a: " + destinataris.join(", "));
-  return { sentTo: destinataris };
+  Logger.log("Correu enviat a Coordinació de Fisio: " + destinatariPrincipal);
+  if (destinatarisCopia.length) {
+    Logger.log("Destinataris en còpia: " + destinatarisCopia.join(", "));
+  }
+
+  return { sentTo: [destinatariPrincipal].concat(destinatarisCopia) };
+}
+
+function correuCoordinadorFisio() {
+  var contacts = obtenirContactesTemporada();
+  var coordinador = (Array.isArray(contacts.coordinators) ? contacts.coordinators : []).find(function(contact) {
+    return contact && contact.role === "coordinador_fisio" && contact.receivesTeamEmails !== false && contact.email;
+  });
+  return coordinador ? String(coordinador.email).trim().toLowerCase() : "";
 }
 
 function correusBaseFisio() {

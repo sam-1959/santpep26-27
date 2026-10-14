@@ -334,7 +334,8 @@ function sendEmailToRecipients(emails, subject, textBody, htmlBody) {
   normalitzarCorreus(emails).forEach(function(email) {
     GmailApp.sendEmail(email, subject, textBody, {
       htmlBody: htmlBody,
-      name: "CB Sant Josep Badalona"
+      name: "CB Sant Josep Badalona",
+      from: "dtecnic@cbsantjosep.cat"
     });
     Logger.log("Correu enviat a: " + email);
   });

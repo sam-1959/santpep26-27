@@ -713,7 +713,8 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt,
   }
   MailApp.sendEmail(tableRestrictionsRecipient, subject, body, {
     htmlBody: restrictionAlertEmailHtml(issues, forceCheck, latestChanges.length),
-    name: "CB Sant Josep Badalona"
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
   });
   status.lastAlertAt = checkedAt;
   writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
@@ -869,7 +870,8 @@ function notifyCalendarChangesByTeam(latestChanges) {
     var recipient = coachEmail || coordinationEmail;
     var options = {
       htmlBody: calendarChangeEmailHtml(group.label, group.changes),
-      name: "CB Sant Josep Badalona"
+      name: "CB Sant Josep Badalona",
+      from: "dtecnic@cbsantjosep.cat"
     };
     if (coachEmail && coordinationEmail && coachEmail.toLowerCase() !== coordinationEmail.toLowerCase()) {
       options.cc = coordinationEmail;

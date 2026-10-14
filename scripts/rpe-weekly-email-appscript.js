@@ -42,7 +42,8 @@ function enviarCorreuRpeSetmanal(request) {
   destinataris.forEach(function(correu) {
     GmailApp.sendEmail(correu, assumpte, cosText, {
       htmlBody: cosHTML,
-      name: "CB Sant Josep Badalona"
+      name: "CB Sant Josep Badalona",
+      from: "dtecnic@cbsantjosep.cat"
     });
     Logger.log("Correu RPE enviat a: " + correu);
   });

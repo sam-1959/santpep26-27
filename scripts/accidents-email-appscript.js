@@ -185,7 +185,8 @@ function enviarCorreuDocumentFamilia(request, pdf) {
       cc: copiaAccidents.join(","),
       attachments: [pdfAdjunt],
       htmlBody: cosHTML,
-      name: "CB Sant Josep Badalona"
+      name: "CB Sant Josep Badalona",
+      from: "dtecnic@cbsantjosep.cat"
     });
     Logger.log("Correu amb comunicat enviat a: " + correu);
   });
@@ -228,7 +229,8 @@ function enviarCorreuProvaPdf(request) {
   GmailApp.sendEmail(testRecipient, assumpte, cosText, {
     attachments: [pdfAdjunt],
     htmlBody: cosHTML,
-    name: "CB Sant Josep Badalona"
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
   });
   Logger.log("Prova de comunicat enviada exclusivament a: " + testRecipient);
   return { ok: true, sentTo: [testRecipient] };
@@ -372,7 +374,8 @@ function enviarCorreuComunicatsAccident(e) {
 
   var opcionsCorreu = {
     htmlBody: cosHTML,
-    name: "CB Sant Josep Badalona"
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
   };
   if (destinatarisCopia.length) {
     opcionsCorreu.cc = destinatarisCopia.join(",");

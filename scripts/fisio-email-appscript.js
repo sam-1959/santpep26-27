@@ -151,7 +151,8 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
 
   var opcionsCorreu = {
     htmlBody: cosHTML,
-    name: "CB Sant Josep Badalona"
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
   };
   if (destinatarisCopia.length) {
     opcionsCorreu.cc = destinatarisCopia.join(",");

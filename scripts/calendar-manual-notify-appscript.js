@@ -59,7 +59,8 @@ function doPost(e) {
     if (!destinatari) throw new Error("No hi ha correu de primer entrenador/a ni de Coordinació general configurat.");
     var mailOptions = {
       htmlBody: calendarChangeEmailHtml(teamLabel, [change]),
-      name: "CB Sant Josep Badalona"
+      name: "CB Sant Josep Badalona",
+      from: "dtecnic@cbsantjosep.cat"
     };
     if (coachEmail && coordinationEmail && coachEmail.toLowerCase() !== coordinationEmail.toLowerCase()) {
       mailOptions.cc = coordinationEmail;
@@ -502,7 +503,7 @@ function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
   var recipient = correuCoordinacioGeneral();
   if (!recipient) throw new Error("No hi ha correu de Coordinació general configurat per a les restriccions de taules.");
   var body = ["S'han detectat " + issues.length + " incidència(es) de planificació després d'un canvi manual de calendari.", ""].concat(issues.map(function(issue) { return "- " + issue.text; })).join("\n");
-  MailApp.sendEmail(recipient, "Alerta: restriccions de taules després d'un canvi manual", body, { htmlBody:htmlRestriccionsTaules(issues), name:"CB Sant Josep Badalona" });
+  MailApp.sendEmail(recipient, "Alerta: restriccions de taules després d'un canvi manual", body, { htmlBody:htmlRestriccionsTaules(issues), name:"CB Sant Josep Badalona", from:"dtecnic@cbsantjosep.cat" });
   status.lastAlertAt = now;
   escriureFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
   return { checked:true, issues:issues.length, emailed:true };

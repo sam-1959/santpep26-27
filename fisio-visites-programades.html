@@ -45,6 +45,7 @@
     .appointment-columns, .appointment { display:grid; grid-template-columns:32px 66px minmax(160px,1fr) minmax(130px,auto) minmax(32px,auto); gap:12px; align-items:center; padding:12px 14px; }
     .appointment-columns { padding-top:7px; padding-bottom:7px; background:#faf8fd; color:var(--muted); font-size:.67rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
     .appointment-columns .status-head { grid-column:4; justify-self:end; }
+    .appointment-columns .type-head { grid-column:5; justify-self:center; }
     .appointment { border-bottom:1px solid var(--line); }
     .appointment:last-child { border-bottom:0; }
     .appointment.visit-created { background:#f1fbf4; box-shadow:inset 4px 0 0 #19a653; }
@@ -369,7 +370,7 @@
         agendaEl.innerHTML = Object.keys(byDay).map(date => {
           const day = parseDate(date);
           const items = byDay[date];
-          return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointment-columns"><span></span><span>Hora</span><span>Jugador/a</span><span class="status-head">Estat</span><span></span></div><div class="appointments">' +
+          return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointment-columns"><span></span><span>Hora</span><span>Jugador/a</span><span class="status-head">Estat</span><span class="type-head">Tipus</span></div><div class="appointments">' +
             items.map(item => '<article class="appointment ' + (item.visitCreated ? 'visit-created' : '') + '" data-appointment-id="' + escapeHtml(item.id) + '" title="' + (item.visitCreated ? 'Visita clínica registrada · ' : '') + 'Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '</div><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div>' + teamBadge(item.team, item.gender) + '</div><div class="appointment-status">' + visitStatusBadge(item) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") +
             '</div></section>';
         }).join("");

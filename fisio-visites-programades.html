@@ -42,7 +42,10 @@
     .day-head h3 { margin:0; color:var(--brand-dark); font-size:.94rem; text-transform:capitalize; }
     .day-head span { color:var(--muted); font-size:.75rem; font-weight:850; }
     .appointments { display:grid; }
-    .appointment { display:grid; grid-template-columns:32px 66px minmax(160px,1fr) minmax(32px,auto); gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid var(--line); }
+    .appointment-columns, .appointment { display:grid; grid-template-columns:32px 66px minmax(160px,1fr) minmax(130px,auto) minmax(32px,auto); gap:12px; align-items:center; padding:12px 14px; }
+    .appointment-columns { padding-top:7px; padding-bottom:7px; background:#faf8fd; color:var(--muted); font-size:.67rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+    .appointment-columns .status-head { grid-column:4; justify-self:end; }
+    .appointment { border-bottom:1px solid var(--line); }
     .appointment:last-child { border-bottom:0; }
     .appointment.visit-created { background:#f1fbf4; box-shadow:inset 4px 0 0 #19a653; }
     .professional-marker { display:grid; place-items:center; }
@@ -53,6 +56,10 @@
     .team.female { background:#fce4ec; color:#880e4f; }
     .visit-created-label { display:inline-flex; align-items:center; gap:4px; margin-top:4px; color:#137a3a; font-size:.68rem; font-weight:900; }
     .visit-created-label::before { content:"✓"; display:inline-grid; place-items:center; width:14px; height:14px; border-radius:999px; background:#19a653; color:#fff; font-size:.62rem; }
+    .appointment-status { justify-self:end; }
+    .status-badge { display:inline-flex; align-items:center; justify-content:center; min-width:124px; border-radius:999px; padding:4px 8px; font-size:.7rem; font-weight:900; white-space:nowrap; }
+    .status-badge.created { background:#e8f7ed; color:#137a3a; }
+    .status-badge.pending { background:#f1eef5; color:var(--muted); }
     .assigned { justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:6px; color:var(--muted); font-size:.8rem; font-weight:750; text-align:right; }
     .physio-badge { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; color:#fff; font-size:.6rem; font-weight:900; letter-spacing:-.03em; box-shadow:0 1px 4px rgba(20,12,32,.16); }
     .physio-badge.pol { background:#713f97; }
@@ -98,7 +105,7 @@
     .modal-button { border:1px solid var(--brand); border-radius:9px; background:var(--brand); color:#fff; padding:9px 12px; font:inherit; font-weight:850; cursor:pointer; }
     .modal-button.secondary { background:#fff; color:var(--brand); }
     footer { padding:0 18px 20px; text-align:center; color:var(--muted); font-size:.75rem; }
-    @media (max-width:600px) { main { padding:16px 12px 28px; } .panel { padding:14px; } .appointment { grid-template-columns:32px 54px 1fr; gap:8px 10px; } .assigned { grid-column:3; justify-self:start; justify-content:flex-start; text-align:left; } }
+    @media (max-width:600px) { main { padding:16px 12px 28px; } .panel { padding:14px; } .appointment { grid-template-columns:32px 54px 1fr; gap:8px 10px; } .appointment-columns { display:none; } .appointment-status { grid-column:2 / -1; justify-self:start; } .assigned { grid-column:3; grid-row:1; justify-self:start; justify-content:flex-start; text-align:left; } }
   </style>
 </head>
 <body>
@@ -227,6 +234,11 @@
     }
     function visitCreatedBadge(item){
       return item.visitCreated ? '<span class="visit-created-label" title="Visita clínica registrada">Visita registrada</span>' : "";
+    }
+    function visitStatusBadge(item){
+      return item.visitCreated
+        ? '<span class="status-badge created">✓ Visita registrada</span>'
+        : '<span class="status-badge pending">Pendent de visita</span>';
     }
     function visitType(appointment){
       return String(appointment.visitType || "").toLowerCase() === "readaptacio" || appointment.assignedPhysio === "Miquel Sánchez" ? "Readaptació" : "Fisioteràpia";
@@ -357,8 +369,8 @@
         agendaEl.innerHTML = Object.keys(byDay).map(date => {
           const day = parseDate(date);
           const items = byDay[date];
-          return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointments">' +
-            items.map(item => '<article class="appointment ' + (item.visitCreated ? 'visit-created' : '') + '" data-appointment-id="' + escapeHtml(item.id) + '" title="' + (item.visitCreated ? 'Visita clínica registrada · ' : '') + 'Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '</div><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div>' + teamBadge(item.team, item.gender) + visitCreatedBadge(item) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") +
+          return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointment-columns"><span></span><span>Hora</span><span>Jugador/a</span><span class="status-head">Estat</span><span></span></div><div class="appointments">' +
+            items.map(item => '<article class="appointment ' + (item.visitCreated ? 'visit-created' : '') + '" data-appointment-id="' + escapeHtml(item.id) + '" title="' + (item.visitCreated ? 'Visita clínica registrada · ' : '') + 'Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '</div><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div>' + teamBadge(item.team, item.gender) + '</div><div class="appointment-status">' + visitStatusBadge(item) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") +
             '</div></section>';
         }).join("");
       }

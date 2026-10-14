@@ -318,10 +318,13 @@ function enviarCorreuComunicatsAccident(e) {
     return;
   }
 
-  var destinataris = destinatarisComunicatsAccident("avis");
+  var destinatariPrincipal = correuPrincipalAvisosAccidents();
+  var destinatarisCopia = destinatarisComunicatsAccident("avis").filter(function(correu) {
+    return correu.toLowerCase() !== destinatariPrincipal.toLowerCase();
+  });
 
-  if (!destinataris.length) {
-    throw new Error("No hi ha destinataris configurats.");
+  if (!destinatariPrincipal) {
+    throw new Error("No hi ha cap destinatari principal configurat per als avisos de comunicats.");
   }
 
   var filesResumHTML = "";
@@ -367,16 +370,29 @@ function enviarCorreuComunicatsAccident(e) {
     </div>
   `;
 
-  destinataris.forEach(function(correu) {
-    GmailApp.sendEmail(correu, assumpte, cosText, {
-      htmlBody: cosHTML,
-      name: "CB Sant Josep Badalona"
-    });
-    Logger.log("Correu enviat a: " + correu);
-  });
+  var opcionsCorreu = {
+    htmlBody: cosHTML,
+    name: "CB Sant Josep Badalona"
+  };
+  if (destinatarisCopia.length) {
+    opcionsCorreu.cc = destinatarisCopia.join(",");
+  }
+  GmailApp.sendEmail(destinatariPrincipal, assumpte, cosText, opcionsCorreu);
 
-  Logger.log("Correus enviats a: " + destinataris.join(", "));
-  return { sentTo: destinataris };
+  Logger.log("Correu enviat a: " + destinatariPrincipal);
+  if (destinatarisCopia.length) {
+    Logger.log("Destinataris en còpia: " + destinatarisCopia.join(", "));
+  }
+  return { sentTo: [destinatariPrincipal].concat(destinatarisCopia) };
+}
+
+function correuPrincipalAvisosAccidents() {
+  var contacts = obtenirContactesTemporada();
+  var principal = (Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : []).filter(function(contact) {
+    return contact && String(contact.email || "").trim().toLowerCase() === "info@cbsantjosep.cat" &&
+      Array.isArray(contact.notifications) && contact.notifications.indexOf("accidents") !== -1;
+  })[0];
+  return principal ? String(principal.email).trim() : "";
 }
 
 function normalitzarCorreus(llistaCorreus) {

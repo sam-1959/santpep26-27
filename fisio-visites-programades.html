@@ -44,12 +44,15 @@
     .appointments { display:grid; }
     .appointment { display:grid; grid-template-columns:32px 66px minmax(160px,1fr) minmax(32px,auto); gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid var(--line); }
     .appointment:last-child { border-bottom:0; }
+    .appointment.visit-created { background:#f1fbf4; box-shadow:inset 4px 0 0 #19a653; }
     .professional-marker { display:grid; place-items:center; }
     .time { color:var(--brand-dark); font-size:1rem; font-weight:900; }
     .player { font-weight:850; }
     .team { display:inline-flex; width:max-content; margin-top:2px; padding:2px 7px; border-radius:999px; font-size:.72rem; font-weight:900; }
     .team.male { background:#e3f2fd; color:#0d47a1; }
     .team.female { background:#fce4ec; color:#880e4f; }
+    .visit-created-label { display:inline-flex; align-items:center; gap:4px; margin-top:4px; color:#137a3a; font-size:.68rem; font-weight:900; }
+    .visit-created-label::before { content:"✓"; display:inline-grid; place-items:center; width:14px; height:14px; border-radius:999px; background:#19a653; color:#fff; font-size:.62rem; }
     .assigned { justify-self:end; display:flex; align-items:center; justify-content:flex-end; gap:6px; color:var(--muted); font-size:.8rem; font-weight:750; text-align:right; }
     .physio-badge { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; color:#fff; font-size:.6rem; font-weight:900; letter-spacing:-.03em; box-shadow:0 1px 4px rgba(20,12,32,.16); }
     .physio-badge.pol { background:#713f97; }
@@ -70,6 +73,7 @@
     .week-day-head { padding:10px; background:#faf8fd; border-bottom:1px solid var(--line); color:var(--brand-dark); font-size:.75rem; font-weight:900; text-transform:capitalize; }
     .week-day.today .week-day-head { background:#fff8d6; }
     .week-entry { display:grid; grid-template-columns:minmax(0,1fr) 30px; gap:6px; margin:8px; padding:8px; border-radius:10px; background:#f6effa; border-left:3px solid var(--brand); }
+    .week-entry.visit-created { background:#f1fbf4; border-left-color:#19a653; }
     .week-entry .professional-marker { display:grid; justify-items:start; gap:4px; grid-column:1; }
     .week-entry .professional-marker .time { font-size:.84rem; }
     .appointment-meta { display:flex; align-items:center; gap:4px; flex-wrap:nowrap; white-space:nowrap; }
@@ -221,6 +225,9 @@
     function teamBadge(team, gender){
       return '<span class="team ' + (gender === "F" ? "female" : "male") + '">' + escapeHtml(teamCategory(team)) + '</span>';
     }
+    function visitCreatedBadge(item){
+      return item.visitCreated ? '<span class="visit-created-label" title="Visita clínica registrada">Visita registrada</span>' : "";
+    }
     function visitType(appointment){
       return String(appointment.visitType || "").toLowerCase() === "readaptacio" || appointment.assignedPhysio === "Miquel Sánchez" ? "Readaptació" : "Fisioteràpia";
     }
@@ -255,7 +262,7 @@
       return Object.entries(data || {}).map(([id, request]) => {
         const appointment = request && request.appointment;
         if(!appointment || !appointment.date || !appointment.time || appointment.date < today) return null;
-        return { id, date:String(appointment.date), time:String(appointment.time).slice(0, 5), assignedPhysio:String(appointment.assignedPhysio || ""), visitType:appointment.visitType || "", player:request.player || "Jugador/a", team:teamCategory(request.team), gender:String(request.gender || "") };
+        return { id, date:String(appointment.date), time:String(appointment.time).slice(0, 5), assignedPhysio:String(appointment.assignedPhysio || ""), visitType:appointment.visitType || "", player:request.player || "Jugador/a", team:teamCategory(request.team), gender:String(request.gender || ""), visitCreated:Boolean(request.clinicalVisit && (request.clinicalVisit.visitId || request.clinicalVisit.date)) };
       }).filter(Boolean).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) || a.player.localeCompare(b.player, "ca-ES"));
     }
     function renderFilters(){
@@ -351,7 +358,7 @@
           const day = parseDate(date);
           const items = byDay[date];
           return '<section class="day"><div class="day-head"><h3>' + escapeHtml(formatDay(day)) + '</h3><span>' + items.length + (items.length === 1 ? ' visita' : ' visites') + '</span></div><div class="appointments">' +
-            items.map(item => '<article class="appointment" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '</div><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div>' + teamBadge(item.team, item.gender) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") +
+            items.map(item => '<article class="appointment ' + (item.visitCreated ? 'visit-created' : '') + '" data-appointment-id="' + escapeHtml(item.id) + '" title="' + (item.visitCreated ? 'Visita clínica registrada · ' : '') + 'Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '</div><div class="time">' + escapeHtml(item.time) + '</div><div><div class="player">' + escapeHtml(item.player) + '</div>' + teamBadge(item.team, item.gender) + visitCreatedBadge(item) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") +
             '</div></section>';
         }).join("");
       }
@@ -368,7 +375,7 @@
         const items = visible.filter(item => item.date === date);
         const heading = new Intl.DateTimeFormat("ca-ES", { weekday:"short", day:"numeric" }).format(parseDate(date));
         return '<section class="week-day ' + (date === today ? 'today' : '') + '"><div class="week-day-head">' + escapeHtml(heading) + '</div>' +
-          (items.length ? items.map(item => '<article class="week-entry" data-appointment-id="' + escapeHtml(item.id) + '" title="Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(shortPlayerName(item.player)) + '</div><div class="appointment-meta"><div class="time">' + escapeHtml(item.time) + '</div>' + teamBadge(item.team, item.gender) + '</div></div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
+          (items.length ? items.map(item => '<article class="week-entry ' + (item.visitCreated ? 'visit-created' : '') + '" data-appointment-id="' + escapeHtml(item.id) + '" title="' + (item.visitCreated ? 'Visita clínica registrada · ' : '') + 'Doble clic per reprogramar"><div class="professional-marker">' + physioBadge(item.assignedPhysio) + '<div class="player">' + escapeHtml(shortPlayerName(item.player)) + '</div><div class="appointment-meta"><div class="time">' + escapeHtml(item.time) + '</div>' + teamBadge(item.team, item.gender) + '</div>' + visitCreatedBadge(item) + '</div><div class="assigned"><span class="type-symbol" title="' + visitType(item) + '">' + (visitType(item) === 'Readaptació' ? '🏃' : '🩺') + '</span></div></article>').join("") : '<div class="week-empty">Sense visites</div>') +
           '</section>';
       }).join("");
     }

@@ -71,7 +71,7 @@ function doPost(e) {
     // Coordinació igualment ha de conèixer el canvi i poder actuar.
     var googleSync;
     try {
-      googleSync = sincronitzarPartitGoogleCalendar(game);
+      googleSync = sincronitzarPartitGoogleCalendar(game, changes);
     } catch (syncError) {
       Logger.log("No s'ha pogut sincronitzar el canvi manual amb Google Calendar: " + syncError);
       googleSync = { ok: false, error: String(syncError) };
@@ -100,9 +100,9 @@ function autoritzarAvisosCanvisManualsCalendar() {
 
 // Requereix habilitar el servei avançat "Google Calendar API" al projecte
 // d'Apps Script. Cerca l'esdeveniment per iCalUID i en manté la durada.
-function sincronitzarPartitGoogleCalendar(game) {
+function sincronitzarPartitGoogleCalendar(game, changes) {
   if (!game.calendarId || !game.icalUid) {
-    throw new Error("Falta l'identificador de Google Calendar del partit. Torna a importar els calendaris abans d'editar-lo.");
+    game = completarIdentificadorsCalendar(game, changes);
   }
   var result = Calendar.Events.list(game.calendarId, { iCalUID: game.icalUid, maxResults: 2 });
   var event = result.items && result.items[0];
@@ -128,6 +128,26 @@ function sincronitzarPartitGoogleCalendar(game) {
   };
   Calendar.Events.patch(patch, game.calendarId, event.id);
   return { ok: true, calendarId: game.calendarId, eventId: event.id };
+}
+
+// La pàgina conserva una còpia local del calendari per si Firebase no està
+// disponible. Aquesta còpia antiga no sempre inclou calendarId ni iCalUid.
+// Abans de desistir, recuperem aquests identificadors del partit original
+// importat, tenint en compte els valors previs que acompanyen el canvi manual.
+function completarIdentificadorsCalendar(game, changes) {
+  var original = taulaPartitAnterior(game, changes || []);
+  var games = taulaTotsElsPartits(llegirFirebase(CALENDAR_FIREBASE_PATH) || { weeks: [] });
+  var targetId = taulaIdPartit(original);
+  var matches = games.filter(function(candidate) {
+    return taulaIdPartit(candidate) === targetId && candidate.calendarId && candidate.icalUid;
+  });
+  if (matches.length !== 1) {
+    throw new Error("No s'ha pogut identificar de manera segura el partit original a Google Calendar.");
+  }
+  return Object.assign({}, game, {
+    calendarId: matches[0].calendarId,
+    icalUid: matches[0].icalUid
+  });
 }
 
 function formatCalendarDateTime(date) {

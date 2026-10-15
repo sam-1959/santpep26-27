@@ -711,7 +711,7 @@ function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt,
     writeFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
     return { checked: true, issues: issues.length, emailed: false, error: "missing_general_coordination" };
   }
-  MailApp.sendEmail(tableRestrictionsRecipient, subject, body, {
+  GmailApp.sendEmail(tableRestrictionsRecipient, subject, body, {
     htmlBody: restrictionAlertEmailHtml(issues, forceCheck, latestChanges.length),
     name: "CB Sant Josep Badalona",
     from: "dtecnic@cbsantjosep.cat"
@@ -882,7 +882,7 @@ function notifyCalendarChangesByTeam(latestChanges) {
       Logger.log("No s'envia l'avís de calendari de " + group.teamKey + ": no hi ha entrenador/a ni Coordinació general configurada.");
       return;
     }
-    MailApp.sendEmail(recipient, subject, body, options);
+    GmailApp.sendEmail(recipient, subject, body, options);
     emailed += 1;
   });
   return { emailed: emailed, teams: groups.length };

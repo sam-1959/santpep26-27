@@ -65,7 +65,7 @@ function doPost(e) {
     if (coachEmail && coordinationEmail && coachEmail.toLowerCase() !== coordinationEmail.toLowerCase()) {
       mailOptions.cc = coordinationEmail;
     }
-    MailApp.sendEmail(destinatari, subject, construirTextCanvisCalendar(teamLabel, [change]), mailOptions);
+    GmailApp.sendEmail(destinatari, subject, construirTextCanvisCalendar(teamLabel, [change]), mailOptions);
 
     // L'avís intern no pot dependre de Calendar: si la sincronització falla,
     // Coordinació igualment ha de conèixer el canvi i poder actuar.
@@ -91,11 +91,11 @@ function doPost(e) {
 }
 
 // Executa aquesta funció una vegada des de l'editor d'Apps Script per
-// autoritzar MailApp i UrlFetchApp. No envia cap correu.
+// autoritzar GmailApp i UrlFetchApp. No envia cap correu.
 function autoritzarAvisosCanvisManualsCalendar() {
-  var quota = MailApp.getRemainingDailyQuota();
+  var aliases = GmailApp.getAliases();
   var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { muteHttpExceptions: true });
-  return { ok: true, mailQuota: quota, firebaseStatus: response.getResponseCode() };
+  return { ok: true, aliases: aliases, firebaseStatus: response.getResponseCode() };
 }
 
 // Requereix habilitar el servei avançat "Google Calendar API" al projecte
@@ -533,7 +533,7 @@ function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
   var recipient = correuCoordinacioGeneral();
   if (!recipient) throw new Error("No hi ha correu de Coordinació general configurat per a les restriccions de taules.");
   var body = ["S'han detectat " + issues.length + " incidència(es) de planificació després d'un canvi manual de calendari.", ""].concat(issues.map(function(issue) { return "- " + issue.text; })).join("\n");
-  MailApp.sendEmail(recipient, "Alerta: restriccions de taules després d'un canvi manual", body, { htmlBody:htmlRestriccionsTaules(issues), name:"CB Sant Josep Badalona", from:"dtecnic@cbsantjosep.cat" });
+  GmailApp.sendEmail(recipient, "Alerta: restriccions de taules després d'un canvi manual", body, { htmlBody:htmlRestriccionsTaules(issues), name:"CB Sant Josep Badalona", from:"dtecnic@cbsantjosep.cat" });
   status.lastAlertAt = now;
   escriureFirebase(TABLE_RESTRICTIONS_ALERT_PATH, status);
   return { checked:true, issues:issues.length, emailed:true };

@@ -141,6 +141,16 @@ function completarIdentificadorsCalendar(game, changes) {
   var matches = games.filter(function(candidate) {
     return taulaIdPartit(candidate) === targetId && candidate.calendarId && candidate.icalUid;
   });
+  // Si aquest partit ja tenia una edició manual anterior, la data, l'hora o
+  // el pavelló del formulari ja no coincideixen amb la importació original.
+  // Equip, sexe, rival, condició de local i amistós continuen identificant-lo
+  // de manera segura sempre que només n'hi hagi un a la temporada.
+  if (matches.length !== 1) {
+    var sourceKey = taulaClauPartit(original);
+    matches = games.filter(function(candidate) {
+      return taulaClauPartit(candidate) === sourceKey && candidate.calendarId && candidate.icalUid;
+    });
+  }
   if (matches.length !== 1) {
     throw new Error("No s'ha pogut identificar de manera segura el partit original a Google Calendar.");
   }

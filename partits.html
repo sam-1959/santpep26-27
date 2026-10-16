@@ -98,6 +98,10 @@
     .agenda-game.away { border-left-color:#e57d00; background:var(--away); }
     .agenda-time { display:block; color:var(--brand-dark); font-weight:900; }
     .agenda-team { display:block; font-weight:800; }
+    .sex-label { display:inline-flex; align-items:center; justify-content:center; min-height:20px; padding:2px 6px; border-radius:999px; font-size:.62rem; font-weight:900; letter-spacing:.04em; line-height:1; white-space:nowrap; text-transform:uppercase; }
+    .sex-label.masc { color:#0d4f9c; background:#e3f0ff; border:1px solid #8fc3f5; }
+    .sex-label.fem { color:#a10d4d; background:#ffe5f0; border:1px solid #f4a8c7; }
+    .agenda-sex { margin:0 4px 0 0; vertical-align:1px; }
     .agenda-rival { display:block; color:var(--muted); }
     .agenda-empty { padding:12px 8px; color:var(--muted); font-size:.73rem; font-style:italic; }
     .agenda-legend { display:flex; gap:12px; align-items:center; margin:5px 0 10px; color:var(--muted); font-size:.72rem; font-weight:700; }
@@ -558,6 +562,8 @@
         '<span class="legend-item"><span class="mini-mark" title="Partit de Mini">🍼</span> Mini</span>' +
         '<span class="legend-item"><span class="change-mark" title="Partit amb canvis recents">↻</span> Canvi recent</span>' +
         '<span class="legend-item"><span class="storm-mark" title="Partit ajornat per tempesta">⛈️</span> Ajornat per tempesta</span>' +
+        '<span class="legend-item"><span class="sex-label masc">Masculí</span></span>' +
+        '<span class="legend-item"><span class="sex-label fem">Femení</span></span>' +
         '<span class="legend-item"><span class="conflict-mark" title="Possible conflicte: mateix horari i pista">!</span> Mateixa hora i pista</span>' +
         '</div>';
     }
@@ -582,8 +588,8 @@
       const ch = changeMark(g);
       const storm = stormMark(g);
       const cf = conflictMark(g);
-      // El gènere s'identifica pel color de la targeta (masc/fem), sense text.
-      return '<div class="game ' + sexCls + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="game-team">' + g.team + fr + mini + ch + storm + cf + '</div>' +
+      const sexLabel = '<span class="sex-label ' + sexCls + '">' + (g.sex==='F' ? 'Femení' : 'Masculí') + '</span>';
+      return '<div class="game ' + sexCls + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="game-top"><div class="game-team">' + g.team + fr + mini + ch + storm + cf + '</div>' + sexLabel + '</div>' +
         vs + loc + cost + '</div>';
     }
 
@@ -627,9 +633,9 @@
       const ch = changeMark(g);
       const storm = stormMark(g);
       const cf = conflictMark(g);
-      // El gènere s'identifica pel color de la targeta (masc/fem), sense text.
+      const sexLabel = '<span class="sex-label ' + sexCls + '">' + (g.sex==='F' ? 'F' : 'M') + '</span>';
       return '<div class="gchip ' + sexCls + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="gchip-top">' +
-        '<span class="gchip-team">' + g.team + fr + mini + ch + storm + cf + '</span></div>' +
+        '<span class="gchip-team">' + g.team + fr + mini + ch + storm + cf + '</span>' + sexLabel + '</div>' +
         '<div class="gchip-vs"><span class="lbl">vs</span> ' + g.rival + '</div>' + loc + cost + '</div>';
     }
 
@@ -691,7 +697,8 @@
           const fr=g.friendly?' <span class="friendly" title="Partit amistós">🤝</span>':'';
           const mini=miniMark(g), ch=changeMark(g), storm=stormMark(g), cf=conflictMark(g);
           const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
-          return '<div class="agenda-game '+(g.home?'home':'away')+'" data-game-edit-key="'+gameEditDataAttribute(g)+'" title="Doble clic per editar"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+storm+cf+'</span>'+loc+'</div>';
+          const sexCls=g.sex==='F'?'fem':'masc', sexLabel='<span class="sex-label '+sexCls+' agenda-sex">'+(g.sex==='F'?'Femení':'Masculí')+'</span>';
+          return '<div class="agenda-game '+(g.home?'home':'away')+' '+sexCls+'" data-game-edit-key="'+gameEditDataAttribute(g)+'" title="Doble clic per editar"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+sexLabel+g.team+' vs '+g.rival+fr+mini+ch+storm+cf+'</span>'+loc+'</div>';
         }).join('');}
         html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';

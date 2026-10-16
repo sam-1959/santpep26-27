@@ -270,6 +270,10 @@
       date.setDate(date.getDate() + amount);
       return isoFromDate(date);
     }
+    function defaultCalendarWeekStart(){
+      const nextAppointment = appointments.find(item => item.date >= todayIso());
+      return mondayOf(nextAppointment ? nextAppointment.date : todayIso());
+    }
     function normalize(data){
       return Object.entries(data || {}).map(([id, request]) => {
         const appointment = request && request.appointment;
@@ -377,7 +381,7 @@
       renderWeekCalendar(visible);
     }
     function renderWeekCalendar(visible){
-      if(!calendarWeekStart) calendarWeekStart = mondayOf(todayIso());
+      if(!calendarWeekStart) calendarWeekStart = defaultCalendarWeekStart();
       const start = parseDate(calendarWeekStart);
       const end = parseDate(addDays(calendarWeekStart, 6));
       weekLabelEl.textContent = new Intl.DateTimeFormat("ca-ES", { day:"numeric", month:"short" }).format(start) + " – " + new Intl.DateTimeFormat("ca-ES", { day:"numeric", month:"short", year:"numeric" }).format(end);

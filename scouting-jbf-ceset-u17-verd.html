@@ -1,29 +1,854 @@
 <!doctype html>
 <html lang="ca">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="icon" href="assets/favicon.png"><title>Scouting CESET U17 Verd · CB Sant Josep</title>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+<title>Scouting CESET U17 Verd · CB Sant Josep</title>
   <style>
     :root{--brand:#713f97;--dark:#5a2f7d;--accent:#fcdb20;--bg:#f5f3f8;--ink:#2a2233;--muted:#7a7085;--line:#e6e0ee;--ok:#2e7d32;--err:#b71c1c;--blue:#00547b;--shadow:0 1px 3px #3c28521a,0 4px 16px #3c28520f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff;box-shadow:var(--shadow)}header a{display:flex}.logo{width:48px;height:48px;padding:3px;background:#fff;border-radius:10px;object-fit:contain}.h{flex:1}.h h1{margin:0;font-size:1.05rem}.h h1 span{display:block;font-size:.72rem;font-weight:500;opacity:.85;letter-spacing:.04em;text-transform:uppercase}.h p{margin:2px 0 0;font-size:.8rem;opacity:.9}.icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#fff;color:var(--brand);font-size:1.45rem}main{padding:22px 24px 36px}.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}.top h2{margin:0;color:var(--dark);font-size:1.28rem}.top p,.sub{margin:3px 0 0;color:var(--muted);font-size:.88rem}.actions{display:flex;gap:10px;align-items:center}.badge{padding:5px 10px;border:1px solid #eed56c;border-radius:999px;background:#fff8d8;color:#6c4800;font-size:.75rem;font-weight:900}.print,.btn{border:0;border-radius:999px;padding:8px 13px;background:var(--brand);color:#fff;font:inherit;font-size:.8rem;font-weight:900;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.panel{grid-column:span 12;padding:18px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.half{grid-column:span 6}.panel h3{margin:0 0 4px;color:var(--dark);font-size:1rem}.panel .sub{margin:0 0 14px;font-size:.82rem}.hero{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.rival{display:flex;align-items:center;gap:16px;min-width:320px}.crest{display:grid;place-items:center;width:82px;height:82px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--blue);font-size:1.05rem;font-weight:900;text-align:center;line-height:1.05}.crest-img{display:block;padding:4px;object-fit:contain}.name{margin:0;color:var(--blue);font-size:1.7rem;line-height:1.1}.meta{margin:6px 0 0;color:var(--muted);font-weight:700}.note,.metric{margin:10px 0 0;color:var(--muted);font-size:.76rem}.kpis{display:grid;grid-template-columns:repeat(5,minmax(104px,1fr));gap:10px;flex:1}.kpi{padding:12px;border:1px solid var(--line);border-radius:14px;background:#faf8fd}.kpi span{display:block;color:var(--muted);font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.kpi strong{display:block;margin-top:2px;color:var(--dark);font-size:1.32rem}.bad{color:var(--err)!important}table{width:100%;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:.86rem}th{background:#faf8fd;color:var(--dark);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}.num{text-align:right;white-space:nowrap}.highlight td{background:#e9fbf6;color:#064d6f;font-weight:900}.loss{color:var(--err);font-weight:900}.best{color:var(--ok);background:#eaf7ee;font-weight:900}.callouts{display:grid;gap:10px}.call{padding:11px 12px;border:1px solid var(--line);border-left:5px solid var(--brand);border-radius:12px}.call.warn{border-left-color:#f0a000}.call.ok{border-left-color:var(--ok)}.call strong{color:var(--dark)}.call p{margin:2px 0 0;color:var(--muted);font-size:.84rem}.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.box{min-height:112px;padding:12px;border:1px dashed var(--line);border-radius:14px;background:#fffdf5}.box h4{margin:0 0 7px;color:var(--dark);font-size:.86rem}.box ul{margin:0;padding-left:18px;font-size:.86rem}.form{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(320px,1.2fr);grid-template-rows:auto auto;gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{color:var(--dark);font-size:.74rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.field input,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font:inherit}.field textarea{min-height:210px;resize:vertical}.video{grid-column:1;grid-row:1}.comments{grid-column:2;grid-row:1 / span 2}.links{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.links a{color:var(--brand);font-size:.82rem;font-weight:900;text-decoration:none}.save{grid-column:1;grid-row:2;align-self:end;display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}.btn.alt{border:1px solid var(--line);background:#fff;color:var(--brand)}.status{color:var(--muted);font-size:.76rem}footer{text-align:center;color:var(--muted);font-size:.75rem;padding:20px}@media(max-width:980px){.half{grid-column:span 12}.kpis,.notes{grid-template-columns:1fr 1fr}}@media(max-width:640px){main{padding:18px 14px}.kpis,.notes,.form{grid-template-columns:1fr}.rival{min-width:0}.video,.comments,.save{grid-column:auto;grid-row:auto}.field textarea{min-height:140px}}@media print{.resource-panel,header .icon,.actions{display:none!important}main{padding:0}.panel{break-inside:avoid-page}}
   </style>
+  <style>
+    main > .grid > article:nth-of-type(1){order:1} main > .grid > article:nth-of-type(2){order:2} main > .grid > article:nth-of-type(3){order:3} main > .grid > article:nth-of-type(13){order:4} main > .grid > article:nth-of-type(9){order:5} main > .grid > article:nth-of-type(14){order:6} main > .grid > article:nth-of-type(6){order:7} main > .grid > article:nth-of-type(7){order:8} main > .grid > article:nth-of-type(4){order:9} main > .grid > article:nth-of-type(5){order:10} main > .grid > article:nth-of-type(8){order:11} main > .grid > article:nth-of-type(10){order:12} main > .grid > article:nth-of-type(11){order:13} main > .grid > article:nth-of-type(12){order:14}
+  </style>
 </head>
 <body>
-  <header><a href="scouting-jbf-index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"></a><div class="h"><h1><span>CB Sant Josep de Badalona</span>Scouting JBF</h1><p>Anàlisi del rival · Temporada 26-27</p></div><div class="icon">🔎</div></header>
+  <header>
+<a href="scouting-jbf-index.html">
+<img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep">
+</a>
+<div class="h">
+<h1>
+<span>CB Sant Josep de Badalona</span>Scouting JBF</h1>
+<p>Anàlisi del rival · Temporada 26-27</p>
+</div>
+<div class="icon">🔎</div>
+</header>
   <main>
-    <div class="top"><div><h2>Scouting rival · CESET U17 Verd</h2><p>Diumenge 18 d’octubre · 10:45 · Pavelló La Colina.</p></div><div class="actions"><span class="badge">Jornada 7 · Partit a casa</span><button class="print" onclick="print()">🖨️ Imprimir</button></div></div>
+    <div class="top">
+<div>
+<h2>Scouting rival · CESET U17 Verd</h2>
+<p>Diumenge 18 d’octubre · 10:45 · Pavelló La Colina.</p>
+</div>
+<div class="actions">
+<span class="badge">Jornada 7 · Partit a casa</span>
+<button class="print" onclick="print()">🖨️ Imprimir</button>
+</div>
+</div>
     <section class="grid">
-      <article class="panel"><div class="hero"><div class="rival"><img class="crest crest-img" src="assets/ceset-logo.png" alt="Escut del CESET U17 Verd"><div><h2 class="name">CESET U17 VERD</h2><p class="meta">C.C. Júnior Femení Preferent 1r Any · Fase prèvia · Grup 03</p><p class="note">Dades disponibles abans de la jornada 7. Les dades individuals disponibles corresponen als tres primers partits amb acta estadística.</p></div></div><div class="kpis"><div class="kpi"><span>Classificació</span><strong>4t</strong></div><div class="kpi"><span>Balanç</span><strong>2-3</strong></div><div class="kpi"><span>PF/P</span><strong>49.8</strong></div><div class="kpi"><span>PC/P</span><strong>59.2</strong></div><div class="kpi"><span>DIF/P</span><strong class="bad">−9.4</strong></div></div></div></article>
-      <article class="panel half"><h3>Classificació de referència</h3><p class="sub">Classificació a la jornada 7, abans de JBF–CESET.</p><table><thead><tr><th>#</th><th>Equip</th><th class="num">J</th><th class="num">G</th><th class="num">P</th><th class="num">PF</th><th class="num">PC</th><th class="num">Pts</th></tr></thead><tbody><tr><td>1</td><td>NAYOX FORÇA LLEIDA B</td><td class="num">5</td><td class="num">5</td><td class="num">0</td><td class="num">355</td><td class="num">215</td><td class="num">10</td></tr><tr><td>2</td><td>TGN BÀSQUET F10A</td><td class="num">6</td><td class="num">4</td><td class="num">2</td><td class="num">385</td><td class="num">334</td><td class="num">10</td></tr><tr><td>3</td><td>CB BLANES A</td><td class="num">5</td><td class="num">5</td><td class="num">0</td><td class="num">296</td><td class="num">259</td><td class="num">10</td></tr><tr class="highlight"><td>4</td><td>CESET U17 VERD</td><td class="num">5</td><td class="num">2</td><td class="num">3</td><td class="num">249</td><td class="num">296</td><td class="num">7</td></tr><tr><td>5</td><td>MANTISE CB SANT JOSEP BADALONA - JBF</td><td class="num">4</td><td class="num">1</td><td class="num">3</td><td class="num">225</td><td class="num">229</td><td class="num">5</td></tr><tr><td>6</td><td>U. B. LLEFIÀ B</td><td class="num">5</td><td class="num">0</td><td class="num">5</td><td class="num">190</td><td class="num">313</td><td class="num">5</td></tr><tr><td>7</td><td>SESE B</td><td class="num">4</td><td class="num">0</td><td class="num">4</td><td class="num">211</td><td class="num">265</td><td class="num">4</td></tr></tbody></table></article>
-      <article class="panel half"><h3>Últims partits CESET U17 Verd</h3><p class="sub">Trajectòria completa dels cinc partits disputats.</p><table><thead><tr><th>Data</th><th>J</th><th>Rival</th><th>Resultat</th><th class="num">DIF</th></tr></thead><tbody><tr><td>03/10/2026</td><td>J5 · Casa</td><td>CB BLANES A</td><td class="loss">54-60</td><td class="num loss">−6</td></tr><tr><td>26/09/2026</td><td>J4 · Fora</td><td>U. B. LLEFIÀ B</td><td class="best">53-40</td><td class="num best">+13</td></tr><tr><td>20/09/2026</td><td>J3 · Casa</td><td>SESE B</td><td class="best">70-58</td><td class="num best">+12</td></tr><tr><td>13/09/2026</td><td>J2 · Fora</td><td>NAYOX FORÇA LLEIDA B</td><td class="loss">31-72</td><td class="num loss">−41</td></tr><tr><td>06/09/2026</td><td>J1 · Casa</td><td>TGN BÀSQUET F10A</td><td class="loss">41-66</td><td class="num loss">−25</td></tr><tr class="highlight"><td colspan="5"><strong>2-3 · 249 PF · 296 PC · −47</strong><span style="margin-left:10px;font-size:.78rem">Casa: 1-2 (−6.3). Fora: 1-1 (−14.0).</span></td></tr></tbody></table><p class="metric">Després de dues derrotes inicials, van encadenar dues victòries. L’últim partit, 54-60 contra CB Blanes A, va ser competitiu.</p></article>
-      <article class="panel"><h3>Estadístiques per partit</h3><p class="sub">Dades acumulades dels cinc partits de la temporada. T2C i T3C són conversions; no es mostren percentatges perquè no hi ha tirs fallats registrats.</p><div style="overflow:auto"><table><thead><tr><th>Rival</th><th class="num">J</th><th>Data</th><th>R</th><th class="num">PF</th><th class="num">PC</th><th class="num">DIF</th><th class="num">T2C</th><th class="num">T3C</th><th class="num">TLC</th><th class="num">TLI</th><th class="num">TL%</th><th class="num">FC</th></tr></thead><tbody><tr><td>vs TGN BÀSQUET F10A</td><td class="num">J1</td><td>06/09/2026</td><td class="loss">41-66</td><td class="num">41</td><td class="num">66</td><td class="num loss">−25</td><td class="num">17</td><td class="num">2</td><td class="num">1</td><td class="num">6</td><td class="num">16.7%</td><td class="num">16</td></tr><tr><td>@ NAYOX FORÇA LLEIDA B</td><td class="num">J2</td><td>13/09/2026</td><td class="loss">31-72</td><td class="num">31</td><td class="num best">72</td><td class="num loss">−41</td><td class="num">11</td><td class="num">1</td><td class="num">6</td><td class="num">14</td><td class="num best">42.9%</td><td class="num">15</td></tr><tr><td>vs SESE B</td><td class="num">J3</td><td>20/09/2026</td><td class="best">70-58</td><td class="num best">70</td><td class="num">58</td><td class="num best">+12</td><td class="num best">23</td><td class="num best">6</td><td class="num">6</td><td class="num">18</td><td class="num">33.3%</td><td class="num">24</td></tr><tr><td>@ U. B. LLEFIÀ B</td><td class="num">J4</td><td>26/09/2026</td><td class="best">53-40</td><td class="num">53</td><td class="num">40</td><td class="num best">+13</td><td class="num">17</td><td class="num">4</td><td class="num best">7</td><td class="num best">25</td><td class="num">28.0%</td><td class="num">18</td></tr><tr><td>vs CB BLANES A</td><td class="num">J5</td><td>03/10/2026</td><td class="loss">54-60</td><td class="num">54</td><td class="num">60</td><td class="num loss">−6</td><td class="num">16</td><td class="num best">6</td><td class="num">4</td><td class="num">17</td><td class="num">23.5%</td><td class="num">18</td></tr><tr class="highlight"><td colspan="4"><strong>Σ / MITJ.</strong></td><td class="num"><strong>49.8</strong></td><td class="num"><strong>59.2</strong></td><td class="num"><strong>−9.4</strong></td><td class="num"><strong>16.8</strong></td><td class="num"><strong>3.8</strong></td><td class="num"><strong>4.8</strong></td><td class="num"><strong>16.0</strong></td><td class="num"><strong>28.9%</strong></td><td class="num"><strong>18.2</strong></td></tr></tbody></table></div></article>
-      <article class="panel"><h3>Plantilla · estadístiques per partit</h3><p class="sub">Mitjanes individuals dels cinc partits disputats. Les cel·les destacades indiquen el valor més alt de l’equip.</p><div style="overflow:auto"><table><thead><tr><th>#</th><th>Jugadora</th><th class="num">PJ</th><th class="num">MIN</th><th class="num">PTS</th><th class="num">T2C</th><th class="num">T3C</th><th class="num">TLC</th><th class="num">TLI</th><th class="num">TL%</th><th class="num">FC</th><th class="num">+/-</th></tr></thead><tbody><tr><td>18</td><td><strong>Clara Lopez Jordi</strong></td><td class="num">5</td><td class="num">26.1</td><td class="num best">11.6</td><td class="num best">4.6</td><td class="num best">0.6</td><td class="num">0.6</td><td class="num">3.0</td><td class="num">20.0</td><td class="num">2.0</td><td class="num best">+3.4</td></tr><tr><td>2</td><td><strong>Leire Cancelo Pi</strong></td><td class="num">5</td><td class="num">26.2</td><td class="num">8.4</td><td class="num">2.8</td><td class="num best">0.6</td><td class="num best">1.0</td><td class="num best">3.6</td><td class="num">27.8</td><td class="num">3.6</td><td class="num best">+1.0</td></tr><tr><td>13</td><td><strong>Nelly Krymska Prudkiy</strong></td><td class="num">5</td><td class="num">21.7</td><td class="num">7.6</td><td class="num">1.8</td><td class="num">1.2</td><td class="num">0.4</td><td class="num">1.0</td><td class="num">40.0</td><td class="num">1.4</td><td class="num loss">−12.2</td></tr><tr><td>00</td><td>Mireia Pardos Palahi</td><td class="num">5</td><td class="num best">26.9</td><td class="num">6.2</td><td class="num">2.0</td><td class="num">0.4</td><td class="num best">1.0</td><td class="num">3.2</td><td class="num best">31.3</td><td class="num">2.6</td><td class="num loss">−2.8</td></tr><tr><td>10</td><td>Mariona Pi i Martínez</td><td class="num">5</td><td class="num">22.7</td><td class="num">5.4</td><td class="num">1.4</td><td class="num">0.6</td><td class="num">0.8</td><td class="num">2.6</td><td class="num">30.8</td><td class="num">2.6</td><td class="num loss">−7.2</td></tr><tr><td>23</td><td>Júlia Méndez Franco</td><td class="num">5</td><td class="num">26.3</td><td class="num">3.6</td><td class="num">1.6</td><td class="num">0.0</td><td class="num">0.4</td><td class="num">1.4</td><td class="num">28.6</td><td class="num">2.2</td><td class="num loss">−3.8</td></tr><tr><td>4</td><td>Claudia Ferrer Brao</td><td class="num">5</td><td class="num">16.2</td><td class="num">2.8</td><td class="num">1.0</td><td class="num">0.2</td><td class="num">0.2</td><td class="num">0.4</td><td class="num">50.0</td><td class="num">1.0</td><td class="num loss">−12.4</td></tr><tr><td>8</td><td>Martina Tobed Haro</td><td class="num">5</td><td class="num">19.4</td><td class="num">2.4</td><td class="num">0.8</td><td class="num">0.2</td><td class="num">0.2</td><td class="num">0.4</td><td class="num">50.0</td><td class="num">1.0</td><td class="num loss">−8.4</td></tr><tr><td>5</td><td>Noa Ruiz Bali</td><td class="num">4</td><td class="num">15.7</td><td class="num">2.3</td><td class="num">1.0</td><td class="num">0.0</td><td class="num">0.3</td><td class="num">0.5</td><td class="num">50.0</td><td class="num">2.3</td><td class="num loss">−5.5</td></tr><tr><td>1</td><td>Elsa Rud Pinsach</td><td class="num">1</td><td class="num">9.3</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num loss">−1.0</td></tr><tr class="highlight"><td colspan="2"><strong>TOTAL EQUIP</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>200.0</strong></td><td class="num"><strong>49.8</strong></td><td class="num"><strong>16.8</strong></td><td class="num"><strong>3.8</strong></td><td class="num"><strong>4.8</strong></td><td class="num"><strong>16.0</strong></td><td class="num"><strong>30.0</strong></td><td class="num"><strong>18.2</strong></td><td class="num"><strong>−9.4</strong></td></tr></tbody></table></div></article>
-      <article class="panel half"><h3>Lectura per scouting</h3><p class="sub">Punts de partida a contrastar amb el vídeo.</p><div class="callouts"><div class="call ok"><strong>Partits competits</strong><p>El 54-60 contra CB Blanes A confirma que poden sostenir un partit tancat contra un rival de la zona alta.</p></div><div class="call"><strong>Producció interior</strong><p>Les tres principals anotadores disponibles generen sobretot des del 2P. Cal protegir pintura i tancar el rebot defensiu.</p></div><div class="call warn"><strong>Contacte i faltes</strong><p>Paula Merce, Alicia Farreras i Joana López visiten sovint la línia. Defensar verticals i sense arribar tard.</p></div><div class="call"><strong>Referències clares</strong><p>Paula Merce, Aina Pardo i Alicia Farreras concentren minuts i anotació. Preparar els emparellaments des de l’inici.</p></div></div></article>
-      <article class="panel half"><h3>Pla de partit JBF</h3><p class="sub">Base de treball per l’staff.</p><div class="notes"><div class="box"><h4>Objectius defensius</h4><ul><li>Protegir la pintura sense regalar faltes.</li><li>Identificar les tres principals generadores.</li><li>Tancar el rebot després de cada tir.</li></ul></div><div class="box"><h4>Objectius ofensius</h4><ul><li>Jugar amb ritme després del rebot.</li><li>Fer circular la pilota abans de l’1c1.</li><li>Atacar espais i avantatges clars.</li></ul></div><div class="box"><h4>Riscos</h4><ul><li>Entrar en un final igualat sense control.</li><li>Concedir segones opcions.</li><li>Carregar-nos de faltes en penetracions.</li></ul></div></div></article>
-      <article class="panel resource-panel"><h3>Vídeo i observacions del rival</h3><p class="sub">Afegeix el vídeo del partit i les conclusions. Es comparteixen amb tot l’staff.</p><form class="form" id="resources"><div class="field video"><label for="video">Vídeo de YouTube</label><input id="video" type="url" placeholder="https://www.youtube.com/watch?..."><div class="links"><a id="openVideo" target="_blank" hidden>▶ Obrir vídeo</a></div></div><div class="field comments"><label for="notes">Comentaris sobre el rival</label><textarea id="notes" placeholder="Fortaleses, patrons ofensius, defensa, jugadores clau, ajustos..."></textarea></div><div class="save"><button class="btn">Guardar observacions</button><button class="btn alt" id="clear" type="button">Netejar</button><span class="status" id="status"></span></div></form></article>
-    </section>
-      <section class="grid" style="margin-top:16px"><article class="panel"><h3>Carta de tir · lectura d’equip</h3><p class="sub">Acumulat dels cinc partits disputats. El registre mostra 103 conversions de camp: 84 tirs de 2 i 19 tirs de 3, per un total de 225 punts des del camp.</p><div class="kpis"><div class="kpi"><span>Tirs de camp</span><strong>103</strong></div><div class="kpi"><span>Conversions 2P</span><strong>84</strong></div><div class="kpi"><span>Conversions 3P</span><strong>19</strong></div><div class="kpi"><span>Punts de camp</span><strong>225</strong></div><div class="kpi"><span>Perfil</span><strong>82% 2P</strong></div></div><div class="callouts" style="margin-top:14px"><div class="call warn"><strong>Dada incompleta d’efectivitat</strong><p>La carta només registra tirs anotats (103 de 103). Per això el 100% d’encert i l’EFG% del visor no són indicadors reals: no hi ha tirs fallats carregats.</p></div><div class="call"><strong>Lectura defensiva</strong><p>La producció és principalment interior: 84 de les 103 conversions són de 2 punts. Prioritat per protegir pintura, contenir penetracions i tancar el rebot defensiu.</p></div></div></article></section>
-      <section class="grid" style="margin-top:16px"><article class="panel"><h3>Rendiment situacional</h3><p class="sub">Mitjanes per partit segons el context, en els cinc partits disputats.</p><div style="overflow:auto"><table><thead><tr><th>Context</th><th class="num">PJ</th><th class="num">V-D</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF/P</th></tr></thead><tbody><tr><td><strong>Temporada completa</strong></td><td class="num">5</td><td class="num">2-3</td><td class="num"><strong>49.8</strong></td><td class="num">59.2</td><td class="num loss">−9.4</td></tr><tr><td>Com a local</td><td class="num">3</td><td class="num">1-2</td><td class="num"><strong>55.0</strong></td><td class="num">61.3</td><td class="num loss">−6.3</td></tr><tr><td>Com a visitant</td><td class="num">2</td><td class="num">1-1</td><td class="num"><strong>42.0</strong></td><td class="num">56.0</td><td class="num loss">−14.0</td></tr><tr><td>En victòries</td><td class="num">2</td><td class="num">2-0</td><td class="num"><strong>61.5</strong></td><td class="num">49.0</td><td class="num best">+12.5</td></tr><tr><td>En derrotes</td><td class="num">3</td><td class="num">0-3</td><td class="num"><strong>42.0</strong></td><td class="num">66.0</td><td class="num loss">−24.0</td></tr><tr><td>Partits trencats (&gt;15)</td><td class="num">2</td><td class="num">0-2</td><td class="num"><strong>36.0</strong></td><td class="num">69.0</td><td class="num loss">−33.0</td></tr></tbody></table></div></article><article class="panel half"><h3>Punts per quart</h3><p class="sub">Punts per partit: CESET / rival.</p><table><thead><tr><th>Quart</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF</th></tr></thead><tbody><tr><td>P1</td><td class="num">12.5</td><td class="num">14.7</td><td class="num loss">−2.2</td></tr><tr><td>P2</td><td class="num">10.7</td><td class="num">13.4</td><td class="num loss">−2.7</td></tr><tr><td>P3</td><td class="num">12.0</td><td class="num">14.1</td><td class="num loss">−2.1</td></tr><tr><td>P4</td><td class="num"><strong>14.4</strong></td><td class="num">16.5</td><td class="num loss">−2.1</td></tr></tbody></table></article><article class="panel half"><h3>Marges de partit</h3><p class="sub">Distribució dels cinc resultats jugats.</p><table><thead><tr><th>Marge</th><th class="num">Partits</th></tr></thead><tbody><tr><td class="loss">Derrota &gt;15</td><td class="num">2</td></tr><tr><td class="loss">Derrota 6-15</td><td class="num">1</td></tr><tr><td>Derrota 1-5</td><td class="num">0</td></tr><tr><td>Victòria 1-5</td><td class="num">0</td></tr><tr><td class="best">Victòria 6-15</td><td class="num">2</td></tr><tr><td>Victòria &gt;15</td><td class="num">0</td></tr></tbody></table></article></section>
-  </main><footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
+      <article class="panel">
+<div class="hero">
+<div class="rival">
+<img class="crest crest-img" src="assets/ceset-logo.png" alt="Escut del CESET U17 Verd">
+<div>
+<h2 class="name">CESET U17 VERD</h2>
+<p class="meta">C.C. Júnior Femení Preferent 1r Any · Fase prèvia · Grup 03</p>
+<p class="note">Dades disponibles abans de la jornada 7. Les dades individuals disponibles corresponen als tres primers partits amb acta estadística.</p>
+</div>
+</div>
+<div class="kpis">
+<div class="kpi">
+<span>Classificació</span>
+<strong>4t</strong>
+</div>
+<div class="kpi">
+<span>Balanç</span>
+<strong>2-3</strong>
+</div>
+<div class="kpi">
+<span>PF/P</span>
+<strong>49.8</strong>
+</div>
+<div class="kpi">
+<span>PC/P</span>
+<strong>59.2</strong>
+</div>
+<div class="kpi">
+<span>DIF/P</span>
+<strong class="bad">−9.4</strong>
+</div>
+</div>
+</div>
+</article>
+      <article class="panel half">
+<h3>Classificació de referència</h3>
+<p class="sub">Classificació a la jornada 7, abans de JBF–CESET.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Equip</th>
+<th class="num">J</th>
+<th class="num">G</th>
+<th class="num">P</th>
+<th class="num">PF</th>
+<th class="num">PC</th>
+<th class="num">Pts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>NAYOX FORÇA LLEIDA B</td>
+<td class="num">5</td>
+<td class="num">5</td>
+<td class="num">0</td>
+<td class="num">355</td>
+<td class="num">215</td>
+<td class="num">10</td>
+</tr>
+<tr>
+<td>2</td>
+<td>TGN BÀSQUET F10A</td>
+<td class="num">6</td>
+<td class="num">4</td>
+<td class="num">2</td>
+<td class="num">385</td>
+<td class="num">334</td>
+<td class="num">10</td>
+</tr>
+<tr>
+<td>3</td>
+<td>CB BLANES A</td>
+<td class="num">5</td>
+<td class="num">5</td>
+<td class="num">0</td>
+<td class="num">296</td>
+<td class="num">259</td>
+<td class="num">10</td>
+</tr>
+<tr class="highlight">
+<td>4</td>
+<td>CESET U17 VERD</td>
+<td class="num">5</td>
+<td class="num">2</td>
+<td class="num">3</td>
+<td class="num">249</td>
+<td class="num">296</td>
+<td class="num">7</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MANTISE CB SANT JOSEP BADALONA - JBF</td>
+<td class="num">4</td>
+<td class="num">1</td>
+<td class="num">3</td>
+<td class="num">225</td>
+<td class="num">229</td>
+<td class="num">5</td>
+</tr>
+<tr>
+<td>6</td>
+<td>U. B. LLEFIÀ B</td>
+<td class="num">5</td>
+<td class="num">0</td>
+<td class="num">5</td>
+<td class="num">190</td>
+<td class="num">313</td>
+<td class="num">5</td>
+</tr>
+<tr>
+<td>7</td>
+<td>SESE B</td>
+<td class="num">4</td>
+<td class="num">0</td>
+<td class="num">4</td>
+<td class="num">211</td>
+<td class="num">265</td>
+<td class="num">4</td>
+</tr>
+</tbody>
+</table>
+</article>
+      <article class="panel half">
+<h3>Últims partits CESET U17 Verd</h3>
+<p class="sub">Trajectòria completa dels cinc partits disputats.</p>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>J</th>
+<th>Rival</th>
+<th>Resultat</th>
+<th class="num">DIF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>03/10/2026</td>
+<td>J5 · Casa</td>
+<td>CB BLANES A</td>
+<td class="loss">54-60</td>
+<td class="num loss">−6</td>
+</tr>
+<tr>
+<td>26/09/2026</td>
+<td>J4 · Fora</td>
+<td>U. B. LLEFIÀ B</td>
+<td class="best">53-40</td>
+<td class="num best">+13</td>
+</tr>
+<tr>
+<td>20/09/2026</td>
+<td>J3 · Casa</td>
+<td>SESE B</td>
+<td class="best">70-58</td>
+<td class="num best">+12</td>
+</tr>
+<tr>
+<td>13/09/2026</td>
+<td>J2 · Fora</td>
+<td>NAYOX FORÇA LLEIDA B</td>
+<td class="loss">31-72</td>
+<td class="num loss">−41</td>
+</tr>
+<tr>
+<td>06/09/2026</td>
+<td>J1 · Casa</td>
+<td>TGN BÀSQUET F10A</td>
+<td class="loss">41-66</td>
+<td class="num loss">−25</td>
+</tr>
+<tr class="highlight">
+<td colspan="5">
+<strong>2-3 · 249 PF · 296 PC · −47</strong>
+<span style="margin-left:10px;font-size:.78rem">Casa: 1-2 (−6.3). Fora: 1-1 (−14.0).</span>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="metric">Després de dues derrotes inicials, van encadenar dues victòries. L’últim partit, 54-60 contra CB Blanes A, va ser competitiu.</p>
+</article>
+      <article class="panel">
+<h3>Estadístiques per partit</h3>
+<p class="sub">Dades acumulades dels cinc partits de la temporada. T2C i T3C són conversions; no es mostren percentatges perquè no hi ha tirs fallats registrats.</p>
+<div style="overflow:auto">
+<table>
+<thead>
+<tr>
+<th>Rival</th>
+<th class="num">J</th>
+<th>Data</th>
+<th>R</th>
+<th class="num">PF</th>
+<th class="num">PC</th>
+<th class="num">DIF</th>
+<th class="num">T2C</th>
+<th class="num">T3C</th>
+<th class="num">TLC</th>
+<th class="num">TLI</th>
+<th class="num">TL%</th>
+<th class="num">FC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vs TGN BÀSQUET F10A</td>
+<td class="num">J1</td>
+<td>06/09/2026</td>
+<td class="loss">41-66</td>
+<td class="num">41</td>
+<td class="num">66</td>
+<td class="num loss">−25</td>
+<td class="num">17</td>
+<td class="num">2</td>
+<td class="num">1</td>
+<td class="num">6</td>
+<td class="num">16.7%</td>
+<td class="num">16</td>
+</tr>
+<tr>
+<td>@ NAYOX FORÇA LLEIDA B</td>
+<td class="num">J2</td>
+<td>13/09/2026</td>
+<td class="loss">31-72</td>
+<td class="num">31</td>
+<td class="num best">72</td>
+<td class="num loss">−41</td>
+<td class="num">11</td>
+<td class="num">1</td>
+<td class="num">6</td>
+<td class="num">14</td>
+<td class="num best">42.9%</td>
+<td class="num">15</td>
+</tr>
+<tr>
+<td>vs SESE B</td>
+<td class="num">J3</td>
+<td>20/09/2026</td>
+<td class="best">70-58</td>
+<td class="num best">70</td>
+<td class="num">58</td>
+<td class="num best">+12</td>
+<td class="num best">23</td>
+<td class="num best">6</td>
+<td class="num">6</td>
+<td class="num">18</td>
+<td class="num">33.3%</td>
+<td class="num">24</td>
+</tr>
+<tr>
+<td>@ U. B. LLEFIÀ B</td>
+<td class="num">J4</td>
+<td>26/09/2026</td>
+<td class="best">53-40</td>
+<td class="num">53</td>
+<td class="num">40</td>
+<td class="num best">+13</td>
+<td class="num">17</td>
+<td class="num">4</td>
+<td class="num best">7</td>
+<td class="num best">25</td>
+<td class="num">28.0%</td>
+<td class="num">18</td>
+</tr>
+<tr>
+<td>vs CB BLANES A</td>
+<td class="num">J5</td>
+<td>03/10/2026</td>
+<td class="loss">54-60</td>
+<td class="num">54</td>
+<td class="num">60</td>
+<td class="num loss">−6</td>
+<td class="num">16</td>
+<td class="num best">6</td>
+<td class="num">4</td>
+<td class="num">17</td>
+<td class="num">23.5%</td>
+<td class="num">18</td>
+</tr>
+<tr class="highlight">
+<td colspan="4">
+<strong>Σ / MITJ.</strong>
+</td>
+<td class="num">
+<strong>49.8</strong>
+</td>
+<td class="num">
+<strong>59.2</strong>
+</td>
+<td class="num">
+<strong>−9.4</strong>
+</td>
+<td class="num">
+<strong>16.8</strong>
+</td>
+<td class="num">
+<strong>3.8</strong>
+</td>
+<td class="num">
+<strong>4.8</strong>
+</td>
+<td class="num">
+<strong>16.0</strong>
+</td>
+<td class="num">
+<strong>28.9%</strong>
+</td>
+<td class="num">
+<strong>18.2</strong>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+      <article class="panel">
+<h3>Jugadores clau</h3>
+<p class="sub">Mitjanes individuals dels cinc partits disputats. Les cel·les destacades indiquen el valor més alt de l’equip.</p>
+<div style="overflow:auto">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Jugadora</th>
+<th class="num">PJ</th>
+<th class="num">MIN</th>
+<th class="num">PTS</th>
+<th class="num">T2C</th>
+<th class="num">T3C</th>
+<th class="num">TLC</th>
+<th class="num">TLI</th>
+<th class="num">TL%</th>
+<th class="num">FC</th>
+<th class="num">+/-</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18</td>
+<td>
+<strong>Clara Lopez Jordi</strong>
+</td>
+<td class="num">5</td>
+<td class="num">26.1</td>
+<td class="num best">11.6</td>
+<td class="num best">4.6</td>
+<td class="num best">0.6</td>
+<td class="num">0.6</td>
+<td class="num">3.0</td>
+<td class="num">20.0</td>
+<td class="num">2.0</td>
+<td class="num best">+3.4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>
+<strong>Leire Cancelo Pi</strong>
+</td>
+<td class="num">5</td>
+<td class="num">26.2</td>
+<td class="num">8.4</td>
+<td class="num">2.8</td>
+<td class="num best">0.6</td>
+<td class="num best">1.0</td>
+<td class="num best">3.6</td>
+<td class="num">27.8</td>
+<td class="num">3.6</td>
+<td class="num best">+1.0</td>
+</tr>
+<tr>
+<td>13</td>
+<td>
+<strong>Nelly Krymska Prudkiy</strong>
+</td>
+<td class="num">5</td>
+<td class="num">21.7</td>
+<td class="num">7.6</td>
+<td class="num">1.8</td>
+<td class="num">1.2</td>
+<td class="num">0.4</td>
+<td class="num">1.0</td>
+<td class="num">40.0</td>
+<td class="num">1.4</td>
+<td class="num loss">−12.2</td>
+</tr>
+<tr>
+<td>00</td>
+<td>Mireia Pardos Palahi</td>
+<td class="num">5</td>
+<td class="num best">26.9</td>
+<td class="num">6.2</td>
+<td class="num">2.0</td>
+<td class="num">0.4</td>
+<td class="num best">1.0</td>
+<td class="num">3.2</td>
+<td class="num best">31.3</td>
+<td class="num">2.6</td>
+<td class="num loss">−2.8</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Mariona Pi i Martínez</td>
+<td class="num">5</td>
+<td class="num">22.7</td>
+<td class="num">5.4</td>
+<td class="num">1.4</td>
+<td class="num">0.6</td>
+<td class="num">0.8</td>
+<td class="num">2.6</td>
+<td class="num">30.8</td>
+<td class="num">2.6</td>
+<td class="num loss">−7.2</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Júlia Méndez Franco</td>
+<td class="num">5</td>
+<td class="num">26.3</td>
+<td class="num">3.6</td>
+<td class="num">1.6</td>
+<td class="num">0.0</td>
+<td class="num">0.4</td>
+<td class="num">1.4</td>
+<td class="num">28.6</td>
+<td class="num">2.2</td>
+<td class="num loss">−3.8</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Claudia Ferrer Brao</td>
+<td class="num">5</td>
+<td class="num">16.2</td>
+<td class="num">2.8</td>
+<td class="num">1.0</td>
+<td class="num">0.2</td>
+<td class="num">0.2</td>
+<td class="num">0.4</td>
+<td class="num">50.0</td>
+<td class="num">1.0</td>
+<td class="num loss">−12.4</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Martina Tobed Haro</td>
+<td class="num">5</td>
+<td class="num">19.4</td>
+<td class="num">2.4</td>
+<td class="num">0.8</td>
+<td class="num">0.2</td>
+<td class="num">0.2</td>
+<td class="num">0.4</td>
+<td class="num">50.0</td>
+<td class="num">1.0</td>
+<td class="num loss">−8.4</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Noa Ruiz Bali</td>
+<td class="num">4</td>
+<td class="num">15.7</td>
+<td class="num">2.3</td>
+<td class="num">1.0</td>
+<td class="num">0.0</td>
+<td class="num">0.3</td>
+<td class="num">0.5</td>
+<td class="num">50.0</td>
+<td class="num">2.3</td>
+<td class="num loss">−5.5</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Elsa Rud Pinsach</td>
+<td class="num">1</td>
+<td class="num">9.3</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num">0.0</td>
+<td class="num loss">−1.0</td>
+</tr>
+<tr class="highlight">
+<td colspan="2">
+<strong>TOTAL EQUIP</strong>
+</td>
+<td class="num">
+<strong>5</strong>
+</td>
+<td class="num">
+<strong>200.0</strong>
+</td>
+<td class="num">
+<strong>49.8</strong>
+</td>
+<td class="num">
+<strong>16.8</strong>
+</td>
+<td class="num">
+<strong>3.8</strong>
+</td>
+<td class="num">
+<strong>4.8</strong>
+</td>
+<td class="num">
+<strong>16.0</strong>
+</td>
+<td class="num">
+<strong>30.0</strong>
+</td>
+<td class="num">
+<strong>18.2</strong>
+</td>
+<td class="num">
+<strong>−9.4</strong>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+      <article class="panel half">
+<h3>Lectura per scouting</h3>
+<p class="sub">Punts de partida a contrastar amb el vídeo.</p>
+<div class="callouts">
+<div class="call ok">
+<strong>Partits competits</strong>
+<p>El 54-60 contra CB Blanes A confirma que poden sostenir un partit tancat contra un rival de la zona alta.</p>
+</div>
+<div class="call">
+<strong>Producció interior</strong>
+<p>Les tres principals anotadores disponibles generen sobretot des del 2P. Cal protegir pintura i tancar el rebot defensiu.</p>
+</div>
+<div class="call warn">
+<strong>Contacte i faltes</strong>
+<p>Paula Merce, Alicia Farreras i Joana López visiten sovint la línia. Defensar verticals i sense arribar tard.</p>
+</div>
+<div class="call">
+<strong>Referències clares</strong>
+<p>Paula Merce, Aina Pardo i Alicia Farreras concentren minuts i anotació. Preparar els emparellaments des de l’inici.</p>
+</div>
+</div>
+</article>
+      <article class="panel half">
+<h3>Pla de partit JBF</h3>
+<p class="sub">Base de treball per l’staff.</p>
+<div class="notes">
+<div class="box">
+<h4>Objectius defensius</h4>
+<ul>
+<li>Protegir la pintura sense regalar faltes.</li>
+<li>Identificar les tres principals generadores.</li>
+<li>Tancar el rebot després de cada tir.</li>
+</ul>
+</div>
+<div class="box">
+<h4>Objectius ofensius</h4>
+<ul>
+<li>Jugar amb ritme després del rebot.</li>
+<li>Fer circular la pilota abans de l’1c1.</li>
+<li>Atacar espais i avantatges clars.</li>
+</ul>
+</div>
+<div class="box">
+<h4>Riscos</h4>
+<ul>
+<li>Entrar en un final igualat sense control.</li>
+<li>Concedir segones opcions.</li>
+<li>Carregar-nos de faltes en penetracions.</li>
+</ul>
+</div>
+</div>
+</article>
+      <article class="panel resource-panel">
+<h3>Vídeo i observacions del rival</h3>
+<p class="sub">Afegeix el vídeo del partit i les conclusions. Es comparteixen amb tot l’staff.</p>
+<form class="form" id="resources">
+<div class="field video">
+<label for="video">Vídeo de YouTube</label>
+<input id="video" type="url" placeholder="https://www.youtube.com/watch?...">
+<div class="links">
+<a id="openVideo" target="_blank" hidden>▶ Obrir vídeo</a>
+</div>
+</div>
+<div class="field comments">
+<label for="notes">Comentaris sobre el rival</label>
+<textarea id="notes" placeholder="Fortaleses, patrons ofensius, defensa, jugadores clau, ajustos...">
+</textarea>
+</div>
+<div class="save">
+<button class="btn">Guardar observacions</button>
+<button class="btn alt" id="clear" type="button">Netejar</button>
+<span class="status" id="status">
+</span>
+</div>
+</form>
+</article>
+
+<article class="panel">
+<h3>Producció ofensiva</h3>
+<p class="sub">Acumulat dels cinc partits disputats. El registre mostra 103 conversions de camp: 84 tirs de 2 i 19 tirs de 3, per un total de 225 punts des del camp.</p>
+<div class="kpis">
+<div class="kpi">
+<span>Tirs de camp</span>
+<strong>103</strong>
+</div>
+<div class="kpi">
+<span>Conversions 2P</span>
+<strong>84</strong>
+</div>
+<div class="kpi">
+<span>Conversions 3P</span>
+<strong>19</strong>
+</div>
+<div class="kpi">
+<span>Punts de camp</span>
+<strong>225</strong>
+</div>
+<div class="kpi">
+<span>Perfil</span>
+<strong>82% 2P</strong>
+</div>
+</div>
+<div class="callouts" style="margin-top:14px">
+<div class="call warn">
+<strong>Dada incompleta d’efectivitat</strong>
+<p>La carta només registra tirs anotats (103 de 103). Per això el 100% d’encert i l’EFG% del visor no són indicadors reals: no hi ha tirs fallats carregats.</p>
+</div>
+<div class="call">
+<strong>Lectura defensiva</strong>
+<p>La producció és principalment interior: 84 de les 103 conversions són de 2 punts. Prioritat per protegir pintura, contenir penetracions i tancar el rebot defensiu.</p>
+</div>
+</div>
+</article>
+
+<article class="panel">
+<h3>Rendiment situacional</h3>
+<p class="sub">Mitjanes per partit segons el context, en els cinc partits disputats.</p>
+<div style="overflow:auto">
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th class="num">PJ</th>
+<th class="num">V-D</th>
+<th class="num">PF/P</th>
+<th class="num">PC/P</th>
+<th class="num">DIF/P</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Temporada completa</strong>
+</td>
+<td class="num">5</td>
+<td class="num">2-3</td>
+<td class="num">
+<strong>49.8</strong>
+</td>
+<td class="num">59.2</td>
+<td class="num loss">−9.4</td>
+</tr>
+<tr>
+<td>Com a local</td>
+<td class="num">3</td>
+<td class="num">1-2</td>
+<td class="num">
+<strong>55.0</strong>
+</td>
+<td class="num">61.3</td>
+<td class="num loss">−6.3</td>
+</tr>
+<tr>
+<td>Com a visitant</td>
+<td class="num">2</td>
+<td class="num">1-1</td>
+<td class="num">
+<strong>42.0</strong>
+</td>
+<td class="num">56.0</td>
+<td class="num loss">−14.0</td>
+</tr>
+<tr>
+<td>En victòries</td>
+<td class="num">2</td>
+<td class="num">2-0</td>
+<td class="num">
+<strong>61.5</strong>
+</td>
+<td class="num">49.0</td>
+<td class="num best">+12.5</td>
+</tr>
+<tr>
+<td>En derrotes</td>
+<td class="num">3</td>
+<td class="num">0-3</td>
+<td class="num">
+<strong>42.0</strong>
+</td>
+<td class="num">66.0</td>
+<td class="num loss">−24.0</td>
+</tr>
+<tr>
+<td>Partits trencats (&gt;15)</td>
+<td class="num">2</td>
+<td class="num">0-2</td>
+<td class="num">
+<strong>36.0</strong>
+</td>
+<td class="num">69.0</td>
+<td class="num loss">−33.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+<article class="panel half">
+<h3>Punts per quart</h3>
+<p class="sub">Punts per partit: CESET / rival.</p>
+<table>
+<thead>
+<tr>
+<th>Quart</th>
+<th class="num">PF/P</th>
+<th class="num">PC/P</th>
+<th class="num">DIF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td class="num">12.5</td>
+<td class="num">14.7</td>
+<td class="num loss">−2.2</td>
+</tr>
+<tr>
+<td>P2</td>
+<td class="num">10.7</td>
+<td class="num">13.4</td>
+<td class="num loss">−2.7</td>
+</tr>
+<tr>
+<td>P3</td>
+<td class="num">12.0</td>
+<td class="num">14.1</td>
+<td class="num loss">−2.1</td>
+</tr>
+<tr>
+<td>P4</td>
+<td class="num">
+<strong>14.4</strong>
+</td>
+<td class="num">16.5</td>
+<td class="num loss">−2.1</td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="panel half">
+<h3>Marges de partit</h3>
+<p class="sub">Distribució dels cinc resultats jugats.</p>
+<table>
+<thead>
+<tr>
+<th>Marge</th>
+<th class="num">Partits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="loss">Derrota &gt;15</td>
+<td class="num">2</td>
+</tr>
+<tr>
+<td class="loss">Derrota 6-15</td>
+<td class="num">1</td>
+</tr>
+<tr>
+<td>Derrota 1-5</td>
+<td class="num">0</td>
+</tr>
+<tr>
+<td>Victòria 1-5</td>
+<td class="num">0</td>
+</tr>
+<tr>
+<td class="best">Victòria 6-15</td>
+<td class="num">2</td>
+</tr>
+<tr>
+<td>Victòria &gt;15</td>
+<td class="num">0</td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="panel half">
+<h3>Comparativa directa CESET vs JBF</h3>
+<p class="sub">Comparació de classificació i rendiment per partit abans de la jornada 7.</p>
+<table><thead><tr><th>Equip</th><th class="num">Pos.</th><th class="num">Balanç</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF/P</th></tr></thead><tbody><tr><td>CESET U17 Verd</td><td class="num best">4t</td><td class="num best">2-3</td><td class="num">49.8</td><td class="num">59.2</td><td class="num loss">−9.4</td></tr><tr><td>JBF</td><td class="num">5è</td><td class="num">1-3</td><td class="num best">56.3</td><td class="num best">57.3</td><td class="num best">−1.0</td></tr></tbody></table>
+</article>
+<article class="panel half">
+<h3>Tir lliure</h3>
+<p class="sub">Dada fiable perquè sí es registren intents.</p>
+<div class="kpis"><div class="kpi"><span>TL%</span><strong>30.0%</strong></div><div class="kpi"><span>Total</span><strong>24/80</strong></div><div class="kpi"><span>Intentats / partit</span><strong>16.0</strong></div><div class="kpi"><span>Anotats / partit</span><strong>4.8</strong></div></div>
+</article>
+</section>
+  </main>
+<footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>
     const BASE='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app',PATH='scoutingResources/season-26-27/jbf/ceset-u17-verd';
     const video=document.querySelector('#video'),notes=document.querySelector('#notes'),status=document.querySelector('#status'),openVideo=document.querySelector('#openVideo');
@@ -33,10 +858,59 @@
     video.oninput=syncVideo;document.querySelector('#resources').onsubmit=async event=>{event.preventDefault();status.textContent='Guardant observacions compartides…';try{const response=await fetch(url(PATH),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({videoUrl:video.value.trim(),notes:notes.value.trim(),updatedAt:new Date().toISOString()})});if(!response.ok)throw new Error('save');status.textContent='Observacions guardades i compartides amb l’staff.';syncVideo()}catch(error){status.textContent='No s’han pogut guardar les observacions compartides.'}};document.querySelector('#clear').onclick=async()=>{try{const response=await fetch(url(PATH),{method:'DELETE'});if(!response.ok)throw new Error('delete');video.value=notes.value='';syncVideo();status.textContent='Observacions compartides eliminades.'}catch(error){status.textContent='No s’han pogut eliminar les observacions compartides.'}};load();
   </script>
   <script>
-    (()=>{const grids=[...document.querySelectorAll('main > .grid')],mainGrid=grids[0],find=text=>[...document.querySelectorAll('main article')].find(card=>card.querySelector('h3')?.textContent.includes(text)),hero=mainGrid.firstElementChild,classification=find('Classificació'),last=find('Últims partits'),stats=find('Estadístiques per partit'),players=find('Plantilla'),reading=find('Lectura per scouting'),plan=find('Pla de partit'),resources=find('Vídeo i observacions'),shooting=find('Carta de tir'),situation=find('Rendiment situacional'),quarters=find('Punts per quart'),margins=find('Marges de partit');
+    (()=>{return; const grids=[...document.querySelectorAll('main > .grid')],mainGrid=grids[0],find=text=>[...document.querySelectorAll('main article')].find(card=>card.querySelector('h3')?.textContent.includes(text)),hero=mainGrid.firstElementChild,classification=find('Classificació'),last=find('Últims partits'),stats=find('Estadístiques per partit'),players=find('Plantilla'),reading=find('Lectura per scouting'),plan=find('Pla de partit'),resources=find('Vídeo i observacions'),shooting=find('Carta de tir'),situation=find('Rendiment situacional'),quarters=find('Punts per quart'),margins=find('Marges de partit');
       const card=(title,html)=>{const article=document.createElement('article');article.className='panel half';article.innerHTML=`<h3>${title}</h3>${html}`;return article};
-      const comparison=card('Comparativa directa CESET vs JBF','<p class="sub">Comparació de classificació i rendiment per partit abans de la jornada 7.</p><table><thead><tr><th>Equip</th><th class="num">Pos.</th><th class="num">Balanç</th><th class="num">PF/P</th><th class="num">PC/P</th><th class="num">DIF/P</th></tr></thead><tbody><tr><td>CESET U17 Verd</td><td class="num best">4t</td><td class="num best">2-3</td><td class="num">49.8</td><td class="num">59.2</td><td class="num loss">−9.4</td></tr><tr><td>JBF</td><td class="num">5è</td><td class="num">1-3</td><td class="num best">56.3</td><td class="num best">57.3</td><td class="num best">−1.0</td></tr></tbody></table><p class="metric">Dades de classificació disponibles abans de JBF–CESET.</p>');
-      const freeThrows=card('Tir lliure','<p class="sub">Dada fiable perquè sí es registren intents.</p><div class="kpis"><div class="kpi"><span>TL%</span><strong>30.0%</strong></div><div class="kpi"><span>Total</span><strong>24/80</strong></div><div class="kpi"><span>Intentats / partit</span><strong>16.0</strong></div><div class="kpi"><span>Anotats / partit</span><strong>4.8</strong></div></div>');
+      const comparison=card('Comparativa directa CESET vs JBF','<p class="sub">Comparació de classificació i rendiment per partit abans de la jornada 7.</p>
+<table>
+<thead>
+<tr>
+<th>Equip</th>
+<th class="num">Pos.</th>
+<th class="num">Balanç</th>
+<th class="num">PF/P</th>
+<th class="num">PC/P</th>
+<th class="num">DIF/P</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CESET U17 Verd</td>
+<td class="num best">4t</td>
+<td class="num best">2-3</td>
+<td class="num">49.8</td>
+<td class="num">59.2</td>
+<td class="num loss">−9.4</td>
+</tr>
+<tr>
+<td>JBF</td>
+<td class="num">5è</td>
+<td class="num">1-3</td>
+<td class="num best">56.3</td>
+<td class="num best">57.3</td>
+<td class="num best">−1.0</td>
+</tr>
+</tbody>
+</table>
+<p class="metric">Dades de classificació disponibles abans de JBF–CESET.</p>');
+      const freeThrows=card('Tir lliure','<p class="sub">Dada fiable perquè sí es registren intents.</p>
+<div class="kpis">
+<div class="kpi">
+<span>TL%</span>
+<strong>30.0%</strong>
+</div>
+<div class="kpi">
+<span>Total</span>
+<strong>24/80</strong>
+</div>
+<div class="kpi">
+<span>Intentats / partit</span>
+<strong>16.0</strong>
+</div>
+<div class="kpi">
+<span>Anotats / partit</span>
+<strong>4.8</strong>
+</div>
+</div>');
       shooting.querySelector('h3').textContent='Producció ofensiva';shooting.querySelector('.sub').textContent='Distribució dels 225 punts anotats des del camp en cinc partits.';shooting.classList.add('half');
       players.querySelector('h3').textContent='Jugadores clau';players.querySelector('.sub').textContent='Producció individual per partit. Les cel·les destacades indiquen el valor més alt de l’equip.';
       const details=document.createElement('details');details.style.marginTop='16px';details.innerHTML='<summary style="cursor:pointer;font-weight:800;color:var(--dark)">Veure rendiment situacional, parcials i marges de partit</summary>';details.append(situation,quarters,margins);stats.append(details);

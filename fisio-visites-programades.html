@@ -274,6 +274,9 @@
       const nextAppointment = appointments.find(item => item.date >= todayIso());
       return mondayOf(nextAppointment ? nextAppointment.date : todayIso());
     }
+    function isPastAppointment(appointment){
+      return Boolean(appointment && appointment.date && appointment.date < todayIso());
+    }
     function normalize(data){
       return Object.entries(data || {}).map(([id, request]) => {
         const appointment = request && request.appointment;
@@ -310,12 +313,12 @@
       onAuthStateChanged(auth, setAuthState);
     }
     function openAppointmentEditor(id){
+      const appointment = appointments.find(item => item.id === id);
+      if(!appointment || isPastAppointment(appointment)) return;
       if(!currentUser){
         alert("Inicia sessió amb un compte autoritzat per modificar una visita programada.");
         return;
       }
-      const appointment = appointments.find(item => item.id === id);
-      if(!appointment) return;
       editingAppointmentId = id;
       appointmentPlayer.value = appointment.player || "";
       appointmentDate.value = appointment.date || "";

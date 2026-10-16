@@ -112,7 +112,7 @@
 <body>
   <header>
     <img class="club-logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona" />
-    <div class="htext"><h1><span>CB Sant Josep de Badalona</span>Visites de fisio programades</h1><p>Agenda de les properes cites del servei</p></div>
+    <div class="htext"><h1><span>CB Sant Josep de Badalona</span>Visites de fisio programades</h1><p>Agenda de les cites programades del servei</p></div>
     <button class="auth-button" id="loginButton" type="button">Entrar per editar</button>
     <button class="auth-button" id="logoutButton" type="button" hidden>Sortir</button>
     <div class="logo" aria-hidden="true">🗓</div>
@@ -132,7 +132,7 @@
     </section>
     <section class="panel view-panel" id="agendaPanel" hidden>
       <div class="head">
-        <div><h2>Properes visites</h2><p class="intro">Només es mostren cites programades a partir d’avui.</p></div>
+        <div><h2>Visites programades</h2><p class="intro">Totes les cites programades, incloses les ja passades.</p></div>
       </div>
       <div class="agenda" id="agenda"></div>
     </section>
@@ -271,10 +271,9 @@
       return isoFromDate(date);
     }
     function normalize(data){
-      const today = todayIso();
       return Object.entries(data || {}).map(([id, request]) => {
         const appointment = request && request.appointment;
-        if(!appointment || !appointment.date || !appointment.time || appointment.date < today) return null;
+        if(!appointment || !appointment.date || !appointment.time) return null;
         return { id, date:String(appointment.date), time:String(appointment.time).slice(0, 5), assignedPhysio:String(appointment.assignedPhysio || ""), visitType:appointment.visitType || "", player:request.player || "Jugador/a", team:teamCategory(request.team), gender:String(request.gender || ""), visitCreated:Boolean(request.clinicalVisit && (request.clinicalVisit.visitId || request.clinicalVisit.date)) };
       }).filter(Boolean).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) || a.player.localeCompare(b.player, "ca-ES"));
     }

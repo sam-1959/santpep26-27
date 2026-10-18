@@ -7,7 +7,7 @@
 <title>Tirs lliures de partits · JBF</title>
   <style>
     :root{--brand:#713f97;--dark:#5a2f7d;--bg:#f5f3f8;--ink:#2a2233;--muted:#7a7085;--line:#e6e0ee;--ok:#2e7d32;--card:#fff;--shadow:0 1px 3px #3c28521a,0 4px 16px #3c28520f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff;box-shadow:var(--shadow)}header a{display:inline-flex}.logo{width:48px;height:48px;padding:3px;background:#fff;border-radius:10px;object-fit:contain}.h{flex:1}.h h1{margin:0;font-size:1.05rem}.h h1 span{display:block;font-size:.72rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;opacity:.85}.h p{margin:2px 0 0;font-size:.8rem;opacity:.9}main{width:min(1040px,calc(100% - 24px));margin:0 auto;padding:20px 0 48px}.back{display:inline-flex;margin:0 0 14px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--dark);background:#fff;font-size:.8rem;font-weight:900;text-decoration:none;box-shadow:var(--shadow)}.panel{margin-bottom:15px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow)}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}h2{margin:0;color:var(--dark);font-size:1.08rem}.sub{margin:3px 0 0;color:var(--muted);font-size:.82rem}.match{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.match strong{color:var(--dark);font-size:1.02rem}.meta{color:var(--muted);font-size:.84rem}.metrics{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px}.metric{padding:12px;border:1px solid var(--line);border-radius:12px;background:#faf8fd}.metric span{display:block;color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.metric strong{display:block;margin-top:3px;color:var(--dark);font-size:1.32rem}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--dark);background:#faf8fd;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase}th.num,td.num{text-align:right}.num{white-space:nowrap}.empty{padding:18px;color:var(--muted);text-align:center}.note{margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--brand);border-radius:9px;background:#faf8fd;color:var(--muted);font-size:.82rem}footer{padding:0 16px 24px;color:var(--muted);text-align:center;font-size:.73rem}@media(max-width:620px){main{width:min(100% - 16px,1040px);padding-top:14px}.metrics{grid-template-columns:1fr}th,td{padding:8px 7px}}
-    main > section.panel{display:none}main > section.combined{display:block}.combined th,.combined td{font-size:.78rem}.combined td.num{font-weight:800}
+    main > section.panel{display:none}main > section.combined{display:block}.combined th,.combined td{font-size:.78rem}.combined td.num{font-weight:800}.pct-best{color:var(--ok)}.pct-worst{color:#c62828}
   </style>
 </head>
 <body>
@@ -166,9 +166,9 @@
 <tfoot>
 <tr>
 <th colspan="2">Total equip</th>
-<th class="num">12/26 · 46,2%</th>
+<th class="num">12/26 · <span class="pct-best">46,2%</span></th>
 <th class="num">4/11 · 36,4%</th>
-<th class="num">5/14 · 35,7%</th>
+<th class="num">5/14 · <span class="pct-worst">35,7%</span></th>
 <th class="num">10/27 · 37,0%</th>
 <th class="num">11/25 · 44,0%</th>
 <th class="num">42/103 · 40,8%</th>

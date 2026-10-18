@@ -1,60 +1,771 @@
 <!doctype html>
 <html lang="ca">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="icon" href="assets/favicon.png"><title>Tirs lliures de partits · JBF</title>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+<title>Tirs lliures de partits · JBF</title>
   <style>
     :root{--brand:#713f97;--dark:#5a2f7d;--bg:#f5f3f8;--ink:#2a2233;--muted:#7a7085;--line:#e6e0ee;--ok:#2e7d32;--card:#fff;--shadow:0 1px 3px #3c28521a,0 4px 16px #3c28520f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff;box-shadow:var(--shadow)}header a{display:inline-flex}.logo{width:48px;height:48px;padding:3px;background:#fff;border-radius:10px;object-fit:contain}.h{flex:1}.h h1{margin:0;font-size:1.05rem}.h h1 span{display:block;font-size:.72rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;opacity:.85}.h p{margin:2px 0 0;font-size:.8rem;opacity:.9}main{width:min(1040px,calc(100% - 24px));margin:0 auto;padding:20px 0 48px}.back{display:inline-flex;margin:0 0 14px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--dark);background:#fff;font-size:.8rem;font-weight:900;text-decoration:none;box-shadow:var(--shadow)}.panel{margin-bottom:15px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow)}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}h2{margin:0;color:var(--dark);font-size:1.08rem}.sub{margin:3px 0 0;color:var(--muted);font-size:.82rem}.match{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.match strong{color:var(--dark);font-size:1.02rem}.meta{color:var(--muted);font-size:.84rem}.metrics{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px}.metric{padding:12px;border:1px solid var(--line);border-radius:12px;background:#faf8fd}.metric span{display:block;color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.metric strong{display:block;margin-top:3px;color:var(--dark);font-size:1.32rem}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--dark);background:#faf8fd;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase}th.num,td.num{text-align:right}.num{white-space:nowrap}.empty{padding:18px;color:var(--muted);text-align:center}.note{margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--brand);border-radius:9px;background:#faf8fd;color:var(--muted);font-size:.82rem}footer{padding:0 16px 24px;color:var(--muted);text-align:center;font-size:.73rem}@media(max-width:620px){main{width:min(100% - 16px,1040px);padding-top:14px}.metrics{grid-template-columns:1fr}th,td{padding:8px 7px}}
     main > section.panel{display:none}main > section.combined{display:block}.combined th,.combined td{font-size:.78rem}.combined td.num{font-weight:800}
   </style>
 </head>
 <body>
-  <header><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona"><div class="h"><h1><span>CB Sant Josep de Badalona</span>Tirs lliures de partits · Júnior B F</h1><p>Registre separat dels tirs lliures d’entrenament</p></div></header>
+  <header>
+<img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep de Badalona">
+<div class="h">
+<h1>
+<span>CB Sant Josep de Badalona</span>Tirs lliures de partits · Júnior B F</h1>
+<p>Registre separat dels tirs lliures d’entrenament</p>
+</div>
+</header>
   <main>
     <section class="panel combined">
-      <div class="panel-head"><div><h2>Tirs lliures de partits · JBF</h2><p class="sub">Cada cel·la mostra anotats / intentats. La darrera columna és l’acumulat dels quatre partits.</p></div></div>
-      <div class="table-wrap"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Nayox<br>05/09</th><th class="num">UB Llefià<br>12/09</th><th class="num">TGN<br>27/09</th><th class="num">Blanes<br>10/10</th><th class="num">Total</th></tr></thead><tbody>
-        <tr><td>1</td><td>Martina Rubio</td><td class="num">4/6</td><td class="num">1/2</td><td class="num">3/5</td><td class="num">—</td><td class="num">8/13 · 61,5%</td></tr><tr><td>4/7</td><td>Aina Villà</td><td class="num">2/4</td><td class="num">0/0</td><td class="num">0/2</td><td class="num">0/2</td><td class="num">2/8 · 25,0%</td></tr><tr><td>5</td><td>Martina Guaita</td><td class="num">4/8</td><td class="num">0/0</td><td class="num">—</td><td class="num">1/4</td><td class="num">5/12 · 41,7%</td></tr><tr><td>6</td><td>Martina Rueda</td><td class="num">0/4</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">3/4</td><td class="num">3/8 · 37,5%</td></tr><tr><td>10</td><td>Thaïs Sampera</td><td class="num">—</td><td class="num">1/2</td><td class="num">0/0</td><td class="num">0/2</td><td class="num">1/4 · 25,0%</td></tr><tr><td>13/22</td><td>Carla Perramón</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">1/2</td><td class="num">1/2 · 50,0%</td></tr><tr><td>14</td><td>Clàudia Gàmiz</td><td class="num">0/2</td><td class="num">0/1</td><td class="num">0/1</td><td class="num">1/5</td><td class="num">1/9 · 11,1%</td></tr><tr><td>16</td><td>Joana Pla</td><td class="num">2/2</td><td class="num">0/2</td><td class="num">2/4</td><td class="num">3/6</td><td class="num">7/14 · 50,0%</td></tr><tr><td>18</td><td>Ainhoa Espinal</td><td class="num">0/0</td><td class="num">2/4</td><td class="num">0/0</td><td class="num">1/2</td><td class="num">3/6 · 50,0%</td></tr><tr><td>30</td><td>Caterina Figueras</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/2</td><td class="num">0/0</td><td class="num">0/2 · 0,0%</td></tr><tr><td>9</td><td>Queralt Gratacos</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0 · —</td></tr><tr><td>77</td><td>Noa Ambel</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0</td><td class="num">0/0 · —</td></tr>
-      </tbody><tfoot><tr><th colspan="2">Total equip</th><th class="num">12/26</th><th class="num">4/11</th><th class="num">5/14</th><th class="num">10/27</th><th class="num">31/78 · 39,7%</th></tr></tfoot></table></div>
+      <div class="panel-head">
+<div>
+<h2>Tirs lliures de partits · JBF</h2>
+<p class="sub">Cada cel·la mostra anotats / intentats. La darrera columna és l’acumulat dels cinc partits.</p>
+</div>
+</div>
+      <div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dorsal</th>
+<th>Jugadora</th>
+<th class="num">Nayox<br>05/09</th>
+<th class="num">UB Llefià<br>12/09</th>
+<th class="num">TGN<br>27/09</th>
+<th class="num">Blanes<br>10/10</th>
+<th class="num">CESET<br>18/10</th>
+<th class="num">Total</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>1</td>
+<td>Martina Rubio</td>
+<td class="num">4/6</td>
+<td class="num">1/2</td>
+<td class="num">3/5</td>
+<td class="num">—</td>
+<td class="num">5/8</td>
+<td class="num">13/21 · 61,9%</td>
+</tr>
+<tr>
+<td>4/7</td>
+<td>Aina Villà</td>
+<td class="num">2/4</td>
+<td class="num">0/0</td>
+<td class="num">0/2</td>
+<td class="num">0/2</td>
+<td class="num">3/4</td>
+<td class="num">5/12 · 41,7%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Martina Guaita</td>
+<td class="num">4/8</td>
+<td class="num">0/0</td>
+<td class="num">—</td>
+<td class="num">1/4</td>
+<td class="num">1/2</td>
+<td class="num">6/14 · 42,9%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martina Rueda</td>
+<td class="num">0/4</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">3/4</td>
+<td class="num">1/4</td>
+<td class="num">4/12 · 33,3%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Thaïs Sampera</td>
+<td class="num">—</td>
+<td class="num">1/2</td>
+<td class="num">0/0</td>
+<td class="num">0/2</td>
+<td class="num">0/2</td>
+<td class="num">1/6 · 16,7%</td>
+</tr>
+<tr>
+<td>13/22</td>
+<td>Carla Perramón</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">1/2</td>
+<td class="num">0/0</td>
+<td class="num">1/2 · 50,0%</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Clàudia Gàmiz</td>
+<td class="num">0/2</td>
+<td class="num">0/1</td>
+<td class="num">0/1</td>
+<td class="num">1/5</td>
+<td class="num">1/4</td>
+<td class="num">2/13 · 15,4%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Joana Pla</td>
+<td class="num">2/2</td>
+<td class="num">0/2</td>
+<td class="num">2/4</td>
+<td class="num">3/6</td>
+<td class="num">0/0</td>
+<td class="num">7/14 · 50,0%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ainhoa Espinal</td>
+<td class="num">0/0</td>
+<td class="num">2/4</td>
+<td class="num">0/0</td>
+<td class="num">1/2</td>
+<td class="num">0/0</td>
+<td class="num">3/6 · 50,0%</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Caterina Figueras</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/2</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/2 · 0,0%</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Queralt Gratacos</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0 · —</td>
+</tr>
+<tr>
+<td>77</td>
+<td>Noa Ambel</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/0</td>
+<td class="num">0/1</td>
+<td class="num">0/1 · 0,0%</td>
+</tr>
+      </tbody>
+<tfoot>
+<tr>
+<th colspan="2">Total equip</th>
+<th class="num">12/26</th>
+<th class="num">4/11</th>
+<th class="num">5/14</th>
+<th class="num">10/27</th>
+<th class="num">11/25</th>
+<th class="num">42/103 · 40,8%</th>
+</tr>
+</tfoot>
+</table>
+</div>
     </section>
     <section class="panel">
-      <div class="panel-head"><div><h2>JBF · NAYOX FORÇA LLEIDA B</h2><p class="sub">Dissabte 05/09/2026 · Jornada 1 · Pavelló La Colina · Resultat 53–77</p></div></div>
-      <div class="match"><div><strong>Tirs lliures de l’equip A (JBF)</strong><div class="meta">Dades extretes de l’acta oficial del partit.</div><a class="back" href="#nayox">Veure desglossament per jugadora ↓</a></div><div class="metrics"><div class="metric"><span>Anotats</span><strong>12</strong></div><div class="metric"><span>Intentats</span><strong>26</strong></div><div class="metric"><span>Percentatge</span><strong>46,2%</strong></div></div></div>
+      <div class="panel-head">
+<div>
+<h2>JBF · NAYOX FORÇA LLEIDA B</h2>
+<p class="sub">Dissabte 05/09/2026 · Jornada 1 · Pavelló La Colina · Resultat 53–77</p>
+</div>
+</div>
+      <div class="match">
+<div>
+<strong>Tirs lliures de l’equip A (JBF)</strong>
+<div class="meta">Dades extretes de l’acta oficial del partit.</div>
+<a class="back" href="#nayox">Veure desglossament per jugadora ↓</a>
+</div>
+<div class="metrics">
+<div class="metric">
+<span>Anotats</span>
+<strong>12</strong>
+</div>
+<div class="metric">
+<span>Intentats</span>
+<strong>26</strong>
+</div>
+<div class="metric">
+<span>Percentatge</span>
+<strong>46,2%</strong>
+</div>
+</div>
+</div>
     </section>
     <section class="panel" id="totals">
-      <div class="panel-head"><div><h2>Totals acumulats · 4 partits</h2><p class="sub">Tirs lliures de competició del JBF, sumant Nayox, UB Llefià, TGN Bàsquet i CB Blanes.</p></div></div>
-      <div class="match"><div><strong>Equip</strong><div class="meta">31 anotats de 78 intents.</div></div><div class="metrics"><div class="metric"><span>Anotats</span><strong>31</strong></div><div class="metric"><span>Intentats</span><strong>78</strong></div><div class="metric"><span>Percentatge</span><strong>39,7%</strong></div></div></div>
-      <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>
-        <tr><td>Martina Rubio</td><td class="num">8</td><td class="num">13</td><td class="num">61,5%</td></tr><tr><td>Aina Villà</td><td class="num">2</td><td class="num">8</td><td class="num">25,0%</td></tr><tr><td>Martina Guaita</td><td class="num">5</td><td class="num">12</td><td class="num">41,7%</td></tr><tr><td>Martina Rueda</td><td class="num">3</td><td class="num">8</td><td class="num">37,5%</td></tr><tr><td>Thaïs Sampera</td><td class="num">1</td><td class="num">4</td><td class="num">25,0%</td></tr><tr><td>Clàudia Gàmiz</td><td class="num">1</td><td class="num">9</td><td class="num">11,1%</td></tr><tr><td>Joana Pla</td><td class="num">7</td><td class="num">14</td><td class="num">50,0%</td></tr><tr><td>Ainhoa Espinal</td><td class="num">3</td><td class="num">6</td><td class="num">50,0%</td></tr><tr><td>Caterina Figueras</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>Carla Perramón</td><td class="num">1</td><td class="num">2</td><td class="num">50,0%</td></tr><tr><td>Queralt Gratacos</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>Noa Ambel</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr>
-      </tbody></table></div>
+      <div class="panel-head">
+<div>
+<h2>Totals acumulats · 4 partits</h2>
+<p class="sub">Tirs lliures de competició del JBF, sumant Nayox, UB Llefià, TGN Bàsquet i CB Blanes.</p>
+</div>
+</div>
+      <div class="match">
+<div>
+<strong>Equip</strong>
+<div class="meta">31 anotats de 78 intents.</div>
+</div>
+<div class="metrics">
+<div class="metric">
+<span>Anotats</span>
+<strong>31</strong>
+</div>
+<div class="metric">
+<span>Intentats</span>
+<strong>78</strong>
+</div>
+<div class="metric">
+<span>Percentatge</span>
+<strong>39,7%</strong>
+</div>
+</div>
+</div>
+      <div class="table-wrap" style="margin-top:14px">
+<table>
+<thead>
+<tr>
+<th>Jugadora</th>
+<th class="num">Anotats</th>
+<th class="num">Intentats</th>
+<th class="num">%</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>Martina Rubio</td>
+<td class="num">8</td>
+<td class="num">13</td>
+<td class="num">61,5%</td>
+</tr>
+<tr>
+<td>Aina Villà</td>
+<td class="num">2</td>
+<td class="num">8</td>
+<td class="num">25,0%</td>
+</tr>
+<tr>
+<td>Martina Guaita</td>
+<td class="num">5</td>
+<td class="num">12</td>
+<td class="num">41,7%</td>
+</tr>
+<tr>
+<td>Martina Rueda</td>
+<td class="num">3</td>
+<td class="num">8</td>
+<td class="num">37,5%</td>
+</tr>
+<tr>
+<td>Thaïs Sampera</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">25,0%</td>
+</tr>
+<tr>
+<td>Clàudia Gàmiz</td>
+<td class="num">1</td>
+<td class="num">9</td>
+<td class="num">11,1%</td>
+</tr>
+<tr>
+<td>Joana Pla</td>
+<td class="num">7</td>
+<td class="num">14</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>Ainhoa Espinal</td>
+<td class="num">3</td>
+<td class="num">6</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>Caterina Figueras</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>Carla Perramón</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>Queralt Gratacos</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>Noa Ambel</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+      </tbody>
+</table>
+</div>
     </section>
     <section class="panel">
-      <div class="panel-head"><div><h2>CB Blanes A · JBF</h2><p class="sub">Partit a fora · JBF: 51 punts</p></div></div>
-      <div class="match"><div><strong>Tirs lliures del JBF</strong><div class="meta">Dades de l’estadística oficial del partit.</div></div><div class="metrics"><div class="metric"><span>Anotats</span><strong>10</strong></div><div class="metric"><span>Intentats</span><strong>27</strong></div><div class="metric"><span>Percentatge</span><strong>37,0%</strong></div></div></div>
-      <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>
-        <tr><td>5</td><td>Martina Guaita</td><td class="num">1</td><td class="num">4</td><td class="num">25,0%</td></tr><tr><td>6</td><td>Martina Rueda</td><td class="num">3</td><td class="num">4</td><td class="num">75,0%</td></tr><tr><td>7</td><td>Aina Villà</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>10</td><td>Thaïs Sampera</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>13</td><td>Carla Perramón</td><td class="num">1</td><td class="num">2</td><td class="num">50,0%</td></tr><tr><td>14</td><td>Clàudia Gàmiz</td><td class="num">1</td><td class="num">5</td><td class="num">20,0%</td></tr><tr><td>16</td><td>Joana Pla</td><td class="num">3</td><td class="num">6</td><td class="num">50,0%</td></tr><tr><td>18</td><td>Ainhoa Espinal</td><td class="num">1</td><td class="num">2</td><td class="num">50,0%</td></tr><tr><td>30</td><td>Caterina Figueras</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>77</td><td>Noa Ambel</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr>
-      </tbody></table></div>
+      <div class="panel-head">
+<div>
+<h2>CB Blanes A · JBF</h2>
+<p class="sub">Partit a fora · JBF: 51 punts</p>
+</div>
+</div>
+      <div class="match">
+<div>
+<strong>Tirs lliures del JBF</strong>
+<div class="meta">Dades de l’estadística oficial del partit.</div>
+</div>
+<div class="metrics">
+<div class="metric">
+<span>Anotats</span>
+<strong>10</strong>
+</div>
+<div class="metric">
+<span>Intentats</span>
+<strong>27</strong>
+</div>
+<div class="metric">
+<span>Percentatge</span>
+<strong>37,0%</strong>
+</div>
+</div>
+</div>
+      <div class="table-wrap" style="margin-top:14px">
+<table>
+<thead>
+<tr>
+<th>Dorsal</th>
+<th>Jugadora</th>
+<th class="num">Anotats</th>
+<th class="num">Intentats</th>
+<th class="num">%</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>5</td>
+<td>Martina Guaita</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">25,0%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martina Rueda</td>
+<td class="num">3</td>
+<td class="num">4</td>
+<td class="num">75,0%</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Aina Villà</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Thaïs Sampera</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Carla Perramón</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Clàudia Gàmiz</td>
+<td class="num">1</td>
+<td class="num">5</td>
+<td class="num">20,0%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Joana Pla</td>
+<td class="num">3</td>
+<td class="num">6</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ainhoa Espinal</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Caterina Figueras</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>77</td>
+<td>Noa Ambel</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+      </tbody>
+</table>
+</div>
     </section>
     <section class="panel">
-      <div class="panel-head"><div><h2>TGN BÀSQUET F10A · JBF</h2><p class="sub">Partit a fora · JBF: 56 punts</p></div></div>
-      <div class="match"><div><strong>Tirs lliures del JBF</strong><div class="meta">Dades de l’estadística oficial del partit.</div></div><div class="metrics"><div class="metric"><span>Anotats</span><strong>5</strong></div><div class="metric"><span>Intentats</span><strong>14</strong></div><div class="metric"><span>Percentatge</span><strong>35,7%</strong></div></div></div>
-      <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>
-        <tr><td>1</td><td>Martina Rubio</td><td class="num">3</td><td class="num">5</td><td class="num">60,0%</td></tr><tr><td>6</td><td>Martina Rueda</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>7</td><td>Aina Villà</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>10</td><td>Thaïs Sampera</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>13</td><td>Carla Perramón</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>14</td><td>Clàudia Gàmiz</td><td class="num">0</td><td class="num">1</td><td class="num">0,0%</td></tr><tr><td>16</td><td>Joana Pla</td><td class="num">2</td><td class="num">4</td><td class="num">50,0%</td></tr><tr><td>18</td><td>Ainhoa Espinal</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>30</td><td>Caterina Figueras</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>77</td><td>Noa Ambel</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr>
-      </tbody></table></div>
+      <div class="panel-head">
+<div>
+<h2>TGN BÀSQUET F10A · JBF</h2>
+<p class="sub">Partit a fora · JBF: 56 punts</p>
+</div>
+</div>
+      <div class="match">
+<div>
+<strong>Tirs lliures del JBF</strong>
+<div class="meta">Dades de l’estadística oficial del partit.</div>
+</div>
+<div class="metrics">
+<div class="metric">
+<span>Anotats</span>
+<strong>5</strong>
+</div>
+<div class="metric">
+<span>Intentats</span>
+<strong>14</strong>
+</div>
+<div class="metric">
+<span>Percentatge</span>
+<strong>35,7%</strong>
+</div>
+</div>
+</div>
+      <div class="table-wrap" style="margin-top:14px">
+<table>
+<thead>
+<tr>
+<th>Dorsal</th>
+<th>Jugadora</th>
+<th class="num">Anotats</th>
+<th class="num">Intentats</th>
+<th class="num">%</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>1</td>
+<td>Martina Rubio</td>
+<td class="num">3</td>
+<td class="num">5</td>
+<td class="num">60,0%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martina Rueda</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Aina Villà</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Thaïs Sampera</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Carla Perramón</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Clàudia Gàmiz</td>
+<td class="num">0</td>
+<td class="num">1</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Joana Pla</td>
+<td class="num">2</td>
+<td class="num">4</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ainhoa Espinal</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Caterina Figueras</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>77</td>
+<td>Noa Ambel</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+      </tbody>
+</table>
+</div>
     </section>
     <section class="panel" id="nayox">
-      <div class="panel-head"><div><h2>JBF · NAYOX FORÇA LLEIDA B — desglossament per jugadora</h2><p class="sub">Dades de l’estadística oficial del partit.</p></div></div>
-      <div class="table-wrap"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>
-        <tr><td>1</td><td>Martina Rubio Matias</td><td class="num">4</td><td class="num">6</td><td class="num">66,7%</td></tr><tr><td>4</td><td>Aina Villà Balmes</td><td class="num">2</td><td class="num">4</td><td class="num">50,0%</td></tr><tr><td>5</td><td>Martina Guaita Ferrer</td><td class="num">4</td><td class="num">8</td><td class="num">50,0%</td></tr><tr><td>6</td><td>Martina Rueda Ramos</td><td class="num">0</td><td class="num">4</td><td class="num">0,0%</td></tr><tr><td>9</td><td>Queralt Gratacos Canals</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>10</td><td>Noa Ambel Rodriguez</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>11</td><td>Caterina Figueras Viñes</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>14</td><td>Clàudia Gàmiz Roset</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>16</td><td>Joana Pla Pujol</td><td class="num">2</td><td class="num">2</td><td class="num">100,0%</td></tr><tr><td>18</td><td>Ainhoa Espinal Lopez</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>22</td><td>Carla Perramón Navarro</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr>
-      </tbody></table></div>
+      <div class="panel-head">
+<div>
+<h2>JBF · NAYOX FORÇA LLEIDA B — desglossament per jugadora</h2>
+<p class="sub">Dades de l’estadística oficial del partit.</p>
+</div>
+</div>
+      <div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dorsal</th>
+<th>Jugadora</th>
+<th class="num">Anotats</th>
+<th class="num">Intentats</th>
+<th class="num">%</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>1</td>
+<td>Martina Rubio Matias</td>
+<td class="num">4</td>
+<td class="num">6</td>
+<td class="num">66,7%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Aina Villà Balmes</td>
+<td class="num">2</td>
+<td class="num">4</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Martina Guaita Ferrer</td>
+<td class="num">4</td>
+<td class="num">8</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martina Rueda Ramos</td>
+<td class="num">0</td>
+<td class="num">4</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Queralt Gratacos Canals</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Noa Ambel Rodriguez</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Caterina Figueras Viñes</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Clàudia Gàmiz Roset</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Joana Pla Pujol</td>
+<td class="num">2</td>
+<td class="num">2</td>
+<td class="num">100,0%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ainhoa Espinal Lopez</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Carla Perramón Navarro</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+      </tbody>
+</table>
+</div>
       <p class="note">La taula d’entrenaments continua independent. Aquest espai recull exclusivament estadístiques de partits oficials.</p>
     </section>
     <section class="panel">
-      <div class="panel-head"><div><h2>UB Llefià B · JBF</h2><p class="sub">Dissabte 12/09/2026 · Partit a fora · JBF: 65 punts</p></div></div>
-      <div class="match"><div><strong>Tirs lliures del JBF</strong><div class="meta">Dades de l’estadística oficial del partit.</div></div><div class="metrics"><div class="metric"><span>Anotats</span><strong>4</strong></div><div class="metric"><span>Intentats</span><strong>11</strong></div><div class="metric"><span>Percentatge</span><strong>36,4%</strong></div></div></div>
-      <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Dorsal</th><th>Jugadora</th><th class="num">Anotats</th><th class="num">Intentats</th><th class="num">%</th></tr></thead><tbody>
-        <tr><td>1</td><td>Martina Rubio</td><td class="num">1</td><td class="num">2</td><td class="num">50,0%</td></tr><tr><td>5</td><td>Martina Guaita</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>6</td><td>Martina Rueda</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>7</td><td>Aina Villà</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>10</td><td>Thaïs Sampera</td><td class="num">1</td><td class="num">2</td><td class="num">50,0%</td></tr><tr><td>13</td><td>Carla Perramón</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>14</td><td>Clàudia Gàmiz</td><td class="num">0</td><td class="num">1</td><td class="num">0,0%</td></tr><tr><td>16</td><td>Joana Pla</td><td class="num">0</td><td class="num">2</td><td class="num">0,0%</td></tr><tr><td>18</td><td>Ainhoa Espinal</td><td class="num">2</td><td class="num">4</td><td class="num">50,0%</td></tr><tr><td>30</td><td>Caterina Figueras</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr><tr><td>77</td><td>Noa Ambel</td><td class="num">0</td><td class="num">0</td><td class="num">—</td></tr>
-      </tbody></table></div>
+      <div class="panel-head">
+<div>
+<h2>UB Llefià B · JBF</h2>
+<p class="sub">Dissabte 12/09/2026 · Partit a fora · JBF: 65 punts</p>
+</div>
+</div>
+      <div class="match">
+<div>
+<strong>Tirs lliures del JBF</strong>
+<div class="meta">Dades de l’estadística oficial del partit.</div>
+</div>
+<div class="metrics">
+<div class="metric">
+<span>Anotats</span>
+<strong>4</strong>
+</div>
+<div class="metric">
+<span>Intentats</span>
+<strong>11</strong>
+</div>
+<div class="metric">
+<span>Percentatge</span>
+<strong>36,4%</strong>
+</div>
+</div>
+</div>
+      <div class="table-wrap" style="margin-top:14px">
+<table>
+<thead>
+<tr>
+<th>Dorsal</th>
+<th>Jugadora</th>
+<th class="num">Anotats</th>
+<th class="num">Intentats</th>
+<th class="num">%</th>
+</tr>
+</thead>
+<tbody>
+        <tr>
+<td>1</td>
+<td>Martina Rubio</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Martina Guaita</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martina Rueda</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Aina Villà</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Thaïs Sampera</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Carla Perramón</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Clàudia Gàmiz</td>
+<td class="num">0</td>
+<td class="num">1</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Joana Pla</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0,0%</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ainhoa Espinal</td>
+<td class="num">2</td>
+<td class="num">4</td>
+<td class="num">50,0%</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Caterina Figueras</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+<tr>
+<td>77</td>
+<td>Noa Ambel</td>
+<td class="num">0</td>
+<td class="num">0</td>
+<td class="num">—</td>
+</tr>
+      </tbody>
+</table>
+</div>
     </section>
   </main>
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>

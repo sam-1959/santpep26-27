@@ -117,6 +117,10 @@
       titleMap: {},
       titleRows: []
     };
+    const LOCAL_COACH_ROWS = [
+      { name:"Leire", surname:"Fernández", team:"SAF", polo:"M", hoodie:"M", pants:"M" },
+      { name:"Biel", surname:"Prats", team:"SBM", polo:"M", hoodie:"M", pants:"L" }
+    ];
     const els = {
       status: document.getElementById("status"),
       notes: document.getElementById("notes"),
@@ -233,7 +237,7 @@
       ]);
       state.hasTitle = titleIdx >= 0;
       state.notes = [...new Set(raw.flatMap(row => row.slice(6).map(clean)).filter(Boolean))];
-      return raw.slice(1).map(row => ({
+      const sheetRows = raw.slice(1).map(row => ({
         name: clean(row[0]),
         surname: clean(row[1]),
         team: clean(row[2]),
@@ -242,6 +246,10 @@
         pants: clean(row[5]),
         title: titleIdx >= 0 ? clean(row[titleIdx]) : ""
       })).filter(r => r.name || r.surname || r.team);
+      const known = new Set(sheetRows.map(r => key([r.name, r.surname, r.team].join("|"))));
+      return sheetRows.concat(LOCAL_COACH_ROWS.filter(r =>
+        !known.has(key([r.name, r.surname, r.team].join("|")))
+      ));
     }
     function filteredRows(){
       const q = key(state.query);

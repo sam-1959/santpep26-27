@@ -191,9 +191,13 @@
     .change-kind { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
     .change-main { font-weight:700; font-size:0.9rem; }
     .change-detail { color:var(--muted); font-size:0.8rem; }
-    .conflict-week-link, .change-week-link { margin-top:8px; border:1px solid #c62828; border-radius:6px; background:#fff; color:#a51d1d;
+    .conflict-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .conflict-week-link, .conflict-resolve, .change-week-link { border:1px solid #c62828; border-radius:6px; background:#fff; color:#a51d1d;
       padding:5px 8px; font-size:.72rem; font-weight:800; cursor:pointer; }
     .conflict-week-link:hover, .change-week-link:hover { background:#fff1f1; }
+    .conflict-resolve { border-color:#2e7d32; color:#1b5e20; }
+    .conflict-resolve:hover { background:#edf8ee; }
+    .conflict-resolve:disabled { opacity:.55; cursor:wait; }
     .change-week-link { border-color:var(--brand); color:var(--brand-dark); }
     .change-week-link:hover { background:#f6f0fb; }
     .empty-filter { color:var(--muted); font-style:italic; text-align:center; padding:40px 0; }
@@ -352,6 +356,7 @@
     function gameEditDataAttribute(g){ return encodeURIComponent(gameEditKey(g)); }
     let gameEdits={};
     let manualChanges=[];
+    const resolvedConflictKeys=new Set();
 
     const changedGames=new Set();
     const STORM_CANCELLED_FROM='2026-10-03T17:00';
@@ -369,6 +374,16 @@
       });
     }
     rebuildChangedGames();
+
+    function rebuildResolvedConflicts(){
+      resolvedConflictKeys.clear();
+      manualChanges.forEach(function(change){
+        if(change && change.type==='conflict_resolved' && change.conflictKey){
+          resolvedConflictKeys.add(change.conflictKey);
+        }
+      });
+    }
+    rebuildResolvedConflicts();
 
     function firebaseDataUrl(path, token){
       const base = FIREBASE_DB_URL.replace(/\/$/, "");
@@ -405,6 +420,7 @@
         if(remote && Array.isArray(remote.weeks) && remote.weeks.length){
           DATA = remote;
           manualChanges=Object.keys(remote.manualChanges || {}).map(function(id){ return remote.manualChanges[id]; }).filter(Boolean);
+          rebuildResolvedConflicts();
         }
       }catch(err){
         console.warn("No s'han pogut carregar els calendaris de Firebase; s'utilitzen les dades incrustades.", err);
@@ -509,7 +525,7 @@
         if(!gamesByPlaceTime.has(key)) gamesByPlaceTime.set(key,[]);
         gamesByPlaceTime.get(key).push(g);
       }); });
-      gamesByPlaceTime.forEach(function(games,key){ if(games.length>1 && !isAllowedSmallBasketSlot(games)) conflictKeys.add(key); });
+      gamesByPlaceTime.forEach(function(games,key){ if(games.length>1 && !isAllowedSmallBasketSlot(games) && !resolvedConflictKeys.has(key)) conflictKeys.add(key); });
     }
     rebuildConflicts();
 
@@ -537,6 +553,7 @@
       gamesByPlaceTime.forEach(function(games,key){
         if(games.length<=1) return;
         if(isAllowedSmallBasketSlot(games)) return;
+        if(resolvedConflictKeys.has(key)) return;
         conflicts.push({key,games});
       });
       if(!conflicts.length) return '';
@@ -549,7 +566,8 @@
         }).join('');
         return '<li class="change-item conflict"><div class="change-kind">Conflicte</div>' +
           '<div class="change-main">' + fmtDateNumeric(first.date) + ' ' + first.time + ' · ' + loc + '</div>' + teams +
-          '<button type="button" class="conflict-week-link" data-conflict-date="' + first.date + '">Veure setmana →</button></li>';
+          '<div class="conflict-actions"><button type="button" class="conflict-week-link" data-conflict-date="' + first.date + '">Veure setmana →</button>' +
+          '<button type="button" class="conflict-resolve" data-conflict-key="' + encodeURIComponent(c.key) + '" data-conflict-date="' + first.date + '">✓ Resolt</button></div></li>';
       }).join('');
       return '<section class="changes conflicts"><h3>Conflictes</h3>' +
         '<p class="changes-meta">Partits amb el mateix dia, hora i lloc.</p>' +
@@ -753,6 +771,36 @@
       });
     }
 
+    function bindConflictResolutionActions(){
+      document.querySelectorAll('.conflict-resolve').forEach(function(button){
+        button.onclick=async function(){
+          const conflictKey=decodeURIComponent(button.dataset.conflictKey || '');
+          if(!conflictKey || resolvedConflictKeys.has(conflictKey)) return;
+          if(!confirm('Marcar aquest conflicte com a resolt? No tornarà a aparèixer al llistat.')) return;
+          button.disabled=true;
+          button.textContent='Desant…';
+          try{
+            const token=await getCalendarToken(true);
+            if(!token) throw new Error('No s\'ha pogut autenticar l\'usuari.');
+            await saveManualChange({
+              type:'conflict_resolved',
+              conflictKey:conflictKey,
+              conflictDate:button.dataset.conflictDate || '',
+              importedAt:new Date().toISOString()
+            }, token);
+            rebuildResolvedConflicts();
+            rebuildConflicts();
+            renderContent();
+          }catch(error){
+            console.error('No s\'ha pogut marcar el conflicte com a resolt.', error);
+            button.disabled=false;
+            button.textContent='✓ Resolt';
+            alert('No s\'ha pogut marcar el conflicte com a resolt: ' + (error.message || error));
+          }
+        };
+      });
+    }
+
     function showWeekForDate(date){
       if(!date) return;
       const weekIndex=DATA.weeks.findIndex(function(week){
@@ -785,6 +833,7 @@
       });
       const manualCutoff=Date.now() - (7 * 24 * 60 * 60 * 1000);
       const recentManualChanges=manualChanges.filter(function(change){
+        if(change && change.type==='conflict_resolved') return false;
         const changedAt=new Date(change && change.importedAt).getTime();
         return Number.isFinite(changedAt) && changedAt >= manualCutoff;
       });
@@ -1036,6 +1085,7 @@
       content.innerHTML = '<div class="agenda-layout"><div>' + weekHtml + venueLegend + iconLegend() + '</div><aside class="agenda-side">' + conflicts + renderLatestChanges() + '</aside></div>';
       bindChangesNav();
       bindConflictWeekNav();
+      bindConflictResolutionActions();
       bindChangeWeekNav();
       bindGameEditors();
     }

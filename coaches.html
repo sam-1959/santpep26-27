@@ -130,6 +130,10 @@
       { name:"Leire", surname:"Fernández", team:"IF", polo:"M", hoodie:"M", pants:"M", orderGroup:"pending" },
       { name:"Biel", surname:"Prats", team:"PBM", polo:"M", hoodie:"M", pants:"L", orderGroup:"pending" }
     ];
+    const TEAM_NORMALIZATION = {
+      CAF: "CF",
+      IBF: "IF"
+    };
     const els = {
       status: document.getElementById("status"),
       notes: document.getElementById("notes"),
@@ -142,6 +146,7 @@
     function val(cell){ return cell && cell.v != null ? String(cell.v).trim() : ""; }
     function clean(s){ return String(s || "").replace(/\s+/g, " ").trim(); }
     function key(s){ return clean(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+    function normalizedTeam(team){ return TEAM_NORMALIZATION[clean(team)] || clean(team); }
     function esc(s){
       return clean(s).replace(/[&<>"']/g, c => ({
         "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
@@ -249,7 +254,7 @@
       const sheetRows = raw.slice(1).map(row => ({
         name: clean(row[0]),
         surname: clean(row[1]),
-        team: clean(row[2]),
+        team: normalizedTeam(row[2]),
         polo: clean(row[3]),
         hoodie: clean(row[4]),
         pants: clean(row[5]),

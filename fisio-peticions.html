@@ -95,8 +95,8 @@
     .whatsapp-link::before { content:"💬 "; }
     .whatsapp-link:hover { text-decoration:underline; }
     .whatsapp-link.empty { background:#f1eef5; color:var(--muted); pointer-events:none; }
-    .edit-button, .appointment-button { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font-size:0.92rem; cursor:pointer; }
-    .edit-button:hover, .appointment-button:hover { background:#faf8fd; border-color:var(--brand); }
+    .edit-button, .appointment-button, .delete-button { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); font-size:0.92rem; cursor:pointer; }
+    .edit-button:hover, .appointment-button:hover, .delete-button:hover { background:#faf8fd; border-color:var(--brand); }
     .appointment-button { color:#0b6b46; border-color:#a9d8be; background:#f1fbf5; }
     .appointment-button:hover { background:#e3f6ea; border-color:#0b6b46; }
     .appointment-value { display:grid; gap:3px; min-width:145px; }
@@ -104,6 +104,8 @@
     .appointment-value span { color:var(--muted); font-size:0.73rem; font-weight:800; white-space:nowrap; }
     .appointment-empty { color:var(--muted); font-size:0.8rem; }
     .appointment-cancel { color:#a01831; border-color:#f1bac5; background:#fff5f6; }
+    .delete-button { color:#a01831; border-color:#f1bac5; background:#fff5f6; }
+    .delete-button:hover { background:#ffe8eb; border-color:#a01831; }
     .col-actions { width:1%; white-space:nowrap; text-align:center; }
     .desc { color:var(--muted); min-width:420px; }
     .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; color:var(--muted); font-size:0.82rem; }
@@ -703,6 +705,36 @@
       return response.json();
     }
 
+    async function deleteFirebase(path, id, token){
+      const response = await fetch(firebaseUrl(path + "/" + id, token), {
+        method: "DELETE"
+      });
+      if(!response.ok) throw new Error("Firebase delete failed");
+    }
+
+    async function deleteRequest(rowId){
+      if(!canEditRequests() || !currentUser) return;
+      const row = rows.find(item => item.id === rowId);
+      if(!row) return;
+      const label = shortName(row.player) || "aquesta petició";
+      if(!confirm("Vols eliminar definitivament la petició de " + label + "? Aquesta acció no es pot desfer.")) return;
+      statusMessage = "Eliminant la petició...";
+      render();
+      try {
+        const token = await currentUser.getIdToken();
+        await deleteFirebase(PRIVATE_REQUESTS_PATH, rowId, token);
+        await deleteFirebase(PUBLIC_REQUESTS_PATH, rowId);
+        newRequestIds.delete(requestIdentity(row));
+        rows = rows.filter(item => item.id !== rowId);
+        currentPage = Math.min(currentPage, Math.max(1, Math.ceil(rows.length / PAGE_SIZE)));
+        statusMessage = "Petició eliminada.";
+        render();
+      } catch(error) {
+        statusMessage = "No s'ha pogut eliminar la petició. Revisa permisos de Firebase.";
+        render();
+      }
+    }
+
     async function saveEditedRequest(event){
       event.preventDefault();
       if(!editingRequestId || !canEditRequests() || !currentUser) return;
@@ -1043,7 +1075,8 @@
           const actionsCell = canEditRequests()
             ? '<td class="col-actions"><button class="appointment-button" type="button" title="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" aria-label="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" data-appointment-id="' + escapeHtml(row.id) + '">🗓</button>' +
               (row.appointment ? '<button class="edit-button appointment-cancel" type="button" title="Cancel·lar visita programada" aria-label="Cancel·lar visita programada" data-cancel-appointment-id="' + escapeHtml(row.id) + '">×</button>' : '') +
-              '<button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button></td>'
+              '<button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button>' +
+              '<button class="delete-button" type="button" title="Eliminar petició" aria-label="Eliminar petició" data-delete-id="' + escapeHtml(row.id) + '">🗑</button></td>'
             : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -1079,6 +1112,11 @@
         button.addEventListener("click", () => {
           markRequestHandled(rows.find(row => row.id === button.dataset.cancelAppointmentId), button);
           clearAppointment(button.dataset.cancelAppointmentId);
+        });
+      });
+      tableWrap.querySelectorAll("[data-delete-id]").forEach(button => {
+        button.addEventListener("click", () => {
+          deleteRequest(button.dataset.deleteId);
         });
       });
       tableWrap.querySelectorAll("[data-whatsapp-id]").forEach(link => {

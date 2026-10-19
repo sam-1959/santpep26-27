@@ -39,7 +39,12 @@
     .notes { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
     .note { background:#fff8c7; border:1px solid #ead46d; color:#594800;
       border-radius:8px; padding:7px 10px; font-size:0.82rem; font-weight:650; }
-    .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin:0 0 18px; }
+    .summary { display:grid; gap:18px; margin:0 0 18px; }
+    .order-summary { display:grid; gap:10px; }
+    .order-summary h2 { margin:0; color:var(--brand-dark); font-size:0.9rem; }
+    .order-summary p { margin:-6px 0 0; color:var(--muted); font-size:0.8rem; }
+    .order-summary.pending { padding:14px; border:1px solid #e9cc55; border-radius:12px; background:#fffcf0; }
+    .summary-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
     .summary-card { background:var(--card); border:1px solid var(--line); border-radius:10px;
       box-shadow:var(--shadow); padding:12px; }
     .summary-title { display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -66,6 +71,10 @@
     .piece { display:inline-flex; min-width:38px; justify-content:center; border-radius:7px;
       padding:4px 7px; background:#ecfdf5; color:var(--ok); border:1px solid #b7ebd6; font-weight:800; }
     .missing { color:var(--empty); font-weight:700; }
+    .order-divider th { position:static; padding:10px 12px; background:#f1ecf6; color:var(--brand-dark); text-align:left;
+      font-size:0.78rem; letter-spacing:0.04em; }
+    .order-divider.pending th { background:#fff5c9; color:#6c5300; border-top:2px solid #e9cc55; }
+    .order-divider small { margin-left:8px; color:var(--muted); font-size:0.78rem; font-weight:600; letter-spacing:0; text-transform:none; }
     .empty { padding:32px 16px; text-align:center; color:var(--muted); }
     footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:20px; }
     @media (max-width:640px) {
@@ -98,7 +107,7 @@
     <section id="summary" class="summary"></section>
     <section class="table-wrap" id="tableWrap"></section>
   </main>
-  <footer>Dades: Google Sheet de roba Pentex · CB Sant Josep de Badalona</footer>
+  <footer>Dades: Google Sheet de roba Pentex · Nous registres pendents afegits a la pàgina · CB Sant Josep de Badalona</footer>
 
   <script>
     const SHEET_ID = "1tls9XYHTJ9Ru_Ex25eHgE-PsiWIrj68nr8QYOj99W5I";
@@ -118,8 +127,8 @@
       titleRows: []
     };
     const LOCAL_COACH_ROWS = [
-      { name:"Leire", surname:"Fernández", team:"SAF", polo:"M", hoodie:"M", pants:"M" },
-      { name:"Biel", surname:"Prats", team:"SBM", polo:"M", hoodie:"M", pants:"L" }
+      { name:"Leire", surname:"Fernández", team:"SAF", polo:"M", hoodie:"M", pants:"M", orderGroup:"pending" },
+      { name:"Biel", surname:"Prats", team:"SBM", polo:"M", hoodie:"M", pants:"L", orderGroup:"pending" }
     ];
     const els = {
       status: document.getElementById("status"),
@@ -244,7 +253,8 @@
         polo: clean(row[3]),
         hoodie: clean(row[4]),
         pants: clean(row[5]),
-        title: titleIdx >= 0 ? clean(row[titleIdx]) : ""
+        title: titleIdx >= 0 ? clean(row[titleIdx]) : "",
+        orderGroup: "completed"
       })).filter(r => r.name || r.surname || r.team);
       const known = new Set(sheetRows.map(r => key([r.name, r.surname, r.team].join("|"))));
       return sheetRows.concat(LOCAL_COACH_ROWS.filter(r =>
@@ -306,8 +316,8 @@
         ["Desuadora negra", "hoodie"],
         ["Pantaló llarg xandall", "pants"]
       ];
-      els.summary.innerHTML = items.map(([label, field]) => {
-        const cs = counts(rows, field);
+      const cards = groupRows => items.map(([label, field]) => {
+        const cs = counts(groupRows, field);
         const total = cs.reduce((sum, x) => sum + x[1], 0);
         return '<article class="summary-card"><h2 class="summary-title">' + label +
           '<span class="summary-total">' + total + '</span></h2><div class="sizes">' +
@@ -319,6 +329,13 @@
           }).join("") : '<span class="missing">Sense talles</span>') +
           '</div></article>';
       }).join("");
+      const completed = rows.filter(r => r.orderGroup !== "pending");
+      const pending = rows.filter(r => r.orderGroup === "pending");
+      els.summary.innerHTML = '<section class="order-summary"><h2>Comanda de roba ja feta</h2>' +
+        '<p>Registres inclosos al full de roba Pentex.</p><div class="summary-cards">' + cards(completed) +
+        '</div></section>' + (pending.length ? '<section class="order-summary pending"><h2>Nous registres pendents</h2>' +
+        '<p>Afegits a la pàgina i pendents d\'incorporar a la comanda.</p><div class="summary-cards">' +
+        cards(pending) + '</div></section>' : '');
       els.summary.querySelectorAll(".size").forEach(b => {
         b.onclick = () => {
           const next = { field: b.dataset.field, size: b.dataset.size };
@@ -336,12 +353,19 @@
       }
       const titleHead = "<th>Títol</th>";
       const titleCell = r => "<td>" + (esc(r.title) || '<span class="missing">-</span>') + "</td>";
+      const coachRow = r => '<tr><td class="name">' + esc(titleCaseName(r.name + " " + r.surname)) + '</td>' +
+        '<td><span class="team">' + esc(r.team) + '</span></td>' +
+        titleCell(r) + '<td>' + piece(r.polo) + '</td><td>' + piece(r.hoodie) +
+        '</td><td>' + piece(r.pants) + '</td></tr>';
+      const orderSection = (label, detail, group, className) => group.length ?
+        '<tr class="order-divider ' + className + '"><th colspan="6">' + label +
+        '<small>' + detail + '</small></th></tr>' + group.map(coachRow).join("") : "";
+      const completed = rows.filter(r => r.orderGroup !== "pending");
+      const pending = rows.filter(r => r.orderGroup === "pending");
       els.table.innerHTML = '<table><thead><tr><th>Coach</th><th>Equip</th>' + titleHead +
         '<th>Polo</th><th>Desuadora</th><th>Pantaló</th></tr></thead><tbody>' +
-        rows.map(r => '<tr><td class="name">' + esc(titleCaseName(r.name + " " + r.surname)) + '</td>' +
-          '<td><span class="team">' + esc(r.team) + '</span></td>' +
-          titleCell(r) + '<td>' + piece(r.polo) + '</td><td>' + piece(r.hoodie) +
-          '</td><td>' + piece(r.pants) + '</td></tr>').join("") +
+        orderSection("Comanda de roba ja feta", "Registres del full Pentex", completed, "completed") +
+        orderSection("Nous registres pendents", "Afegits a la pàgina", pending, "pending") +
         '</tbody></table>';
     }
     function renderNotes(){

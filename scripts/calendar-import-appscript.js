@@ -534,9 +534,39 @@ function tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tabl
   var saved = assignment.game;
   var matchKey = tableAssignmentMatchKey(saved);
   var candidates = tableGames.filter(function(game) {
-    return tableAssignmentMatchKey(game) === matchKey;
+    return tableAssignmentMatchKey(game) === matchKey && mondayISO(game.date) === mondayISO(saved.date);
   });
   return candidates.length === 1 ? candidates[0] : null;
+}
+
+function tableApplySavedManualChanges(calendarData) {
+  var edits = Object.keys(calendarData.manualChanges || {}).map(function(key) { return calendarData.manualChanges[key]; })
+    .filter(function(edit) { return edit && edit.manual && edit.type === "changed" && edit.game; })
+    .sort(function(a, b) { return String(a.importedAt || "").localeCompare(String(b.importedAt || "")); });
+  var games = allGames(calendarData);
+  edits.forEach(function(edit) {
+    var previous = {
+      date:edit.game.date, time:edit.game.time, rival:edit.game.rival, loc:edit.game.loc || "",
+      home:!!edit.game.home, friendly:!!edit.game.friendly, team:edit.game.team, sex:edit.game.sex
+    };
+    (edit.fields || []).forEach(function(field) {
+      if (field.label === "Data") previous.date = field.from;
+      if (field.label === "Hora") previous.time = field.from;
+      if (field.label === "Rival") previous.rival = field.from;
+      if (field.label === "Lloc") previous.loc = field.from;
+      if (field.label === "Casa/fora") previous.home = field.from === "casa";
+      if (field.label === "Amistós") previous.friendly = field.from === "sí";
+    });
+    var candidates = games.filter(function(game) { return tableGameId(game) === tableGameId(previous); });
+    if (candidates.length !== 1) {
+      candidates = games.filter(function(game) {
+        return tableAssignmentMatchKey(game) === tableAssignmentMatchKey(previous) && mondayISO(game.date) === mondayISO(previous.date);
+      });
+    }
+    if (candidates.length !== 1) return;
+    ["date", "time", "rival", "loc", "home", "friendly"].forEach(function(field) { candidates[0][field] = edit.game[field]; });
+  });
+  return calendarData;
 }
 
 function tableRestrictionIssues(calendarData, rawAssignments, rawProfiles) {
@@ -674,6 +704,7 @@ function restrictionAlertEmailHtml(issues, forceCheck, changeCount) {
 
 function verifyTableRestrictionsAndAlert(calendarData, latestChanges, checkedAt, forceCheck) {
   if ((!latestChanges || !latestChanges.length) && !forceCheck) return { checked: false, issues: 0, emailed: false };
+  calendarData = tableApplySavedManualChanges(calendarData);
   var assignments = readFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {};
   var profiles = readFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {};
   var alertStatus = readFirebase(TABLE_RESTRICTIONS_ALERT_PATH) || {};

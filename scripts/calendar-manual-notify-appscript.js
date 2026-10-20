@@ -457,6 +457,20 @@ function aplicarCanviManualAlCalendari(calendarData, game, changes) {
   return calendarData;
 }
 
+function aplicarEdicionsManualsDesades(calendarData) {
+  var edits = Object.keys(calendarData.manualChanges || {}).map(function(key) { return calendarData.manualChanges[key]; })
+    .filter(function(edit) { return edit && edit.manual && edit.type === "changed" && edit.game; })
+    .sort(function(a, b) { return String(a.importedAt || "").localeCompare(String(b.importedAt || "")); });
+  edits.forEach(function(edit) {
+    try {
+      aplicarCanviManualAlCalendari(calendarData, edit.game, edit.fields || []);
+    } catch (error) {
+      Logger.log("No s'ha pogut aplicar una edició manual prèvia per verificar les taules: " + error);
+    }
+  });
+  return calendarData;
+}
+
 function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
   var all = taulaTotsElsPartits(calendarData);
   var tableGames = all.filter(function(game) { return taulaEsPistaClub(game) && (game.fam === "MINI" || game.fam === "PREMINI" || game.friendly); });
@@ -474,7 +488,7 @@ function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
     var game = gamesById[assignmentId];
     if (!game && assignment.game) {
       var candidates = tableGames.filter(function(candidate) {
-        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game);
+        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game) && taulaDilluns(candidate.date) === taulaDilluns(assignment.game.date);
       });
       game = candidates.length === 1 ? candidates[0] : null;
     }
@@ -521,7 +535,8 @@ function htmlRestriccionsTaules(issues) {
 }
 
 function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
-  var calendarData = aplicarCanviManualAlCalendari(llegirFirebase(CALENDAR_FIREBASE_PATH), game, changes);
+  var calendarData = aplicarEdicionsManualsDesades(llegirFirebase(CALENDAR_FIREBASE_PATH));
+  calendarData = aplicarCanviManualAlCalendari(calendarData, game, changes);
   var issues = incidenciesRestriccionsTaules(calendarData, llegirFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {}, llegirFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {});
   var signature = issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");
   var previous = llegirFirebase(TABLE_RESTRICTIONS_ALERT_PATH) || {};

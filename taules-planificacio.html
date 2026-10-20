@@ -471,7 +471,10 @@
         ]);
         const app = initializeApp(FIREBASE_CONFIG, "tablesCalendarEdits");
         const auth = getAuth(app);
-        const user = await new Promise(resolve => onAuthStateChanged(auth, resolve));
+        const user = await Promise.race([
+          new Promise(resolve => onAuthStateChanged(auth, resolve)),
+          new Promise(resolve => setTimeout(() => resolve(null), 2000))
+        ]);
         if(!user) return null;
         const token = await user.getIdToken();
         const response = await fetch(firebasePathUrl(GAME_EDITS_FIREBASE_PATH) + "?auth=" + encodeURIComponent(token), { cache:"no-store" });

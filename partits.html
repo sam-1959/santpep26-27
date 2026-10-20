@@ -123,7 +123,10 @@
     .games { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px; }
     .game { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
       box-shadow:var(--shadow); padding:8px 10px; display:flex; flex-direction:column; gap:4px; }
+    .game.needs-change, .gchip.needs-change, .agenda-game.needs-change { box-shadow:0 0 0 3px rgba(245,158,11,.25),var(--shadow); border-color:#d97706; background:#fff8e6; }
     .game-top { display:flex; align-items:center; gap:6px; }
+    .needs-change-mark { margin-left:auto; border:0; border-radius:999px; background:#d97706; color:#fff; width:25px; height:25px; font-size:.9rem; font-weight:900; cursor:pointer; }
+    .needs-change-mark[aria-pressed="true"] { background:#a95100; }
     .game-time { font-weight:700; font-size:0.84rem; color:var(--brand-dark); }
     .badge { font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:0.03em; }
     .badge.home { background:var(--home); color:var(--home-ink); }
@@ -592,6 +595,13 @@
         : '';
     }
 
+    function changeNeededButton(g){
+      const marked=!!g.changeNeeded;
+      const label=marked ? 'Treure la marca de canvi pendent' : 'Marcar que cal un canvi de partit';
+      return '<button type="button" class="needs-change-mark" data-game-change-key="' + gameEditDataAttribute(g) +
+        '" aria-pressed="' + marked + '" title="' + label + '" aria-label="' + label + '">⚑</button>';
+    }
+
     function gameCard(g){
       const sexCls = g.sex==='F' ? 'fem' : 'masc';
       const vs = g.home
@@ -607,7 +617,7 @@
       const storm = stormMark(g);
       const cf = conflictMark(g);
       const sexLabel = '<span class="sex-label ' + sexCls + '">' + (g.sex==='F' ? 'Femení' : 'Masculí') + '</span>';
-      return '<div class="game ' + sexCls + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="game-top"><div class="game-team">' + g.team + fr + mini + ch + storm + cf + '</div></div>' +
+      return '<div class="game ' + sexCls + (g.changeNeeded ? ' needs-change' : '') + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="game-top"><div class="game-team">' + g.team + fr + mini + ch + storm + cf + '</div>' + changeNeededButton(g) + '</div>' +
         vs + loc + cost + sexLabel + '</div>';
     }
 
@@ -652,8 +662,8 @@
       const storm = stormMark(g);
       const cf = conflictMark(g);
       const sexLabel = '<span class="sex-label ' + sexCls + '">' + (g.sex==='F' ? 'F' : 'M') + '</span>';
-      return '<div class="gchip ' + sexCls + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="gchip-top">' +
-        '<span class="gchip-team">' + g.team + fr + mini + ch + storm + cf + '</span></div>' +
+      return '<div class="gchip ' + sexCls + (g.changeNeeded ? ' needs-change' : '') + '" data-game-edit-key="' + gameEditDataAttribute(g) + '" title="Doble clic per editar"><div class="gchip-top">' +
+        '<span class="gchip-team">' + g.team + fr + mini + ch + storm + cf + '</span>' + changeNeededButton(g) + '</div>' +
         '<div class="gchip-vs"><span class="lbl">vs</span> ' + g.rival + '</div>' + loc + cost + sexLabel + '</div>';
     }
 
@@ -716,7 +726,7 @@
           const mini=miniMark(g), ch=changeMark(g), storm=stormMark(g), cf=conflictMark(g);
           const loc=g.loc?'<span class="agenda-rival">📍 '+shortLocation(g.loc)+'</span>':'';
           const sexCls=g.sex==='F'?'fem':'masc', sexLabel='<span class="sex-label '+sexCls+'">'+(g.sex==='F'?'Femení':'Masculí')+'</span>';
-          return '<div class="agenda-game '+(g.home?'home':'away')+' '+sexCls+'" data-game-edit-key="'+gameEditDataAttribute(g)+'" title="Doble clic per editar"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+storm+cf+'</span>'+loc+sexLabel+'</div>';
+          return '<div class="agenda-game '+(g.home?'home':'away')+' '+sexCls+(g.changeNeeded?' needs-change':'')+'" data-game-edit-key="'+gameEditDataAttribute(g)+'" title="Doble clic per editar"><span class="agenda-time">'+g.time+'</span><span class="agenda-team">'+g.team+' vs '+g.rival+fr+mini+ch+storm+cf+'</span>'+changeNeededButton(g)+loc+sexLabel+'</div>';
         }).join('');}
         html+='<div class="agenda-session morning" style="--morning-games:'+maxMorning+'"><div class="agenda-period">Matí</div>'+cards(morning)+'</div><div class="agenda-session afternoon"><div class="agenda-period">Tarda</div>'+cards(afternoon)+'</div>';
         html+='</div></section>';
@@ -972,6 +982,34 @@
       document.querySelectorAll('[data-game-edit-key]').forEach(function(card){
         card.ondblclick=function(){ openGameEditor(decodeURIComponent(card.dataset.gameEditKey)); };
       });
+      document.querySelectorAll('[data-game-change-key]').forEach(function(button){
+        button.onclick=async function(event){
+          event.stopPropagation();
+          const key=decodeURIComponent(button.dataset.gameChangeKey);
+          const game=findGameByEditKey(key);
+          if(!game) return;
+          button.disabled=true;
+          try{
+            const token=await getCalendarToken(true);
+            if(!token) throw new Error('No autenticat');
+            const edit={
+              date:game.date, time:game.time, rival:game.rival, loc:game.loc || '',
+              home:!!game.home, friendly:!!game.friendly,
+              changeNeeded:!game.changeNeeded, updatedAt:new Date().toISOString()
+            };
+            const response=await fetch(firebaseDataUrl(GAME_EDITS_FIREBASE_PATH+'/'+key, token), {
+              method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(edit)
+            });
+            if(!response.ok) throw new Error('Firebase '+response.status);
+            gameEdits[key]=edit;
+            Object.assign(game,edit);
+            renderContent();
+          }catch(error){
+            alert(gameEditErrorMessage(error));
+            button.disabled=false;
+          }
+        };
+      });
     }
     function closeGameEditor(){ gameEditDialog.close(); }
     document.getElementById('gameEditClose').onclick=closeGameEditor;
@@ -991,6 +1029,7 @@
         loc:selectedGameLocation(),
         home:document.getElementById('gameEditHome').checked,
         friendly:document.getElementById('gameEditFriendly').checked,
+        changeNeeded:game.changeNeeded === true,
         updatedAt:new Date().toISOString()
       };
       if(!edit.date || !edit.time || !edit.rival) return;

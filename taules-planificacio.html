@@ -329,15 +329,18 @@
       "Sènior A F"
     ];
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
+    const FIREBASE_CONFIG = { apiKey:"AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU", authDomain:"coord-fa09e.firebaseapp.com", databaseURL:FIREBASE_DB_URL, projectId:"coord-fa09e", storageBucket:"coord-fa09e.firebasestorage.app", messagingSenderId:"509431001997", appId:"1:509431001997:web:561fa966029d873131c3c4" };
     const FIREBASE_PATH = "miniTablesAssignments/season-26-27";
     const PEOPLE_FIREBASE_PATH = "miniTablesPeople/season-26-27";
     const CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
+    const GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
 
     let allGames = [];
     let games = [];
     let costGames = [];
     let assignments = {};
     let assignmentAliases = {};
+    let manualGameAliases = [];
     let tablePeopleProfiles = {};
     let activeFilter = "all";
     let activeView = "month";
@@ -402,6 +405,98 @@
       const raw = doc.getElementById("partitsData");
       if (!raw) throw new Error("No s'han trobat les dades de partits");
       return JSON.parse(raw.textContent);
+    }
+
+    function manualChangeProperty(label){
+      return {
+        "Data":"date", "Hora":"time", "Rival":"rival", "Lloc":"loc",
+        "Casa/fora":"home", "Amistós":"friendly"
+      }[label] || "";
+    }
+
+    function manualChangeValue(property, value){
+      if(property === "home") return value === "casa";
+      if(property === "friendly") return value === "sí";
+      return value;
+    }
+
+    function sameManualGame(game, expected, strict){
+      const fields = strict ? ["date", "time", "rival", "loc", "home", "friendly"] : ["date", "time", "rival"];
+      return game.team === expected.team && (game.sex || "") === (expected.sex || "") &&
+        fields.every(field => (game[field] || (typeof game[field] === "boolean" ? game[field] : "")) ===
+          (expected[field] || (typeof expected[field] === "boolean" ? expected[field] : "")));
+    }
+
+    function applyManualCalendarChanges(data){
+      manualGameAliases = [];
+      const changes = Object.values(data.manualChanges || {})
+        .filter(change => change && change.type === "changed" && change.manual && change.game)
+        .sort((a, b) => String(a.importedAt || "").localeCompare(String(b.importedAt || "")));
+      const calendarGames = data.weeks.flatMap(week => week.games || []);
+      changes.forEach(change => {
+        const before = { ...change.game };
+        (change.fields || []).forEach(field => {
+          const property = manualChangeProperty(field.label);
+          if(property) before[property] = manualChangeValue(property, field.from);
+        });
+        let candidates = calendarGames.filter(game => sameManualGame(game, before, true));
+        if(candidates.length !== 1) candidates = calendarGames.filter(game => sameManualGame(game, before, false));
+        if(candidates.length !== 1) return;
+        const game = candidates[0];
+        const original = { ...game };
+        Object.assign(game, {
+          date: change.game.date,
+          time: change.game.time,
+          rival: change.game.rival,
+          loc: change.game.loc || "",
+          home: !!change.game.home,
+          friendly: !!change.game.friendly,
+          dow: new Date(change.game.date + "T12:00:00").getDay()
+        });
+        manualGameAliases.push({ before:original, after:{ ...game } });
+      });
+      return data;
+    }
+
+    function gameEditKey(game){
+      const raw = game._editKey || [game.date, game.time, game.team, game.sex, game.rival].join("|");
+      return String(raw).replace(/[.#$\[\]/]/g, "_");
+    }
+
+    async function loadPrivateGameEdits(){
+      try{
+        const [{ initializeApp }, { getAuth, onAuthStateChanged }] = await Promise.all([
+          import("https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js"),
+          import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js")
+        ]);
+        const app = initializeApp(FIREBASE_CONFIG, "tablesCalendarEdits");
+        const auth = getAuth(app);
+        const user = await new Promise(resolve => onAuthStateChanged(auth, resolve));
+        if(!user) return null;
+        const token = await user.getIdToken();
+        const response = await fetch(firebasePathUrl(GAME_EDITS_FIREBASE_PATH) + "?auth=" + encodeURIComponent(token), { cache:"no-store" });
+        if(!response.ok) return null;
+        const edits = await response.json();
+        return edits && typeof edits === "object" ? edits : null;
+      }catch(error){
+        console.warn("No s'han pogut carregar els ajustos manuals privats dels partits.", error);
+        return null;
+      }
+    }
+
+    function applyPrivateGameEdits(data, edits){
+      manualGameAliases = [];
+      if(!edits) return 0;
+      let applied = 0;
+      data.weeks.flatMap(week => week.games || []).forEach(game => {
+        const edit = edits[gameEditKey(game)];
+        if(!edit) return;
+        const original = { ...game };
+        Object.assign(game, edit, { dow:new Date((edit.date || game.date) + "T12:00:00").getDay() });
+        manualGameAliases.push({ before:original, after:{ ...game } });
+        applied++;
+      });
+      return applied;
     }
 
     function normalize(value){
@@ -729,6 +824,8 @@
 
     async function loadGames(){
       const data = await loadCalendarData();
+      const privateEdits = await loadPrivateGameEdits();
+      if(!applyPrivateGameEdits(data, privateEdits)) applyManualCalendarChanges(data);
       const importedGames = data.weeks.flatMap(week => week.games || [])
         .map(game => ({ ...game, id: gameId(game) }));
       allGames = importedGames;
@@ -751,26 +848,24 @@
       });
       const currentIds = new Set(games.map(game => game.id));
       const currentByMatchKey = new Map(games.map(game => [assignmentMatchKey(game), game]));
-      const staleMovedIds = [];
       const migratedIds = [];
       Object.entries(assignments).forEach(([id, assignment]) => {
         if (!assignment || !assignment.game || currentIds.has(id)) return;
         const currentGame = currentByMatchKey.get(assignmentMatchKey(assignment.game));
-        if (!currentGame) return;
-        if (periodKey(currentGame) !== periodKey(assignment.game)) {
-          staleMovedIds.push(id);
-          return;
-        }
-        if (!assignments[currentGame.id]) {
+        const manuallyMoved = manualGameAliases.find(alias => gameId(alias.before) === id);
+        const movedGame = manuallyMoved && games.find(game => gameId(game) === gameId(manuallyMoved.after));
+        const targetGame = currentGame || movedGame;
+        if (!targetGame) return;
+        if (!assignments[targetGame.id]) {
           const migrated = {
             ...assignment,
-            game: gameSnapshot(currentGame),
+            game: gameSnapshot(targetGame),
             updatedAt: new Date().toISOString()
           };
-          assignments[currentGame.id] = migrated;
-          migratedIds.push({ oldId:id, newId:currentGame.id, body:migrated });
+          assignments[targetGame.id] = migrated;
+          migratedIds.push({ oldId:id, newId:targetGame.id, body:migrated });
         } else {
-          staleMovedIds.push(id);
+          return;
         }
       });
       if (migratedIds.length) {
@@ -784,11 +879,6 @@
         ]));
         migratedIds.forEach(item => delete assignments[item.oldId]);
         setStatus(`Assignacions migrades a la clau nova: ${migratedIds.length}.`);
-      }
-      if (staleMovedIds.length) {
-        await Promise.all(staleMovedIds.map(id => fetch(firebaseUrl(id), { method:"DELETE" })));
-        staleMovedIds.forEach(id => delete assignments[id]);
-        setStatus(`Assignacions eliminades per canvi de cap de setmana: ${staleMovedIds.length}.`);
       }
       games.forEach(game => {
         if (!assignments[game.id]) {

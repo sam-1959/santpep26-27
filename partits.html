@@ -425,6 +425,7 @@
         if(remote && Array.isArray(remote.weeks) && remote.weeks.length){
           DATA = remote;
           manualChanges=Object.keys(remote.manualChanges || {}).map(function(id){ return remote.manualChanges[id]; }).filter(Boolean);
+          applySavedManualChanges();
           rebuildResolvedConflicts();
         }
       }catch(err){
@@ -442,12 +443,14 @@
         const allEdits=saved && typeof saved==='object' ? saved : {};
         gameEdits={};
         Object.keys(allEdits).forEach(function(key){ gameEdits[key]=allEdits[key]; });
+        const movedGames=[];
         DATA.weeks.forEach(function(week){ week.games.forEach(function(game){
           const key=gameEditKey(game);
           game._editKey=key;
           const edit=gameEdits[key];
-          if(edit) Object.assign(game, edit, {_editKey:key});
+          if(edit) { Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date || game.date)}); movedGames.push(game); }
         }); });
+        movedGames.forEach(moveGameToItsWeek);
       }catch(err){
         console.warn("No s'han pogut carregar els ajustos manuals dels partits.", err);
       }
@@ -482,6 +485,34 @@
         DATA.weeks.sort(function(a,b){ return a.monday.localeCompare(b.monday); });
       }
       target.games.push(game);
+    }
+
+    function applySavedManualChanges(){
+      const changes=manualChanges.filter(function(change){ return change && change.manual && change.type==='changed' && change.game; })
+        .sort(function(a,b){ return String(a.importedAt || '').localeCompare(String(b.importedAt || '')); });
+      changes.forEach(function(change){
+        const previous={ ...change.game };
+        (change.fields || []).forEach(function(field){
+          if(field.label==='Data') previous.date=field.from;
+          if(field.label==='Hora') previous.time=field.from;
+          if(field.label==='Rival') previous.rival=field.from;
+          if(field.label==='Lloc') previous.loc=field.from;
+          if(field.label==='Casa/fora') previous.home=field.from==='casa';
+          if(field.label==='Amistós') previous.friendly=field.from==='sí';
+        });
+        const allGames=DATA.weeks.flatMap(function(week){ return week.games; });
+        let candidates=allGames.filter(function(game){
+          return game.team===previous.team && game.sex===previous.sex && game.date===previous.date && game.time===previous.time && game.rival===previous.rival;
+        });
+        if(candidates.length!==1) candidates=allGames.filter(function(game){
+          return game.team===previous.team && game.sex===previous.sex && game.rival===previous.rival && !!game.home===!!previous.home && !!game.friendly===!!previous.friendly;
+        });
+        if(candidates.length!==1) return;
+        const game=candidates[0];
+        game._editKey=game._editKey || [game.date,game.time,game.team,game.sex,game.rival].join('|');
+        Object.assign(game,change.game,{dow:weekdayForDate(change.game.date)});
+        moveGameToItsWeek(game);
+      });
     }
 
     function changeMark(g){

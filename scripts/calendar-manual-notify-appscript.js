@@ -479,9 +479,11 @@ function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
       game = candidates.length === 1 ? candidates[0] : null;
     }
     if (!game) {
+      if (assignment.restrictionsAcceptedAt || taulaDataPassada(assignment.game && assignment.game.date)) return;
       issues.push({ fingerprint:"assignment-not-mapped|" + assignmentId, text:"Assignació sense partit mini coincident al calendari actual: " + assignmentId + "." });
       return;
     }
+    if (assignment.restrictionsAcceptedAt || taulaDataPassada(game.date)) return;
     var people = [assignment.table1 || "", assignment.table2 || ""].filter(Boolean);
     var gameText = game.date + " " + (game.time || "hora pendent") + " · " + taulaEtiquetaEquip(game) + " vs " + (game.rival || "rival pendent");
     if (assignment.table1 && assignment.table2 && assignment.table1 === assignment.table2) {
@@ -504,6 +506,11 @@ function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
     }
   });
   return issues;
+}
+
+function taulaDataPassada(dateValue) {
+  if (!dateValue) return false;
+  return String(dateValue) < Utilities.formatDate(new Date(), "Europe/Madrid", "yyyy-MM-dd");
 }
 
 function htmlRestriccionsTaules(issues) {

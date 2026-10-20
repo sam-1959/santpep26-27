@@ -493,6 +493,11 @@ function tableDayPart(game) {
   return Number(match[1]) < 14 ? "morning" : "afternoon";
 }
 
+function tableIsPastDate(dateValue) {
+  if (!dateValue) return false;
+  return String(dateValue) < Utilities.formatDate(new Date(), "Europe/Madrid", "yyyy-MM-dd");
+}
+
 function tableIsClubVenue(game) {
   var loc = tableNormalize(game.loc || "");
   return !!game.home || loc.indexOf("la-colina") !== -1 || loc.indexOf("montigala") !== -1 || loc.indexOf("bufala") !== -1 || loc.indexOf("pomar") !== -1;
@@ -549,12 +554,14 @@ function tableRestrictionIssues(calendarData, rawAssignments, rawProfiles) {
     if (!assignment.table1 && !assignment.table2) return;
     var game = tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames);
     if (!game) {
+      if (assignment.restrictionsAcceptedAt || tableIsPastDate(assignment.game && assignment.game.date)) return;
       issues.push({
         fingerprint: "assignment-not-mapped|" + assignmentId,
         text: "Assignació sense partit mini coincident al calendari actual: " + assignmentId + "."
       });
       return;
     }
+    if (assignment.restrictionsAcceptedAt || tableIsPastDate(game.date)) return;
 
     var people = [assignment.table1 || "", assignment.table2 || ""].filter(Boolean);
     var gameText = game.date + " " + (game.time || "hora pendent") + " · " + tableTeamLabel(game) + " vs " + (game.rival || "rival pendent");

@@ -2177,15 +2177,27 @@
       if (event.target.tagName !== "SELECT") return;
       const id = event.target.dataset.gameId;
       const slot = event.target.dataset.slot;
-      assignments[id] = { ...assignmentFor(id), [slot]: event.target.value };
+      const assignment = { ...assignmentFor(id), [slot]: event.target.value };
+      delete assignment.restrictionsAcceptedAt;
+      assignments[id] = assignment;
       const issues = validateGameRestrictions(id);
+      if (issues.length && !isPastGame(games.find(game => game.id === id))) {
+        const accepted = confirm(
+          "Aquesta assignació té restriccions. Vols acceptar-les? " +
+          "Si les acceptes, no apareixeran als avisos automàtics per correu."
+        );
+        if (accepted) assignment.restrictionsAcceptedAt = new Date().toISOString();
+      }
       render();
       setStatus("Guardant...");
       try {
         await saveAssignment(id);
         render();
         if (issues.length) {
-          setStatus(`Assignació guardada. Validació: ${issues.length} incidència(es) en aquest partit.`, "error");
+          setStatus(assignment.restrictionsAcceptedAt
+            ? "Assignació guardada amb les restriccions acceptades."
+            : `Assignació guardada. Validació: ${issues.length} incidència(es) en aquest partit.`,
+          assignment.restrictionsAcceptedAt ? undefined : "error");
         } else {
           setStatus("Assignació guardada. Validació correcta.");
         }

@@ -474,7 +474,7 @@ function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
     var game = gamesById[assignmentId];
     if (!game && assignment.game) {
       var candidates = tableGames.filter(function(candidate) {
-        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game) && taulaDilluns(candidate.date) === taulaDilluns(assignment.game.date);
+        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game);
       });
       game = candidates.length === 1 ? candidates[0] : null;
     }

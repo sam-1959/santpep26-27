@@ -534,7 +534,7 @@ function tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tabl
   var saved = assignment.game;
   var matchKey = tableAssignmentMatchKey(saved);
   var candidates = tableGames.filter(function(game) {
-    return tableAssignmentMatchKey(game) === matchKey && mondayISO(game.date) === mondayISO(saved.date);
+    return tableAssignmentMatchKey(game) === matchKey;
   });
   return candidates.length === 1 ? candidates[0] : null;
 }

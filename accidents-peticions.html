@@ -71,6 +71,8 @@
     .pdf-email-pending { background:#f1eef5; color:var(--muted); border:1px solid var(--line); }
     .edit-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:6px 9px; font-weight:900; cursor:pointer; }
     .edit-button:hover { border-color:var(--brand); background:#faf8fd; }
+    .edit-button:disabled { opacity:.55; cursor:wait; }
+    .request-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
     dialog { width:min(760px,calc(100% - 24px)); max-height:calc(100vh - 24px); border:0; border-radius:16px; padding:0; color:var(--ink); box-shadow:0 16px 50px rgba(42,34,51,.28); }
     dialog::backdrop { background:rgba(42,34,51,.42); }
     .edit-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px; background:var(--brand); color:#fff; }
@@ -211,6 +213,7 @@
     let refreshTimer = null;
     let isRefreshing = false;
     let pdfBusy = null;
+    let resendBusyId = null;
     let editingRowId = null;
 
     function parseDateValue(value){
@@ -336,6 +339,30 @@
         pdfDriveId:row.pdfDriveId || "",
         pdfUrl:row.pdfUrl || "",
         deletedBy:currentUser.email || ""
+      });
+    }
+
+    async function resendAccidentAlert(row){
+      if(!ACCIDENT_FILES_URL || !currentUser || !row || !row.id) throw new Error("No s'ha pogut preparar el reenviament.");
+      const payload = {
+        action:"resendInternalAlert",
+        requestId:row.id,
+        createdAt:row.createdAt || "",
+        email:row.email || "",
+        guardianName:row.guardianName || "",
+        player:row.player || "",
+        phone:row.phone || "",
+        injuryDate:row.injuryDate || "",
+        venue:row.venue || "",
+        damage:row.damage || "",
+        side:row.side || "",
+        claimNumber:row.claimNumber || ""
+      };
+      await fetch(ACCIDENT_FILES_URL, {
+        method:"POST",
+        mode:"no-cors",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body:JSON.stringify(payload)
       });
     }
 
@@ -508,6 +535,7 @@
           const rowClass = row.isNew ? 'new-request' : '';
           const isAnyPdfBusy = !!pdfBusy;
           const isThisPdfBusy = pdfBusy && pdfBusy.id === row.id;
+          const isResendBusy = resendBusyId === row.id;
           const uploadTitle = row.pdfUrl ? "Canviar PDF" : "Adjuntar PDF pendent";
           const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
           const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
@@ -531,7 +559,10 @@
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + escapeHtml(row.phone || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
-            '<td class="col-name"><button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️ Editar</button></td>' : '';
+            '<td class="col-name"><div class="request-actions">' +
+              '<button class="edit-button" type="button" data-resend-alert="' + escapeHtml(row.id) + '" title="Reenviar l\'avís intern a Info i Direcció Tècnica" aria-label="Reenviar avís intern"' + (isResendBusy ? ' disabled' : '') + '>' + (isResendBusy ? 'Enviant…' : '↗ Reenviar avís') + '</button>' +
+              '<button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️ Editar</button>' +
+            '</div></td>' : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
           '<td class="col-date">' + escapeHtml(formatDate(row.createdAt, false)) + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
@@ -545,6 +576,7 @@
         }).join("") +
         '</tbody></table>';
       bindPdfUploads();
+      bindResendAlerts();
       bindEditActions();
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);
@@ -675,6 +707,29 @@
     function bindEditActions(){
       tableWrap.querySelectorAll("[data-edit-request]").forEach(button => {
         button.addEventListener("click", () => openEditDialog(rows.find(row => row.id === button.dataset.editRequest)));
+      });
+    }
+
+    function bindResendAlerts(){
+      tableWrap.querySelectorAll("[data-resend-alert]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if(!isPrivateView || !currentUser) return;
+          const row = rows.find(item => item.id === button.dataset.resendAlert);
+          if(!row) return;
+          if(!window.confirm("Vols reenviar l'avís intern del comunicat de " + shortName(row.player) + " a Info i Direcció Tècnica?")) return;
+          resendBusyId = row.id;
+          statusMessage = "Reenviant avís intern…";
+          render();
+          try {
+            await resendAccidentAlert(row);
+            statusMessage = "S'ha sol·licitat el reenviament de l'avís intern de " + shortName(row.player) + ".";
+          } catch(error) {
+            statusMessage = error && error.message ? error.message : "No s'ha pogut reenviar l'avís intern.";
+          } finally {
+            resendBusyId = null;
+            render();
+          }
+        });
       });
     }
 

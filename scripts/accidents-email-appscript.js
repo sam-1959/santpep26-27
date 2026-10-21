@@ -343,8 +343,9 @@ function enviarCorreuComunicatsAccident(e) {
     textResumPla += `${pregunta}: ${resposta}\n`;
   }
 
+  var urlComunicats = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
   var assumpte = "Nou comunicat d'accident esportiu rebut";
-  var cosText = "CB SANT JOSEP BADALONA\n\nS'ha rebut un nou comunicat d'accident esportiu:\n\n" + textResumPla;
+  var cosText = "CB SANT JOSEP BADALONA\n\nS'ha rebut un nou comunicat d'accident esportiu:\n\n" + textResumPla + "\n" + urlComunicats;
 
   var cosHTML = `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #E5E5E5; border-radius: 8px; overflow: hidden;">
@@ -364,6 +365,15 @@ function enviarCorreuComunicatsAccident(e) {
           </thead>
           <tbody>${filesResumHTML}</tbody>
         </table>
+
+        <div style="text-align: center; margin: 30px 0 10px 0; padding: 20px; background-color: #F9F6FC; border-radius: 6px; border: 1px dashed #4B1D6D;">
+          <p style="margin: 0 0 15px 0; font-weight: bold; color: #4B1D6D; font-size: 15px;">Comunicats d'accident:</p>
+          <a href="${urlComunicats}"
+             target="_blank"
+             style="background-color: #4B1D6D; color: #FFC72C; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; font-size: 14px; border: 2px solid #FFC72C;">
+            Accedir als comunicats rebuts
+          </a>
+        </div>
       </div>
 
       <div style="background-color: #F4F4F4; padding: 15px; text-align: center; border-top: 1px solid #EEEEEE;">

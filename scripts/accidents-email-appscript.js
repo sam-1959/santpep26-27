@@ -314,23 +314,35 @@ function adaptarComunicatANamedValues(request) {
   };
 }
 
-// Envia només a Direcció Tècnica una mostra de l'avís intern, sense crear cap comunicat.
+// Envia només a Direcció Tècnica l'últim comunicat actiu amb el format de nou avís.
 function enviarProvaAvisComunicatsAccident() {
-  return enviarCorreuComunicatsAccident({
-    testRecipient: "dtecnic@cbsantjosep.cat",
-    namedValues: {
-      "Marca de temps": [formatarDataHora(new Date())],
-      "Adreça electrònica": ["prova@cbsantjosep.cat"],
-      "Nom i cognoms pare/mare": ["Família de prova"],
-      "Nom i cognoms jugador/a": ["Jugador/a de prova"],
-      "Telèfon de contacte": ["600 000 000"],
-      "Dia de la lesió": [formatarData(new Date())],
-      "Instal·lació on s'ha fet la lesió": ["Poliesportiu de Pomar"],
-      "Danys soferts": ["Lesió de prova"],
-      "Lloc de la lesió": ["Entrenament"],
-      "Número d'expedient LLOYD'S": ["—"]
-    }
-  });
+  var request = obtenirUltimComunicatAccident();
+  if (!request) throw new Error("No hi ha cap comunicat actiu per enviar com a prova.");
+  var prova = adaptarComunicatANamedValues(request);
+  prova.testRecipient = "dtecnic@cbsantjosep.cat";
+  Logger.log("S'envia una prova amb el comunicat de " + valor(request.player));
+  return enviarCorreuComunicatsAccident(prova);
+}
+
+function obtenirUltimComunicatAccident() {
+  var base = FIREBASE_DB_URL.replace(/\/$/, "");
+  var safePath = PRIVATE_REQUESTS_PATH.split("/").map(encodeURIComponent).join("/");
+  var response = UrlFetchApp.fetch(base + "/" + safePath + ".json", { muteHttpExceptions: true });
+  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
+    throw new Error("No s'han pogut llegir els comunicats de Firebase: " + response.getResponseCode());
+  }
+  var data = JSON.parse(response.getContentText() || "{}");
+  return Object.keys(data || {})
+    .map(function(id) { return Object.assign({ id: id }, data[id] || {}); })
+    .filter(function(request) { return !request.deleted && !request.deletedAt; })
+    .sort(function(a, b) { return momentComunicat(b) - momentComunicat(a); })[0] || null;
+}
+
+function momentComunicat(request) {
+  var value = request && request.createdAt;
+  if (value instanceof Date) return value.getTime();
+  var moment = new Date(value || 0).getTime();
+  return isNaN(moment) ? 0 : moment;
 }
 
 function enviarCorreuComunicatsAccident(e) {

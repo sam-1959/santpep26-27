@@ -16,6 +16,7 @@ var PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
 var ACCIDENT_PDF_REMINDER_TO = "info@cbsantjosep.cat";
 var ACCIDENT_PDF_REMINDER_CC = "dtecnic@cbsantjosep.cat";
 var ACCIDENT_REQUESTS_URL = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
+var ACCIDENT_PDF_REMINDER_START_KEY = "accidentPdfReminderStartAt";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
@@ -372,10 +373,16 @@ function clauRecordatoriPdf(requestId) {
 function enviarRecordatorisPdfPendents() {
   var ara = Date.now();
   var prop = PropertiesService.getScriptProperties();
+  var inici = new Date(prop.getProperty(ACCIDENT_PDF_REMINDER_START_KEY) || 0).getTime();
+  if (!inici) {
+    Logger.log("No s'han activat encara els recordatoris de PDF; no s'envia cap avís.");
+    return { sent: 0, skipped: "not_activated" };
+  }
   var pendents = obtenirComunicatsPublics().filter(function(request) {
     var edat = ara - momentComunicat(request);
     return !request.deleted && !request.deletedAt && request.hasPdf === false &&
-      edat >= 24 * 60 * 60 * 1000 && !prop.getProperty(clauRecordatoriPdf(request.id));
+      momentComunicat(request) >= inici && edat >= 24 * 60 * 60 * 1000 &&
+      !prop.getProperty(clauRecordatoriPdf(request.id));
   });
   if (!pendents.length) {
     Logger.log("No hi ha comunicats amb PDF pendent de més de 24 hores.");
@@ -415,6 +422,10 @@ function enviarRecordatorisPdfPendents() {
 
 // Executa-la una vegada manualment per crear l'activador horari a Apps Script.
 function programarRecordatorisPdfPendents() {
+  var prop = PropertiesService.getScriptProperties();
+  if (!prop.getProperty(ACCIDENT_PDF_REMINDER_START_KEY)) {
+    prop.setProperty(ACCIDENT_PDF_REMINDER_START_KEY, new Date().toISOString());
+  }
   ScriptApp.getProjectTriggers().forEach(function(trigger) {
     if (trigger.getHandlerFunction() === "enviarRecordatorisPdfPendents") {
       ScriptApp.deleteTrigger(trigger);

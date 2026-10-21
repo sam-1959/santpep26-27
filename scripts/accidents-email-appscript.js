@@ -433,9 +433,9 @@ function programarRecordatorisPdfPendents() {
   });
   ScriptApp.newTrigger("enviarRecordatorisPdfPendents")
     .timeBased()
-    .everyHours(1)
+    .everyHours(12)
     .create();
-  Logger.log("Activador horari creat per a enviarRecordatorisPdfPendents.");
+  Logger.log("Activador creat cada 12 hores per a enviarRecordatorisPdfPendents.");
 }
 
 function enviarCorreuComunicatsAccident(e) {

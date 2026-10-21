@@ -193,7 +193,6 @@
     .change-item.removed { border-left-color:#c62828; }
     .change-item.conflict { border-left-color:#c62828; }
     .change-kind { font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
-    .change-date { margin-top:2px; color:var(--muted); font-size:0.72rem; font-weight:700; }
     .change-main { font-weight:700; font-size:0.9rem; }
     .change-detail { color:var(--muted); font-size:0.8rem; }
     .conflict-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
@@ -901,7 +900,7 @@
       const visible=changes.slice(start, start + CHANGES_PER_PAGE);
       const items=visible.map(function(c){
         const changedAt=fmtImportDate(changeImportDate(c, latest && latest.importedAt));
-        const dateLine=changedAt ? '<div class="change-date">Canvi fet: ' + changedAt + '</div>' : '';
+        const kindLabel=changeTypeLabel(c.type) + (changedAt ? ' - ' + changedAt : '');
         const details=(c.fields||[]).map(function(f){
           return '<div class="change-detail">' + f.label + ': ' +
             fmtChangeValue(f.label, f.from) + ' → ' + fmtChangeValue(f.label, f.to) + '</div>';
@@ -909,8 +908,8 @@
         const weekLink=c.game && c.game.date
           ? '<button type="button" class="change-week-link" data-change-date="' + c.game.date + '">Veure setmana →</button>'
           : '';
-        return '<li class="change-item ' + c.type + '"><div class="change-kind">' + changeTypeLabel(c.type) + '</div>' +
-          dateLine + '<div class="change-main">' + changeGameLine(c.game) + '</div>' + details + weekLink + '</li>';
+        return '<li class="change-item ' + c.type + '"><div class="change-kind">' + kindLabel + '</div>' +
+          '<div class="change-main">' + changeGameLine(c.game) + '</div>' + details + weekLink + '</li>';
       }).join('');
       const nav=total > CHANGES_PER_PAGE
         ? '<div class="changes-nav">' +

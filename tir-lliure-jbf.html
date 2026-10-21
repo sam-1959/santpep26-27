@@ -189,11 +189,19 @@
       const end = new Date(`${weekStart}T12:00:00`); end.setDate(end.getDate() + 6);
       return `${formatDate(weekStart)} – ${end.toISOString().slice(0,10).split('-').reverse().join('/')}`;
     }
+    function compactWeeklyLabel(weekStart){
+      const start = new Date(`${weekStart}T12:00:00`), end = new Date(`${weekStart}T12:00:00`);
+      end.setDate(end.getDate() + 6);
+      if(start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()){
+        return `${String(start.getDate()).padStart(2,'0')}–${String(end.getDate()).padStart(2,'0')}/${String(end.getMonth()+1).padStart(2,'0')}/${end.getFullYear()}`;
+      }
+      return weeklyLabel(weekStart);
+    }
     function renderSummary(){
       const currentWeek = weekStartISO(todayISO());
       const scopedEntries = summaryScope === 'week' ? entries.filter(entry => entry.trainingDate && weekStartISO(entry.trainingDate) === currentWeek) : entries;
       const totals = allPlayerTotals(scopedEntries); const team = totals.reduce((sum,row) => ({ made:sum.made + row.made, attempts:sum.attempts + row.attempts }),{made:0,attempts:0});
-      document.getElementById('summaryTitle').textContent = summaryScope === 'week' ? `Acumulat · setmana del ${weeklyLabel(currentWeek)}` : 'Acumulat de la temporada';
+      document.getElementById('summaryTitle').textContent = summaryScope === 'week' ? `Acumulat · ${compactWeeklyLabel(currentWeek)}` : 'Acumulat de la temporada';
       document.getElementById('summarySub').textContent = summaryScope === 'week' ? 'Classificació de la setmana actual.' : 'Classificació per percentatge, amb el volum de tirs registrat.';
       document.querySelectorAll('[data-summary-scope]').forEach(button => button.classList.toggle('active', button.dataset.summaryScope === summaryScope));
       document.getElementById('seasonMetrics').innerHTML = `<div class="metric"><span>Sessions</span><strong>${scopedEntries.length}</strong></div><div class="metric"><span>Tirs</span><strong>${team.made}/${team.attempts}</strong></div><div class="metric"><span>% d'equip</span><strong>${pct(team.made,team.attempts)}</strong></div>`;

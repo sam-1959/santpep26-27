@@ -303,11 +303,6 @@
       if(!response.ok) throw new Error("Firebase patch failed");
     }
 
-    async function deleteFirebaseRequest(path, id, token){
-      const response = await fetch(firebaseUrl(path + "/" + id, token), { method:"DELETE" });
-      if(!response.ok) throw new Error("Firebase delete failed");
-    }
-
     function readFileAsBase64(file){
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -446,7 +441,7 @@
     }
 
     function normalizeRequests(requests){
-      return requests.map(row => ({
+      return requests.filter(row => !row.deleted && !row.deletedAt).map(row => ({
         id: row.id,
         createdAt: parseDateValue(row.createdAt),
         injuryDate: parseDateValue(row.injuryDate),
@@ -572,7 +567,7 @@
             '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
             '<td class="col-name"><div class="request-actions">' +
               '<button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️</button>' +
-              '<button class="edit-button delete-request" type="button" data-delete-request="' + escapeHtml(row.id) + '" title="' + (isDeleteBusy ? 'Eliminant comunicat' : 'Eliminar comunicat') + '" aria-label="' + (isDeleteBusy ? 'Eliminant comunicat' : 'Eliminar comunicat') + '"' + (isDeleteBusy ? ' disabled' : '') + '>' + (isDeleteBusy ? '<span class="pdf-loading" aria-hidden="true"></span>' : '🗑') + '</button>' +
+              '<button class="edit-button delete-request" type="button" data-delete-request="' + escapeHtml(row.id) + '" title="' + (isDeleteBusy ? 'Retirant comunicat' : 'Retirar comunicat (conservat a Firebase)') + '" aria-label="' + (isDeleteBusy ? 'Retirant comunicat' : 'Retirar comunicat (conservat a Firebase)') + '"' + (isDeleteBusy ? ' disabled' : '') + '>' + (isDeleteBusy ? '<span class="pdf-loading" aria-hidden="true"></span>' : '🗑') + '</button>' +
             '</div></td>' : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -728,30 +723,23 @@
           if(!isPrivateView || !currentUser || deleteBusyId) return;
           const row = rows.find(item => item.id === button.dataset.deleteRequest);
           if(!row) return;
-          const hasPdf = !!row.pdfUrl;
-          const confirmation = "Això eliminarà definitivament el comunicat de " + shortName(row.player) +
-            " de la vista privada i pública" + (hasPdf ? ", i també el PDF associat" : "") + ". Vols continuar?";
+          const confirmation = "Això retirarà el comunicat de " + shortName(row.player) +
+            " de les vistes privada i pública. Les dades i el PDF es conservaran a Firebase. Vols continuar?";
           if(!window.confirm(confirmation)) return;
           deleteBusyId = row.id;
           try {
-            if(hasPdf){
-              statusMessage = "Eliminant el PDF associat...";
-              render();
-              await deleteAccidentPdf(row);
-              const pdfRemoved = await waitForPdfRemoval(row.id);
-              if(!pdfRemoved) throw new Error("No s'ha pogut confirmar l'eliminació del PDF. El comunicat no s'ha eliminat.");
-            }
-            statusMessage = "Eliminant comunicat...";
+            statusMessage = "Retirant comunicat...";
             render();
             const token = await currentUser.getIdToken();
+            const deletedAt = new Date().toISOString();
             await Promise.all([
-              deleteFirebaseRequest(PRIVATE_REQUESTS_PATH, row.id, token),
-              deleteFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, token)
+              patchFirebaseRequest(PRIVATE_REQUESTS_PATH, row.id, { deleted:true, deletedAt, deletedBy:currentUser.email || "" }, token),
+              patchFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, { deleted:true, deletedAt }, token)
             ]);
             newRequestIds.delete(requestIdentity(row));
             seenRequestIds.delete(requestIdentity(row));
             await loadPrivateRequests(currentUser);
-            statusMessage = "Comunicat de " + shortName(row.player) + " eliminat.";
+            statusMessage = "Comunicat de " + shortName(row.player) + " retirat.";
           } catch(error) {
             statusMessage = error && error.message ? error.message : "No s'ha pogut eliminar el comunicat.";
           } finally {

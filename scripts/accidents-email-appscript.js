@@ -12,6 +12,7 @@
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
+var PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
@@ -326,7 +327,7 @@ function enviarProvaAvisComunicatsAccident() {
 
 function obtenirUltimComunicatAccident() {
   var base = FIREBASE_DB_URL.replace(/\/$/, "");
-  var safePath = PRIVATE_REQUESTS_PATH.split("/").map(encodeURIComponent).join("/");
+  var safePath = PUBLIC_REQUESTS_PATH.split("/").map(encodeURIComponent).join("/");
   var response = UrlFetchApp.fetch(base + "/" + safePath + ".json", { muteHttpExceptions: true });
   if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
     throw new Error("No s'han pogut llegir els comunicats de Firebase: " + response.getResponseCode());

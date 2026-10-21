@@ -72,6 +72,8 @@
     .edit-button { border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--brand); padding:6px 9px; font-weight:900; cursor:pointer; }
     .edit-button:hover { border-color:var(--brand); background:#faf8fd; }
     .edit-button:disabled { opacity:.55; cursor:wait; }
+    .delete-request { border-color:#ffcdd2; color:#b71c1c; background:#fff5f5; }
+    .delete-request:hover { border-color:#b71c1c; background:#ffebee; }
     .request-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
     dialog { width:min(760px,calc(100% - 24px)); max-height:calc(100vh - 24px); border:0; border-radius:16px; padding:0; color:var(--ink); box-shadow:0 16px 50px rgba(42,34,51,.28); }
     dialog::backdrop { background:rgba(42,34,51,.42); }
@@ -214,6 +216,7 @@
     let isRefreshing = false;
     let pdfBusy = null;
     let resendBusyId = null;
+    let deleteBusyId = null;
     let editingRowId = null;
 
     function parseDateValue(value){
@@ -297,6 +300,11 @@
         body:JSON.stringify(payload)
       });
       if(!response.ok) throw new Error("Firebase patch failed");
+    }
+
+    async function deleteFirebaseRequest(path, id, token){
+      const response = await fetch(firebaseUrl(path + "/" + id, token), { method:"DELETE" });
+      if(!response.ok) throw new Error("Firebase delete failed");
     }
 
     function readFileAsBase64(file){
@@ -453,6 +461,7 @@
         pdfName: row.pdfName,
         pdfPath: row.pdfPath,
         pdfUrl: row.pdfUrl,
+        pdfDriveId: row.pdfDriveId,
         pdfUploadedAt: parseDateValue(row.pdfUploadedAt),
         pdfUploadedBy: row.pdfUploadedBy,
         familyEmailSentAt: parseDateValue(row.familyEmailSentAt),
@@ -536,6 +545,7 @@
           const isAnyPdfBusy = !!pdfBusy;
           const isThisPdfBusy = pdfBusy && pdfBusy.id === row.id;
           const isResendBusy = resendBusyId === row.id;
+          const isDeleteBusy = deleteBusyId === row.id;
           const uploadTitle = row.pdfUrl ? "Canviar PDF" : "Adjuntar PDF pendent";
           const uploadLabel = isThisPdfBusy && pdfBusy.action === "upload" ? '<span class="pdf-loading" aria-hidden="true"></span>' : (row.pdfUrl ? "↻" : "＋");
           const deleteLabel = isThisPdfBusy && pdfBusy.action === "delete" ? '<span class="pdf-loading" aria-hidden="true"></span>' : "🗑";
@@ -561,6 +571,7 @@
             '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
             '<td class="col-name"><div class="request-actions">' +
               '<button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️ Editar</button>' +
+              '<button class="edit-button delete-request" type="button" data-delete-request="' + escapeHtml(row.id) + '" title="Eliminar comunicat" aria-label="Eliminar comunicat"' + (isDeleteBusy ? ' disabled' : '') + '>' + (isDeleteBusy ? 'Eliminant...' : '🗑 Eliminar') + '</button>' +
             '</div></td>' : '';
           return '<tr class="' + rowClass + '">' +
           '<td class="col-count">' + (visible.length - start - index) + '</td>' +
@@ -577,6 +588,7 @@
       bindPdfUploads();
       bindResendAlerts();
       bindEditActions();
+      bindDeleteActions();
       renderPagination(visible.length, totalPages);
       renderAnalysis(visible);
     }
@@ -706,6 +718,46 @@
     function bindEditActions(){
       tableWrap.querySelectorAll("[data-edit-request]").forEach(button => {
         button.addEventListener("click", () => openEditDialog(rows.find(row => row.id === button.dataset.editRequest)));
+      });
+    }
+
+    function bindDeleteActions(){
+      tableWrap.querySelectorAll("[data-delete-request]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if(!isPrivateView || !currentUser || deleteBusyId) return;
+          const row = rows.find(item => item.id === button.dataset.deleteRequest);
+          if(!row) return;
+          const hasPdf = !!row.pdfUrl;
+          const confirmation = "Això eliminarà definitivament el comunicat de " + shortName(row.player) +
+            " de la vista privada i pública" + (hasPdf ? ", i també el PDF associat" : "") + ". Vols continuar?";
+          if(!window.confirm(confirmation)) return;
+          deleteBusyId = row.id;
+          try {
+            if(hasPdf){
+              statusMessage = "Eliminant el PDF associat...";
+              render();
+              await deleteAccidentPdf(row);
+              const pdfRemoved = await waitForPdfRemoval(row.id);
+              if(!pdfRemoved) throw new Error("No s'ha pogut confirmar l'eliminació del PDF. El comunicat no s'ha eliminat.");
+            }
+            statusMessage = "Eliminant comunicat...";
+            render();
+            const token = await currentUser.getIdToken();
+            await Promise.all([
+              deleteFirebaseRequest(PRIVATE_REQUESTS_PATH, row.id, token),
+              deleteFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, token)
+            ]);
+            newRequestIds.delete(requestIdentity(row));
+            seenRequestIds.delete(requestIdentity(row));
+            await loadPrivateRequests(currentUser);
+            statusMessage = "Comunicat de " + shortName(row.player) + " eliminat.";
+          } catch(error) {
+            statusMessage = error && error.message ? error.message : "No s'ha pogut eliminar el comunicat.";
+          } finally {
+            deleteBusyId = null;
+            render();
+          }
+        });
       });
     }
 

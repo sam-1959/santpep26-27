@@ -560,7 +560,6 @@
             '<td class="col-phone">' + escapeHtml(row.phone || "—") + '</td>' +
             '<td class="col-name">' + escapeHtml(row.email || "—") + '</td>' +
             '<td class="col-name"><div class="request-actions">' +
-              '<button class="edit-button" type="button" data-resend-alert="' + escapeHtml(row.id) + '" title="Reenviar l\'avís intern a Info i Direcció Tècnica" aria-label="Reenviar avís intern"' + (isResendBusy ? ' disabled' : '') + '>' + (isResendBusy ? 'Enviant…' : '↗ Reenviar avís') + '</button>' +
               '<button class="edit-button" type="button" data-edit-request="' + escapeHtml(row.id) + '" title="Editar comunicat" aria-label="Editar comunicat">✏️ Editar</button>' +
             '</div></td>' : '';
           return '<tr class="' + rowClass + '">' +

@@ -31,9 +31,9 @@
       .metric { padding:10px 12px; } .metric strong { font-size:1.2rem; }
       .table-wrap { -webkit-overflow-scrolling:touch; }
       .entry-table { min-width:0; } .entry-table thead { display:none; } .entry-table, .entry-table tbody, .entry-table tfoot { display:block; width:100%; }
-      .entry-table tbody tr { display:grid; grid-template-columns:34px minmax(0,1fr) auto; grid-template-areas:"number name session" "made attempts percent"; gap:8px; margin:0; padding:10px 0; border-bottom:1px solid var(--line); }
+      .entry-table tbody tr { position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-areas:"name name session" "made attempts percent"; gap:8px; margin:0; padding:10px 0; border-bottom:1px solid var(--line); }
       .entry-table tbody td { min-width:0; padding:0; border:0; text-align:left; } .entry-table tbody tr:last-child { border-bottom:0; }
-      .entry-table .entry-number { grid-area:number; align-self:center; color:var(--muted); font-weight:850; } .entry-table .entry-name { grid-area:name; align-self:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .entry-table .entry-session { grid-area:session; }
+      .entry-table .entry-number { position:absolute; top:13px; left:0; color:var(--muted); font-weight:850; } .entry-table .entry-name { grid-area:name; align-self:center; min-width:0; padding-left:30px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .entry-table .entry-session { grid-area:session; }
       .entry-table .entry-made { grid-area:made; } .entry-table .entry-attempts { grid-area:attempts; } .entry-table .entry-percent { grid-area:percent; display:grid; align-content:end; text-align:right; }
       .entry-table .entry-made::before, .entry-table .entry-attempts::before, .entry-table .entry-percent::before { display:block; margin-bottom:3px; color:var(--muted); font-size:.61rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
       .entry-table .entry-made::before { content:"Anotats"; } .entry-table .entry-attempts::before { content:"Intentats"; } .entry-table .entry-percent::before { content:"Percentatge"; }

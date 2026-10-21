@@ -440,6 +440,26 @@
       }
     }
 
+    async function syncPublicPdfStatus(privateRows){
+      try {
+        const publicRows = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
+        const publicById = new Map(publicRows.map(row => [row.id, row]));
+        const updates = privateRows
+          .map(row => ({ id:row.id, hasPdf:!!row.pdfUrl, pdfUploadedAt:row.pdfUploadedAt || null }))
+          .filter(row => {
+            const current = publicById.get(row.id) || {};
+            return row.id && current.hasPdf !== row.hasPdf;
+          })
+          .map(row => patchFirebaseRequest(PUBLIC_REQUESTS_PATH, row.id, {
+            hasPdf: row.hasPdf,
+            pdfUploadedAt: row.pdfUploadedAt
+          }));
+        if(updates.length) await Promise.all(updates);
+      } catch(error) {
+        console.warn("No s'ha pogut sincronitzar l'estat del PDF a la vista pública.", error);
+      }
+    }
+
     function normalizeRequests(requests){
       return requests.filter(row => !row.deleted && !row.deletedAt).map(row => ({
         id: row.id,
@@ -968,6 +988,7 @@
         const token = await user.getIdToken();
         const privateRows = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
         await syncPublicPlayerNames(privateRows);
+        await syncPublicPdfStatus(privateRows);
         rows = applyRequestMarkers(normalizeRequests(privateRows), true);
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";

@@ -13,6 +13,9 @@
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var PRIVATE_REQUESTS_PATH = "accidentReportsPrivate/season-26-27";
 var PUBLIC_REQUESTS_PATH = "accidentReportsPublic/season-26-27";
+var ACCIDENT_PDF_REMINDER_TO = "info@cbsantjosep.cat";
+var ACCIDENT_PDF_REMINDER_CC = "dtecnic@cbsantjosep.cat";
+var ACCIDENT_REQUESTS_URL = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
@@ -114,6 +117,11 @@ function guardarPdfComunicat(request) {
   };
 
   actualitzarFirebase(PRIVATE_REQUESTS_PATH + "/" + request.requestId, payload);
+  actualitzarFirebase(PUBLIC_REQUESTS_PATH + "/" + request.requestId, {
+    hasPdf: true,
+    pdfUploadedAt: payload.pdfUploadedAt
+  });
+  PropertiesService.getScriptProperties().deleteProperty(clauRecordatoriPdf(request.requestId));
   eliminarFitxerDriveSiExisteix(request.previousPdfDriveId || extreureDriveFileId(request.previousPdfUrl));
   if (String(request.sendFamilyEmail || "true") === "true") {
     var destinatarisFamilia = enviarCorreuDocumentFamilia(request, payload);
@@ -254,6 +262,11 @@ function eliminarPdfComunicat(request) {
     pdfDeletedAt: new Date().toISOString(),
     pdfDeletedBy: valor(request.deletedBy)
   });
+  actualitzarFirebase(PUBLIC_REQUESTS_PATH + "/" + request.requestId, {
+    hasPdf: false,
+    pdfUploadedAt: null
+  });
+  PropertiesService.getScriptProperties().deleteProperty(clauRecordatoriPdf(request.requestId));
   Logger.log("PDF eliminat i Firebase actualitzat.");
   return { ok: true, deleted: true };
 }
@@ -326,6 +339,12 @@ function enviarProvaAvisComunicatsAccident() {
 }
 
 function obtenirUltimComunicatAccident() {
+  return obtenirComunicatsPublics()
+    .filter(function(request) { return !request.deleted && !request.deletedAt; })
+    .sort(function(a, b) { return momentComunicat(b) - momentComunicat(a); })[0] || null;
+}
+
+function obtenirComunicatsPublics() {
   var base = FIREBASE_DB_URL.replace(/\/$/, "");
   var safePath = PUBLIC_REQUESTS_PATH.split("/").map(encodeURIComponent).join("/");
   var response = UrlFetchApp.fetch(base + "/" + safePath + ".json", { muteHttpExceptions: true });
@@ -335,8 +354,7 @@ function obtenirUltimComunicatAccident() {
   var data = JSON.parse(response.getContentText() || "{}");
   return Object.keys(data || {})
     .map(function(id) { return Object.assign({ id: id }, data[id] || {}); })
-    .filter(function(request) { return !request.deleted && !request.deletedAt; })
-    .sort(function(a, b) { return momentComunicat(b) - momentComunicat(a); })[0] || null;
+    .filter(function(request) { return !!request.id; });
 }
 
 function momentComunicat(request) {
@@ -344,6 +362,69 @@ function momentComunicat(request) {
   if (value instanceof Date) return value.getTime();
   var moment = new Date(value || 0).getTime();
   return isNaN(moment) ? 0 : moment;
+}
+
+function clauRecordatoriPdf(requestId) {
+  return "accidentPdfReminder:" + String(requestId || "");
+}
+
+// Pensada per a un activador horari: envia un únic recordatori per comunicat pendent.
+function enviarRecordatorisPdfPendents() {
+  var ara = Date.now();
+  var prop = PropertiesService.getScriptProperties();
+  var pendents = obtenirComunicatsPublics().filter(function(request) {
+    var edat = ara - momentComunicat(request);
+    return !request.deleted && !request.deletedAt && request.hasPdf === false &&
+      edat >= 24 * 60 * 60 * 1000 && !prop.getProperty(clauRecordatoriPdf(request.id));
+  });
+  if (!pendents.length) {
+    Logger.log("No hi ha comunicats amb PDF pendent de més de 24 hores.");
+    return { sent: 0 };
+  }
+
+  var filesText = pendents.map(function(request) {
+    return "- " + valor(request.player) + " · rebut el " + formatarDataHora(request.createdAt);
+  }).join("\n");
+  var filesHtml = pendents.map(function(request) {
+    return '<tr><td style="padding:10px;border-bottom:1px solid #E5E5E5;font-weight:bold;color:#4B1D6D;">' + escaparHtml(valor(request.player)) +
+      '</td><td style="padding:10px;border-bottom:1px solid #E5E5E5;color:#333;">' + escaparHtml(formatarDataHora(request.createdAt)) + '</td></tr>';
+  }).join("");
+  var plural = pendents.length === 1 ? "comunicat" : "comunicats";
+  var assumpte = "PDF pendent · " + pendents.length + " " + plural + " d'accident";
+  var cosText = "CB SANT JOSEP BADALONA\n\nHi ha " + pendents.length + " " + plural +
+    " d'accident rebut fa més de 24 hores sense PDF adjunt:\n\n" + filesText +
+    "\n\nAdjunteu el PDF des de:\n" + ACCIDENT_REQUESTS_URL;
+  var cosHtml = '<div style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;">' +
+    '<div style="background:#4B1D6D;padding:22px;text-align:center;border-bottom:4px solid #FFC72C;"><h1 style="color:#FFC72C;margin:0;font-size:20px;">CB SANT JOSEP BADALONA</h1><p style="color:#fff;margin:5px 0 0;font-size:13px;">Recordatori de comunicats d\'accident</p></div>' +
+    '<div style="padding:24px;background:#fff;"><p style="margin:0 0 18px;padding:12px;background:#FFF8D6;border-left:4px solid #FFC72C;border-radius:6px;"><strong>PDF pendent:</strong> hi ha ' + pendents.length + ' ' + plural + ' rebut' + (pendents.length === 1 ? '' : 's') + ' fa més de 24 hores sense document adjunt.</p>' +
+    '<table style="width:100%;border-collapse:collapse;margin:0 0 22px;"><thead><tr style="background:#4B1D6D;color:#FFC72C;"><th style="padding:10px;text-align:left;">Jugador/a</th><th style="padding:10px;text-align:left;">Data del comunicat</th></tr></thead><tbody>' + filesHtml + '</tbody></table>' +
+    '<div style="text-align:center;padding:18px;background:#F9F6FC;border:1px dashed #4B1D6D;border-radius:6px;"><a href="' + ACCIDENT_REQUESTS_URL + '" target="_blank" style="background:#4B1D6D;color:#FFC72C;padding:12px 24px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;border:2px solid #FFC72C;">Adjuntar PDF al comunicat</a></div></div></div>';
+
+  GmailApp.sendEmail(ACCIDENT_PDF_REMINDER_TO, assumpte, cosText, {
+    cc: ACCIDENT_PDF_REMINDER_CC,
+    htmlBody: cosHtml,
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
+  });
+  pendents.forEach(function(request) {
+    prop.setProperty(clauRecordatoriPdf(request.id), new Date().toISOString());
+  });
+  Logger.log("Recordatori de PDF pendent enviat per " + pendents.length + " comunicat(s).");
+  return { sent: pendents.length, requestIds: pendents.map(function(request) { return request.id; }) };
+}
+
+// Executa-la una vegada manualment per crear l'activador horari a Apps Script.
+function programarRecordatorisPdfPendents() {
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === "enviarRecordatorisPdfPendents") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  ScriptApp.newTrigger("enviarRecordatorisPdfPendents")
+    .timeBased()
+    .everyHours(1)
+    .create();
+  Logger.log("Activador horari creat per a enviarRecordatorisPdfPendents.");
 }
 
 function enviarCorreuComunicatsAccident(e) {

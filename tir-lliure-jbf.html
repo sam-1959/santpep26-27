@@ -39,7 +39,7 @@
       .entry-table .entry-made::before { content:"Anotats"; } .entry-table .entry-attempts::before { content:"Intentats"; } .entry-table .entry-percent::before { content:"Percentatge"; }
       .entry-table .shot-input { width:100%; min-width:0; min-height:40px; padding:6px; } .entry-table .exclude-player { min-height:34px; padding:5px 8px; }
       .entry-table tfoot tr { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:10px 0; } .entry-table .total-row td { padding:0; border:0; text-align:left; background:transparent; } .entry-table .total-row td:first-child { grid-column:1 / -1; } .entry-table .total-row td:last-child { display:none; } .entry-table .total-row td.num { text-align:center; }
-      .summary-table { width:max-content; min-width:0; } .summary-table th, .summary-table td { white-space:nowrap; } .summary-table .rank { width:36px; text-align:center; } .summary-table .rank-name { font-size:.82rem; } .summary-table .summary-split { display:none; } .summary-table .summary-combined { display:table-cell; } #history .table-wrap table { min-width:460px; } footer { padding:0 12px 20px; }
+      .summary-table { width:max-content; min-width:0; } .summary-table th, .summary-table td { white-space:nowrap; } .summary-table .rank { width:36px; text-align:center; } .summary-table .rank-name { font-size:.82rem; } .summary-table .summary-split { display:none; } .summary-table .summary-combined { display:table-cell; text-align:center; } .summary-table th:last-child, .summary-table td:last-child { text-align:center; } #history .table-wrap table { min-width:460px; } footer { padding:0 12px 20px; }
     }
   </style>
 </head>
@@ -61,7 +61,7 @@
     <section class="panel">
       <div class="panel-head"><div><h2 id="summaryTitle">Acumulat de la setmana</h2><p class="sub" id="summarySub">Classificació per percentatge, amb el volum de tirs registrat.</p></div><div class="summary-switch" role="group" aria-label="Període de l’acumulat"><button class="active" type="button" data-summary-scope="week">Setmana</button><button type="button" data-summary-scope="season">Temporada</button></div></div>
       <div class="summary-grid" id="seasonMetrics"></div>
-      <div class="table-wrap" style="margin-top:12px"><table class="summary-table"><thead><tr><th class="rank">#</th><th>Jugadora</th><th class="num summary-split">Anotats</th><th class="num summary-split">Intentats</th><th class="num summary-combined">A/I</th><th class="num">%</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
+      <div class="table-wrap" style="margin-top:12px"><table class="summary-table"><thead><tr><th class="rank">#</th><th>Jugadora</th><th class="num summary-split">Anotats</th><th class="num summary-split">Intentats</th><th class="num summary-combined">TL</th><th class="num">%</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
     </section>
     <section class="panel">
       <div class="panel-head"><div><h2>Entrenaments registrats</h2><p class="sub">Resum de cada entrada desada.</p></div></div>

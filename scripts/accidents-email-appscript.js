@@ -314,14 +314,34 @@ function adaptarComunicatANamedValues(request) {
   };
 }
 
+// Envia només a Direcció Tècnica una mostra de l'avís intern, sense crear cap comunicat.
+function enviarProvaAvisComunicatsAccident() {
+  return enviarCorreuComunicatsAccident({
+    testRecipient: "dtecnic@cbsantjosep.cat",
+    namedValues: {
+      "Marca de temps": [formatarDataHora(new Date())],
+      "Adreça electrònica": ["prova@cbsantjosep.cat"],
+      "Nom i cognoms pare/mare": ["Família de prova"],
+      "Nom i cognoms jugador/a": ["Jugador/a de prova"],
+      "Telèfon de contacte": ["600 000 000"],
+      "Dia de la lesió": [formatarData(new Date())],
+      "Instal·lació on s'ha fet la lesió": ["Poliesportiu de Pomar"],
+      "Danys soferts": ["Lesió de prova"],
+      "Lloc de la lesió": ["Entrenament"],
+      "Número d'expedient LLOYD'S": ["—"]
+    }
+  });
+}
+
 function enviarCorreuComunicatsAccident(e) {
   if (!e || !e.namedValues) {
     Logger.log("Aquesta funció s'ha d'executar mitjançant doPost.");
     return;
   }
 
-  var destinatariPrincipal = correuPrincipalAvisosAccidents();
-  var destinatarisCopia = destinatarisComunicatsAccident("avis").filter(function(correu) {
+  var esProva = !!e.testRecipient;
+  var destinatariPrincipal = esProva ? String(e.testRecipient).trim() : correuPrincipalAvisosAccidents();
+  var destinatarisCopia = esProva ? [] : destinatarisComunicatsAccident("avis").filter(function(correu) {
     return correu.toLowerCase() !== destinatariPrincipal.toLowerCase();
   });
 
@@ -344,7 +364,7 @@ function enviarCorreuComunicatsAccident(e) {
   }
 
   var urlComunicats = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
-  var assumpte = "Nou comunicat d'accident esportiu rebut";
+  var assumpte = (esProva ? "PROVA · " : "") + "Nou comunicat d'accident esportiu rebut";
   var cosText = "CB SANT JOSEP BADALONA\n\nS'ha rebut un nou comunicat d'accident esportiu:\n\n" + textResumPla + "\n" + urlComunicats;
 
   var cosHTML = `
@@ -392,11 +412,11 @@ function enviarCorreuComunicatsAccident(e) {
   }
   GmailApp.sendEmail(destinatariPrincipal, assumpte, cosText, opcionsCorreu);
 
-  Logger.log("Correu enviat a: " + destinatariPrincipal);
+  Logger.log((esProva ? "Prova enviada" : "Correu enviat") + " a: " + destinatariPrincipal);
   if (destinatarisCopia.length) {
     Logger.log("Destinataris en còpia: " + destinatarisCopia.join(", "));
   }
-  return { sentTo: [destinatariPrincipal].concat(destinatarisCopia) };
+  return { sentTo: [destinatariPrincipal].concat(destinatarisCopia), test: esProva };
 }
 
 function correuPrincipalAvisosAccidents() {

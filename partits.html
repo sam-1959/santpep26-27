@@ -266,7 +266,7 @@
         <label class="edit-field">Data<input id="gameEditDate" type="date" required /></label>
         <label class="edit-field">Hora<input id="gameEditTime" type="time" required /></label>
         <label class="edit-field full">Rival<input id="gameEditRival" type="text" required /></label>
-        <label class="edit-field">Instal·lació
+        <label class="edit-field" id="gameEditVenueField">Instal·lació
           <select id="gameEditVenue">
             <option value="">Sense especificar</option>
             <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
@@ -275,7 +275,7 @@
             <option value="Altres">Altres</option>
           </select>
         </label>
-        <label class="edit-field" id="gameEditOtherLocationField" hidden>Indica la instal·lació<input id="gameEditOtherLocation" type="text" /></label>
+        <label class="edit-field" id="gameEditOtherLocationField" hidden>Instal·lació<input id="gameEditOtherLocation" type="text" /></label>
         <div class="edit-checks">
           <label class="edit-check"><input id="gameEditHome" type="checkbox" /> Partit a casa</label>
           <label class="edit-check"><input id="gameEditFriendly" type="checkbox" /> Partit amistós</label>
@@ -954,6 +954,7 @@
     const gameEditForm=document.getElementById('gameEditForm');
     const gameEditStatus=document.getElementById('gameEditStatus');
     const gameEditVenue=document.getElementById('gameEditVenue');
+    const gameEditVenueField=document.getElementById('gameEditVenueField');
     const gameEditOtherLocation=document.getElementById('gameEditOtherLocation');
     const gameEditOtherLocationField=document.getElementById('gameEditOtherLocationField');
     const HOME_VENUES=["Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
@@ -966,19 +967,34 @@
       return "";
     }
     function updateOtherLocationField(){
+      if(!document.getElementById('gameEditHome').checked) return;
       const isOther=gameEditVenue.value === "Altres";
       gameEditOtherLocationField.hidden=!isOther;
+      gameEditOtherLocationField.classList.remove('full');
       gameEditOtherLocation.required=isOther;
       if(!isOther) gameEditOtherLocation.value='';
+    }
+    function updateGameEditVenueMode(){
+      const isHome=document.getElementById('gameEditHome').checked;
+      gameEditVenueField.hidden=!isHome;
+      if(!isHome){
+        gameEditOtherLocationField.hidden=false;
+        gameEditOtherLocationField.classList.add('full');
+        gameEditOtherLocation.required=false;
+        return;
+      }
+      updateOtherLocationField();
     }
     function setGameEditLocation(location){
       const known=knownHomeVenue(location);
       gameEditVenue.value=known || (location ? "Altres" : "");
       gameEditOtherLocation.value=known ? "" : (location || "");
-      updateOtherLocationField();
+      updateGameEditVenueMode();
     }
     function selectedGameLocation(){
-      return gameEditVenue.value === "Altres" ? gameEditOtherLocation.value.trim() : gameEditVenue.value;
+      return !document.getElementById('gameEditHome').checked || gameEditVenue.value === "Altres"
+        ? gameEditOtherLocation.value.trim()
+        : gameEditVenue.value;
     }
     function gameEditErrorMessage(error){
       const code=String(error && error.code || '');
@@ -1003,8 +1019,8 @@
       document.getElementById('gameEditDate').value=game.date || '';
       document.getElementById('gameEditTime').value=game.time || '';
       document.getElementById('gameEditRival').value=game.rival || '';
-      setGameEditLocation(game.loc || '');
       document.getElementById('gameEditHome').checked=!!game.home;
+      setGameEditLocation(game.loc || '');
       document.getElementById('gameEditFriendly').checked=!!game.friendly;
       document.getElementById('gameEditChangeNeeded').checked=game.changeNeeded === true;
       document.getElementById('gameEditSubtitle').textContent=game.team+' '+(game.sex==='F'?'F':'M');
@@ -1020,6 +1036,7 @@
     document.getElementById('gameEditClose').onclick=closeGameEditor;
     document.getElementById('gameEditCancel').onclick=closeGameEditor;
     gameEditVenue.onchange=updateOtherLocationField;
+    document.getElementById('gameEditHome').onchange=updateGameEditVenueMode;
     gameEditDialog.addEventListener('click', function(event){ if(event.target===gameEditDialog) closeGameEditor(); });
     gameEditForm.addEventListener('submit', async function(event){
       event.preventDefault();

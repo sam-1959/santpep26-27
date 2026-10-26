@@ -21,6 +21,7 @@ var SEASON = "season-26-27";
 var TIMEZONE = "Europe/Madrid";
 var WEEK_OFFSET_DAYS = 7;
 var RPE_GLOBAL_URL = "https://sam-1959.github.io/santpep26-27/wellness-dades.html";
+var PHYSIO_WEEKLY_CC = "dtecnic@cbsantjosep.cat";
 
 var PHYSIO_VISITS_PATH = "physioVisits/" + SEASON;
 var WELLNESS_RESPONSES_PATH = "wellnessResponses/" + SEASON;
@@ -165,12 +166,13 @@ function enviarSetmanalVisitesFisio(options) {
   var recipients = weeklyPhysioRecipients(contacts);
   var payload = buildPhysioVisitsPayload(selectedWeek, dates, records);
   if (options.dryRun) {
-    Logger.log("[DRY_RUN] Visites Fisio a " + recipients.names.join(", ") + ". Registres: " + records.length);
-    return { status: "dry_run", recipients: recipients.names, records: records.length };
+    Logger.log("[DRY_RUN] Visites Fisio a " + recipients.toNames.join(", ") + " · CC: " + recipients.cc.join(", ") + ". Registres: " + records.length);
+    return { status: "dry_run", recipients: recipients.toNames, cc: recipients.cc, records: records.length };
   }
 
-  sendEmailToRecipients(
-    recipients.emails,
+  sendPhysioWeeklyEmail(
+    recipients.to,
+    recipients.cc,
     "Resum setmanal de visites de fisioteràpia - " + payload.weekLabel,
     buildPhysioVisitsText(payload),
     buildPhysioVisitsHtml(payload)
@@ -180,12 +182,13 @@ function enviarSetmanalVisitesFisio(options) {
     week: selectedWeek,
     weekLabel: payload.weekLabel,
     at: nowIso(),
-    recipients: recipients.emails,
-    recipientNames: recipients.names,
+    recipients: recipients.to,
+    recipientNames: recipients.toNames,
+    cc: recipients.cc,
     records: records.length,
     players: payload.summary.players
   });
-  return { status: "sent", recipients: recipients.names, records: records.length };
+  return { status: "sent", recipients: recipients.toNames, cc: recipients.cc, records: records.length };
 }
 
 function enviarSetmanalRpe(options) {
@@ -339,6 +342,21 @@ function sendEmailToRecipients(emails, subject, textBody, htmlBody) {
     });
     Logger.log("Correu enviat a: " + email);
   });
+}
+
+function sendPhysioWeeklyEmail(to, cc, subject, textBody, htmlBody) {
+  var toRecipients = normalitzarCorreus(to);
+  var ccRecipients = normalitzarCorreus(cc).filter(function(email) {
+    return toRecipients.map(function(toEmail) { return toEmail.toLowerCase(); }).indexOf(email.toLowerCase()) === -1;
+  });
+  if (!toRecipients.length) throw new Error("No hi ha destinataris principals per al resum setmanal de Visites Fisio.");
+  GmailApp.sendEmail(toRecipients.join(","), subject, textBody, {
+    htmlBody: htmlBody,
+    cc: ccRecipients.join(","),
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
+  });
+  Logger.log("Resum Visites Fisio enviat a: " + toRecipients.join(", ") + (ccRecipients.length ? " · CC: " + ccRecipients.join(", ") : ""));
 }
 
 function selectedWeekKey() {
@@ -563,7 +581,19 @@ function weeklyPhysioRecipients(contacts) {
   var all = coordinators.filter(function(contact) {
     return includedRoles[String(contact.role || "").trim()];
   });
-  return contactsToRecipients(all, "No hi ha destinataris vàlids per al resum setmanal de Visites Fisio.");
+  var recipients = contactsToRecipients(all, "No hi ha destinataris vàlids per al resum setmanal de Visites Fisio.");
+  var cc = normalitzarCorreus([PHYSIO_WEEKLY_CC]);
+  var to = recipients.emails.filter(function(email) {
+    return cc.map(function(ccEmail) { return ccEmail.toLowerCase(); }).indexOf(email.toLowerCase()) === -1;
+  });
+  if (!to.length) throw new Error("No hi ha destinataris principals per al resum setmanal de Visites Fisio.");
+  return {
+    to: to,
+    toNames: recipients.names.filter(function(name, index) {
+      return to.indexOf(recipients.emails[index]) !== -1;
+    }),
+    cc: cc
+  };
 }
 
 function contactsToRecipients(contacts, errorMessage) {

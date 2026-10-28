@@ -19,14 +19,14 @@
   </style>
 </head>
 <body>
-  <header><a class="logo-link" href="index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep" /></a><div><h1><span>CB Sant Josep de Badalona</span>Planificació d'entrenaments</h1><p>Període de Nadal · 28/12/2026 – 08/01/2027</p></div></header>
+  <header><a class="logo-link" href="index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep" /></a><div><h1><span>CB Sant Josep de Badalona</span>Planificació d'entrenaments</h1><p>Període de Nadal · 24/12/2026 – 08/01/2027</p></div></header>
   <main>
     <div class="top"><div><h2>Peticions d'entrenament</h2><p class="hint">Visualització per detectar franges i equips que es poden agrupar.</p></div><a class="back" href="index.html">← Tornar al portal</a></div>
     <div id="summary" class="summary"></div>
     <p class="intro"><strong>Planificació en curs:</strong> cada entrenament dura <strong>1 h 30 min</strong>. Hi afegirem cada petició d'equip amb el dia, la franja, la pista i el nombre de jugadors. Les coincidències apareixeran automàticament a les propostes d'agrupació.</p>
     <nav class="week-tabs" aria-label="Vista per setmana">
       <button type="button" class="active" data-week="all">Totes les setmanes</button>
-      <button type="button" data-week="week1">Setmana 1 · 28/12 – 01/01</button>
+      <button type="button" data-week="week1">Setmana 1 · 24/12 – 01/01</button>
       <button type="button" data-week="week2">Setmana 2 · 04/01 – 08/01</button>
     </nav>
     <section><div class="section-heading"><h3>Peticions per dia</h3><p>Targetes coincidents = possible sessió compartida.</p></div><div id="board" class="board"></div></section>
@@ -35,9 +35,9 @@
   <script>
     // Afegim aquí les peticions rebudes: { date, team, sex:"F"|"M", time, players, court, notes }.
     const SESSION_DURATION = "1 h 30 min";
-    const WEEK_DAYS = { week1:["2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week2:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
-    const CLOSED_DAYS = { "2027-01-01":"No es pot entrenar", "2027-01-06":"No es pot entrenar" };
-    const DAY_NOTICES = { "2027-01-05":"Només es pot entrenar al matí" };
+    const WEEK_DAYS = { week1:["2026-12-24","2026-12-25","2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week2:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
+    const CLOSED_DAYS = { "2026-12-25":"No es pot entrenar", "2027-01-01":"No es pot entrenar", "2027-01-06":"No es pot entrenar" };
+    const DAY_NOTICES = { "2026-12-24":"Només es pot entrenar al matí", "2026-12-31":"Només es pot entrenar al matí", "2027-01-05":"Només es pot entrenar al matí" };
     let activeWeek = "all";
     const requests = [
       { date:"2026-12-28", team:"SAM", sex:"M", notes:"Tarda · si hi ha forat, millor més d'hora del normal" },
@@ -49,7 +49,7 @@
       { date:"2026-12-29", team:"CF", sex:"F", notes:"Tarda · treballa fins a les 18:00 a Cornellà" },
       { date:"2026-12-30", team:"CF", sex:"F", notes:"Tarda · treballa fins a les 18:00 a Cornellà" }
     ];
-    const DAYS = [["2026-12-28","Dilluns"],["2026-12-29","Dimarts"],["2026-12-30","Dimecres"],["2026-12-31","Dijous"],["2027-01-01","Divendres"],["2027-01-04","Dilluns"],["2027-01-05","Dimarts"],["2027-01-06","Dimecres"],["2027-01-07","Dijous"],["2027-01-08","Divendres"]];
+    const DAYS = [["2026-12-24","Dijous"],["2026-12-25","Divendres"],["2026-12-28","Dilluns"],["2026-12-29","Dimarts"],["2026-12-30","Dimecres"],["2026-12-31","Dijous"],["2027-01-01","Divendres"],["2027-01-04","Dilluns"],["2027-01-05","Dimarts"],["2027-01-06","Dimecres"],["2027-01-07","Dijous"],["2027-01-08","Divendres"]];
     const formatDate = date => new Intl.DateTimeFormat("ca-ES", {day:"2-digit",month:"2-digit"}).format(new Date(date+"T12:00:00"));
     const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[char]);
     const grouped = () => requests.reduce((all,request) => { if(request.date && request.time) (all[request.date+"|"+request.time] ||= []).push(request); return all; },{});

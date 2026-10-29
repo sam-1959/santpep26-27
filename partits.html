@@ -282,7 +282,7 @@
           <label class="edit-check"><input id="gameEditChangeNeeded" type="checkbox" /> Cal un canvi de partit</label>
         </div>
       </div>
-      <div class="edit-actions"><span class="edit-status" id="gameEditStatus"></span><button class="edit-button" type="button" id="gameEditCancel">Cancel·lar</button><button class="edit-button primary" type="submit">Desar canvis</button></div>
+      <div class="edit-actions"><span class="edit-status" id="gameEditStatus"></span><button class="edit-button" type="button" id="gameEditRetryNotify" hidden>↻ Reintentar avís</button><button class="edit-button" type="button" id="gameEditCancel">Cancel·lar</button><button class="edit-button primary" type="submit">Desar canvis</button></div>
     </form>
   </dialog>
   <footer>Font: calendari Partits SamPep Masc · CB Sant Josep de Badalona</footer>
@@ -956,6 +956,7 @@
     const gameEditVenueField=document.getElementById('gameEditVenueField');
     const gameEditOtherLocation=document.getElementById('gameEditOtherLocation');
     const gameEditOtherLocationField=document.getElementById('gameEditOtherLocationField');
+    const gameEditRetryNotify=document.getElementById('gameEditRetryNotify');
     const HOME_VENUES=["Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
     function knownHomeVenue(location){
       const value=String(location || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -1011,6 +1012,19 @@
       }
       return null;
     }
+    function latestManualChangeForGame(game){
+      return manualChanges.filter(function(change){
+        const saved=change && change.manual && change.type==='changed' && change.game;
+        const candidate=change && change.game || {};
+        return saved && candidate.team===game.team && candidate.sex===game.sex && candidate.date===game.date && candidate.time===game.time && candidate.rival===game.rival && !!candidate.home===!!game.home && String(candidate.loc || '')===String(game.loc || '');
+      }).sort(function(a,b){ return String(b.importedAt || '').localeCompare(String(a.importedAt || '')); })[0] || null;
+    }
+    function refreshRetryNotificationButton(game){
+      const retryChange=latestManualChangeForGame(game);
+      gameEditRetryNotify.hidden=!retryChange;
+      gameEditRetryNotify.dataset.changeId=retryChange ? String(retryChange.importedAt || '') : '';
+      gameEditRetryNotify.title=retryChange ? 'Reintentar l’avís i la sincronització de Google Calendar del darrer canvi desat' : '';
+    }
     function openGameEditor(key){
       const game=findGameByEditKey(key);
       if(!game) return;
@@ -1024,6 +1038,7 @@
       document.getElementById('gameEditChangeNeeded').checked=game.changeNeeded === true;
       document.getElementById('gameEditSubtitle').textContent=game.team+' '+(game.sex==='F'?'F':'M');
       gameEditStatus.textContent='';
+      refreshRetryNotificationButton(game);
       gameEditDialog.showModal();
     }
     function bindGameEditors(){
@@ -1034,6 +1049,27 @@
     function closeGameEditor(){ gameEditDialog.close(); }
     document.getElementById('gameEditClose').onclick=closeGameEditor;
     document.getElementById('gameEditCancel').onclick=closeGameEditor;
+    gameEditRetryNotify.onclick=async function(){
+      const game=findGameByEditKey(document.getElementById('gameEditKey').value);
+      const retryChange=game && latestManualChangeForGame(game);
+      if(!game || !retryChange) return;
+      if(!confirm('Reintentar l’avís per correu i la sincronització de Google Calendar d’aquest darrer canvi?')) return;
+      gameEditRetryNotify.disabled=true;
+      gameEditStatus.textContent='Reintentant avís i sincronització…';
+      try{
+        const token=await getCalendarToken(true);
+        if(!token) throw new Error('No autenticat');
+        const notificationGame=Object.assign({}, retryChange.game, { calendarId:game.calendarId || '', icalUid:game.icalUid || '' });
+        const notification=await notifyManualCalendarEdit(notificationGame, retryChange.fields || [], token);
+        if(notification.googleSync && notification.googleSync.ok===false) throw new Error(notification.googleSync.error || 'No s’ha pogut actualitzar Google Calendar.');
+        gameEditStatus.textContent='Avís reenviat i Google Calendar sincronitzat.';
+        gameEditRetryNotify.hidden=true;
+      }catch(error){
+        gameEditStatus.textContent='No s’ha pogut reintentar: '+(error.message || error);
+      }finally{
+        gameEditRetryNotify.disabled=false;
+      }
+    };
     gameEditVenue.onchange=updateOtherLocationField;
     document.getElementById('gameEditHome').onchange=updateGameEditVenueMode;
     gameEditDialog.addEventListener('click', function(event){ if(event.target===gameEditDialog) closeGameEditor(); });

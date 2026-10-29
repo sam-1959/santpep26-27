@@ -785,9 +785,16 @@
   <footer>CB Sant Josep de Badalona · Temporada 26-27</footer>
   <script>
     const totalsBody = document.querySelector('.combined tbody');
-    const percentage = row => parseFloat((row.cells[6].textContent.match(/([\d,]+)%/) || ['','-1'])[1].replace(',', '.')) || -1;
+    const freeThrowStats = row => {
+      const match = row.cells[row.cells.length - 1].textContent.match(/(\d+)\/(\d+)/);
+      if (!match || Number(match[2]) === 0) return { percentage: -1, attempts: 0 };
+      return { percentage: Number(match[1]) / Number(match[2]), attempts: Number(match[2]) };
+    };
     [...totalsBody.rows]
-      .sort((a, b) => percentage(b) - percentage(a))
+      .sort((a, b) => {
+        const statsA = freeThrowStats(a), statsB = freeThrowStats(b);
+        return statsB.percentage - statsA.percentage || statsB.attempts - statsA.attempts;
+      })
       .forEach(row => totalsBody.appendChild(row));
   </script>
 </body>

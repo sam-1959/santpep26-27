@@ -34,7 +34,7 @@
   <script>
     // Afegim aquí les peticions rebudes: { date, team, sex:"F"|"M", time, players, court, notes }.
     const SESSION_DURATION = "1 h 30 min";
-    const WEEK_DAYS = { week1:["2026-12-21","2026-12-24","2026-12-25","2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week2:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
+    const WEEK_DAYS = { week1:["2026-12-21","2026-12-22","2026-12-23","2026-12-24","2026-12-25","2026-12-27","2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week2:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
     const CLOSED_DAYS = { "2026-12-25":"No es pot entrenar", "2027-01-01":"No es pot entrenar", "2027-01-06":"No es pot entrenar" };
     const DAY_NOTICES = { "2026-12-24":"Només es pot entrenar al matí", "2026-12-31":"Només es pot entrenar al matí", "2027-01-05":"Només es pot entrenar al matí" };
     const HOLIDAYS = { "2026-12-25":{ icon:"🎄", label:"Nadal" }, "2027-01-06":{ icon:"👑", label:"Reis Mags d'Orient" } };
@@ -45,6 +45,16 @@
       { date:"2027-01-04", team:"SAM", sex:"M", notes:"Tarda · si hi ha forat, millor més d'hora del normal" },
       { date:"2027-01-07", team:"SAM", sex:"M", notes:"Tarda · si hi ha forat, millor més d'hora del normal" },
       { date:"2027-01-08", team:"SAM", sex:"M", notes:"Tarda · si hi ha forat, millor més d'hora del normal" },
+      { date:"2026-12-22", team:"JAM", sex:"M", notes:"Horari normal o matí · no tard" },
+      { date:"2026-12-23", team:"JAM", sex:"M", notes:"Horari normal o matí · no tard" },
+      { date:"2026-12-27", team:"JAM", sex:"M", notes:"Horari normal o matí · no tard" },
+      { date:"2026-12-28", team:"JAM", sex:"M", notes:"Tarda · jo no hi soc, Santi tampoc; Michael treballa però arriba" },
+      { date:"2026-12-29", team:"JAM", sex:"M", notes:"Horari normal o matí · no tard" },
+      { date:"2026-12-30", team:"JAM", sex:"M", notes:"Tarda · jo no hi soc, Santi tampoc; Michael treballa però arriba" },
+      { date:"2027-01-04", team:"JAM", sex:"M", notes:"Horari normal · preferència pel matí" },
+      { date:"2027-01-05", team:"JAM", sex:"M", notes:"Horari normal · preferència pel matí" },
+      { date:"2027-01-07", team:"JAM", sex:"M", notes:"Horari normal · preferència pel matí" },
+      { date:"2027-01-08", team:"JAM", sex:"M", notes:"Horari normal · preferència pel matí" },
       { date:"2026-12-28", team:"CF", sex:"F", notes:"Tarda · treballa fins a les 18:00 a Cornellà" },
       { date:"2026-12-29", team:"CF", sex:"F", notes:"Tarda · treballa fins a les 18:00 a Cornellà" },
       { date:"2026-12-30", team:"CF", sex:"F", notes:"Tarda · treballa fins a les 18:00 a Cornellà" },
@@ -68,7 +78,7 @@
       { date:"2027-01-07", team:"MF", sex:"F" },
       { date:"2027-01-08", team:"MF", sex:"F" }
     ];
-    const DAYS = [["2026-12-21","Dilluns"],["2026-12-24","Dijous"],["2026-12-25","Divendres"],["2026-12-28","Dilluns"],["2026-12-29","Dimarts"],["2026-12-30","Dimecres"],["2026-12-31","Dijous"],["2027-01-01","Divendres"],["2027-01-04","Dilluns"],["2027-01-05","Dimarts"],["2027-01-06","Dimecres"],["2027-01-07","Dijous"],["2027-01-08","Divendres"]];
+    const DAYS = [["2026-12-21","Dilluns"],["2026-12-22","Dimarts"],["2026-12-23","Dimecres"],["2026-12-24","Dijous"],["2026-12-25","Divendres"],["2026-12-27","Diumenge"],["2026-12-28","Dilluns"],["2026-12-29","Dimarts"],["2026-12-30","Dimecres"],["2026-12-31","Dijous"],["2027-01-01","Divendres"],["2027-01-04","Dilluns"],["2027-01-05","Dimarts"],["2027-01-06","Dimecres"],["2027-01-07","Dijous"],["2027-01-08","Divendres"]];
     const formatDate = date => new Intl.DateTimeFormat("ca-ES", {day:"2-digit",month:"2-digit"}).format(new Date(date+"T12:00:00"));
     const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[char]);
     function renderSummary(){ const teams=new Set(requests.map(r=>r.team).filter(Boolean)); const dates=new Set(requests.map(r=>r.date).filter(Boolean)); document.querySelector("#summary").innerHTML=[[requests.length,"Peticions"],[teams.size,"Equips"],[dates.size,"Dies amb peticions"]].map(([number,label])=>`<div class="metric"><strong>${number}</strong><span>${label}</span></div>`).join(""); }

@@ -22,7 +22,7 @@
   <script>
     const female=new Set(['SAF','CF','JBF','JAF','IF','MF']);
     const days=[
-      ['w1','21/12','Dilluns',[['17:30–19:00',['MBM'],'Mini · tarda'],['19:00–20:30',['IF','IAM'],'Infantil · tarda'],['20:30–22:00',['JBF'],'Júnior F · tarda'],['19:00–20:30',['JBM'],'Júnior M'],['20:30–22:00',['SAM','SBM','SAF'],'Sèniors']]],
+      ['w1','21/12','Dilluns',[['17:30–19:00',['MBM','MAM'],'Minis · tarda'],['19:00–20:30',['IF','IAM'],'Infantil · tarda'],['20:30–22:00',['JBF'],'Júnior F · tarda'],['19:00–20:30',['JBM'],'Júnior M'],['20:30–22:00',['SAM','SBM','SAF'],'Sèniors']]],
       ['w1','22/12','Dimarts',[['17:30–19:00',['IAM'],'Infantil M · tarda'],['19:00–20:30',['JAM'],'Júnior M · tarda'],['19:00–20:30',['CF','JAF'],'Cadet / Júnior F · tarda']]],
       ['w1','23/12','Dimecres',[['17:30–19:00',['IF'],'Infantil F · tarda'],['19:00–20:30',['JAM'],'Júnior M · tarda'],['19:00–20:30',['CF','JBF'],'Cadet / Júnior F · tarda'],['20:30–22:00',['SAF'],'Sènior A F']]],
       ['w1','24/12','Dijous',[['09:00–10:30',['IF'],'Infantil F · només matí']]],
@@ -51,7 +51,7 @@
     const migrateSchedule=source=>Object.fromEntries(Object.entries(source||{}).map(([key,value])=>[key.replace(/^w\d-/,'').trim(),value]));
     const normalizeSessions=sessions=>sessions.flatMap(s=>s.teams.map(team=>({id:team,time:s.time,teams:[team],note:(s.note||'').replace(' · última franja obligatòria',''),warn:s.warn||'',customTime:s.customTime||''})));
     const baseSessions=day=>normalizeSessions((day[3]||[]).map(([time,teams,note,warn,customTime])=>({time,teams,note,warn:warn||'',customTime:customTime||''})));
-    const christmasAfternoonTimes={'21/12':{MBM:'17:30–19:00',IF:'19:00–20:30',IAM:'19:00–20:30',JBF:'20:30–22:00',JBM:'19:00–20:30',SAM:'20:30–22:00',SBM:'20:30–22:00',SAF:'20:30–22:00'},'22/12':{IAM:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JAF:'19:00–20:30'},'23/12':{IF:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JBF:'19:00–20:30',SAF:'20:30–22:00'}};
+    const christmasAfternoonTimes={'21/12':{MBM:'17:30–19:00',MAM:'17:30–19:00',IF:'19:00–20:30',IAM:'19:00–20:30',JBF:'20:30–22:00',JBM:'19:00–20:30',SAM:'20:30–22:00',SBM:'20:30–22:00',SAF:'20:30–22:00'},'22/12':{IAM:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JAF:'19:00–20:30'},'23/12':{IF:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JBF:'19:00–20:30',SAF:'20:30–22:00'}};
     const applyScheduleRules=source=>{const schedule=migrateSchedule(source);Object.entries(christmasAfternoonTimes).forEach(([date,times])=>{if(schedule[date]){const sessions=normalizeSessions(schedule[date]),standard=baseSessions(days.find(day=>day[1]===date));standard.forEach(s=>{if(!sessions.some(current=>current.id===s.id))sessions.push(s)});schedule[date]=sessions.map(s=>times[s.id]?{...s,time:times[s.id],customTime:''}:s)}});if(schedule['08/01'])schedule['08/01']=normalizeSessions(schedule['08/01']).map(s=>s.id==='CAM'?{...s,time:'17:00–18:30',note:'Cadet A M · horari específic',warn:'',customTime:'16:30–18:00'}:s);return schedule};
     const sessionsFor=day=>normalizeSessions(manualSchedule[dayId(day)]||baseSessions(day));
     const isChristmasAfternoon=day=>christmasAfternoonDates.includes(day[1]);

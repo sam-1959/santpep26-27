@@ -173,6 +173,16 @@
       result.textContent = opponentName + " " + opponentScore + " – " + teamScore + " JBF · " + status;
     }
 
+    function sortJbfScoutings(){
+      const list = document.querySelector('[aria-label="Scouting Júnior B F"]');
+      if(!list) return;
+      const cards = Array.from(list.querySelectorAll('[data-scouting-date]'));
+      cards.sort((a, b) => String(b.dataset.scoutingDate).localeCompare(String(a.dataset.scoutingDate)));
+      cards.forEach(card => list.appendChild(card));
+      const empty = list.querySelector('.empty');
+      if(empty) list.appendChild(empty);
+    }
+
     async function loadScoutingResults(){
       const cards = Array.from(document.querySelectorAll("[data-scouting-opponent]"));
       if(!cards.length) return;
@@ -195,6 +205,7 @@
       }
     }
 
+    sortJbfScoutings();
     loadScoutingResults();
   </script>
 </body>

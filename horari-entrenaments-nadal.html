@@ -11,12 +11,13 @@
   <header><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"><div><h1><span>CB Sant Josep de Badalona</span>Horari definitiu d'entrenaments</h1><p>Nadal · proposta de distribució · 21/12/2026 – 08/01/2027</p></div></header>
   <main>
     <div class="top"><div><h2>Proposta d'horari</h2><p class="hint">Agrupada per edat, respectant preferències i restriccions comunicades.</p></div><a class="back" href="planificacio-entrenaments-nadal.html">Veure peticions →</a></div>
-    <p class="notice"><strong>Franges fixes:</strong> matí 09:00–10:30, 10:30–12:00 i 12:00–13:30; tarda 17:00–18:30, 18:30–20:00 i 21:00–22:30. Del 21 al 23 de desembre només hi ha tarda: 17:30–19:00, 19:00–20:30 i 20:30–22:00. SBM, SAM i SAF són sempre a l'última franja. <strong>Atenció:</strong> el CAM del 08/01 demana acabar a les 18:00; amb una sessió de 90 minuts des de les 17:00 acabaria a les 18:30.</p>
     <div class="legend"><span class="tag m">Masculí</span><span class="tag f">Femení</span><span class="tag lock">21:00–22:30 · sèniors</span></div>
     <div class="slot-key" aria-label="Franges d'entrenament"><span class="slot"><b>P1</b>09:00–10:30 · 17:00–18:30</span><span class="slot"><b>P2</b>10:30–12:00 · 18:30–20:00</span><span class="slot"><b>P3</b>12:00–13:30 · 21:00–22:30</span></div>
     <p class="drag-hint">Arrossega una sessió a una altra franja del mateix dia. Deixa-la sobre P1, P2 o P3 per afegir-la a la franja; sobre una sessió, les intercanvia. Els canvis es desen automàticament.</p><p id="save-status" class="save-status" aria-live="polite"></p>
     <div class="controls"><nav class="tabs"><button class="active" data-week="all">Totes les setmanes</button><button data-week="w1">Setmana 1 · 21/12 – 27/12</button><button data-week="w2">Setmana 2 · 28/12 – 03/01</button><button data-week="w3">Setmana 3 · 04/01 – 10/01</button></nav><div class="filters"><label>Equip<select id="team-filter"><option value="all">Tots els equips</option></select></label><label>Franja<select id="slot-filter"><option value="all">Totes les franges</option><option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option></select></label></div></div>
-    <div id="schedule"></div><p class="footer">Proposta interna · Cal confirmar pistes, staff i volum final de jugadors abans de tancar l'horari.</p>
+    <div id="schedule"></div>
+    <p class="notice"><strong>Franges fixes:</strong> matí 09:00–10:30, 10:30–12:00 i 12:00–13:30; tarda 17:00–18:30, 18:30–20:00 i 21:00–22:30. Del 21 al 23 de desembre només hi ha tarda: 17:30–19:00, 19:00–20:30 i 20:30–22:00. SBM, SAM i SAF són sempre a l'última franja. <strong>Atenció:</strong> el CAM del 08/01 demana acabar a les 18:00; amb una sessió de 90 minuts des de les 17:00 acabaria a les 18:30.</p>
+    <p class="footer">Proposta interna · Cal confirmar pistes, staff i volum final de jugadors abans de tancar l'horari.</p>
   </main>
   <script>
     const female=new Set(['SAF','CF','JBF','JAF','IF','MF']);

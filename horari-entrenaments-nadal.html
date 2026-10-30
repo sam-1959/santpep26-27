@@ -46,8 +46,9 @@
     let activeFilter='all',manualSchedule={},draggedSession=null;
     const period=time=>time.startsWith('09:00')||time.startsWith('17:00')?'P1':time.startsWith('10:30')||time.startsWith('18:30')?'P2':'P3';
     const dayId=day=>`${day[0]}-${day[1]}`;
-    const baseSessions=day=>(day[3]||[]).map(([time,teams,note,warn])=>({id:teams.join('-'),time,teams,note,warn:warn||''}));
-    const sessionsFor=day=>manualSchedule[dayId(day)]||baseSessions(day);
+    const normalizeSessions=sessions=>sessions.flatMap(s=>s.teams.map(team=>({id:team,time:s.time,teams:[team],note:s.note,warn:s.warn||''})));
+    const baseSessions=day=>normalizeSessions((day[3]||[]).map(([time,teams,note,warn])=>({time,teams,note,warn:warn||''})));
+    const sessionsFor=day=>normalizeSessions(manualSchedule[dayId(day)]||baseSessions(day));
     const slotsFor=day=>['24/12','31/12','05/01'].includes(day[1])?morningSlots:[...morningSlots,...afternoonSlots];
     const status=text=>document.querySelector('#save-status').textContent=text;
     const session=(s,day)=>`<article class="s ${s.time<'17'?'':'pm'} ${s.time==='21:00–22:30'?'last':''}" draggable="true" data-day-id="${dayId(day)}" data-session-id="${s.id}"><div class="time"><span class="period">${period(s.time)}</span>${s.time}</div><div class="body"><div class="teams">${s.teams.map(t=>`<span class="team ${female.has(t)?'f':'m'}">${t}</span>`).join('')}</div><div class="note">${s.note}</div>${s.warn?`<div class="warning">⚠ ${s.warn}</div>`:''}</div></article>`;

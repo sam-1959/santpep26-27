@@ -237,6 +237,47 @@
       return JSON.parse(raw.textContent);
     }
 
+    function manualChangeProperty(label){
+      return { "Data":"date", "Hora":"time", "Rival":"rival", "Lloc":"loc", "Casa/fora":"home", "Amistós":"friendly" }[label] || "";
+    }
+
+    function manualChangeValue(property, value){
+      if(property === "home") return value === "casa";
+      if(property === "friendly") return value === "sí";
+      return value;
+    }
+
+    function sameManualGame(game, expected, strict){
+      const fields = strict ? ["date", "time", "rival", "loc", "home", "friendly"] : ["date", "time", "rival"];
+      return game.team === expected.team && (game.sex || "") === (expected.sex || "") &&
+        fields.every(field => (game[field] || (typeof game[field] === "boolean" ? game[field] : "")) ===
+          (expected[field] || (typeof expected[field] === "boolean" ? expected[field] : "")));
+    }
+
+    function applyManualCalendarChanges(data){
+      const changes = Object.values(data.manualChanges || {})
+        .filter(change => change && change.type === "changed" && change.manual && change.game)
+        .sort((a, b) => String(a.importedAt || "").localeCompare(String(b.importedAt || "")));
+      const calendarGames = data.weeks.flatMap(week => week.games || []);
+      changes.forEach(change => {
+        const before = { ...change.game };
+        (change.fields || []).forEach(field => {
+          const property = manualChangeProperty(field.label);
+          if(property) before[property] = manualChangeValue(property, field.from);
+        });
+        let candidates = calendarGames.filter(game => sameManualGame(game, before, true));
+        if(candidates.length !== 1) candidates = calendarGames.filter(game => sameManualGame(game, before, false));
+        if(candidates.length !== 1) return;
+        const game = candidates[0];
+        Object.assign(game, {
+          date:change.game.date, time:change.game.time, rival:change.game.rival,
+          loc:change.game.loc || "", home:!!change.game.home, friendly:!!change.game.friendly,
+          dow:new Date(change.game.date + "T12:00:00").getDay()
+        });
+      });
+      return data;
+    }
+
     function normalize(value){
       return String(value || "").trim().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -441,6 +482,7 @@
 
     async function loadGames(){
       const data = await loadCalendarData();
+      applyManualCalendarChanges(data);
       const importedGames = data.weeks.flatMap(week => week.games || [])
         .map(game => ({ ...game, id: gameId(game) }));
       games = importedGames

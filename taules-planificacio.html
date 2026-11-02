@@ -971,6 +971,10 @@
       if (assignment.table1 && assignment.table2 && assignment.table1 === assignment.table2) {
         reasons.push("La mateixa persona està assignada dues vegades al partit.");
       }
+      const rejectionRecords = rejectionRecordsFor(person, game, assignment);
+      if (rejectionRecords.length) {
+        reasons.push("La persona ja ha rebutjat una taula en aquesta mateixa franja horària.");
+      }
       const profile = tablePeopleProfiles[personKey(person)] || (PEOPLE.includes(person)
         ? { name: person, active:true, playerTeams:[], assistantTeams:[], siblingTeams:[] }
         : null);
@@ -1038,8 +1042,27 @@
       return Object.keys(assignment.rejectedPeople || {}).filter(Boolean);
     }
 
+    function sameTableTimeSlot(firstGame, secondGame){
+      return !!firstGame?.date && !!firstGame?.time &&
+        firstGame.date === secondGame?.date && firstGame.time === secondGame?.time;
+    }
+
+    function rejectionRecordsFor(person, game, currentAssignment = assignmentFor(game.id)){
+      if (!person || !game) return [];
+      const records = [];
+      if (rejectedPeopleFor(game, currentAssignment).includes(person)) {
+        records.push({ game });
+      }
+      Object.entries(assignments).forEach(([id, assignment]) => {
+        if (id === game.id || !rejectedPeopleFor(null, assignment).includes(person)) return;
+        const rejectedGame = games.find(item => item.id === id) || assignment.game;
+        if (sameTableTimeSlot(game, rejectedGame)) records.push({ game:rejectedGame });
+      });
+      return records;
+    }
+
     function isRejectedForGame(person, game, assignment = assignmentFor(game.id)){
-      return rejectedPeopleFor(game, assignment).includes(person);
+      return rejectionRecordsFor(person, game, assignment).length > 0;
     }
 
     function openRejectionsDialog(game){
@@ -1287,6 +1310,7 @@
       ["table1", "table2"].forEach(slot => {
         const person = assignment[slot];
         if (!person) return;
+        if (rejectionRecordsFor(person, game, assignment).length) types.add("Rebuig");
         const profile = tablePeopleProfiles[personKey(person)] || (PEOPLE.includes(person)
           ? { name:person, active:true, playerTeams:[], assistantTeams:[], siblingTeams:[] }
           : null);
@@ -1305,17 +1329,16 @@
       });
       if (assignment.table1 && assignment.table1 === assignment.table2) types.add("Duplicada");
       if (miniExperienceIssue(game, assignment)) types.add("Experiència");
-      if (rejectedPeopleFor(game, assignment).length) types.add("Rebuig");
       const ordered = ["Player", "Coach", "Experiència", "Rebuig", "Persona inactiva", "Duplicada"];
       const visible = assignment.restrictionsAcceptedAt && !includeAccepted
-        ? ordered.filter(type => ["Experiència", "Rebuig"].includes(type) && types.has(type))
+        ? ordered.filter(type => type === "Experiència" && types.has(type))
         : ordered.filter(type => types.has(type));
       return visible;
     }
 
     function pendingAcceptanceRestrictionTypes(game){
       return restrictionTypesForGame(game, { includeAccepted:true })
-        .filter(type => ["Player", "Coach", "Persona inactiva", "Duplicada"].includes(type));
+        .filter(type => ["Player", "Coach", "Rebuig", "Persona inactiva", "Duplicada"].includes(type));
     }
 
     function makeAcceptRestrictionsButton(game){

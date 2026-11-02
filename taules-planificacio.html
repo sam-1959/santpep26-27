@@ -1996,7 +1996,7 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
-        const restrictionTypes = restrictionTypesForGame(game);
+        const restrictionTypes = restrictionTypesForGame(game, { includeAccepted:true });
         const card = document.createElement("article");
         card.className = `game ${game.sex === "F" ? "fem" : "masc"}`;
         if (state !== "complete" && isCurrentWeekGame(game)) card.classList.add("needs-attention");
@@ -2017,7 +2017,7 @@
           stateBadge
         );
         restrictionTypes.forEach(type => meta.appendChild(Object.assign(document.createElement("span"), {
-            className:"badge invalid",
+            className:`badge ${assignment.restrictionsAcceptedAt && type !== "Experiència" ? "restriction-accepted" : "invalid"}`,
             textContent:type,
             title:gameValidationIssues.map(issue => issue.message).join(" ") || type
           })));
@@ -2083,14 +2083,14 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
-        const restrictionTypes = restrictionTypesForGame(game);
+        const restrictionTypes = restrictionTypesForGame(game, { includeAccepted:true });
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         if (experienceIssue) row.classList.add(`experience-${experienceIssue.type}`);
         if (gameValidationIssues.length) row.classList.add("validation-invalid");
         const stateBadge = `<span class="badge ${state === "complete" ? "ok" : state === "review" ? "review" : "warn"}">${escapeHtml(stateText(state))}</span>`;
         const restrictionBadges = restrictionTypes
-          .map(type => ` <span class="badge invalid" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" ") || type)}">${escapeHtml(type)}</span>`)
+          .map(type => ` <span class="badge ${assignment.restrictionsAcceptedAt && type !== "Experiència" ? "restriction-accepted" : "invalid"}" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" ") || type)}">${escapeHtml(type)}</span>`)
           .join("");
         const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =

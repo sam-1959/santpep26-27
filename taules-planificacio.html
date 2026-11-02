@@ -196,6 +196,9 @@
     .undo-rejection:hover { background:#ffe2e2; }
     .rejection-list { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:7px; color:#9f1d1d; font-size:0.7rem; font-weight:800; }
     .undo-rejection { padding:3px 6px; font-size:0.68rem; }
+    .accept-restrictions { border:1px solid #d6a51c; border-radius:8px; background:#fff8db; color:#745300; padding:5px 7px; font:inherit; font-size:0.68rem; font-weight:800; line-height:1.1; cursor:pointer; white-space:nowrap; }
+    .accept-restrictions:hover { background:#ffefae; }
+    .restriction-accepted { background:#edf7ef; color:#28713c; }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
     select:disabled { background:#f3f0f6; color:var(--muted); opacity:1; cursor:not-allowed; }
     .empty { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -1013,7 +1016,7 @@
         select.appendChild(option);
       }
       const conflictReasons = assignmentConflictReasons(value, game, assignmentFor(game.id));
-      if (conflictReasons.length) {
+      if (conflictReasons.length && !assignmentFor(game.id).restrictionsAcceptedAt) {
         select.classList.add("assignment-conflict");
         select.title = `Assignació en conflicte: ${conflictReasons.join(" ")}`;
       }
@@ -1246,10 +1249,13 @@
 
     function validationIssuesForGame(game){
       const assignment = assignmentFor(game.id);
-      const issues = [
+      const slotIssues = [
         ...slotValidationIssues(game, assignment, "table1"),
         ...slotValidationIssues(game, assignment, "table2")
       ];
+      const issues = assignment.restrictionsAcceptedAt
+        ? slotIssues.filter(issue => !assignment[issue.slot])
+        : slotIssues;
       const experienceIssue = miniExperienceIssue(game, assignment);
       if (experienceIssue) {
         issues.push({ slot:"experience", message:experienceIssue.title });
@@ -1261,6 +1267,23 @@
       return (validationIssues[game.id] || [])
         .filter(issue => issue.slot === slot)
         .map(issue => issue.message);
+    }
+
+    function restrictionReasonsForGame(game){
+      const assignment = assignmentFor(game.id);
+      return ["table1", "table2"].flatMap(slot => assignmentConflictReasons(assignment[slot], game, assignment));
+    }
+
+    function makeAcceptRestrictionsButton(game){
+      const reasons = restrictionReasonsForGame(game);
+      if (!reasons.length || assignmentFor(game.id).restrictionsAcceptedAt || isPastGame(game)) return null;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "accept-restrictions";
+      button.dataset.acceptRestrictionsGameId = game.id;
+      button.textContent = "Acceptar restricció";
+      button.title = reasons.join(" ");
+      return button;
     }
 
     function computeCurrentPeriodValidationIssues(){
@@ -1925,6 +1948,14 @@
             title:gameValidationIssues.map(issue => issue.message).join(" ")
           }));
         }
+        if (assignment.restrictionsAcceptedAt) {
+          meta.appendChild(Object.assign(document.createElement("span"), {
+            className:"badge restriction-accepted",
+            textContent:"Restricció acceptada"
+          }));
+        }
+        const acceptRestrictionsButton = makeAcceptRestrictionsButton(game);
+        if (acceptRestrictionsButton) meta.appendChild(acceptRestrictionsButton);
 
         const title = document.createElement("div");
         title.className = "title";
@@ -2007,6 +2038,11 @@
           `<td class="info-cell"></td>` +
           `<td class="assign-cell"></td>` +
           `<td class="assign-cell"></td>`;
+        if (assignment.restrictionsAcceptedAt) {
+          row.children[6].insertAdjacentHTML("beforeend", ' <span class="badge restriction-accepted">Restricció acceptada</span>');
+        }
+        const acceptRestrictionsButton = makeAcceptRestrictionsButton(game);
+        if (acceptRestrictionsButton) row.children[6].appendChild(acceptRestrictionsButton);
         const rejectedPeople = rejectedPeopleFor(game, assignment);
         const infoButton = document.createElement("button");
         infoButton.type = "button";
@@ -2118,6 +2154,25 @@
     });
 
     els.content.addEventListener("click", async event => {
+      const acceptRestrictionsButton = event.target.closest("[data-accept-restrictions-game-id]");
+      if (acceptRestrictionsButton) {
+        const id = acceptRestrictionsButton.dataset.acceptRestrictionsGameId;
+        const game = games.find(item => item.id === id);
+        if (!game || isPastGame(game)) return;
+        const assignment = { ...assignmentFor(id), restrictionsAcceptedAt:new Date().toISOString() };
+        assignments[id] = assignment;
+        validateGameRestrictions(id);
+        render();
+        setStatus("Guardant l'acceptació de la restricció...");
+        try {
+          await saveAssignment(id);
+          setStatus("Restricció acceptada. L'assignació ja no es marca en vermell.");
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || "No s'ha pogut acceptar la restricció.", "error");
+        }
+        return;
+      }
       const infoButton = event.target.closest("[data-rejections-info-game-id]");
       if (infoButton) {
         const game = games.find(item => item.id === infoButton.dataset.rejectionsInfoGameId);

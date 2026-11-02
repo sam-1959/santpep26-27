@@ -1278,6 +1278,44 @@
       return ["table1", "table2"].flatMap(slot => assignmentConflictReasons(assignment[slot], game, assignment));
     }
 
+    function restrictionTypesForGame(game, { includeAccepted = false } = {}){
+      const assignment = assignmentFor(game.id);
+      const types = new Set();
+      const currentTeam = normalize(canonicalTeamName(teamLabel(game)));
+      ["table1", "table2"].forEach(slot => {
+        const person = assignment[slot];
+        if (!person) return;
+        const profile = tablePeopleProfiles[personKey(person)] || (PEOPLE.includes(person)
+          ? { name:person, active:true, playerTeams:[], assistantTeams:[], siblingTeams:[] }
+          : null);
+        if (!profile) return;
+        const playerTeams = (profile.playerTeams || []).map(canonicalTeamName).map(normalize);
+        const assistantTeams = (profile.assistantTeams || []).map(canonicalTeamName).map(normalize);
+        if (playerTeams.includes(currentTeam)) types.add("Player");
+        if (assistantTeams.includes(currentTeam)) types.add("Coach");
+        if (profile.active === false) types.add("Persona inactiva");
+        const targetDayPart = gameDayPart(game);
+        if (targetDayPart && allGames.some(otherGame =>
+          otherGame.date === game.date &&
+          gameDayPart(otherGame) === targetDayPart &&
+          [...playerTeams, ...assistantTeams].includes(normalize(canonicalTeamName(teamLabel(otherGame))))
+        )) types.add("Coach");
+      });
+      if (assignment.table1 && assignment.table1 === assignment.table2) types.add("Duplicada");
+      if (miniExperienceIssue(game, assignment)) types.add("Experiència");
+      if (rejectedPeopleFor(game, assignment).length) types.add("Rebuig");
+      const ordered = ["Player", "Coach", "Experiència", "Rebuig", "Persona inactiva", "Duplicada"];
+      const visible = assignment.restrictionsAcceptedAt && !includeAccepted
+        ? ordered.filter(type => ["Experiència", "Rebuig"].includes(type) && types.has(type))
+        : ordered.filter(type => types.has(type));
+      return visible;
+    }
+
+    function pendingAcceptanceRestrictionTypes(game){
+      return restrictionTypesForGame(game, { includeAccepted:true })
+        .filter(type => ["Player", "Coach", "Persona inactiva", "Duplicada"].includes(type));
+    }
+
     function makeAcceptRestrictionsButton(game){
       const reasons = restrictionReasonsForGame(game);
       if (!reasons.length || assignmentFor(game.id).restrictionsAcceptedAt || isPastGame(game)) return null;
@@ -1285,7 +1323,7 @@
       button.type = "button";
       button.className = "accept-restrictions";
       button.dataset.acceptRestrictionsGameId = game.id;
-      button.textContent = "Restricció";
+      button.textContent = pendingAcceptanceRestrictionTypes(game).join(" · ");
       button.title = `Acceptar la restricció: ${reasons.join(" ")}`;
       return button;
     }
@@ -1919,6 +1957,7 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
+        const restrictionTypes = restrictionTypesForGame(game);
         const card = document.createElement("article");
         card.className = `game ${game.sex === "F" ? "fem" : "masc"}`;
         if (state !== "complete" && isCurrentWeekGame(game)) card.classList.add("needs-attention");
@@ -1945,13 +1984,11 @@
             title:experienceIssue.title
           }));
         }
-        if (gameValidationIssues.length) {
-          meta.appendChild(Object.assign(document.createElement("span"), {
-            className:"badge invalid",
-            textContent:"Restricció",
-            title:gameValidationIssues.map(issue => issue.message).join(" ")
-          }));
-        }
+        restrictionTypes.forEach(type => meta.appendChild(Object.assign(document.createElement("span"), {
+          className:"badge invalid",
+          textContent:type,
+          title:gameValidationIssues.map(issue => issue.message).join(" ") || type
+        })));
         if (assignment.restrictionsAcceptedAt) {
           meta.appendChild(Object.assign(document.createElement("span"), {
             className:"badge restriction-accepted",
@@ -2018,6 +2055,7 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
+        const restrictionTypes = restrictionTypesForGame(game);
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         if (experienceIssue) row.classList.add(`experience-${experienceIssue.type}`);
@@ -2026,9 +2064,9 @@
         const experienceBadge = experienceIssue
           ? ` <span class="badge experience-${experienceIssue.type}" title="${escapeHtml(experienceIssue.title)}">${escapeHtml(experienceIssue.label)}</span>`
           : "";
-        const validationBadge = gameValidationIssues.length
-          ? ` <span class="badge invalid" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" "))}">Restricció</span>`
-          : "";
+        const validationBadge = restrictionTypes
+          .map(type => ` <span class="badge invalid" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" ") || type)}">${escapeHtml(type)}</span>`)
+          .join("");
         const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =
           `<td>${escapeHtml(index + 1)}</td>` +

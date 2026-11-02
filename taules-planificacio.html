@@ -1993,7 +1993,6 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
-        const restrictionTypes = restrictionTypesForGame(game);
         const card = document.createElement("article");
         card.className = `game ${game.sex === "F" ? "fem" : "masc"}`;
         if (state !== "complete" && isCurrentWeekGame(game)) card.classList.add("needs-attention");
@@ -2020,11 +2019,6 @@
             title:experienceIssue.title
           }));
         }
-        restrictionTypes.forEach(type => meta.appendChild(Object.assign(document.createElement("span"), {
-          className:"badge invalid",
-          textContent:type,
-          title:gameValidationIssues.map(issue => issue.message).join(" ") || type
-        })));
         const undoAcceptedRestrictionsButton = makeUndoAcceptedRestrictionsButton(game);
         if (undoAcceptedRestrictionsButton) meta.appendChild(undoAcceptedRestrictionsButton);
         const acceptRestrictionsButton = makeAcceptRestrictionsButton(game);
@@ -2087,7 +2081,6 @@
         const state = assignmentState(assignment);
         const experienceIssue = miniExperienceIssue(game, assignment);
         const gameValidationIssues = validationIssues[game.id] || [];
-        const restrictionTypes = restrictionTypesForGame(game);
         const row = document.createElement("tr");
         if (state !== "complete" && !isPastGame(game)) row.classList.add("needs-attention");
         if (experienceIssue) row.classList.add(`experience-${experienceIssue.type}`);
@@ -2096,9 +2089,6 @@
         const experienceBadge = experienceIssue
           ? ` <span class="badge experience-${experienceIssue.type}" title="${escapeHtml(experienceIssue.title)}">${escapeHtml(experienceIssue.label)}</span>`
           : "";
-        const validationBadge = restrictionTypes
-          .map(type => ` <span class="badge invalid" title="${escapeHtml(gameValidationIssues.map(issue => issue.message).join(" ") || type)}">${escapeHtml(type)}</span>`)
-          .join("");
         const typeBadge = game.friendly ? `<span class="badge friendly">Amistós</span>` : `<span class="badge">Lliga</span>`;
         row.innerHTML =
           `<td>${escapeHtml(index + 1)}</td>` +
@@ -2107,7 +2097,7 @@
           `<td><span class="badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}">${escapeHtml(displayTeamLabel(game))}</span></td>` +
           `<td>${escapeHtml(game.rival || "Rival pendent")}</td>` +
           `<td>${escapeHtml(displayLocation(game.loc))}</td>` +
-          `<td>${stateBadge}${experienceBadge}${validationBadge}</td>` +
+          `<td>${stateBadge}${experienceBadge}</td>` +
           `<td>${typeBadge}</td>` +
           `<td class="info-cell"></td>` +
           `<td class="assign-cell"></td>` +

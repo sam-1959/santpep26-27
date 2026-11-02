@@ -196,8 +196,8 @@
     .undo-rejection:hover { background:#ffe2e2; }
     .rejection-list { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:7px; color:#9f1d1d; font-size:0.7rem; font-weight:800; }
     .undo-rejection { padding:3px 6px; font-size:0.68rem; }
-    .accept-restrictions { border:1px solid #d6a51c; border-radius:8px; background:#fff8db; color:#745300; padding:5px 7px; font:inherit; font-size:0.68rem; font-weight:800; line-height:1.1; cursor:pointer; white-space:nowrap; }
-    .accept-restrictions:hover { background:#ffefae; }
+    .accept-restrictions { border:1px solid #fecaca; border-radius:8px; background:#fdecec; color:var(--danger); padding:5px 7px; font:inherit; font-size:0.68rem; font-weight:800; line-height:1.1; cursor:pointer; white-space:nowrap; }
+    .accept-restrictions:hover { background:#ffe2e2; }
     .restriction-accepted { background:#edf7ef; color:#28713c; }
     select:focus { outline:2px solid rgba(113,63,151,0.18); border-color:var(--brand); }
     select:disabled { background:#f3f0f6; color:var(--muted); opacity:1; cursor:not-allowed; }
@@ -1285,8 +1285,8 @@
       button.type = "button";
       button.className = "accept-restrictions";
       button.dataset.acceptRestrictionsGameId = game.id;
-      button.textContent = "Acceptar-la";
-      button.title = reasons.join(" ");
+      button.textContent = "Restricció";
+      button.title = `Acceptar la restricció: ${reasons.join(" ")}`;
       return button;
     }
 

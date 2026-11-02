@@ -587,6 +587,10 @@
       return canonicalTeamName(teamLabel(game));
     }
 
+    function displayLocation(value){
+      return String(value || "Localització pendent").toLocaleUpperCase("ca-ES");
+    }
+
     function teamOptions(){
       const values = [
         ...BASE_TEAM_OPTIONS,
@@ -1970,7 +1974,7 @@
         title.append(team, versus, rival);
         const loc = document.createElement("div");
         loc.className = "loc";
-        loc.textContent = game.loc || "Localització pendent";
+        loc.textContent = displayLocation(game.loc);
         main.append(meta, title, loc);
         if (game.cost != null) {
           const cost = document.createElement("div");
@@ -2032,7 +2036,7 @@
           `<td>${escapeHtml(game.time || "Hora pendent")}</td>` +
           `<td><span class="badge ${game.sex === "F" ? "sex-fem" : "sex-masc"}">${escapeHtml(displayTeamLabel(game))}</span></td>` +
           `<td>${escapeHtml(game.rival || "Rival pendent")}</td>` +
-          `<td>${escapeHtml(game.loc || "Localització pendent")}</td>` +
+          `<td>${escapeHtml(displayLocation(game.loc))}</td>` +
           `<td>${stateBadge}${experienceBadge}${validationBadge}</td>` +
           `<td>${typeBadge}</td>` +
           `<td class="info-cell"></td>` +

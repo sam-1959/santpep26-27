@@ -172,7 +172,17 @@
     .people-table th, .people-table td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
     .people-table th { color:var(--brand-dark); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; background:#faf8fc; }
     .people-table input, .people-table select { width:100%; min-height:36px; border:1px solid var(--line); border-radius:10px; padding:7px 9px; font:inherit; }
-    .people-table select[multiple] { min-height:88px; }
+    .profile-team-picker { position:relative; min-width:170px; }
+    .profile-team-picker summary { list-style:none; min-height:36px; display:flex; align-items:center; gap:8px; padding:7px 31px 7px 9px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-weight:750; cursor:pointer; box-sizing:border-box; }
+    .profile-team-picker summary::-webkit-details-marker { display:none; }
+    .profile-team-picker summary::after { content:"⌄"; position:absolute; right:10px; top:50%; transform:translateY(-57%); color:var(--brand); font-size:1.25rem; font-weight:900; pointer-events:none; }
+    .profile-team-picker[open] summary { border-color:var(--brand); border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:0 0 0 2px rgba(113,63,151,0.14); }
+    .profile-team-picker[open] summary::after { transform:translateY(-43%) rotate(180deg); }
+    .profile-team-options { position:absolute; z-index:8; left:0; right:0; max-height:220px; overflow:auto; padding:5px; border:1px solid var(--brand); border-top:0; border-radius:0 0 10px 10px; background:#fff; box-shadow:0 10px 22px rgba(50,28,78,0.17); }
+    .profile-team-option { display:flex; align-items:center; gap:7px; padding:6px 5px; color:var(--ink); font-size:0.78rem; font-weight:700; letter-spacing:0; text-transform:none; cursor:pointer; }
+    .profile-team-option:hover { background:#f5f0fa; border-radius:6px; }
+    .profile-team-option input { width:15px; min-height:15px; height:15px; margin:0; padding:0; accent-color:var(--brand); }
+    .profile-team-picker.is-empty summary { color:var(--muted); font-weight:650; }
     .people-table .active-cell { text-align:center; }
     .active-toggle { position:relative; display:inline-flex; align-items:center; justify-content:center; width:46px; height:26px; cursor:pointer; }
     .active-toggle input { position:absolute; opacity:0; width:1px; height:1px; min-height:0; padding:0; border:0; }
@@ -1150,11 +1160,13 @@
 
     function profileTeamSelectHtml(field, selectedTeams, label){
       const selected = new Set((selectedTeams || []).map(canonicalTeamName).map(normalize));
+      const selectedNames = teamOptions().filter(team => selected.has(normalize(canonicalTeamName(team)))).map(canonicalTeamName);
       const options = teamOptions().map(team => {
         const canonical = canonicalTeamName(team);
-        return `<option value="${escapeHtml(canonical)}"${selected.has(normalize(canonical)) ? " selected" : ""}>${escapeHtml(canonical)}</option>`;
+        return `<label class="profile-team-option"><input data-field="${field}" type="checkbox" value="${escapeHtml(canonical)}"${selected.has(normalize(canonical)) ? " checked" : ""} /><span>${escapeHtml(canonical)}</span></label>`;
       }).join("");
-      return `<select data-field="${field}" multiple size="4" aria-label="${escapeHtml(label)}" title="Pots seleccionar més d'un equip amb Ctrl o Cmd">${options}</select>`;
+      const text = selectedNames.length ? selectedNames.join(", ") : "Selecciona equips";
+      return `<details class="profile-team-picker${selectedNames.length ? "" : " is-empty"}" data-team-picker="${field}"><summary aria-label="${escapeHtml(label)}" title="Desplega per seleccionar un o més equips">${escapeHtml(text)}</summary><div class="profile-team-options">${options}</div></details>`;
     }
 
     function collectPeopleProfiles(){
@@ -1165,8 +1177,8 @@
         const canonical = canonicalTeamName(team);
         return [normalize(canonical), canonical];
       }));
-      function profileTeams(field, fieldLabel, personName){
-        const entered = Array.from(field.selectedOptions || []).map(option => canonicalTeamName(option.value));
+      function profileTeams(fields, fieldLabel, personName){
+        const entered = Array.from(fields || []).filter(field => field.checked).map(field => canonicalTeamName(field.value));
         const invalid = entered.filter(team => !validTeams.has(normalize(team)));
         if (invalid.length) {
           throw new Error(`${personName}: ${fieldLabel} no és un equip vàlid (${invalid.join(", ")}). Selecciona un equip del club.`);
@@ -1180,9 +1192,9 @@
           name,
           active: row.querySelector('[data-field="active"]').checked,
           experienced: row.querySelector('[data-field="experienced"]').checked,
-          playerTeams: profileTeams(row.querySelector('[data-field="playerTeams"]'), "Juga a", name),
-          assistantTeams: profileTeams(row.querySelector('[data-field="assistantTeams"]'), "Ajuda a", name),
-          siblingTeams: profileTeams(row.querySelector('[data-field="siblingTeams"]'), "Equip germà", name)
+          playerTeams: profileTeams(row.querySelectorAll('[data-field="playerTeams"]'), "Juga a", name),
+          assistantTeams: profileTeams(row.querySelectorAll('[data-field="assistantTeams"]'), "Ajuda a", name),
+          siblingTeams: profileTeams(row.querySelectorAll('[data-field="siblingTeams"]'), "Equip germà", name)
         };
       });
       tablePeopleProfiles = profiles;
@@ -2166,6 +2178,16 @@
     els.togglePeoplePanel.addEventListener("click", () => {
       els.peoplePanel.hidden = !els.peoplePanel.hidden;
       if (!els.peoplePanel.hidden) renderPeopleProfiles();
+    });
+
+    els.peopleProfiles.addEventListener("change", event => {
+      const input = event.target;
+      if (!input.matches('.profile-team-picker input[type="checkbox"]')) return;
+      const picker = input.closest(".profile-team-picker");
+      const checked = Array.from(picker.querySelectorAll('input[type="checkbox"]:checked'));
+      const summary = picker.querySelector("summary");
+      summary.textContent = checked.length ? checked.map(item => item.value).join(", ") : "Selecciona equips";
+      picker.classList.toggle("is-empty", !checked.length);
     });
 
     els.savePeopleProfiles.addEventListener("click", async () => {

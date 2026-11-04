@@ -528,15 +528,46 @@ function tableProfilesByPerson(rawProfiles) {
   return profiles;
 }
 
-function tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames) {
-  if (gamesById[assignmentId]) return gamesById[assignmentId];
-  if (!assignment || !assignment.game) return null;
-  var saved = assignment.game;
-  var matchKey = tableAssignmentMatchKey(saved);
-  var candidates = tableGames.filter(function(game) {
-    return tableAssignmentMatchKey(game) === matchKey && mondayISO(game.date) === mondayISO(saved.date);
+function tableAssignmentAliasesFromManualChanges(calendarData) {
+  var edits = Object.keys(calendarData.manualChanges || {}).map(function(key) { return calendarData.manualChanges[key]; })
+    .filter(function(edit) { return edit && edit.manual && edit.type === "changed" && edit.game; })
+    .sort(function(a, b) { return String(a.importedAt || "").localeCompare(String(b.importedAt || "")); });
+  var aliases = {};
+  edits.forEach(function(edit) {
+    var previous = {
+      date:edit.game.date, time:edit.game.time, rival:edit.game.rival, loc:edit.game.loc || "",
+      home:!!edit.game.home, friendly:!!edit.game.friendly, team:edit.game.team, sex:edit.game.sex
+    };
+    (edit.fields || []).forEach(function(field) {
+      if (field.label === "Data") previous.date = field.from;
+      if (field.label === "Hora") previous.time = field.from;
+      if (field.label === "Rival") previous.rival = field.from;
+      if (field.label === "Lloc") previous.loc = field.from;
+      if (field.label === "Casa/fora") previous.home = field.from === "casa";
+      if (field.label === "Amistós") previous.friendly = field.from === "sí";
+    });
+    var previousId = tableGameId(previous);
+    var targetId = tableGameId(edit.game);
+    Object.keys(aliases).forEach(function(assignmentId) {
+      if (tableGameId(aliases[assignmentId]) === previousId) aliases[assignmentId] = edit.game;
+    });
+    aliases[previousId] = edit.game;
+    aliases[targetId] = edit.game;
   });
-  return candidates.length === 1 ? candidates[0] : null;
+  return aliases;
+}
+
+function tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames, aliases) {
+  if (gamesById[assignmentId]) return gamesById[assignmentId];
+  if (assignment && assignment.game) {
+    var saved = assignment.game;
+    var matchKey = tableAssignmentMatchKey(saved);
+    var candidates = tableGames.filter(function(game) {
+      return tableAssignmentMatchKey(game) === matchKey;
+    });
+    if (candidates.length === 1) return candidates[0];
+  }
+  return aliases && aliases[assignmentId] ? gamesById[tableGameId(aliases[assignmentId])] || null : null;
 }
 
 function tableApplySavedManualChanges(calendarData) {
@@ -576,13 +607,14 @@ function tableRestrictionIssues(calendarData, rawAssignments, rawProfiles) {
   });
   var gamesById = {};
   tableGames.forEach(function(game) { gamesById[tableGameId(game)] = game; });
+  var aliases = tableAssignmentAliasesFromManualChanges(calendarData);
   var profiles = tableProfilesByPerson(rawProfiles);
   var issues = [];
 
   Object.keys(rawAssignments || {}).forEach(function(assignmentId) {
     var assignment = rawAssignments[assignmentId] || {};
     if (!assignment.table1 && !assignment.table2) return;
-    var game = tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames);
+    var game = tableCurrentGameForAssignment(assignmentId, assignment, gamesById, tableGames, aliases);
     if (!game) {
       if (assignment.restrictionsAcceptedAt || tableIsPastDate(assignment.game && assignment.game.date)) return;
       issues.push({

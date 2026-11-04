@@ -471,11 +471,31 @@ function aplicarEdicionsManualsDesades(calendarData) {
   return calendarData;
 }
 
-function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
+function aliasesAssignacionsTaulesPerCanvisManuals(calendarData, extraEdit) {
+  var edits = Object.keys(calendarData.manualChanges || {}).map(function(key) { return calendarData.manualChanges[key]; })
+    .filter(function(edit) { return edit && edit.manual && edit.type === "changed" && edit.game; });
+  if (extraEdit && extraEdit.game) edits.push(extraEdit);
+  edits.sort(function(a, b) { return String(a.importedAt || "").localeCompare(String(b.importedAt || "")); });
+  var aliases = {};
+  edits.forEach(function(edit) {
+    var previous = taulaPartitAnterior(edit.game, edit.fields || []);
+    var previousId = taulaIdPartit(previous);
+    var targetId = taulaIdPartit(edit.game);
+    Object.keys(aliases).forEach(function(assignmentId) {
+      if (taulaIdPartit(aliases[assignmentId]) === previousId) aliases[assignmentId] = edit.game;
+    });
+    aliases[previousId] = edit.game;
+    aliases[targetId] = edit.game;
+  });
+  return aliases;
+}
+
+function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles, extraEdit) {
   var all = taulaTotsElsPartits(calendarData);
   var tableGames = all.filter(function(game) { return taulaEsPistaClub(game) && (game.fam === "MINI" || game.fam === "PREMINI" || game.friendly); });
   var gamesById = {};
   tableGames.forEach(function(game) { gamesById[taulaIdPartit(game)] = game; });
+  var aliases = aliasesAssignacionsTaulesPerCanvisManuals(calendarData, extraEdit);
   var profiles = {};
   Object.keys(rawProfiles || {}).forEach(function(key) {
     var profile = rawProfiles[key];
@@ -488,9 +508,12 @@ function incidenciesRestriccionsTaules(calendarData, assignments, rawProfiles) {
     var game = gamesById[assignmentId];
     if (!game && assignment.game) {
       var candidates = tableGames.filter(function(candidate) {
-        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game) && taulaDilluns(candidate.date) === taulaDilluns(assignment.game.date);
+        return taulaClauPartit(candidate) === taulaClauPartit(assignment.game);
       });
       game = candidates.length === 1 ? candidates[0] : null;
+    }
+    if (!game && aliases[assignmentId]) {
+      game = gamesById[taulaIdPartit(aliases[assignmentId])] || null;
     }
     if (!game) {
       if (assignment.restrictionsAcceptedAt || taulaDataPassada(assignment.game && assignment.game.date)) return;
@@ -537,7 +560,12 @@ function htmlRestriccionsTaules(issues) {
 function verificarRestriccionsTaulesDespresCanviManual(game, changes) {
   var calendarData = aplicarEdicionsManualsDesades(llegirFirebase(CALENDAR_FIREBASE_PATH));
   calendarData = aplicarCanviManualAlCalendari(calendarData, game, changes);
-  var issues = incidenciesRestriccionsTaules(calendarData, llegirFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {}, llegirFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {});
+  var issues = incidenciesRestriccionsTaules(
+    calendarData,
+    llegirFirebase(TABLE_ASSIGNMENTS_FIREBASE_PATH) || {},
+    llegirFirebase(TABLE_PEOPLE_FIREBASE_PATH) || {},
+    { type:"changed", manual:true, game:game, fields:changes, importedAt:new Date().toISOString() }
+  );
   var signature = issues.map(function(issue) { return issue.fingerprint; }).sort().join("\n");
   var previous = llegirFirebase(TABLE_RESTRICTIONS_ALERT_PATH) || {};
   var now = new Date().toISOString();

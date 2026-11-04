@@ -62,7 +62,10 @@
     .badge.variation-high { background:#ffcdd2; color:#b71c1c; border-color:#ef9a9a; }
     .badge.variation-low { background:#c8e6c9; color:#145a18; border-color:#a5d6a7; }
     .badge.variation-even { background:#f4eef9; color:var(--brand-dark); border-color:#dccce9; }
-    .load-total { font-variant-numeric:tabular-nums; }
+    .load-breakdown { display:grid; grid-template-columns:auto auto; justify-content:center; gap:3px 6px; font-variant-numeric:tabular-nums; }
+    .load-breakdown .load-part { display:inline-flex; align-items:center; gap:3px; font-size:0.7rem; font-weight:900; }
+    .load-breakdown .load-part strong { font-size:0.76rem; }
+    .load-breakdown .load-label { color:var(--muted); font-size:0.61rem; font-weight:900; text-transform:uppercase; letter-spacing:0.03em; }
     .alerts { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:0; overflow:hidden; margin-bottom:14px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
     .alert { padding:13px; border-right:1px solid var(--line); }
     .alert:last-child { border-right:0; }
@@ -641,7 +644,7 @@
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—", null, null, value => value.toFixed(1));
       renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => sleepHoursLabel(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);
-      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—", loadTooltip, loadVariation);
+      renderMetricTable("load", "Càrrega", dates, pagedGroups, record => record.load, value => loadColorClass(value, maxLoad), value => value ? Math.round(value).toLocaleString("ca-ES") : "—", null, loadVariation);
     }
     function renderPlayerPagination(totalGroups, start, pageSize, totalPages){
       const shouldPaginate = totalGroups > PLAYERS_PER_PAGE;
@@ -727,22 +730,12 @@
       const divisor = mode === "week" ? 1 : valid.length;
       const court = valid.reduce((sum, record) => sum + numeric(record.courtLoad), 0) / divisor;
       const physical = valid.reduce((sum, record) => sum + numeric(record.physicalLoad), 0) / divisor;
-      const total = court + physical;
       const number = value => Math.round(value).toLocaleString("ca-ES");
-      const label = mode === "week" ? "Càrrega setmanal" : mode === "average" ? "Càrrega mitjana per resposta" : "Càrrega de la resposta";
-      const title = label + ": " + number(total) + "\nPista: " + number(court) + "\nFísic: " + number(physical);
-      return '<td><span class="badge load-total ' + classGetter(total) + '" title="' + escapeHtml(title) + '">' + number(total) + '</span></td>';
-    }
-    function loadTooltip(records, value, isSummary){
-      const valid = (records || []).filter(record => numeric(record.load) > 0);
-      if(!valid.length) return "";
-      if(isSummary){
-        const total = valid.reduce((sum, record) => sum + numeric(record.load), 0);
-        return "Càrrega setmanal: " + Math.round(total);
-      }
-      const record = valid[0];
-      const load = Math.round(numeric(record.load));
-      return "Càrrega de la resposta: " + load;
+      const total = court + physical;
+      return '<td><div class="load-breakdown" aria-label="Càrrega de pista ' + number(court) + ' i càrrega física ' + number(physical) + '">' +
+        '<span class="load-part"><span class="load-label">Pista</span><strong class="badge ' + classGetter(total) + '">' + number(court) + '</strong></span>' +
+        '<span class="load-part"><span class="load-label">Físic</span><strong class="badge ' + classGetter(total) + '">' + number(physical) + '</strong></span>' +
+      '</div></td>';
     }
     function buildWeeklyEmailPayload(){
       const selectedWeek = currentWeekKey();

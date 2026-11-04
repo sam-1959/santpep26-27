@@ -30,7 +30,7 @@
       background:rgba(255,255,255,0.72); border:1px solid var(--line);
       border-radius:var(--radius); box-shadow:0 1px 2px rgba(60,40,90,0.04); }
     .control-bar { display:flex; align-items:stretch; gap:8px; margin-bottom:12px; }
-    .control-bar .nav-panel { margin:0; flex:0 0 auto; grid-template-columns:210px 220px; }
+    .control-bar .nav-panel { margin:0; flex:0 0 auto; grid-template-columns:210px 220px 210px; }
     .control-bar .filters { flex:1; margin:0; }
     .nav-group { min-width:0; }
     .nav-label { display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;
@@ -39,12 +39,14 @@
     .month-current, .week-current { min-height:30px; display:grid; place-items:center; border:1px solid var(--brand);
       border-radius:999px; background:var(--brand); color:#fff; font-size:0.78rem; font-weight:800; padding:3px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .week-current { background:var(--card); color:var(--brand-dark); border-color:var(--line); font-size:0.78rem; }
+    .week-jump { width:100%; min-height:30px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; font-size:0.78rem; padding:4px 7px; }
     .nav-arrow { display:inline-grid; place-items:center; width:30px; height:30px; border:1px solid var(--line);
       border-radius:999px; background:var(--card); color:var(--brand); cursor:pointer; }
     .nav-arrow svg { width:16px; height:16px; stroke:currentColor; }
     .nav-arrow:disabled { opacity:0.42; cursor:not-allowed; }
     @media (max-width:640px){ .nav-panel { grid-template-columns:1fr; } }
-    @media (max-width:900px){ .control-bar { flex-direction:column; } .control-bar .nav-panel { grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr); } }
+    @media (max-width:900px){ .control-bar { flex-direction:column; } .control-bar .nav-panel { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:640px){ .control-bar .nav-panel { grid-template-columns:1fr; } }
     .tabs { display:flex; gap:6px; margin-bottom:0; flex-wrap:wrap; }
     .subtabs .tab { font-size:0.78rem; padding:6px 11px; }
     .tab { border:1px solid var(--line); background:var(--card); color:var(--brand);
@@ -254,6 +256,10 @@
           <div class="week-current" id="currentWeekLabel"></div>
           <button class="nav-arrow" id="nextWeek" type="button" title="Setmana següent" aria-label="Setmana següent"></button>
         </div>
+      </div>
+      <div class="nav-group">
+        <label class="nav-label" for="weekJumpDateTime">Ves a data i hora</label>
+        <input class="week-jump" id="weekJumpDateTime" type="datetime-local" aria-label="Ves a la setmana d'una data i hora" />
       </div>
     </section><div class="filters" id="filters"></div></div>
     <div id="content"></div>
@@ -927,6 +933,7 @@
     const currentWeekLabelEl = document.getElementById('currentWeekLabel');
     const prevWeekEl = document.getElementById('prevWeek');
     const nextWeekEl = document.getElementById('nextWeek');
+    const weekJumpDateTimeEl = document.getElementById('weekJumpDateTime');
 
     // Assigna cada setmana a un mes segons el dissabte (primer dia visible de competició)
     function monthKeyOf(wk){ const sat=addDays(wk.monday,5); return sat.slice(0,7); } // "YYYY-MM"
@@ -943,6 +950,12 @@
         if(!(k in weeksByMonth)){ weeksByMonth[k]=[]; monthKeys.push(k); }
         weeksByMonth[k].push(i); // guarda índex global de la setmana
       });
+    }
+
+    function updateWeekJumpBounds(){
+      if(!DATA.weeks.length) return;
+      weekJumpDateTimeEl.min=DATA.weeks[0].monday + 'T00:00';
+      weekJumpDateTimeEl.max=addDays(DATA.weeks[DATA.weeks.length-1].monday,6) + 'T23:59';
     }
     rebuildMonths();
 
@@ -1197,6 +1210,10 @@
       const pos=idxs.indexOf(currentIdx);
       if(pos>=0 && pos<idxs.length-1) showWeek(idxs[pos+1]);
     };
+    weekJumpDateTimeEl.onchange=function(){
+      const date=weekJumpDateTimeEl.value.slice(0,10);
+      showWeekForDate(date);
+    };
 
     function buildFilters(){
       const presentFam=new Set(), presentSex=new Set();
@@ -1285,6 +1302,7 @@
       rebuildChangedGames();
       rebuildConflicts();
       rebuildMonths();
+      updateWeekJumpBounds();
       buildFilters();
       // Obre el mes i la setmana on estiguem (o el/la m\u00e9s proper/a)
       const startIdx=defaultWeek();

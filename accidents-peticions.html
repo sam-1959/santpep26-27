@@ -154,7 +154,7 @@
         <label>Instal·lació<select id="editVenue" required>
           <option value="">Selecciona...</option>
           <option value="CEM Besòs">CEM Besòs</option>
-          <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
+          <option value="PAVELLO LA COLINA">PAVELLO LA COLINA</option>
           <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
           <option value="Poliesportiu de Pomar">Poliesportiu de Pomar</option>
           <option value="ALTRES">Altres...</option>
@@ -202,7 +202,7 @@
     const ACCIDENT_FILES_URL = "https://script.google.com/macros/s/AKfycbwrOIWp7ifH2pmw5ExcaUe-DMQ57U_Y93HUo2RLIZ38J4TEBtNZuejrsJmyw6BgOrxE/exec";
     const PAGE_SIZE = 10;
     const REFRESH_INTERVAL_MS = 30000;
-    const VENUE_OPTIONS = new Set(["CEM Besòs", "Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu de Pomar"]);
+    const VENUE_OPTIONS = new Set(["CEM Besòs", "PAVELLO LA COLINA", "Poliesportiu Montigalà", "Poliesportiu de Pomar"]);
     let rows = [];
     let currentPage = 1;
     let statusMessage = "";
@@ -694,7 +694,8 @@
     function setEditVenue(venue){
       const select = document.getElementById("editVenue");
       const otherInput = document.getElementById("editVenueOther");
-      const value = String(venue || "").trim();
+      const rawValue = String(venue || "").trim();
+      const value = /la colina|gran bretanya/i.test(rawValue) ? "PAVELLO LA COLINA" : rawValue;
       if(value && !VENUE_OPTIONS.has(value)){
         select.value = "ALTRES";
         otherInput.value = value;

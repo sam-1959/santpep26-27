@@ -803,6 +803,12 @@ function normalizeRpeRecord(record, id, rosterInfo) {
   var fallbackTeam = rosterInfo.teamNamesByKey[teamKey] || DEFAULT_TEAM_NAMES_BY_KEY[teamKey] || "Júnior B F";
   var durationTotalMinutes = numeric(record.durationTotalMinutes) || numeric(record.durationHours) * 60 + numeric(record.durationMinutes);
   var rpe = numeric(record.rpe);
+  var courtTotalMinutes = numeric(record.courtTotalMinutes) || durationTotalMinutes;
+  var physicalTotalMinutes = numeric(record.physicalTotalMinutes);
+  var courtRpe = numeric(record.courtRpe) || rpe;
+  var physicalRpe = numeric(record.physicalRpe);
+  var courtLoad = numeric(record.courtLoad) || courtRpe * courtTotalMinutes;
+  var physicalLoad = numeric(record.physicalLoad) || physicalRpe * physicalTotalMinutes;
   return {
     id: id,
     teamKey: teamKey,
@@ -812,9 +818,11 @@ function normalizeRpeRecord(record, id, rosterInfo) {
     trainingDate: record.trainingDate || "",
     durationTotalMinutes: durationTotalMinutes,
     rpe: rpe,
+    courtLoad: courtLoad,
+    physicalLoad: physicalLoad,
     muscleFatigue: numeric(record.muscleFatigue),
     sleepHours: sleepHoursValue(record.sleepHours),
-    load: numeric(record.load) || rpe * durationTotalMinutes
+    load: numeric(record.load) || courtLoad + physicalLoad
   };
 }
 
@@ -884,6 +892,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
     var fatigueAvg = average(group.records, "muscleFatigue");
     var sleepAvg = average(group.records, "sleepHours");
     var loadTotal = group.records.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
+    var loadBreakdown = loadBreakdownForRecords(group.records, true);
     var playerHistory = allRecords.filter(function(record) {
       return record.teamKey === teamKey && normalize(record.player) === normalize(group.player);
     });
@@ -899,6 +908,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
       fatigue: fatigueAvg,
       sleep: sleepAvg,
       load: loadTotal,
+      loadBreakdown: loadBreakdown,
       loadAverage: loadSummary.average,
       loadTrend: loadSummary.trend
     };
@@ -906,6 +916,7 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
     return numberSortValue(a.number) - numberSortValue(b.number) || a.player.localeCompare(b.player, "ca");
   });
   var totalLoad = records.reduce(function(sum, record) { return sum + numeric(record.load); }, 0);
+  var teamLoadBreakdown = loadBreakdownForRecords(records, false);
   var teamHistory = allRecords.filter(function(record) { return record.teamKey === teamKey; });
   var teamLoadSummary = loadSummaryForRecords(records, teamHistory);
   var rpeHigh = players.filter(function(group) { return alertLabels(group).indexOf("RPE") !== -1; }).map(function(group) { return group.player; });
@@ -922,6 +933,8 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
       fatigue: formatNumber(average(records, "muscleFatigue")),
       sleep: formatNumber(average(records, "sleepHours")),
       load: totalLoad ? Math.round(totalLoad).toLocaleString("ca-ES") : "—",
+      courtLoad: formatNumber(teamLoadBreakdown.court, 0),
+      physicalLoad: formatNumber(teamLoadBreakdown.physical, 0),
       loadAverage: formatNumber(teamLoadSummary.average, 0),
       loadTrend: formatPercentage(teamLoadSummary.trend),
       alerts: { rpe: rpeHigh, fatigue: fatigueHigh, sleep: sleepLow }
@@ -936,13 +949,16 @@ function buildRpeTeamPayload(teamKey, team, selectedWeek, dates, records, roster
         fatigue: valuesFor(group, dates, function(record) { return record.muscleFatigue; }),
         sleep: valuesFor(group, dates, function(record) { return record.sleepHours; }),
         load: valuesFor(group, dates, function(record) { return record.load; }).map(function(value) { return value === "" ? "" : Math.round(value); }),
+        loadBreakdown: loadBreakdownValuesFor(group, dates),
         averages: {
           rpe: formatNumber(group.rpe),
           fatigue: formatNumber(group.fatigue),
           sleep: formatNumber(group.sleep),
-          load: formatNumber(group.loadAverage, 0)
+          load: formatNumber(group.loadAverage, 0),
+          loadBreakdown: group.loadBreakdown
         },
         weeklyLoad: Math.round(group.load).toLocaleString("ca-ES"),
+        weeklyLoadBreakdown: loadBreakdownForRecords(group.records, false),
         loadTrend: formatPercentage(group.loadTrend)
       };
     })
@@ -991,6 +1007,24 @@ function valuesFor(group, dates, fieldFn) {
   });
 }
 
+function loadBreakdownForRecords(records, averageMode) {
+  var valid = (records || []).filter(function(record) { return numeric(record.load) > 0; });
+  if (!valid.length) return { court:null, physical:null };
+  var divisor = averageMode ? valid.length : 1;
+  return {
+    court: valid.reduce(function(sum, record) { return sum + numeric(record.courtLoad); }, 0) / divisor,
+    physical: valid.reduce(function(sum, record) { return sum + numeric(record.physicalLoad); }, 0) / divisor
+  };
+}
+
+function loadBreakdownValuesFor(group, dates) {
+  return dates.map(function(date) {
+    var records = group.records.filter(function(record) { return record.trainingDate === date; });
+    if (!records.length) return null;
+    return loadBreakdownForRecords(records, true);
+  });
+}
+
 function alertLabels(group) {
   var labels = [];
   if (group.rpe !== null && group.rpe >= 8) labels.push("RPE");
@@ -1007,7 +1041,7 @@ function buildRpeGroupedText(payload) {
     lines.push("RPE mitjà: " + team.summary.rpe);
     lines.push("Fatiga mitjana: " + team.summary.fatigue);
     lines.push("Hores de son mitjana: " + team.summary.sleep);
-    lines.push("Càrrega setmana: " + team.summary.load);
+    lines.push("Càrrega setmana: " + team.summary.load + " (Pista: " + team.summary.courtLoad + " · Físic: " + team.summary.physicalLoad + ")");
     lines.push("Càrrega mitjana: " + team.summary.loadAverage);
     lines.push("Tendència de càrrega: " + team.summary.loadTrend);
     lines.push("Alertes RPE: " + alertesResum(team.summary.alerts.rpe));
@@ -1021,7 +1055,7 @@ function buildRpeGroupedText(payload) {
 function buildRpeCoordinatorText(payload) {
   var lines = ["CB SANT JOSEP BADALONA", "", "Resum RPE setmanal", "Setmana: " + payload.weekLabel, ""];
   payload.teams.forEach(function(team) {
-    lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega setmana " + team.summary.load + " · Mitjana " + team.summary.loadAverage + " · Tendència " + team.summary.loadTrend);
+    lines.push(team.team + ": " + team.summary.records + " registres · RPE " + team.summary.rpe + " · Fatiga " + team.summary.fatigue + " · Son " + team.summary.sleep + " · Càrrega setmana " + team.summary.load + " (Pista " + team.summary.courtLoad + " · Físic " + team.summary.physicalLoad + ") · Mitjana " + team.summary.loadAverage + " · Tendència " + team.summary.loadTrend);
     lines.push("  Alertes — RPE: " + alertesResum(team.summary.alerts.rpe) + " | Fatiga: " + alertesResum(team.summary.alerts.fatigue) + " | Son: " + alertesResum(team.summary.alerts.sleep));
   });
   lines.push("", "Vista Global RPE: " + RPE_GLOBAL_URL);
@@ -1098,12 +1132,13 @@ function rpeMetricTable(title, dates, players, field, averageField) {
     return '<th style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;">' + escaparHtml(date.label || date.iso) + '</th>';
   }).join("");
   var rows = players.map(function(player) {
-    var values = (player[field] || []).map(function(value) {
-      return '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;">' + escaparHtml(value === "" || value == null ? "—" : value) + '</td>';
+    var values = (isLoad ? (player.loadBreakdown || []) : (player[field] || [])).map(function(value) {
+      var content = isLoad ? rpeLoadBreakdownHtml(value) : escaparHtml(value === "" || value == null ? "—" : value);
+      return '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;vertical-align:middle;">' + content + '</td>';
     }).join("");
     var loadSummaryCells = isLoad
-      ? '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.weeklyLoad || "—") + '</td>' +
-        '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.averages && player.averages[averageField]) + '</td>' +
+      ? '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;vertical-align:middle;">' + rpeLoadBreakdownHtml(player.weeklyLoadBreakdown) + '</td>' +
+        '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;vertical-align:middle;">' + rpeLoadBreakdownHtml(player.averages && player.averages.loadBreakdown) + '</td>' +
         '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.loadTrend || "—") + '</td>'
       : '<td style="padding:8px;border-bottom:1px solid #E5E5E5;text-align:center;font-weight:bold;">' + escaparHtml(player.averages && player.averages[averageField]) + '</td>';
     return '<tr>' +
@@ -1118,6 +1153,16 @@ function rpeMetricTable(title, dates, players, field, averageField) {
     '<thead><tr style="background-color:#4B1D6D;color:#FFC72C;">' +
     head("Jugador/a") + head("Alertes") + headerDates + (isLoad ? '<th style="padding:8px;text-align:center;">Setmana</th>' : '') + '<th style="padding:8px;text-align:center;">Mitjana</th>' + (isLoad ? '<th style="padding:8px;text-align:center;">Tendència</th>' : '') +
     '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function rpeLoadBreakdownHtml(value) {
+  if (!value || (value.court === null && value.physical === null)) return "—";
+  var court = value.court === null || value.court === undefined ? "—" : Math.round(value.court).toLocaleString("ca-ES");
+  var physical = value.physical === null || value.physical === undefined ? "—" : Math.round(value.physical).toLocaleString("ca-ES");
+  return '<div style="display:inline-block;text-align:left;line-height:1.55;white-space:nowrap;">' +
+    '<div><span style="font-size:10px;font-weight:bold;color:#6B5B75;text-transform:uppercase;">Pista</span> <strong style="color:#4B1D6D;">' + escaparHtml(court) + '</strong></div>' +
+    '<div><span style="font-size:10px;font-weight:bold;color:#6B5B75;text-transform:uppercase;">Físic</span> <strong style="color:#4B1D6D;">' + escaparHtml(physical) + '</strong></div>' +
+  '</div>';
 }
 
 function alertesResum(players) {

@@ -1439,17 +1439,9 @@
       const balancedCandidates = requiredCandidates.filter(profile =>
         !targetMax || (counts.get(profile.name) || 0) < targetMax
       );
-      const siblingCandidates = requiredCandidates.filter(profile => hasSiblingInGame(profile, game));
-      const balancedSiblingCandidates = siblingCandidates.filter(profile =>
-        !targetMax || (counts.get(profile.name) || 0) < targetMax
-      );
-      const preferredCandidates = balancedSiblingCandidates.length
-        ? balancedSiblingCandidates
-        : balancedCandidates.length
-          ? balancedCandidates
-          : siblingCandidates.length
-            ? siblingCandidates
-            : requiredCandidates;
+      const preferredCandidates = balancedCandidates.length
+        ? balancedCandidates
+        : requiredCandidates;
       return preferredCandidates
         .sort((a, b) => (counts.get(a.name) || 0) - (counts.get(b.name) || 0) || a.name.localeCompare(b.name, "ca"))[0] || null;
     }
@@ -1516,7 +1508,6 @@
         experiencedPriorities: 0,
         experiencedRepairs: 0,
         missingExperienced: 0,
-        siblingPriorities: 0,
         rejectedSkipped: 0,
         unresolved: 0
       };
@@ -1565,24 +1556,16 @@
             proposalLog.unresolved += 1;
             return;
           }
-          const siblingCandidates = requiredCandidates.filter(profile => hasSiblingInGame(profile, game));
           const requiredCounts = requiredCandidates.map(profile => counts.get(profile.name) || 0);
           const requiredMinCount = requiredCounts.length ? Math.min(...requiredCounts) : 0;
           const experienceBalanceLimit = needsExperienceNow ? requiredMinCount + 1 : targetMax;
           const balancedCandidates = requiredCandidates.filter(profile =>
             !experienceBalanceLimit || (counts.get(profile.name) || 0) < experienceBalanceLimit
           );
-          const balancedSiblingCandidates = siblingCandidates.filter(profile =>
-            !experienceBalanceLimit || (counts.get(profile.name) || 0) < experienceBalanceLimit
-          );
           if (!balancedCandidates.length && requiredCandidates.length) proposalLog.balancedFallbacks += 1;
-          const preferredCandidates = balancedSiblingCandidates.length
-            ? balancedSiblingCandidates
-            : balancedCandidates.length
-              ? balancedCandidates
-              : siblingCandidates.length
-                ? siblingCandidates
-                : requiredCandidates;
+          const preferredCandidates = balancedCandidates.length
+            ? balancedCandidates
+            : requiredCandidates;
           const chosen = preferredCandidates[0];
           if (!chosen) {
             if (replacedPerson) {
@@ -1594,7 +1577,6 @@
           }
           if (needsExperienceNow && chosen.experienced === true) proposalLog.experiencedPriorities += 1;
           if (replacedPerson) proposalLog.experiencedRepairs += 1;
-          if (siblingCandidates.length && hasSiblingInGame(chosen, game)) proposalLog.siblingPriorities += 1;
           current[slot] = chosen.name;
           counts.set(chosen.name, (counts.get(chosen.name) || 0) + 1);
           changed += 1;
@@ -1868,7 +1850,6 @@
           `<div class="proposal-log-item"><span class="proposal-log-label">Assignades</span><span class="proposal-log-value">${escapeHtml(log.assigned)} / ${escapeHtml(log.slotsEvaluated)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Conflictes evitats</span><span class="proposal-log-value">${escapeHtml(log.conflictSkipped)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Rebuigs respectats</span><span class="proposal-log-value">${escapeHtml(log.rejectedSkipped || 0)}</span></div>` +
-          `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat germà</span><span class="proposal-log-value">${escapeHtml(log.siblingPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Prioritat experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedPriorities)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Mini corregits per experiència</span><span class="proposal-log-value">${escapeHtml(log.experiencedRepairs || 0)}</span></div>` +
           `<div class="proposal-log-item"><span class="proposal-log-label">Sense experiència disponible</span><span class="proposal-log-value">${escapeHtml(log.missingExperienced || 0)}</span></div>` +
@@ -1882,7 +1863,6 @@
           `<li>Les persones que han rebutjat un partit no tornen a sortir a la proposta d’aquella mateixa taula.</li>` +
           `<li>Es balancegen les taules del mes perquè el repartiment sigui aproximadament equivalent. Fallbacks per restriccions: ${escapeHtml(log.balancedFallbacks)}.</li>` +
           `<li>Mini A M, Mini B M i Mini F requereixen com a mínim una taula amb experiència; si no n’hi ha cap disponible, la plaça queda pendent.</li>` +
-          `<li>Si el partit coincideix amb l’equip germà d’una persona, aquesta persona té prioritat.</li>` +
         `</ul>`;
       els.content.appendChild(section);
     }

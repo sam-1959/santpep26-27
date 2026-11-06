@@ -275,7 +275,7 @@
         <label class="edit-field" id="gameEditVenueField">Instal·lació
           <select id="gameEditVenue">
             <option value="">Sense especificar</option>
-            <option value="PAVELLO LA COLINA">PAVELLO LA COLINA</option>
+            <option value="Poliesportiu La Colina">Poliesportiu La Colina</option>
             <option value="Poliesportiu Montigalà">Poliesportiu Montigalà</option>
             <option value="Poliesportiu Bufalà">Poliesportiu Bufalà</option>
             <option value="Altres">Altres</option>
@@ -299,7 +299,6 @@
     import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     let DATA = JSON.parse(document.getElementById('partitsData').textContent);
-    DATA.weeks.forEach(function(week){ (week.games || []).forEach(function(game){ game.loc=canonicalPlace(game.loc); }); });
     const FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
     const FIREBASE_CONFIG = { apiKey:"AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU", authDomain:"coord-fa09e.firebaseapp.com", databaseURL:FIREBASE_DB_URL, projectId:"coord-fa09e", storageBucket:"coord-fa09e.firebasestorage.app", messagingSenderId:"509431001997", appId:"1:509431001997:web:561fa966029d873131c3c4" };
     // Apps Script independent que envia l'avís immediat del canvi manual.
@@ -455,7 +454,7 @@
           const key=gameEditKey(game);
           game._editKey=key;
           const edit=gameEdits[key];
-          if(edit) { Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date || game.date)}); game.loc=canonicalPlace(game.loc); movedGames.push(game); }
+          if(edit) { Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date || game.date)}); movedGames.push(game); }
         }); });
         movedGames.forEach(moveGameToItsWeek);
       }catch(err){
@@ -518,7 +517,6 @@
         const game=candidates[0];
         game._editKey=game._editKey || [game.date,game.time,game.team,game.sex,game.rival].join('|');
         Object.assign(game,change.game,{dow:weekdayForDate(change.game.date)});
-        game.loc=canonicalPlace(game.loc);
         moveGameToItsWeek(game);
       });
     }
@@ -541,7 +539,7 @@
       if(!raw) return '';
       const normalized=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
         .replace(/\s+/g,' ').toUpperCase();
-      if(/LA COLINA|GRAN BRETANYA/.test(normalized)) return 'PAVELLO LA COLINA';
+      if(/LA COLINA|GRAN BRETANYA/.test(normalized)) return 'La Colina';
       if(/MONTIGALA/.test(normalized)) return 'PAVELLO DE MONTIGALA';
       if(/BUFALA/.test(normalized)) return 'BUFALA';
       if(/POMAR/.test(normalized)) return 'POLIESPORTIU DE POMAR';
@@ -971,7 +969,7 @@
     const gameEditVenueField=document.getElementById('gameEditVenueField');
     const gameEditOtherLocation=document.getElementById('gameEditOtherLocation');
     const gameEditOtherLocationField=document.getElementById('gameEditOtherLocationField');
-    const HOME_VENUES=["PAVELLO LA COLINA", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
+    const HOME_VENUES=["Poliesportiu La Colina", "Poliesportiu Montigalà", "Poliesportiu Bufalà"];
     function knownHomeVenue(location){
       const value=String(location || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
       if(!value) return "";
@@ -1107,7 +1105,6 @@
           };
         }
         Object.assign(game, edit, {_editKey:key, dow:weekdayForDate(edit.date)});
-        game.loc=canonicalPlace(game.loc);
         moveGameToItsWeek(game);
         rebuildChangedGames();
         rebuildConflicts();

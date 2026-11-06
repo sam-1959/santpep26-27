@@ -600,7 +600,9 @@
     }
 
     function displayLocation(value){
-      return String(value || "Localització pendent").toLocaleUpperCase("ca-ES");
+      const location = String(value || "").trim();
+      if (/LA COLINA|GRAN BRETANYA/i.test(location)) return "PAVELLÓ DE LA COLINA";
+      return location ? location.toLocaleUpperCase("ca-ES") : "LOCALITZACIÓ PENDENT";
     }
 
     function teamOptions(){

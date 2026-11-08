@@ -6,11 +6,12 @@
 // 3. Executa `crearTriggerEnviamentMensualTaules()` una vegada i autoritza
 //    GmailApp, UrlFetchApp i ScriptApp.
 // 4. Opcionalment, executa `provarEnviamentMensualTaules()` per enviar una
-//    prova real del mes actual a dtecnic@cbsantjosep.cat.
+//    prova real del mes anterior a dtecnic@cbsantjosep.cat.
 //
 // El trigger es comprova cada dia a les 09:10 (Europe/Madrid). Envia l'1 de
 // cada mes si és laborable; si l'1 és dissabte o diumenge, envia el dilluns
-// següent. ScriptProperties evita un segon enviament del mateix mes.
+// següent. Sempre inclou les taules del mes ja tancat. ScriptProperties evita
+// un segon enviament del mateix període.
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var SEASON = "season-26-27";
@@ -68,7 +69,7 @@ function esDiaEnviamentMensualTaules(date) {
 function enviarTaulesMensuals(options) {
   options = options || {};
   var now = options.now || new Date();
-  var monthKey = Utilities.formatDate(now, TIMEZONE, "yyyy-MM");
+  var monthKey = previousMonthKey(now);
   var stateKey = STATE_PREFIX + monthKey;
   var properties = PropertiesService.getScriptProperties();
   if (!options.force && properties.getProperty(stateKey)) {
@@ -270,4 +271,15 @@ function buildHtml(games, assignments, costs, label) {
 
 function localIsoDate(date) {
   return Utilities.formatDate(date || new Date(), TIMEZONE, "yyyy-MM-dd");
+}
+
+function previousMonthKey(date) {
+  var parts = localIsoDate(date || new Date()).split("-").map(Number);
+  var year = parts[0];
+  var month = parts[1] - 1;
+  if (month === 0) {
+    year -= 1;
+    month = 12;
+  }
+  return year + "-" + (month < 10 ? "0" : "") + month;
 }

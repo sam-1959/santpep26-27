@@ -6,7 +6,7 @@
 // 3. Executa `crearTriggerEnviamentMensualTaules()` una vegada i autoritza
 //    GmailApp, UrlFetchApp i ScriptApp.
 // 4. Opcionalment, executa `provarEnviamentMensualTaules()` per enviar una
-//    prova real del mes anterior a dtecnic@cbsantjosep.cat.
+//    prova real del mes anterior als destinataris configurats.
 //
 // El trigger es comprova cada dia a les 09:10 (Europe/Madrid). Envia l'1 de
 // cada mes si és laborable; si l'1 és dissabte o diumenge, envia el dilluns
@@ -18,7 +18,8 @@ var SEASON = "season-26-27";
 var TIMEZONE = "Europe/Madrid";
 var CALENDAR_PATH = "calendarGames/" + SEASON;
 var ASSIGNMENTS_PATH = "miniTablesAssignments/" + SEASON;
-var RECIPIENT = "dtecnic@cbsantjosep.cat";
+var RECIPIENTS = ["info@cbsantjosep.cat", "miquelpratsgol@gmail.com"];
+var CC_RECIPIENTS = ["dtecnic@cbsantjosep.cat"];
 var PLANNING_URL = "https://sam-1959.github.io/santpep26-27/taules-planificacio.html";
 var STATE_PREFIX = "monthlyTablesEmail:";
 var TABLE_COST = 10;
@@ -94,13 +95,14 @@ function enviarTaulesMensuals(options) {
   var monthLabel = monthName(monthKey);
   var subject = "Taules de " + monthLabel + " · CB Sant Josep Badalona";
 
-  GmailApp.sendEmail(RECIPIENT, subject, buildText(games, assignmentsByGame, monthlyCosts, monthLabel), {
+  GmailApp.sendEmail(RECIPIENTS.join(","), subject, buildText(games, assignmentsByGame, monthlyCosts, monthLabel), {
     htmlBody:buildHtml(games, assignmentsByGame, monthlyCosts, monthLabel),
+    cc:CC_RECIPIENTS.join(","),
     name:"CB Sant Josep Badalona",
     from:"dtecnic@cbsantjosep.cat"
   });
-  properties.setProperty(stateKey, JSON.stringify({ sentAt:new Date().toISOString(), games:games.length, recipient:RECIPIENT }));
-  return { status:"sent", month:monthKey, games:games.length, recipient:RECIPIENT };
+  properties.setProperty(stateKey, JSON.stringify({ sentAt:new Date().toISOString(), games:games.length, recipients:RECIPIENTS, cc:CC_RECIPIENTS }));
+  return { status:"sent", month:monthKey, games:games.length, recipients:RECIPIENTS, cc:CC_RECIPIENTS };
 }
 
 function readFirebase(path) {

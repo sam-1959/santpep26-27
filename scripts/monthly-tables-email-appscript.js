@@ -84,6 +84,10 @@ function enviarTaulesMensuals(options) {
   }).sort(function(a, b) {
     return (String(a.date) + " " + String(a.time)).localeCompare(String(b.date) + " " + String(b.time));
   });
+  if (!games.length) {
+    Logger.log("No s'envien les taules de " + monthKey + ": no hi ha cap partit amb taula.");
+    return { status:"skipped_no_tables", month:monthKey, games:0 };
+  }
   var assignments = readFirebase(ASSIGNMENTS_PATH) || {};
   var assignmentsByGame = assignmentsForGames(games, assignments);
   var monthlyCosts = monthlyCostByPerson(games, assignmentsByGame);

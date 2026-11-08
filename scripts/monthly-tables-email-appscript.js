@@ -6,7 +6,7 @@
 // 3. Executa `crearTriggerEnviamentMensualTaules()` una vegada i autoritza
 //    GmailApp, UrlFetchApp i ScriptApp.
 // 4. Opcionalment, executa `provarEnviamentMensualTaules()` per enviar una
-//    prova real del mes actual a info@cbsantjosep.cat.
+//    prova real del mes actual a dtecnic@cbsantjosep.cat.
 //
 // El trigger es comprova cada dia a les 09:10 (Europe/Madrid). Envia l'1 de
 // cada mes si és laborable; si l'1 és dissabte o diumenge, envia el dilluns
@@ -17,7 +17,7 @@ var SEASON = "season-26-27";
 var TIMEZONE = "Europe/Madrid";
 var CALENDAR_PATH = "calendarGames/" + SEASON;
 var ASSIGNMENTS_PATH = "miniTablesAssignments/" + SEASON;
-var RECIPIENT = "info@cbsantjosep.cat";
+var RECIPIENT = "dtecnic@cbsantjosep.cat";
 var PLANNING_URL = "https://sam-1959.github.io/santpep26-27/taules-planificacio.html";
 var STATE_PREFIX = "monthlyTablesEmail:";
 var TABLE_COST = 10;

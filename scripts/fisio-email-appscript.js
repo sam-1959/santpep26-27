@@ -74,7 +74,8 @@ function enviarCorreuAAdrecesFixes(e, teamName) {
   }
 
   // Destinataris base de Contactes: Coordinació general, fisioteràpia,
-  // Direcció tècnica i Coordinació de preparació física.
+  // Direcció tècnica, Coordinació de preparació física i destinataris que
+  // s'hagin subscrit a les peticions de fisioteràpia.
   // La coordinació femenina o masculina es manté segons el gènere.
   var destinatariPrincipal = correuCoordinadorFisio();
   var llistaCorreus = correusBaseFisio();
@@ -187,7 +188,10 @@ function correusBaseFisio() {
   if (missing.length) {
     throw new Error("Falten rols de Contactes per avisar una petició de fisio: " + missing.join(", "));
   }
-  return selected.map(function(contact) { return contact.email; });
+  var subscribedRecipients = (Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : []).filter(function(contact) {
+    return contact && Array.isArray(contact.notifications) && contact.notifications.indexOf("physio") !== -1;
+  });
+  return selected.concat(subscribedRecipients).map(function(contact) { return contact.email; });
 }
 
 function obtenirContactesTemporada() {

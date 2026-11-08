@@ -581,6 +581,10 @@ function weeklyPhysioRecipients(contacts) {
   var all = coordinators.filter(function(contact) {
     return includedRoles[String(contact.role || "").trim()];
   });
+  var subscribedRecipients = (Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : []).filter(function(contact) {
+    return contact && Array.isArray(contact.notifications) && contact.notifications.indexOf("physioWeekly") !== -1;
+  });
+  all = all.concat(subscribedRecipients);
   var recipients = contactsToRecipients(all, "No hi ha destinataris vàlids per al resum setmanal de Visites Fisio.");
   var cc = normalitzarCorreus([PHYSIO_WEEKLY_CC]);
   var to = recipients.emails.filter(function(email) {

@@ -342,12 +342,12 @@
     const activeFilters=new Set(); // categories
     const activeSex=new Set();     // gèneres
     let activeFriendly=false;      // només amistosos
-    let showAway=false;            // per defecte, només partits a casa
+    let venueFilter='all';         // per defecte, tots els partits
     function passes(g){
       const okFam = activeFilters.size===0 || activeFilters.has(g.fam);
       const okSex = activeSex.size===0 || activeSex.has(g.sex);
       const okFriendly = !activeFriendly || !!g.friendly;
-      const okVenue = g.home || showAway;
+      const okVenue = venueFilter==='all' || (venueFilter==='home' ? g.home : !g.home);
       return okFam && okSex && okFriendly && okVenue;
     }
 
@@ -1258,11 +1258,14 @@
 
       // Grup 2: ubicació
       const venueGroup=group('Partits', 'venue-filter');
-      const away=document.createElement('button');
-      away.className='chip away-filter';
-      away.textContent='Mostrar fora';
-      away.onclick=function(){ showAway=!showAway; sync(); renderContent(); };
-      venueGroup.appendChild(away);
+      [['all','Tots'],['home','Casa'],['away','Fora']].forEach(function(option){
+        const button=document.createElement('button');
+        button.className='chip venue-option';
+        button.dataset.venue=option[0];
+        button.textContent=option[1];
+        button.onclick=function(){ venueFilter=option[0]; sync(); renderContent(); };
+        venueGroup.appendChild(button);
+      });
 
       // Grup 3: categoria
       const famGroup=group('Categoria', 'category-filter');
@@ -1281,8 +1284,9 @@
         Array.prototype.forEach.call(el.querySelectorAll('.chip[data-sex]'), function(c){ c.classList.toggle('active',activeSex.has(c.dataset.sex)); });
         const friendly=el.querySelector('.friendly-filter');
         if(friendly) friendly.classList.toggle('active',activeFriendly);
-        const away=el.querySelector('.away-filter');
-        if(away) away.classList.toggle('active',showAway);
+        Array.prototype.forEach.call(el.querySelectorAll('.venue-option'), function(button){
+          button.classList.toggle('active',button.dataset.venue===venueFilter);
+        });
         Array.prototype.forEach.call(el.querySelectorAll('.chip[data-fam]'), function(c){ c.classList.toggle('active',activeFilters.has(c.dataset.fam)); });
       }
     }

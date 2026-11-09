@@ -1260,7 +1260,7 @@
       const venueGroup=group('Partits', 'venue-filter');
       [['all','Tots'],['home','Casa'],['away','Fora']].forEach(function(option){
         const button=document.createElement('button');
-        button.className='chip venue-option';
+        button.className='chip venue-option' + (option[0]===venueFilter ? ' active' : '');
         button.dataset.venue=option[0];
         button.textContent=option[1];
         button.onclick=function(){ venueFilter=option[0]; sync(); renderContent(); };

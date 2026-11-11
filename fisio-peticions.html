@@ -720,17 +720,19 @@
       return requestRows.concat(visitRows).sort((a, b) => (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0));
     }
 
-    async function syncPublicRequestsToPrivate(privateRequests, token){
+    async function mergePublicRequestsIntoPrivate(privateRequests, token, sync){
       const publicRequests = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
       const privateIds = new Set(privateRequests.map(request => String(request.id || "")));
       const missingRequests = publicRequests.filter(request => request.id && !privateIds.has(String(request.id)));
-      if(!missingRequests.length) return { requests: privateRequests, synced: 0 };
+      const requests = privateRequests.concat(missingRequests);
+      if(!sync || !missingRequests.length) return { requests, synced: 0, pending: 0 };
 
-      await Promise.all(missingRequests.map(async request => {
+      const results = await Promise.allSettled(missingRequests.map(async request => {
         const { id, ...publicData } = request;
         await patchFirebase(PRIVATE_REQUESTS_PATH, id, publicData, token);
       }));
-      return { requests: privateRequests.concat(missingRequests), synced: missingRequests.length };
+      const synced = results.filter(result => result.status === "fulfilled").length;
+      return { requests, synced, pending: missingRequests.length - synced };
     }
 
     function openEditModal(rowId){
@@ -1357,15 +1359,21 @@
         let syncedRequests = privateRequests;
         let syncedCount = 0;
         try {
-          const result = await syncPublicRequestsToPrivate(privateRequests, token);
+          const result = await mergePublicRequestsIntoPrivate(privateRequests, token, true);
           syncedRequests = result.requests;
           syncedCount = result.synced;
+          var pendingCount = result.pending;
         } catch(syncError) {
           console.warn("No s'han pogut sincronitzar les peticions públiques al registre privat.", syncError);
+          const result = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
+          syncedRequests = result.requests;
+          var pendingCount = result.requests.length - privateRequests.length;
         }
         rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(syncedRequests), true));
         setPrivateMode(user);
-        statusMessage = syncedCount ? "Dades completes carregades. S'han sincronitzat " + syncedCount + " petició" + (syncedCount === 1 ? "." : "ns.") : "Dades completes carregades.";
+        statusMessage = pendingCount
+          ? "Dades completes carregades. Es mostren " + pendingCount + " petició" + (pendingCount === 1 ? " pública pendent de sincronitzar." : "ns públiques pendents de sincronitzar.")
+          : syncedCount ? "Dades completes carregades. S'han sincronitzat " + syncedCount + " petició" + (syncedCount === 1 ? "." : "ns.") : "Dades completes carregades.";
         render();
       } catch(error) {
         setPublicMode("No s'ha pogut carregar la vista completa. Revisa permisos de Firebase.");
@@ -1382,7 +1390,9 @@
           const token = await currentUser.getIdToken();
           await loadPaidPlayers();
           await loadLatestVisitGuidelines(token);
-          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), false));
+          const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
+          const combined = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
+          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(combined.requests), false));
         } else {
           await loadPaidPlayers();
           await loadLatestVisitGuidelines();

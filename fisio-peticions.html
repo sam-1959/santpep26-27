@@ -720,6 +720,19 @@
       return requestRows.concat(visitRows).sort((a, b) => (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0));
     }
 
+    async function syncPublicRequestsToPrivate(privateRequests, token){
+      const publicRequests = await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH);
+      const privateIds = new Set(privateRequests.map(request => String(request.id || "")));
+      const missingRequests = publicRequests.filter(request => request.id && !privateIds.has(String(request.id)));
+      if(!missingRequests.length) return { requests: privateRequests, synced: 0 };
+
+      await Promise.all(missingRequests.map(async request => {
+        const { id, ...publicData } = request;
+        await patchFirebase(PRIVATE_REQUESTS_PATH, id, publicData, token);
+      }));
+      return { requests: privateRequests.concat(missingRequests), synced: missingRequests.length };
+    }
+
     function openEditModal(rowId){
       const row = rows.find(item => item.id === rowId);
       if(!row || !canEditRequests()) return;
@@ -1340,9 +1353,19 @@
         const token = await user.getIdToken();
         await loadPaidPlayers();
         await loadLatestVisitGuidelines(token);
-        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true));
+        const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
+        let syncedRequests = privateRequests;
+        let syncedCount = 0;
+        try {
+          const result = await syncPublicRequestsToPrivate(privateRequests, token);
+          syncedRequests = result.requests;
+          syncedCount = result.synced;
+        } catch(syncError) {
+          console.warn("No s'han pogut sincronitzar les peticions públiques al registre privat.", syncError);
+        }
+        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(syncedRequests), true));
         setPrivateMode(user);
-        statusMessage = "Dades completes carregades.";
+        statusMessage = syncedCount ? "Dades completes carregades. S'han sincronitzat " + syncedCount + " petició" + (syncedCount === 1 ? "." : "ns.") : "Dades completes carregades.";
         render();
       } catch(error) {
         setPublicMode("No s'ha pogut carregar la vista completa. Revisa permisos de Firebase.");

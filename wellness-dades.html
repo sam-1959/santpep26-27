@@ -141,7 +141,7 @@
     </section>
 
     <section class="alerts" aria-label="Alertes">
-      <div class="alert danger"><span>RPE alt</span><strong id="alertRpe">—</strong></div>
+      <div class="alert danger"><span>RPE alt (8–10)</span><strong id="alertRpe">—</strong></div>
       <div class="alert danger"><span>Fatiga alta</span><strong id="alertFatigue">—</strong></div>
       <div class="alert warning"><span>Son baixa</span><strong id="alertSleep">—</strong></div>
     </section>
@@ -428,6 +428,12 @@
       if(normalized <= 4) return "orange";
       return "red";
     }
+    function rpeColorClass(value){
+      const rpe = numeric(value);
+      if(rpe >= 8) return "red";
+      if(rpe >= 7) return "yellow";
+      return colorClass(rpe, 10);
+    }
     function loadColorClass(value, maxLoad){
       if(!maxLoad) return "green-strong";
       return colorClass(numeric(value) / maxLoad * 5, 5);
@@ -604,7 +610,7 @@
     }
     function alertLabels(group){
       const labels = [];
-      if(group.rpe !== null && group.rpe >= 7) labels.push("RPE");
+      if(group.rpe !== null && group.rpe >= 8) labels.push("RPE");
       if(group.fatigue !== null && group.fatigue >= 4) labels.push("Fatiga");
       if(group.sleep !== null && group.sleep <= 6) labels.push("Son");
       return labels;
@@ -641,7 +647,7 @@
       const start = state.playerPageIndex * PLAYERS_PER_PAGE;
       const pagedGroups = groups.slice(start, start + PLAYERS_PER_PAGE);
       renderPlayerPagination(groups.length, start, pagedGroups.length, totalPages);
-      renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, value => colorClass(value, 10), value => value || "—", null, null, value => value.toFixed(1));
+      renderMetricTable("rpe", "RPE", dates, pagedGroups, record => record.rpe, rpeColorClass, value => value || "—", null, null, value => value.toFixed(1));
       renderMetricTable("fatigue", "Fatiga", dates, pagedGroups, record => record.muscleFatigue, value => colorClass(value, 5), value => value || "—", null, null, value => value.toFixed(1));
       renderMetricTable("sleep", "Hores de son", dates, pagedGroups, record => record.sleepHours, value => colorClass(10 - numeric(value), 10), value => sleepHoursLabel(value));
       const maxLoad = Math.max(...state.filtered.map(record => numeric(record.load)), 0);

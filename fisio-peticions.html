@@ -63,6 +63,7 @@
     .col-team { width:1%; white-space:nowrap; }
     .col-court, .col-type { width:1%; white-space:nowrap; text-align:center; }
     .col-phone { width:1%; white-space:nowrap; }
+    .col-source { width:1%; text-align:center; white-space:nowrap; }
     .col-guidelines { min-width:260px; color:var(--brand-dark); font-weight:750; }
     .guidelines-meta { color:var(--muted); font-size:0.72rem; line-height:1.25; margin-top:4px; font-weight:800; }
     .no-guidelines-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; background:#f3f0f6; color:var(--muted); font-size:0.72rem; font-weight:900; }
@@ -1116,7 +1117,7 @@
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
       const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
-      const sourceHead = '<th>Origen</th>';
+      const sourceHead = '<th class="col-source">Origen</th>';
       const actionsHead = canEditRequests() ? '<th class="col-actions">Accions</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th>' + sourceHead + '<th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Visita programada</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
@@ -1128,7 +1129,7 @@
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
-          const sourceCell = '<td>' + (row.visitOnly ? '<span class="no-visit-badge">VISITA</span>' : '<span class="paid-badge">Petició</span>') + '</td>';
+          const sourceCell = '<td class="col-source">' + (row.visitOnly ? '<span class="no-visit-badge">VISITA</span>' : '<span class="paid-badge">Petició</span>') + '</td>';
           const quotaCell = isPrivateView
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';

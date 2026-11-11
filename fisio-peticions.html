@@ -586,24 +586,33 @@
       return Object.entries(data).map(([id, request]) => ({ id, ...(request || {}) }));
     }
 
+    function standaloneVisitsFrom(visits){
+      return visits.filter(visit => !String(visit.requestId || "").trim()).map(visit => ({
+        id: String(visit.id || ""),
+        name: String(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" ")).trim(),
+        team: teamCategory(visit.team || ""),
+        gender: String(visit.gender || ""),
+        date: parseDateValue(visit.date) || parseDateValue(visit.createdAt),
+        createdAt: parseDateValue(visit.createdAt) || parseDateValue(visit.date),
+        assignedPhysio: String(visit.assignedPhysio || ""),
+        visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
+        courtStatus: visit.courtStatus || "pending",
+        guidelines: String(visit.guidelines || "")
+      })).filter(visit => visit.id && visit.name);
+    }
+
+    async function loadPublicStandaloneVisits(){
+      const visits = await fetchFirebaseRequests("physioVisitsPublic/season-26-27");
+      standaloneVisits = standaloneVisitsFrom(visits);
+    }
+
     async function loadLatestVisitGuidelines(token){
       try {
         const path = token ? VISITS_PATH : "physioVisitsPublic/season-26-27";
         const visits = await fetchFirebaseRequests(path, token);
         const visitsByPlayer = new Map();
         const visitsById = new Map();
-        standaloneVisits = visits.filter(visit => !String(visit.requestId || "").trim()).map(visit => ({
-          id: String(visit.id || ""),
-          name: String(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" ")).trim(),
-          team: teamCategory(visit.team || ""),
-          gender: String(visit.gender || ""),
-          date: parseDateValue(visit.date) || parseDateValue(visit.createdAt),
-          createdAt: parseDateValue(visit.createdAt) || parseDateValue(visit.date),
-          assignedPhysio: String(visit.assignedPhysio || ""),
-          visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
-          courtStatus: visit.courtStatus || "pending",
-          guidelines: String(visit.guidelines || "")
-        })).filter(visit => visit.id && visit.name);
+        standaloneVisits = standaloneVisitsFrom(visits);
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
           const visitDate = parseDateValue(visit.date);
@@ -1355,6 +1364,7 @@
         const token = await user.getIdToken();
         await loadPaidPlayers();
         await loadLatestVisitGuidelines(token);
+        await loadPublicStandaloneVisits();
         const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
         const combined = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
         rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(combined.requests), true));
@@ -1392,6 +1402,7 @@
           const token = await currentUser.getIdToken();
           await loadPaidPlayers();
           await loadLatestVisitGuidelines(token);
+          await loadPublicStandaloneVisits();
           const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
           const combined = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
           nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(combined.requests), false));

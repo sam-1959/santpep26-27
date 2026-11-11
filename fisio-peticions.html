@@ -1128,7 +1128,7 @@
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
             '<td class="col-phone">' + phoneCell + '</td>' : '';
-          const sourceCell = '<td>' + (row.visitOnly ? '<span class="no-visit-badge">Sense petició</span>' : '<span class="paid-badge">Petició</span>') + '</td>';
+          const sourceCell = '<td>' + (row.visitOnly ? '<span class="no-visit-badge">X Petició</span>' : '<span class="paid-badge">Petició</span>') + '</td>';
           const quotaCell = isPrivateView
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';

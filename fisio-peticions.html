@@ -368,6 +368,7 @@
     let quotaImportedAt = null;
     let latestGuidelinesByPlayer = new Map();
     let visitGuidelinesById = new Map();
+    let standaloneVisits = [];
     let editingRequestId = "";
     let schedulingRequestId = "";
 
@@ -591,6 +592,18 @@
         const visits = await fetchFirebaseRequests(path, token);
         const visitsByPlayer = new Map();
         const visitsById = new Map();
+        standaloneVisits = visits.filter(visit => !String(visit.requestId || "").trim()).map(visit => ({
+          id: String(visit.id || ""),
+          name: String(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" ")).trim(),
+          team: teamCategory(visit.team || ""),
+          gender: String(visit.gender || ""),
+          date: parseDateValue(visit.date) || parseDateValue(visit.createdAt),
+          createdAt: parseDateValue(visit.createdAt) || parseDateValue(visit.date),
+          assignedPhysio: String(visit.assignedPhysio || ""),
+          visitType: visitTypeValue(visit.visitType, visit.assignedPhysio || ""),
+          courtStatus: visit.courtStatus || "pending",
+          guidelines: String(visit.guidelines || "")
+        })).filter(visit => visit.id && visit.name);
         visits.forEach(visit => {
           const guidelines = String(visit.guidelines || "").trim();
           const visitDate = parseDateValue(visit.date);
@@ -625,6 +638,7 @@
       } catch(error) {
         latestGuidelinesByPlayer = new Map();
         visitGuidelinesById = new Map();
+        standaloneVisits = [];
         console.warn("No s'han pogut carregar les pautes de visites.", error);
       }
     }
@@ -670,6 +684,40 @@
         const bt = b.createdAt ? b.createdAt.getTime() : 0;
         return bt - at;
       });
+    }
+
+    function mergeStandaloneVisits(requestRows){
+      if(!standaloneVisits.length) return requestRows;
+      const playersWithRequest = new Set(requestRows.map(row => teamCategory(row.team) + "|" + normalizeName(row.player)));
+      const latestStandaloneByPlayer = new Map();
+      standaloneVisits.forEach(visit => {
+        const key = teamCategory(visit.team) + "|" + normalizeName(visit.name);
+        const previous = latestStandaloneByPlayer.get(key);
+        const timestamp = visit.date ? visit.date.getTime() : 0;
+        const previousTimestamp = previous && previous.date ? previous.date.getTime() : 0;
+        if(!previous || timestamp >= previousTimestamp) latestStandaloneByPlayer.set(key, visit);
+      });
+      const visitRows = [...latestStandaloneByPlayer.values()]
+        .filter(visit => !playersWithRequest.has(teamCategory(visit.team) + "|" + normalizeName(visit.name)))
+        .map(visit => ({
+          id: "visit-only:" + visit.id,
+          createdAt: visit.createdAt || visit.date,
+          injuryDate: null,
+          team: visit.team,
+          gender: visit.gender,
+          player: visit.name,
+          quotaPaid: hasPaidQuota(visit.name),
+          description: "Visita registrada directament, sense petició.",
+          fullDescription: "Visita registrada directament, sense petició.",
+          email: "",
+          guardianName: "",
+          phone: "",
+          clinicalVisit: { visitId: visit.id },
+          appointment: null,
+          visitOnly: true,
+          isNew: false
+        }));
+      return requestRows.concat(visitRows).sort((a, b) => (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0));
     }
 
     function openEditModal(rowId){
@@ -1043,7 +1091,7 @@
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
-      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th>Origen</th>' : '';
       const actionsHead = canEditRequests() ? '<th class="col-actions">Accions</th>' : '';
       tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Visita programada</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
@@ -1054,7 +1102,8 @@
             : '<span class="whatsapp-link empty">—</span>';
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
-            '<td class="col-phone">' + phoneCell + '</td>' : '';
+            '<td class="col-phone">' + phoneCell + '</td>' +
+            '<td>' + (row.visitOnly ? '<span class="no-visit-badge">Sense petició</span>' : '<span class="paid-badge">Petició</span>') + '</td>' : '';
           const quotaCell = isPrivateView
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
@@ -1072,7 +1121,7 @@
             ? escapeHtml(latestGuidelines.assignedPhysio)
             : (latestGuidelines ? "—" : '<span class="no-visit-badge">Sense visita</span>');
           const visitTypeHtml = latestGuidelines ? visitTypeBadge(latestGuidelines.visitType, latestGuidelines.assignedPhysio) : '<span class="no-visit-badge">Sense visita</span>';
-          const actionsCell = canEditRequests()
+          const actionsCell = canEditRequests() && !row.visitOnly
             ? '<td class="col-actions"><button class="appointment-button" type="button" title="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" aria-label="' + (row.appointment ? 'Reprogramar visita' : 'Programar visita') + '" data-appointment-id="' + escapeHtml(row.id) + '">🗓</button>' +
               (row.appointment ? '<button class="edit-button appointment-cancel" type="button" title="Cancel·lar visita programada" aria-label="Cancel·lar visita programada" data-cancel-appointment-id="' + escapeHtml(row.id) + '">×</button>' : '') +
               '<button class="edit-button" type="button" title="Editar petició" aria-label="Editar petició" data-edit-id="' + escapeHtml(row.id) + '">✎</button>' +
@@ -1289,7 +1338,7 @@
         const token = await user.getIdToken();
         await loadPaidPlayers();
         await loadLatestVisitGuidelines(token);
-        rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true);
+        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), true));
         setPrivateMode(user);
         statusMessage = "Dades completes carregades.";
         render();
@@ -1308,13 +1357,13 @@
           const token = await currentUser.getIdToken();
           await loadPaidPlayers();
           await loadLatestVisitGuidelines(token);
-          nextRows = normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token));
+          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token)), false));
         } else {
           await loadPaidPlayers();
           await loadLatestVisitGuidelines();
           nextRows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
         }
-        rows = applyRequestMarkers(nextRows, false);
+        rows = isPrivateView && currentUser ? nextRows : applyRequestMarkers(nextRows, false);
         const newCount = newRequestIds.size;
         statusMessage = newCount ? "Hi ha " + newCount + " petició" + (newCount === 1 ? " nova." : " noves.") : "";
         render();

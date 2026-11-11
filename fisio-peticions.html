@@ -1123,7 +1123,7 @@
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
-          const phoneCell = whatsapp
+          const phoneCell = row.visitOnly ? "—" : whatsapp
             ? '<a class="whatsapp-link" href="' + escapeHtml(whatsapp) + '" target="_blank" rel="noopener" data-whatsapp-id="' + escapeHtml(row.id) + '">' + escapeHtml(row.phone || "—") + '</a>'
             : '<span class="whatsapp-link empty">—</span>';
           const privateCells = isPrivateView ?

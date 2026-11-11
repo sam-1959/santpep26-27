@@ -1091,9 +1091,10 @@
       const start = (currentPage - 1) * PAGE_SIZE;
       const pageRows = visible.slice(start, start + PAGE_SIZE);
       const quotaHead = isPrivateView ? '<th class="col-quota">Quota</th>' : '';
-      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th><th>Origen</th>' : '';
+      const privateHead = isPrivateView ? '<th class="col-name">Pare/mare</th><th class="col-phone">Telèfon</th>' : '';
+      const sourceHead = '<th>Origen</th>';
       const actionsHead = canEditRequests() ? '<th class="col-actions">Accions</th>' : '';
-      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th><th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Visita programada</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
+      tableWrap.innerHTML = '<table><thead><tr><th class="col-count">#</th><th class="col-request-date">Data sol·licitud</th>' + quotaHead + '<th class="col-name">Jugador/a</th><th class="col-team">Equip</th>' + sourceHead + '<th class="col-date">Data lesió</th>' + privateHead + '<th>Descripció</th><th>Visita programada</th><th class="col-physio">👤 ÚLTIMA VISITA</th><th class="col-type">Tipus</th><th class="col-court">Pista</th><th>Pautes última visita</th>' + actionsHead + '</tr></thead><tbody>' +
         pageRows.map((row, index) => {
           const rowClass = row.isNew ? 'new-request' : '';
           const whatsapp = whatsappLink(row);
@@ -1102,8 +1103,8 @@
             : '<span class="whatsapp-link empty">—</span>';
           const privateCells = isPrivateView ?
             '<td class="col-name">' + escapeHtml(shortName(row.guardianName)) + '</td>' +
-            '<td class="col-phone">' + phoneCell + '</td>' +
-            '<td>' + (row.visitOnly ? '<span class="no-visit-badge">Sense petició</span>' : '<span class="paid-badge">Petició</span>') + '</td>' : '';
+            '<td class="col-phone">' + phoneCell + '</td>' : '';
+          const sourceCell = '<td>' + (row.visitOnly ? '<span class="no-visit-badge">Sense petició</span>' : '<span class="paid-badge">Petició</span>') + '</td>';
           const quotaCell = isPrivateView
             ? '<td class="col-quota">' + (row.quotaPaid ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>'
             : '';
@@ -1133,6 +1134,7 @@
           quotaCell +
           '<td class="col-name">' + escapeHtml(shortName(row.player)) + '</td>' +
           '<td class="col-team"><span class="team ' + (row.gender === "F" ? "female" : "male") + '">' + escapeHtml(row.team || "—") + '</span></td>' +
+          sourceCell +
           '<td class="col-date">' + escapeHtml(formatDate(row.injuryDate, false)) + '</td>' +
           privateCells +
           '<td class="desc">' + escapeHtml(description || "—") + '</td>' +
@@ -1323,7 +1325,7 @@
       try {
         await loadPaidPlayers();
         await loadLatestVisitGuidelines();
-        rows = applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true);
+        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true));
         if(!rows.length) rows = normalizeRequests(REQUESTS);
         statusMessage = message || "";
       } catch(error) {
@@ -1361,9 +1363,9 @@
         } else {
           await loadPaidPlayers();
           await loadLatestVisitGuidelines();
-          nextRows = normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH));
+          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), false));
         }
-        rows = isPrivateView && currentUser ? nextRows : applyRequestMarkers(nextRows, false);
+        rows = nextRows;
         const newCount = newRequestIds.size;
         statusMessage = newCount ? "Hi ha " + newCount + " petició" + (newCount === 1 ? " nova." : " noves.") : "";
         render();

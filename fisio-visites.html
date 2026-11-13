@@ -1103,7 +1103,7 @@
           return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
-            '<td class="col-quota">' + (hasPaidQuota(row.name) ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>' +
+            '<td class="col-quota">' + (hasPaidQuota(row.name) ? '<span class="paid-badge">✓ SI</span>' : '<span class="unpaid-badge">NO</span>') + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-request">' + requestHtml + '</td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +

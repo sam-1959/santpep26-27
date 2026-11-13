@@ -102,9 +102,12 @@
     th { background:#faf8fd; color:var(--brand-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
     td { font-size:0.86rem; }
     tr:last-child td { border-bottom:0; }
-    .col-count, .col-date, .col-team, .col-structure, .col-location { width:1%; white-space:nowrap; }
+    .col-count, .col-date, .col-team, .col-structure, .col-location, .col-quota { width:1%; white-space:nowrap; }
     .col-count { text-align:left; color:var(--muted); font-weight:900; }
     .col-name { width:1%; min-width:130px; white-space:nowrap; font-weight:900; color:var(--brand-dark); }
+    .paid-badge, .unpaid-badge { display:inline-flex; align-items:center; justify-content:center; min-width:31px; border-radius:999px; padding:3px 7px; font-size:0.72rem; font-weight:900; }
+    .paid-badge { background:#e8f5e9; color:#1b5e20; }
+    .unpaid-badge { background:#fdeaea; color:#a12626; }
     .col-physio { width:1%; min-width:140px; white-space:nowrap; }
     .inline-select { width:fit-content; min-width:0; max-width:none; border-radius:999px; padding:7px 10px; font-size:0.8rem; font-weight:800; color:var(--brand-dark); background:#fff; }
     .long { min-width:190px; max-width:320px; color:var(--ink); white-space:normal; }
@@ -332,6 +335,7 @@
     const PUBLIC_VISITS_PATH = "physioVisitsPublic/season-26-27";
     const PUBLIC_REQUESTS_PATH = "physioRequestsPublic/season-26-27";
     const PRIVATE_REQUESTS_PATH = "physioRequestsPrivate/season-26-27";
+    const QUOTA_FIREBASE_PATH = "physioQuota/season-26-27";
     const USER_ROLES_PATH = "userRoles/season-26-27";
     const PAGE_SIZE = 5;
     const REFRESH_INTERVAL_MS = 30000;
@@ -363,6 +367,8 @@
     let hasInitializedSeenVisits = false;
     let refreshTimer = null;
     let isRefreshing = false;
+    let paidPlayerNames = new Set();
+    let paidPlayersLoaded = false;
 
     const els = {
       total: document.getElementById("totalVisits"),
@@ -434,6 +440,40 @@
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+    }
+
+    function normalizeQuotaName(value){
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[’']/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function shortQuotaName(value){
+      return String(value || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).join(" ");
+    }
+
+    async function loadPaidPlayers(){
+      if(paidPlayersLoaded) return;
+      paidPlayersLoaded = true;
+      try {
+        const response = await fetch(firebaseUrl(QUOTA_FIREBASE_PATH), { cache:"no-store" });
+        if(!response.ok) throw new Error("Quota Firebase read failed");
+        const data = await response.json();
+        paidPlayerNames = new Set(Array.isArray(data?.paidNames) ? data.paidNames.map(normalizeQuotaName).filter(Boolean) : []);
+      } catch(error) {
+        paidPlayerNames = new Set();
+        console.warn("No s'ha pogut carregar la quota persistida.", error);
+      }
+    }
+
+    function hasPaidQuota(player){
+      const full = normalizeQuotaName(player);
+      const short = normalizeQuotaName(shortQuotaName(player));
+      return !!full && (paidPlayerNames.has(full) || paidPlayerNames.has(short));
     }
 
     function emailKey(email){
@@ -1026,6 +1066,7 @@
       els.table.innerHTML = '<table><thead><tr>' +
         '<th class="col-count">#</th>' +
         '<th class="col-date">Data</th>' +
+        '<th class="col-quota">Quota</th>' +
         '<th class="col-name">Jugador/a</th>' +
         '<th class="col-request">Petició</th>' +
         '<th class="col-physio">👤 VISITA</th>' +
@@ -1062,6 +1103,7 @@
           return '<tr class="' + rowClass + '">' +
             '<td class="col-count">' + (visible.length - start - index) + '</td>' +
             '<td class="col-date">' + escapeHtml(formatDate(row.date) || "—") + (row.isNew ? '<span class="new-badge">Nou!</span>' : '') + '</td>' +
+            '<td class="col-quota">' + (hasPaidQuota(row.name) ? '<span class="paid-badge">Sí</span>' : '<span class="unpaid-badge">No</span>') + '</td>' +
             '<td class="col-name">' + escapeHtml(row.name || "—") + '</td>' +
             '<td class="col-request">' + requestHtml + '</td>' +
             '<td class="col-physio"><select class="inline-select" data-action="assign-physio" data-id="' + escapeHtml(row.id) + '" title="Assignar fisio" ' + (!isFisio() ? "disabled" : "") + '>' +
@@ -1113,7 +1155,7 @@
     async function load(){
       try {
         const token = hasAccess() ? await authToken() : "";
-        if(hasAccess()) await loadRequestOptions();
+        if(hasAccess()) { await loadRequestOptions(); await loadPaidPlayers(); }
         else { requestPlayerNames = []; requestOptions = []; }
         const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");
@@ -1134,7 +1176,7 @@
       isRefreshing = true;
       try {
         const token = hasAccess() ? await authToken() : "";
-        if(hasAccess()) await loadRequestOptions();
+        if(hasAccess()) { await loadRequestOptions(); await loadPaidPlayers(); }
         else { requestPlayerNames = []; requestOptions = []; }
         const response = await fetch(firebaseUrl(hasAccess() ? VISITS_PATH : PUBLIC_VISITS_PATH, "", token), { cache:"no-store" });
         if(!response.ok) throw new Error("Firebase read failed");

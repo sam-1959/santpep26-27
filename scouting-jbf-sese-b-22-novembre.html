@@ -33,6 +33,9 @@
   <script>
     document.addEventListener('DOMContentLoaded',()=>{const reading=[...document.querySelectorAll('.grid>article')].find(article=>article.querySelector('h3')?.textContent==="Claus de l'anada");if(reading)reading.querySelector('h3').textContent='Lectura per scouting'});
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{const roster=[...document.querySelectorAll('.grid>article')].find(article=>article.querySelector('h3')?.textContent==='Plantilla');if(!roster)return;roster.querySelector('.sub').textContent='Cinc referències principals per minuts, producció i pes en el joc.';[...roster.querySelectorAll('tbody tr')].slice(5).forEach(row=>row.remove())});
+  </script>
 </head>
 <body>
   <header><a href="scouting-jbf-index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"></a><div class="h"><h1><span>CB Sant Josep de Badalona</span>Scouting JBF</h1><p>Anàlisi del rival · Temporada 26-27</p></div><div class="icon">🔎</div></header>

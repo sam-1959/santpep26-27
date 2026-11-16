@@ -14,6 +14,11 @@
 
 var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app";
 var FIREBASE_API_KEY = "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU";
+// Credencials del compte de servei: desa-les a Project settings > Script
+// properties, mai al codi. Són les mateixes dues propietats que fa servir
+// l'script de quotes de fisioteràpia.
+var FIREBASE_SCOPE = "https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email";
+var FIREBASE_ACCESS_TOKEN = "";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
 var GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
@@ -95,8 +100,20 @@ function doPost(e) {
 // autoritzar GmailApp i UrlFetchApp. No envia cap correu.
 function autoritzarAvisosCanvisManualsCalendar() {
   var aliases = GmailApp.getAliases();
-  var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { muteHttpExceptions: true });
+  var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { headers: firebaseHeaders(), muteHttpExceptions: true });
   return { ok: true, aliases: aliases, firebaseStatus: response.getResponseCode() };
+}
+
+// Comprovació sense enviar correus. Retorna 200 quan les propietats del
+// compte de servei permeten llegir el calendari i les seves edicions.
+function comprovarAccesFirebaseRecordatoris() {
+  var calendar = llegirFirebase(CALENDAR_FIREBASE_PATH) || {};
+  var edits = llegirFirebase(GAME_EDITS_FIREBASE_PATH) || {};
+  return {
+    ok: true,
+    weeks: (calendar.weeks || []).length,
+    edits: Object.keys(edits).length
+  };
 }
 
 // Recordatori automàtic de la data límit per demanar canvis de partit.
@@ -463,7 +480,7 @@ function validarUsuariFirebase(idToken) {
 
 function llegirContactes() {
   var url = FIREBASE_DB_URL + "/" + SEASON_CONTACTS_PATH.split("/").map(encodeURIComponent).join("/") + ".json";
-  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  var response = UrlFetchApp.fetch(url, { headers: firebaseHeaders(), muteHttpExceptions: true });
   if (response.getResponseCode() !== 200) throw new Error("No s'han pogut llegir els contactes.");
   return JSON.parse(response.getContentText() || "{}") || {};
 }
@@ -472,8 +489,43 @@ function firebaseUrl(pathName) {
   return FIREBASE_DB_URL + "/" + pathName.split("/").map(encodeURIComponent).join("/") + ".json";
 }
 
+function firebaseHeaders() {
+  return { Authorization: "Bearer " + firebaseAccessToken() };
+}
+
+function firebaseAccessToken() {
+  if (FIREBASE_ACCESS_TOKEN) return FIREBASE_ACCESS_TOKEN;
+  var properties = PropertiesService.getScriptProperties();
+  var email = properties.getProperty("FIREBASE_SERVICE_ACCOUNT_EMAIL");
+  var privateKey = properties.getProperty("FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY");
+  if (!email || !privateKey) {
+    throw new Error("Falten FIREBASE_SERVICE_ACCOUNT_EMAIL o FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY a les propietats de l'script.");
+  }
+  var now = Math.floor(Date.now() / 1000);
+  var header = base64Url({ alg: "RS256", typ: "JWT" });
+  var claim = base64Url({ iss: email, scope: FIREBASE_SCOPE, aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 });
+  var unsignedJwt = header + "." + claim;
+  var signature = Utilities.computeRsaSha256Signature(unsignedJwt, privateKey.replace(/\\n/g, "\n"));
+  var assertion = unsignedJwt + "." + Utilities.base64EncodeWebSafe(signature).replace(/=+$/, "");
+  var response = UrlFetchApp.fetch("https://oauth2.googleapis.com/token", {
+    method: "post",
+    contentType: "application/x-www-form-urlencoded",
+    payload: { grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: assertion },
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("No s'ha pogut autenticar el compte de servei: " + response.getContentText());
+  }
+  FIREBASE_ACCESS_TOKEN = JSON.parse(response.getContentText()).access_token;
+  return FIREBASE_ACCESS_TOKEN;
+}
+
+function base64Url(value) {
+  return Utilities.base64EncodeWebSafe(JSON.stringify(value)).replace(/=+$/, "");
+}
+
 function llegirFirebase(pathName) {
-  var response = UrlFetchApp.fetch(firebaseUrl(pathName), { muteHttpExceptions: true });
+  var response = UrlFetchApp.fetch(firebaseUrl(pathName), { headers: firebaseHeaders(), muteHttpExceptions: true });
   if (response.getResponseCode() === 404) return null;
   if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
     throw new Error("Firebase GET " + response.getResponseCode() + ": " + response.getContentText());
@@ -484,7 +536,7 @@ function llegirFirebase(pathName) {
 
 function escriureFirebase(pathName, value) {
   var response = UrlFetchApp.fetch(firebaseUrl(pathName), {
-    method: "put", contentType: "application/json; charset=utf-8", payload: JSON.stringify(value), muteHttpExceptions: true
+    method: "put", contentType: "application/json; charset=utf-8", payload: JSON.stringify(value), headers: firebaseHeaders(), muteHttpExceptions: true
   });
   if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
     throw new Error("Firebase PUT " + response.getResponseCode() + ": " + response.getContentText());

@@ -140,6 +140,27 @@ function avisarCanvisPartit15DiesAbans() {
   return { ok: true, sent: true, targetDate: targetDate, games: unsent.length, recipient: recipient };
 }
 
+// Prova manual segura: envia un correu identificat com a prova, sense tocar
+// l'estat dels recordatoris reals. Executa-la des de l'editor d'Apps Script.
+function sendTestChangeNeeded15DayReminder() {
+  var games = partitsAmbEdicionsCanvi().filter(function(game) {
+    return game && game.changeNeeded === true;
+  }).slice(0, 3);
+  if (!games.length) {
+    games = [{
+      team: "Equip de prova", sex: "", rival: "Rival de prova",
+      date: isoMadridAfegintDies(15), time: "00:00", home: true, loc: ""
+    }];
+  }
+  var recipient = "dtecnic@cbsantjosep.cat";
+  GmailApp.sendEmail(recipient, "[PROVA] Acció necessària avui · Canvi de partit a 15 dies", textRecordatoriCanvi15Dies(games), {
+    htmlBody: htmlRecordatoriCanvi15Dies(games),
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
+  });
+  return { ok: true, test: true, recipient: recipient, games: games.length };
+}
+
 function partitsAmbEdicionsCanvi() {
   var calendar = llegirFirebase(CALENDAR_FIREBASE_PATH) || {};
   var edits = llegirFirebase(GAME_EDITS_FIREBASE_PATH) || {};

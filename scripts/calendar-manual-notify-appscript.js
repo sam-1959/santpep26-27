@@ -145,13 +145,8 @@ function avisarCanvisPartit15DiesAbans() {
 function sendTestChangeNeeded15DayReminder() {
   var games = partitsAmbEdicionsCanvi().filter(function(game) {
     return game && game.changeNeeded === true;
-  }).slice(0, 3);
-  if (!games.length) {
-    games = [{
-      team: "Equip de prova", sex: "", rival: "Rival de prova",
-      date: isoMadridAfegintDies(15), time: "00:00", home: true, loc: ""
-    }];
-  }
+  });
+  if (!games.length) return { ok: true, test: true, sent: false, reason: "without_change_needed_games" };
   var recipient = "dtecnic@cbsantjosep.cat";
   GmailApp.sendEmail(recipient, "[PROVA] Acció necessària avui · Canvi de partit a 15 dies", textRecordatoriCanvi15Dies(games), {
     htmlBody: htmlRecordatoriCanvi15Dies(games),

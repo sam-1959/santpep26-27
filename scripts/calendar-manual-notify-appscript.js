@@ -16,6 +16,7 @@ var FIREBASE_DB_URL = "https://coord-fa09e-default-rtdb.europe-west1.firebasedat
 var FIREBASE_API_KEY = "AIzaSyDge8IFez-I-HhyFDx0ch0Jr1-NYLHDWRU";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
 var CALENDAR_FIREBASE_PATH = "calendarGames/season-26-27";
+var GAME_EDITS_FIREBASE_PATH = "calendarGameEdits/season-26-27";
 var TABLE_ASSIGNMENTS_FIREBASE_PATH = "miniTablesAssignments/season-26-27";
 var TABLE_PEOPLE_FIREBASE_PATH = "miniTablesPeople/season-26-27";
 var TABLE_RESTRICTIONS_ALERT_PATH = CALENDAR_FIREBASE_PATH + "/tableRestrictionAlerts";
@@ -96,6 +97,103 @@ function autoritzarAvisosCanvisManualsCalendar() {
   var aliases = GmailApp.getAliases();
   var response = UrlFetchApp.fetch(FIREBASE_DB_URL + "/.json", { muteHttpExceptions: true });
   return { ok: true, aliases: aliases, firebaseStatus: response.getResponseCode() };
+}
+
+// Recordatori automàtic de la data límit per demanar canvis de partit.
+// Per activar-lo després de desplegar aquesta versió de l'Apps Script, executa
+// una vegada `installChangeNeeded15DayReminder()` des de l'editor.
+// El trigger diari revisa els partits marcats amb `changeNeeded` i envia a
+// dtecnic@cbsantjosep.cat els que es juguen exactament d'aquí a 15 dies.
+function installChangeNeeded15DayReminder() {
+  var handler = "avisarCanvisPartit15DiesAbans";
+  ScriptApp.getProjectTriggers().forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === handler) ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger(handler).timeBased().everyDays(1).atHour(8).create();
+  return { ok: true, handler: handler };
+}
+
+function avisarCanvisPartit15DiesAbans() {
+  var targetDate = isoMadridAfegintDies(15);
+  var games = partitsAmbEdicionsCanvi();
+  var due = games.filter(function(game) {
+    return game && game.changeNeeded === true && String(game.date || "") === targetDate;
+  });
+  if (!due.length) return { ok: true, sent: false, targetDate: targetDate, games: 0 };
+
+  var store = PropertiesService.getScriptProperties();
+  var unsent = due.filter(function(game) {
+    return store.getProperty(clauRecordatoriCanvi(game, targetDate)) !== "sent";
+  });
+  if (!unsent.length) return { ok: true, sent: false, duplicate: true, targetDate: targetDate, games: due.length };
+
+  var recipient = "dtecnic@cbsantjosep.cat";
+  var subject = "Acció necessària avui · Canvi de partit a 15 dies";
+  GmailApp.sendEmail(recipient, subject, textRecordatoriCanvi15Dies(unsent), {
+    htmlBody: htmlRecordatoriCanvi15Dies(unsent),
+    name: "CB Sant Josep Badalona",
+    from: "dtecnic@cbsantjosep.cat"
+  });
+  unsent.forEach(function(game) {
+    store.setProperty(clauRecordatoriCanvi(game, targetDate), "sent");
+  });
+  return { ok: true, sent: true, targetDate: targetDate, games: unsent.length, recipient: recipient };
+}
+
+function partitsAmbEdicionsCanvi() {
+  var calendar = llegirFirebase(CALENDAR_FIREBASE_PATH) || {};
+  var edits = llegirFirebase(GAME_EDITS_FIREBASE_PATH) || {};
+  var games = (calendar.weeks || []).reduce(function(all, week) {
+    return all.concat((week && week.games) || []);
+  }, []);
+  return games.map(function(game) {
+    var key = clauEdicioPartit(game);
+    var edit = edits[key] || {};
+    return Object.assign({}, game, edit);
+  });
+}
+
+function clauEdicioPartit(game) {
+  return [game.date, game.time, game.team, game.sex, game.rival].join("|").replace(/[.#$\[\]\/]/g, "_");
+}
+
+function isoMadridAfegintDies(days) {
+  var now = new Date();
+  var local = Utilities.formatDate(now, "Europe/Madrid", "yyyy-MM-dd").split("-").map(Number);
+  var date = new Date(local[0], local[1] - 1, local[2]);
+  date.setDate(date.getDate() + Number(days || 0));
+  return Utilities.formatDate(date, "Europe/Madrid", "yyyy-MM-dd");
+}
+
+function clauRecordatoriCanvi(game, targetDate) {
+  return "changeNeeded15d:" + targetDate + ":" + clauEdicioPartit(game);
+}
+
+function etiquetaPartitRecordatori(game) {
+  var team = String(game.team || "") + " " + String(game.sex || "");
+  var matchup = game.home ? team + " vs " + game.rival : game.rival + " vs " + team;
+  return matchup + " · " + formatCalendarEmailDate(game.date) + " · " + (game.time || "sense hora") + (game.loc ? " · " + game.loc : "");
+}
+
+function textRecordatoriCanvi15Dies(games) {
+  return [
+    "Avís de termini de Federació.",
+    "",
+    "Avui falten 15 dies per als partits següents, marcats com a ‘Cal un canvi de partit’:",
+    ""
+  ].concat(games.map(function(game) { return "- " + etiquetaPartitRecordatori(game); })).concat([
+    "",
+    "Cal tramitar avui, si escau, la petició de canvi dins del termini de la Federació.",
+    "",
+    "Calendaris de Partits: https://sam-1959.github.io/santpep26-27/partits.html"
+  ]).join("\n");
+}
+
+function htmlRecordatoriCanvi15Dies(games) {
+  var rows = games.map(function(game) {
+    return '<tr><td style="padding:11px;border-bottom:1px solid #e5e5e5;font-weight:700;color:#4B1D6D;">' + escapeAlertHtml(game.home ? (game.team + " " + game.sex + " vs " + game.rival) : (game.rival + " vs " + game.team + " " + game.sex)) + '</td><td style="padding:11px;border-bottom:1px solid #e5e5e5;">' + escapeAlertHtml(formatCalendarEmailDate(game.date) + " · " + (game.time || "sense hora") + (game.loc ? " · " + game.loc : "")) + '</td></tr>';
+  }).join("");
+  return '<div style="font-family:Helvetica,Arial,sans-serif;color:#333;max-width:680px;margin:0 auto;border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;"><div style="background:#4B1D6D;padding:24px;text-align:center;border-bottom:4px solid #FFC72C;"><h1 style="color:#FFC72C;margin:0;font-size:22px;text-transform:uppercase;">CB Sant Josep Badalona</h1><p style="color:#fff;margin:5px 0 0;font-size:13px;opacity:.9;">Avís de calendari</p></div><div style="padding:24px;background:#fff;"><h2 style="color:#4B1D6D;margin:0 0 10px;font-size:18px;">Termini de canvi de partit</h2><p style="margin:0 0 16px;line-height:1.45;">Avui falten <strong>15 dies</strong> per als partits següents. Si cal modificar-los, la petició s'ha de tramitar dins del termini de la Federació.</p><table style="border-collapse:collapse;width:100%;"><thead><tr style="background:#F9F6FC;"><th style="padding:9px 11px;text-align:left;color:#4B1D6D;">Partit</th><th style="padding:9px 11px;text-align:left;color:#4B1D6D;">Data i lloc</th></tr></thead><tbody>' + rows + '</tbody></table><div style="text-align:center;margin:24px 0 4px;"><a href="https://sam-1959.github.io/santpep26-27/partits.html" target="_blank" style="background:#4B1D6D;color:#FFC72C;padding:11px 20px;text-decoration:none;font-weight:bold;border-radius:5px;display:inline-block;">Obrir Calendaris de Partits</a></div></div><div style="background:#F4F4F4;padding:14px;text-align:center;border-top:1px solid #EEEEEE;font-size:12px;color:#666;">CB Sant Josep Badalona · Notificació automàtica</div></div>';
 }
 
 // Requereix habilitar el servei avançat "Google Calendar API" al projecte

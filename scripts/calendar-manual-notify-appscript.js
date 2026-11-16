@@ -128,9 +128,11 @@ function avisarCanvisPartit15DiesAbans() {
   if (!unsent.length) return { ok: true, sent: false, duplicate: true, targetDate: targetDate, games: due.length };
 
   var recipient = "dtecnic@cbsantjosep.cat";
-  var subject = "Acció necessària avui · Canvi de partit a 15 dies";
-  GmailApp.sendEmail(recipient, subject, textRecordatoriCanvi15Dies(unsent), {
-    htmlBody: htmlRecordatoriCanvi15Dies(unsent),
+  var teamLabel = "partits amb canvi pendent";
+  var changes = recordatorisComACanvis(unsent);
+  var subject = "Recordatori de calendari · canvi de partit a 15 dies";
+  GmailApp.sendEmail(recipient, subject, construirTextCanvisCalendar(teamLabel, changes), {
+    htmlBody: calendarChangeEmailHtml(teamLabel, changes),
     name: "CB Sant Josep Badalona",
     from: "dtecnic@cbsantjosep.cat"
   });
@@ -148,8 +150,10 @@ function sendTestChangeNeeded15DayReminder() {
   });
   if (!games.length) return { ok: true, test: true, sent: false, reason: "without_change_needed_games" };
   var recipient = "dtecnic@cbsantjosep.cat";
-  GmailApp.sendEmail(recipient, "[PROVA] Acció necessària avui · Canvi de partit a 15 dies", textRecordatoriCanvi15Dies(games), {
-    htmlBody: htmlRecordatoriCanvi15Dies(games),
+  var teamLabel = "partits amb canvi pendent";
+  var changes = recordatorisComACanvis(games);
+  GmailApp.sendEmail(recipient, "[PROVA] Canvi de calendari · partits amb canvi pendent", construirTextCanvisCalendar(teamLabel, changes), {
+    htmlBody: calendarChangeEmailHtml(teamLabel, changes),
     name: "CB Sant Josep Badalona",
     from: "dtecnic@cbsantjosep.cat"
   });
@@ -189,6 +193,16 @@ function etiquetaPartitRecordatori(game) {
   var team = String(game.team || "") + " " + String(game.sex || "");
   var matchup = game.home ? team + " vs " + game.rival : game.rival + " vs " + team;
   return matchup + " · " + formatCalendarEmailDate(game.date) + " · " + (game.time || "sense hora") + (game.loc ? " · " + game.loc : "");
+}
+
+function recordatorisComACanvis(games) {
+  return games.map(function(game) {
+    return {
+      type: "changed",
+      game: game,
+      fields: [{ label: "Termini Federació", from: "pendent", to: "tramitar avui (falten 15 dies)" }]
+    };
+  });
 }
 
 function textRecordatoriCanvi15Dies(games) {

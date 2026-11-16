@@ -119,30 +119,33 @@ function comprovarAccesFirebaseRecordatoris() {
 // Recordatori automàtic de la data límit per demanar canvis de partit.
 // Per activar-lo després de desplegar aquesta versió de l'Apps Script, executa
 // una vegada `installChangeNeeded15DayReminder()` des de l'editor.
-// El trigger diari revisa els partits marcats amb `changeNeeded` i envia a
-// dtecnic@cbsantjosep.cat els que es juguen exactament d'aquí a 15 dies.
+// El trigger de cada divendres a les 8 h revisa els partits marcats amb
+// `changeNeeded` i envia a dtecnic@cbsantjosep.cat els que es juguen entre
+// 15 i 21 dies vista. Així tots reben avís amb almenys 15 dies de marge.
 function installChangeNeeded15DayReminder() {
   var handler = "avisarCanvisPartit15DiesAbans";
   ScriptApp.getProjectTriggers().forEach(function(trigger) {
     if (trigger.getHandlerFunction() === handler) ScriptApp.deleteTrigger(trigger);
   });
-  ScriptApp.newTrigger(handler).timeBased().everyDays(1).atHour(8).create();
+  ScriptApp.newTrigger(handler).timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(8).create();
   return { ok: true, handler: handler };
 }
 
 function avisarCanvisPartit15DiesAbans() {
-  var targetDate = isoMadridAfegintDies(15);
+  var firstDate = isoMadridAfegintDies(15);
+  var lastDate = isoMadridAfegintDies(21);
   var games = partitsAmbEdicionsCanvi();
   var due = games.filter(function(game) {
-    return game && game.changeNeeded === true && String(game.date || "") === targetDate;
+    var date = String((game && game.date) || "");
+    return game && game.changeNeeded === true && date >= firstDate && date <= lastDate;
   });
-  if (!due.length) return { ok: true, sent: false, targetDate: targetDate, games: 0 };
+  if (!due.length) return { ok: true, sent: false, firstDate: firstDate, lastDate: lastDate, games: 0 };
 
   var store = PropertiesService.getScriptProperties();
   var unsent = due.filter(function(game) {
-    return store.getProperty(clauRecordatoriCanvi(game, targetDate)) !== "sent";
+    return store.getProperty(clauRecordatoriCanvi(game, firstDate)) !== "sent";
   });
-  if (!unsent.length) return { ok: true, sent: false, duplicate: true, targetDate: targetDate, games: due.length };
+  if (!unsent.length) return { ok: true, sent: false, duplicate: true, firstDate: firstDate, lastDate: lastDate, games: due.length };
 
   var recipient = "dtecnic@cbsantjosep.cat";
   var teamLabel = "partits amb canvi pendent";
@@ -154,9 +157,9 @@ function avisarCanvisPartit15DiesAbans() {
     from: "dtecnic@cbsantjosep.cat"
   });
   unsent.forEach(function(game) {
-    store.setProperty(clauRecordatoriCanvi(game, targetDate), "sent");
+    store.setProperty(clauRecordatoriCanvi(game, firstDate), "sent");
   });
-  return { ok: true, sent: true, targetDate: targetDate, games: unsent.length, recipient: recipient };
+  return { ok: true, sent: true, firstDate: firstDate, lastDate: lastDate, games: unsent.length, recipient: recipient };
 }
 
 // Prova manual segura: envia un correu identificat com a prova, sense tocar

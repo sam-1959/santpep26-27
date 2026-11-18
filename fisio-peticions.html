@@ -352,6 +352,7 @@
     let activePhysio = "TOTS";
     let activeCourtStatus = "TOTS";
     let activeAppointment = "TOTES";
+    let activeOrigin = "TOTS";
     let searchQuery = "";
     let currentPage = 1;
     let statusMessage = "";
@@ -1013,7 +1014,18 @@
         { value: "PROGRAMADES", label: "Programades" },
         { value: "SENSE_VISITA", label: "Sense programar" }
       ];
+      const originFilters = [
+        { value: "TOTS", label: "Tots" },
+        { value: "PETICIO", label: "Peticions" },
+        { value: "VISITA", label: "Visites" }
+      ];
       genderFiltersEl.innerHTML =
+        '<div class="filter-group"><div class="filter-label">Origen</div>' +
+        originFilters.map(filter =>
+          '<button class="chip ' + (filter.value === activeOrigin ? "active" : "") + '" type="button" data-origin="' + escapeHtml(filter.value) + '">' +
+          escapeHtml(filter.label) + '</button>'
+        ).join("") +
+        '</div>' +
         '<div class="filter-group"><div class="filter-label">Gènere</div>' +
         genders.map(gender =>
           '<button class="chip ' + (gender.value === activeGender ? "active" : "") + '" type="button" data-gender="' + escapeHtml(gender.value) + '">' +
@@ -1057,6 +1069,13 @@
           render();
         });
       });
+      genderFiltersEl.querySelectorAll("[data-origin]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeOrigin = button.dataset.origin;
+          currentPage = 1;
+          render();
+        });
+      });
       filtersEl.querySelectorAll("[data-physio]").forEach(button => {
         button.addEventListener("click", () => {
           activePhysio = button.dataset.physio;
@@ -1088,6 +1107,7 @@
         (activePhysio === "TOTS" || latestPhysioFilterValue(r) === activePhysio) &&
         (activeCourtStatus === "TOTS" || latestCourtFilterValue(r) === activeCourtStatus) &&
         (activeAppointment === "TOTES" || (activeAppointment === "PROGRAMADES" ? Boolean(r.appointment) : !r.appointment)) &&
+        (activeOrigin === "TOTS" || (activeOrigin === "VISITA" ? r.visitOnly : !r.visitOnly)) &&
         (!searchQuery || normalizeName([
           r.createdAt,
           r.player,

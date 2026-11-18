@@ -370,7 +370,6 @@
     let latestGuidelinesByPlayer = new Map();
     let visitGuidelinesById = new Map();
     let standaloneVisits = [];
-    let allVisits = [];
     let editingRequestId = "";
     let schedulingRequestId = "";
 
@@ -612,7 +611,6 @@
       try {
         const path = token ? VISITS_PATH : "physioVisitsPublic/season-26-27";
         const visits = await fetchFirebaseRequests(path, token);
-        allVisits = visits;
         const visitsByPlayer = new Map();
         const visitsById = new Map();
         standaloneVisits = standaloneVisitsFrom(visits);
@@ -651,7 +649,6 @@
         latestGuidelinesByPlayer = new Map();
         visitGuidelinesById = new Map();
         standaloneVisits = [];
-        allVisits = [];
         console.warn("No s'han pogut carregar les pautes de visites.", error);
       }
     }
@@ -731,32 +728,6 @@
           isNew: false
         }));
       return requestRows.concat(visitRows).sort((a, b) => (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0));
-    }
-
-    function visitsAsRows(visits){
-      return visits.map(visit => {
-        const name = String(visit.name || [visit.firstName, visit.lastName].filter(Boolean).join(" ")).trim();
-        const details = [visit.location, visit.structure].map(value => String(value || "").trim()).filter(Boolean);
-        return {
-          id: "visit-only:" + String(visit.id || ""),
-          createdAt: parseDateValue(visit.createdAt) || parseDateValue(visit.date),
-          injuryDate: null,
-          team: teamCategory(visit.team || ""),
-          gender: String(visit.gender || ""),
-          player: name,
-          quotaPaid: hasPaidQuota(name),
-          description: details.length ? "Visita de fisioteràpia · " + details.join(" · ") : "Visita registrada directament.",
-          fullDescription: details.length ? "Visita de fisioteràpia · " + details.join(" · ") : "Visita registrada directament.",
-          email: "",
-          guardianName: "",
-          phone: "",
-          clinicalVisit: { visitId: String(visit.id || "") },
-          appointment: null,
-          visitOnly: true,
-          isNew: false
-        };
-      }).filter(row => row.id !== "visit-only:" && row.player)
-        .sort((a, b) => (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0));
     }
 
     async function mergePublicRequestsIntoPrivate(privateRequests, token, sync){
@@ -1379,7 +1350,7 @@
       try {
         await loadPaidPlayers();
         await loadLatestVisitGuidelines();
-        rows = visitsAsRows(allVisits);
+        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), true));
         if(!rows.length) rows = normalizeRequests(REQUESTS);
         statusMessage = message || "";
       } catch(error) {
@@ -1397,7 +1368,7 @@
         await loadPublicStandaloneVisits();
         const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
         const combined = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
-        rows = visitsAsRows(allVisits);
+        rows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(combined.requests), true));
         setPrivateMode(user);
         statusMessage = combined.requests.length > privateRequests.length
           ? "Dades completes carregades. S'han incorporat " + (combined.requests.length - privateRequests.length) + " petició" + (combined.requests.length - privateRequests.length === 1 ? " pública." : "ns públiques.")
@@ -1435,11 +1406,11 @@
           await loadPublicStandaloneVisits();
           const privateRequests = await fetchFirebaseRequests(PRIVATE_REQUESTS_PATH, token);
           const combined = await mergePublicRequestsIntoPrivate(privateRequests, token, false);
-          nextRows = visitsAsRows(allVisits);
+          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(combined.requests), false));
         } else {
           await loadPaidPlayers();
           await loadLatestVisitGuidelines();
-          nextRows = visitsAsRows(allVisits);
+          nextRows = mergeStandaloneVisits(applyRequestMarkers(normalizeRequests(await fetchFirebaseRequests(PUBLIC_REQUESTS_PATH)), false));
         }
         rows = nextRows;
         const newCount = newRequestIds.size;

@@ -806,8 +806,7 @@
     }
 
     function isClubVenue(game){
-      const loc = normalize(game.loc || "");
-      return game.home || loc.includes("la-colina") || loc.includes("montigala") || loc.includes("bufala") || loc.includes("pomar");
+      return game.home === true;
     }
 
     function todayIso(){

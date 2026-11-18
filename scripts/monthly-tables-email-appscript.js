@@ -138,10 +138,8 @@ function gameMatchKey(game) {
 }
 
 function isTableGame(game) {
-  var location = normalized(game.loc);
-  var clubVenue = !!game.home || /la-colina|montigala|bufala|pomar/.test(location);
   var family = String(game.fam || "").toUpperCase();
-  return clubVenue && (family === "MINI" || family === "PREMINI" || game.friendly === true);
+  return game.home === true && (family === "MINI" || family === "PREMINI" || game.friendly === true);
 }
 
 function applyManualChanges(calendar) {

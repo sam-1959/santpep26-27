@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+  <title>Horaris definitius de Nadal · CB Sant Josep</title>
+  <style>
+    :root{--brand:#713f97;--dark:#5a2f7d;--bg:#f5f3f8;--card:#fff;--ink:#2a2233;--muted:#71677a;--line:#e6e0ee;--female:#a13369;--male:#1b5c9a}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.4}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff}.logo{width:48px;height:48px;padding:3px;border-radius:10px;background:#fff;object-fit:contain}h1{margin:0;font-size:1.08rem}h1 span{display:block;font-size:.72rem;font-weight:500;letter-spacing:.04em;opacity:.86;text-transform:uppercase}header p{margin:3px 0 0;font-size:.82rem;opacity:.92}main{max-width:1120px;margin:auto;padding:28px 20px 52px}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}.intro h2{margin:0;color:var(--dark);font-size:1.35rem}.intro p{margin:4px 0 0;color:var(--muted)}.updated{color:var(--muted);font-size:.78rem;font-weight:700}.filters{display:flex;align-items:center;gap:9px;margin-bottom:18px}.filters label{color:var(--muted);font-size:.74rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.filters select{min-width:180px;padding:9px 30px 9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:.88rem;font-weight:700}.week{margin-top:28px}.week h3{margin:0 0 10px;color:var(--dark);font-size:1.05rem}.day{overflow:hidden;margin-bottom:12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.day-head{display:flex;gap:9px;align-items:baseline;padding:10px 13px;border-bottom:1px solid var(--line);background:#fcfbfd}.date{color:var(--brand);font-weight:900}.weekday{color:var(--muted);font-size:.82rem}.sessions{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:9px;padding:10px}.session{display:grid;grid-template-columns:auto 1fr;gap:9px;padding:9px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:8px;background:#fff}.session-time{color:var(--dark);font-size:.82rem;font-weight:900;white-space:nowrap}.team{display:inline-flex;align-items:center;width:max-content;padding:3px 7px;border-radius:999px;background:#e4f0ff;color:var(--male);font-size:.74rem;font-weight:900}.team.female{background:#fae7f1;color:var(--female)}.venue{margin-top:3px;color:var(--muted);font-size:.77rem;font-weight:700}.empty,.loading{padding:22px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);text-align:center}.error{border-color:#e1a6a6;background:#fff3f3;color:#8b2929}.footer{margin-top:28px;color:var(--muted);font-size:.76rem;text-align:center}@media(max-width:600px){main{padding:20px 14px 42px}.sessions{grid-template-columns:1fr}.filters select{min-width:0;width:100%}.filters{align-items:stretch;flex-direction:column}.day-head{flex-direction:column;gap:1px}}
+  </style>
+</head>
+<body>
+  <header><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"><div><h1><span>CB Sant Josep de Badalona</span>Horaris definitius de Nadal</h1><p>Entrenaments confirmats · 21 de desembre de 2026 – 8 de gener de 2027</p></div></header>
+  <main>
+    <div class="intro"><div><h2>Assignacions d'entrenament</h2><p>Consulta l'equip, la instal·lació i l'hora de cada sessió.</p></div><span id="updated" class="updated"></span></div>
+    <div class="filters"><label for="team-filter">Equip</label><select id="team-filter"><option value="">Tots els equips</option></select></div>
+    <div id="schedule" class="loading">Carregant els horaris definitius…</div>
+    <p class="footer">CB Sant Josep de Badalona · Aquesta pàgina és només de consulta.</p>
+  </main>
+  <script>
+    const FIREBASE_DB_URL='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
+    const SCHEDULE_PATH='christmasTrainingSchedule/season-26-27';
+    const FEMALE_TEAMS=new Set(['SAF','CF','JBF','JAF','IF','MF']);
+    const DAY_NAMES=['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+    const MONTHS=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+    const scheduleEl=document.getElementById('schedule'),teamFilter=document.getElementById('team-filter'),updatedEl=document.getElementById('updated');
+    let rows=[];
+    function dateFor(id){const [day,month]=id.split('/').map(Number);return new Date(Date.UTC(month===1?2027:2026,month-1,day));}
+    function labelForDate(id){const date=dateFor(id);return DAY_NAMES[date.getUTCDay()]+' '+date.getUTCDate()+' de '+MONTHS[date.getUTCMonth()];}
+    function courtFor(session,sameTime){if(session.fullCourt)return 'Pista completa';if(session.court)return 'Pista '+session.court;const index=sameTime.findIndex(item=>item.id===session.id),defaults=sameTime.length===1?['P3']:sameTime.length===2?['P3','P2']:['P3','P2','P1'];return 'Pista '+(defaults[index]||'P1');}
+    function toRows(data){return (data.days||[]).flatMap(day=>{const sessions=day.sessions||[];return sessions.map(session=>({date:day.id,time:session.customTime||session.time,team:(session.teams||[])[0]||session.id,venue:'La Colina · '+courtFor(session,sessions.filter(item=>(item.customTime||item.time)===(session.customTime||session.time)))}));}).filter(row=>row.date&&row.time&&row.team);}
+    function render(){const selected=teamFilter.value;const visible=rows.filter(row=>!selected||row.team===selected);if(!visible.length){scheduleEl.className='empty';scheduleEl.textContent='No hi ha cap entrenament per a aquest equip.';return}const byDate=visible.reduce((group,row)=>{(group[row.date]=group[row.date]||[]).push(row);return group},{});scheduleEl.className='';scheduleEl.innerHTML=Object.keys(byDate).sort((a,b)=>dateFor(a)-dateFor(b)).map(date=>'<section class="week"><h3>'+labelForDate(date)+'</h3><div class="day"><div class="day-head"><span class="date">'+date+'</span><span class="weekday">La Colina</span></div><div class="sessions">'+byDate[date].sort((a,b)=>a.time.localeCompare(b.time)||a.team.localeCompare(b.team)).map(row=>'<article class="session"><span class="session-time">'+row.time+'</span><div><span class="team '+(FEMALE_TEAMS.has(row.team)?'female':'')+'">'+row.team+'</span><div class="venue">📍 '+row.venue+'</div></div></article>').join('')+'</div></div></section>').join('');}
+    async function load(){try{const response=await fetch(FIREBASE_DB_URL+'/'+SCHEDULE_PATH+'.json',{cache:'no-store'});if(!response.ok)throw new Error(response.status);const data=await response.json();rows=toRows(data||{});const teams=[...new Set(rows.map(row=>row.team))].sort();teamFilter.insertAdjacentHTML('beforeend',teams.map(team=>'<option value="'+team+'">'+team+'</option>').join(''));updatedEl.textContent=data&&data.updatedAt?'Actualitzat: '+new Date(data.updatedAt).toLocaleString('ca-ES',{dateStyle:'medium',timeStyle:'short'}):'';render()}catch(error){scheduleEl.className='empty error';scheduleEl.textContent='No s’han pogut carregar els horaris. Torna-ho a provar d’aquí a uns instants.';console.error(error)}}
+    teamFilter.addEventListener('change',render);load();
+  </script>
+</body>
+</html>

@@ -342,7 +342,10 @@
     const FAMILY_ORDER=['SÈNIOR','JÚNIOR','CADET','INFANTIL','MINI'];
     const SEX_ORDER=[['M','Masculí'],['F','Femení']];
     // Actes del club que es mostren al calendari, però no compten com a partits.
-    const CLUB_EVENTS=[{date:'2026-11-21',time:'16:30',title:'Presentació del Club',loc:'La Colina'}];
+    const CLUB_EVENTS=[
+      {date:'2026-11-21',time:'16:30',title:'Presentació del Club',loc:'La Colina'},
+      {date:'2026-12-20',time:'09:00',endTime:'15:00',title:'Presentació de CORET'}
+    ];
     const activeFilters=new Set(); // categories
     const activeSex=new Set();     // gèneres
     let activeFriendly=false;      // només amistosos
@@ -772,7 +775,9 @@
         function cards(list){return list.map(function(item){
           if(item.event){
             const event=item.event;
-            return '<div class="agenda-event"><div class="agenda-top"><span class="agenda-time">'+event.time+'</span></div><span class="agenda-event-title">🏀 '+event.title+'</span><span class="agenda-rival">📍 '+event.loc+'</span></div>';
+            const schedule=event.time+(event.endTime?' – '+event.endTime:'');
+            const loc=event.loc?'<span class="agenda-rival">📍 '+event.loc+'</span>':'';
+            return '<div class="agenda-event"><div class="agenda-top"><span class="agenda-time">'+schedule+'</span></div><span class="agenda-event-title">🏀 '+event.title+'</span>'+loc+'</div>';
           }
           const g=item.game;
           const fr=g.friendly?' <span class="friendly" title="Partit amistós">🤝</span>':'';

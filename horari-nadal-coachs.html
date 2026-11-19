@@ -29,7 +29,7 @@
     const WEEK_TITLES={w1:'Setmana 1 · 21/12 – 27/12',w2:'Setmana 2 · 28/12 – 03/01',w3:'Setmana 3 · 04/01 – 10/01'};
     const WEEK_DAYS={w1:['21/12','22/12','23/12','24/12','25/12'],w2:['28/12','29/12','30/12','31/12','01/01'],w3:['04/01','05/01','06/01','07/01','08/01']};
     const CLOSED_DAYS={'25/12':'🎄 Nadal · instal·lació tancada','01/01':'Any Nou · instal·lació tancada','06/01':'👑 Reis Mags d’Orient · instal·lació tancada'};
-    const PARTIAL_CLOSED_DAYS={'24/12':'🎄 Nadal · instal·lació tancada per la tarda'};
+    const PARTIAL_CLOSED_DAYS={'24/12':'🎄 Nadal · instal·lació tancada per la tarda','31/12':'Any Nou · instal·lació tancada per la tarda'};
     const scheduleEl=document.getElementById('schedule'),weekButtons=[...document.querySelectorAll('[data-week]')],teamFilter=document.getElementById('team-filter'),updatedEl=document.getElementById('updated');
     let rows=[],activeWeek='';
     function dateFor(id){const [day,month]=id.split('/').map(Number);return new Date(Date.UTC(month===1?2027:2026,month-1,day));}

@@ -27,8 +27,9 @@
     <div class="schedule-controls">
       <nav class="week-tabs" aria-label="Vista per setmana">
         <button type="button" class="active" data-week="all">Totes les setmanes</button>
-        <button type="button" data-week="week1">Setmana 1 · 21/12 – 01/01</button>
-        <button type="button" data-week="week2">Setmana 2 · 04/01 – 08/01</button>
+        <button type="button" data-week="week1">Setmana 1 · 21/12 – 27/12</button>
+        <button type="button" data-week="week2">Setmana 2 · 28/12 – 03/01</button>
+        <button type="button" data-week="week3">Setmana 3 · 04/01 – 10/01</button>
       </nav>
       <label class="team-filter" for="teamFilter">Equip<select id="teamFilter"><option value="">Tots els equips</option></select></label>
     </div>
@@ -37,7 +38,7 @@
   <script>
     // Afegim aquí les peticions rebudes: { date, team, sex:"F"|"M", time, players, court, notes }.
     const SESSION_DURATION = "1 h 30 min";
-    const WEEK_DAYS = { week1:["2026-12-21","2026-12-22","2026-12-23","2026-12-24","2026-12-25","2026-12-27","2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week2:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
+    const WEEK_DAYS = { week1:["2026-12-21","2026-12-22","2026-12-23","2026-12-24","2026-12-25","2026-12-27"], week2:["2026-12-28","2026-12-29","2026-12-30","2026-12-31","2027-01-01"], week3:["2027-01-04","2027-01-05","2027-01-06","2027-01-07","2027-01-08"] };
     const CLOSED_DAYS = { "2026-12-25":"No es pot entrenar", "2027-01-01":"No es pot entrenar", "2027-01-06":"No es pot entrenar" };
     const DAY_NOTICES = { "2026-12-24":"Només es pot entrenar al matí", "2026-12-31":"Només es pot entrenar al matí", "2027-01-05":"Només es pot entrenar al matí" };
     const HOLIDAYS = { "2026-12-25":{ icon:"🎄", label:"Nadal" }, "2027-01-06":{ icon:"👑", label:"Reis Mags d'Orient" } };
@@ -134,7 +135,7 @@
     function card(r){ const tags=[r.sex&&`<span class="tag ${r.sex==="F"?"f":"m"}">${r.sex==="F"?"Femení":"Masculí"}</span>`,`<span class="tag">${SESSION_DURATION}</span>`,r.players&&`<span class="tag">${r.players} jug.</span>`,r.court&&`<span class="tag">${esc(r.court)}</span>`].filter(Boolean).join(""); return `<article class="request"><div class="request-top"><span class="team">${esc(r.team||"Equip pendent")}</span><span class="time">${esc(r.time||"Franja pendent")}</span></div>${r.notes?`<div class="meta">${esc(r.notes)}</div>`:""}<div class="tags">${tags}</div></article>`; }
     function visibleDays(){ const days=activeWeek === "all" ? DAYS : DAYS.filter(([date]) => WEEK_DAYS[activeWeek].includes(date)); return activeTeam ? days.filter(([date])=>requests.some(request=>request.team===activeTeam && request.date===date)) : days; }
     function dayCard([date,weekday]){ const closed=CLOSED_DAYS[date],notice=DAY_NOTICES[date],holiday=HOLIDAYS[date],rows=activeRequests().filter(r=>r.date===date); return `<article class="day${closed?" closed":notice?" limited":""}"><div class="day-head">${holiday?`<span class="holiday-icon" title="${esc(holiday.label)}" aria-label="${esc(holiday.label)}">${holiday.icon}</span>`:""}<span class="date">${formatDate(date)}</span><span class="weekday">${weekday}</span><span class="count">${closed?"Tancat":notice?"Només matí":rows.length?`${rows.length} ${rows.length===1?"petició":"peticions"}`:"Sense peticions"}</span></div><div class="requests">${closed?`<div class="closed-message">${esc(closed)}</div>`:`${notice?`<div class="availability-message">${esc(notice)}</div>`:""}${rows.length?rows.map(card).join(""):'<div class="empty">Sense peticions encara</div>'}`}</div></article>`; }
-    function renderBoard(){ const board=document.querySelector("#board"); if(activeWeek!=="all"){ board.innerHTML=`<div class="day-grid">${renderDays(visibleDays())}</div>`; return; } board.innerHTML=`<div class="week-sections">${[["week1","Setmana 1","21/12 – 01/01"],["week2","Setmana 2","04/01 – 08/01"]].map(([week,title,range])=>{ const days=DAYS.filter(([date])=>WEEK_DAYS[week].includes(date) && (!activeTeam || requests.some(request=>request.team===activeTeam && request.date===date))); return `<section class="week-section"><h4 class="week-title">${title} <span>${range}</span></h4><div class="day-grid">${renderDays(days)}</div></section>`; }).join("")}</div>`; }
+    function renderBoard(){ const board=document.querySelector("#board"); if(activeWeek!=="all"){ board.innerHTML=`<div class="day-grid">${renderDays(visibleDays())}</div>`; return; } board.innerHTML=`<div class="week-sections">${[["week1","Setmana 1","21/12 – 27/12"],["week2","Setmana 2","28/12 – 03/01"],["week3","Setmana 3","04/01 – 10/01"]].map(([week,title,range])=>{ const days=DAYS.filter(([date])=>WEEK_DAYS[week].includes(date) && (!activeTeam || requests.some(request=>request.team===activeTeam && request.date===date))); return `<section class="week-section"><h4 class="week-title">${title} <span>${range}</span></h4><div class="day-grid">${renderDays(days)}</div></section>`; }).join("")}</div>`; }
     function renderDays(days){ return days.length ? days.map(dayCard).join("") : '<div class="empty">Aquest equip no té peticions en aquest període</div>'; }
     function setupTeamFilter(){ const filter=document.querySelector("#teamFilter"); filter.insertAdjacentHTML("beforeend", [...new Set(requests.map(request=>request.team).filter(Boolean))].sort().map(team=>`<option value="${esc(team)}">${esc(team)}</option>`).join("")); filter.addEventListener("change", ()=>{ activeTeam=filter.value; renderSummary(); renderBoard(); }); }
     document.querySelectorAll("[data-week]").forEach(button => button.addEventListener("click", () => { activeWeek = button.dataset.week; document.querySelectorAll("[data-week]").forEach(item => item.classList.toggle("active", item === button)); renderBoard(); }));

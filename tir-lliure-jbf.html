@@ -76,12 +76,13 @@
     const PLAYERS = [
       ['1','Martina Rubio'], ['5','Martina Guaita'], ['6','Martina Rueda'], ['7','Aina Villà'],
       ['10','Thaïs Sampera'], ['11','Núria Navarrete'], ['13','Carla Perramón'], ['14','Clàudia Gàmiz'],
-      ['16','Joana Pla'], ['18','Ainhoa Espinal'], ['30','Caterina Figueras'], ['77','Noa Ambel']
+      ['16','Joana Pla'], ['18','Ainhoa Espinal'], ['30','Caterina Figueras']
     ];
     const entryBody = document.getElementById('entryBody'), entryFoot = document.getElementById('entryFoot');
     const statusEl = document.getElementById('status'), saveButton = document.getElementById('saveButton'), historyEl = document.getElementById('history');
     let entries = [], editingId = '', summaryScope = 'week';
     const DEFAULT_EXCLUDED_PLAYERS = new Set(['Núria Navarrete']);
+    const REMOVED_PLAYERS = new Set(['Noa Ambel']);
     const numberSort = value => Number(String(value || '').replace(/\D/g,'')) || 999;
     const safeKey = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
     const pct = (made, attempts) => attempts ? (made / attempts * 100).toFixed(1) + '%' : '—';
@@ -167,6 +168,7 @@
     function allPlayerTotals(sourceEntries = entries){
       const totals = new Map(PLAYERS.map(([number,name]) => [name,{number,name,made:0,attempts:0}]));
       sourceEntries.forEach(entry => Object.values(entry.players || {}).forEach(row => {
+        if(REMOVED_PLAYERS.has(row.name)) return;
         if(!totals.has(row.name)) totals.set(row.name,{number:row.number || '',name:row.name,made:0,attempts:0});
         const total = totals.get(row.name); total.made += Number(row.made) || 0; total.attempts += Number(row.attempts) || 0;
       }));

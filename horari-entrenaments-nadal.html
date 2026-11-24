@@ -28,7 +28,7 @@
   <script>
     const female=new Set(['SAF','CF','JBF','JAF','IF','MF']);
     const days=[
-      ['w1','21/12','Dilluns',[['17:30–19:00',['MBM','PBM','MAM','PAM'],'Minis · tarda'],['19:00–20:30',['IF','IAM'],'Infantil · tarda'],['20:30–22:00',['JBF'],'Júnior F · tarda'],['19:00–20:30',['JBM'],'Júnior M'],['20:30–22:00',['SAM','SBM','SAF'],'Sèniors']]],
+      ['w1','21/12','Dilluns',[['17:30–19:00',['MBM','PBM','MAM','PAM'],'Minis · tarda'],['19:00–20:30',['IF','IAM'],'Infantil · tarda'],['19:30–20:30',['MF'],'Mini F · tarda'],['20:30–22:00',['JBF'],'Júnior F · tarda'],['19:00–20:30',['JBM'],'Júnior M'],['20:30–22:00',['SAM','SBM','SAF'],'Sèniors']]],
       ['w1','22/12','Dimarts',[['17:30–19:00',['IAM','MF'],'Infantil M / Mini F · tarda'],['19:00–20:30',['CF','JAF','JAM'],'Cadet / Júnior F / Júnior A M · tarda']]],
       ['w1','23/12','Dimecres',[['17:30–19:00',['IF','PAM','MAM'],'Infantil F / Premini / Mini A · tarda'],['19:00–20:30',['JAM'],'Júnior M · tarda'],['19:00–20:30',['CF','JBF'],'Cadet / Júnior F · tarda'],['20:30–22:00',['SAF'],'Sènior A F']]],
       ['w1','24/12','Dijous',[]],
@@ -51,14 +51,14 @@
     const VENUE_OPTIONS=['CEM Besòs','Poliesportiu La Colina','Poliesportiu Montigalà','Poliesportiu de Pomar','Poliesportiu Països Catalans','Complex Esportiu Montigalà','Poliesportiu Municipal La Plana'];
     const morningSlots=['09:00–10:30','10:30–12:00','12:00–13:30'];
     const afternoonSlots=['17:00–18:30','18:30–20:00','21:00–22:30'],lateAfternoonSlots=['18:00–19:30','19:30–21:00','21:00–22:30'],monday28AfternoonSlots=['17:30–19:00','19:30–21:00','20:30–22:00','21:00–22:30'],friday08AfternoonSlots=['16:30–18:00','18:00–19:30','19:30–21:00','21:00–22:30'];
-    const christmasAfternoonDates=['21/12','22/12','23/12'],christmasAfternoonSlots=['17:30–19:00','18:30–19:30','19:00–20:30','20:30–22:00'];
+    const christmasAfternoonDates=['21/12','22/12','23/12'],christmasAfternoonSlots=['17:30–19:00','18:30–19:30','19:00–20:30','19:30–20:30','20:30–22:00'];
     let activeFilter='all',teamFilter='all',slotFilter='all',manualSchedule={},draggedSession=null,touchDraggedSession=null,editingSession=null;
     const period=(time,date='')=>time.startsWith('16:30')?'F0':time==='18:30–19:30'||time==='20:30–22:00'&&date==='28/12'||time.startsWith('09:00')||time.startsWith('17:00')||time.startsWith('17:30')||time.startsWith('18:00')?'F1':time==='20:30–22:00'||time.startsWith('10:30')||time.startsWith('18:30')||time.startsWith('19:00')||time.startsWith('19:30')?'F2':'F3';
     const dayId=day=>day[1];
     const migrateSchedule=source=>Object.fromEntries(Object.entries(source||{}).map(([key,value])=>[key.replace(/^w\d-/,'').trim(),value]));
     const normalizeSessions=sessions=>sessions.flatMap(s=>s.teams.map(team=>({id:team,time:s.time,teams:[team],note:(s.note||'').replace(' · última franja obligatòria',''),comment:s.comment||'',venue:(s.venue||DEFAULT_VENUE).trim()||DEFAULT_VENUE,court:['P1','P2','P3'].includes(s.court)?s.court:'',warn:s.warn||'',customTime:s.customTime||'',needsChange:Boolean(s.needsChange),confirmed:Boolean(s.confirmed),fullCourt:Boolean(s.fullCourt)})));
     const baseSessions=day=>normalizeSessions((day[3]||[]).map(([time,teams,note,warn,customTime])=>({time,teams,note,warn:warn||'',customTime:customTime||''})));
-    const christmasAfternoonTimes={'21/12':{MBM:'17:30–19:00',MAM:'17:30–19:00',PAM:'18:30–19:30',PBM:'18:30–19:30',IF:'19:00–20:30',IAM:'19:00–20:30',JBF:'20:30–22:00',JBM:'19:00–20:30',SAM:'20:30–22:00',SBM:'20:30–22:00',SAF:'20:30–22:00'},'22/12':{IAM:'17:30–19:00',MF:'17:30–19:00',CF:'19:00–20:30',JAF:'19:00–20:30',JAM:'19:00–20:30'},'23/12':{IF:'17:30–19:00',PAM:'17:30–19:00',MAM:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JBF:'19:00–20:30',SAF:'20:30–22:00'}};
+    const christmasAfternoonTimes={'21/12':{MBM:'17:30–19:00',MAM:'17:30–19:00',PAM:'18:30–19:30',PBM:'18:30–19:30',IF:'19:00–20:30',IAM:'19:00–20:30',MF:'19:30–20:30',JBF:'20:30–22:00',JBM:'19:00–20:30',SAM:'20:30–22:00',SBM:'20:30–22:00',SAF:'20:30–22:00'},'22/12':{IAM:'17:30–19:00',MF:'17:30–19:00',CF:'19:00–20:30',JAF:'19:00–20:30',JAM:'19:00–20:30'},'23/12':{IF:'17:30–19:00',PAM:'17:30–19:00',MAM:'17:30–19:00',JAM:'19:00–20:30',CF:'19:00–20:30',JBF:'19:00–20:30',SAF:'20:30–22:00'}};
     const teamRestrictions={SAM:{default:"Tarda · si hi ha forat, millor més d'hora del normal",'30/12':'Tarda · prioritat a una franja més d’hora del normal'},JAM:{'23/12':'Horari normal o matí · no tard','28/12':'Tarda · jo no hi soc, Santi tampoc; Michael treballa però arriba','29/12':'Horari normal o matí · no tard','30/12':'Tarda · jo no hi soc, Santi tampoc; Michael treballa però arriba',default:'Horari normal · preferència pel matí'},JBM:{default:'Tarda · preferència entre les 18 i les 20 h'},CF:{default:'Tarda · treballa fins a les 18:00 a Cornellà'},JAF:{default:'Tarda'},IBM:{default:'Preferència pel matí · no molt aviat'}};
     const restrictionFor=(date,team)=>teamRestrictions[team]?.[date]??teamRestrictions[team]?.default??'';
     const camTrainingTimes={'28/12':'17:30–19:00','30/12':'17:30–19:30','04/01':'17:30–19:30','08/01':'16:30–18:00'};

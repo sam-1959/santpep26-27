@@ -52,4 +52,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(sub)sub.textContent='Les cinc jugadores més rellevants per minuts, anotació i impacte. T2C, T3C i TLC són conversions per partit.';
 });
 </script>
+<style>
+.print{border:0;border-radius:999px;padding:8px 13px;background:#713f97;color:#fff;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer;margin-left:8px}
+@media print{@page{size:A4 portrait;margin:7mm}header,.top .badge,.resource{display:none!important}main{max-width:none;padding:0}.panel{break-inside:avoid-page;box-shadow:none}.grid{gap:8px}.top{margin:0 0 8px}.print{display:none!important}}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const top=document.querySelector('.top');
+  if(!top||top.querySelector('.print'))return;
+  const button=document.createElement('button');
+  button.className='print';button.type='button';button.textContent='🖨️ Imprimir';button.addEventListener('click',()=>window.print());
+  top.append(button);
+});
+</script>
 </body></html>

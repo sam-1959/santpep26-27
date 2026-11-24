@@ -42,4 +42,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(standings){const shot=document.createElement('article');shot.className='panel half';shot.innerHTML='<h3>Tir de la temporada</h3><p class="sub">Dades acumulades del CB Blanes A en 10 partits.</p><div class="kpis" style="grid-template-columns:repeat(3,minmax(100px,1fr))"><div class="kpi"><span>Tirs lliures</span><strong>55%</strong><small>14,9 de 26,9</small></div><div class="kpi"><span>Punts de 2</span><strong>64,5%</strong><small>41,8 de 64,8 punts</small></div><div class="kpi"><span>Punts de 3</span><strong>12,5%</strong><small>8,1 de 64,8 punts</small></div></div><div class="callouts" style="margin-top:12px"><div class="call warn"><strong>Lectura defensiva</strong><p>La producció principal és dins l’arc: protegir pintura, negar segones opcions i defensar amb verticalitat.</p></div></div>';standings.after(shot)}
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const roster=[...document.querySelectorAll('.grid > article')].find(article=>article.querySelector('h3')?.textContent==='Plantilla · referències individuals');
+  if(!roster)return;
+  const rows=[...roster.querySelectorAll('tbody tr')];
+  rows.slice(5).forEach(row=>row.remove());
+  const sub=roster.querySelector('.sub');
+  if(sub)sub.textContent='Les cinc jugadores més rellevants per minuts, anotació i impacte. T2C, T3C i TLC són conversions per partit.';
+});
+</script>
 </body></html>

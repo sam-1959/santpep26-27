@@ -557,7 +557,8 @@ function destinatarisComunicatsAccident(tipus) {
   var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
   var externs = avisos.filter(function(contact) {
     if (!Array.isArray(contact.notifications) || contact.notifications.indexOf("accidents") === -1) return false;
-    if (esCorreuExclosAvisosAccidents(contact.email)) return false;
+    // Aon rep el comunicat amb PDF, però no l'avís inicial de la petició familiar.
+    if (tipus === "avis" && esCorreuExclosAvisosAccidents(contact.email)) return false;
     var esDigglo = String(contact.email || "").trim().toLowerCase() === "basquetcatala@digglo.eu";
     return tipus === "pdf" ? true : !esDigglo;
   }).map(function(contact) { return contact.email; });

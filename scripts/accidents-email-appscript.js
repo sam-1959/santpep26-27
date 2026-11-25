@@ -18,7 +18,6 @@ var ACCIDENT_PDF_REMINDER_CC = "dtecnic@cbsantjosep.cat";
 var ACCIDENT_REQUESTS_URL = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
 var ACCIDENT_PDF_REMINDER_START_KEY = "accidentPdfReminderStartAt";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
-var EXCLOSOS_AVISOS_ACCIDENTS = ["siniestros.baloncesto@aon.es"];
 var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 
@@ -528,8 +527,7 @@ function enviarCorreuComunicatsAccident(e) {
 function correuPrincipalAvisosAccidents() {
   var contacts = obtenirContactesTemporada();
   var principal = (Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : []).filter(function(contact) {
-    return contact && String(contact.email || "").trim().toLowerCase() === "info@cbsantjosep.cat" &&
-      Array.isArray(contact.notifications) && contact.notifications.indexOf("accidents") !== -1;
+    return contact && String(contact.email || "").trim().toLowerCase() === "info@cbsantjosep.cat";
   })[0];
   return principal ? String(principal.email).trim() : "";
 }
@@ -546,22 +544,14 @@ function normalitzarCorreus(llistaCorreus) {
     });
 }
 
-function esCorreuExclosAvisosAccidents(correu) {
-  return EXCLOSOS_AVISOS_ACCIDENTS.indexOf(String(correu || "").trim().toLowerCase()) !== -1;
-}
-
-// Els destinataris permanents es gestionen a Contactes. L'avís del formulari
-// és per a Pere i Coordinació general; el PDF adjunt inclou Digglo.
+// El check d'accidents de Contactes només controla la còpia del PDF adjunt.
+// L'avís inicial del formulari és per a Pere i Coordinació general.
 function destinatarisComunicatsAccident(tipus) {
   var contacts = obtenirContactesTemporada();
   var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
-  var externs = avisos.filter(function(contact) {
-    if (!Array.isArray(contact.notifications) || contact.notifications.indexOf("accidents") === -1) return false;
-    // Aon rep el comunicat amb PDF, però no l'avís inicial de la petició familiar.
-    if (tipus === "avis" && esCorreuExclosAvisosAccidents(contact.email)) return false;
-    var esDigglo = String(contact.email || "").trim().toLowerCase() === "basquetcatala@digglo.eu";
-    return tipus === "pdf" ? true : !esDigglo;
-  }).map(function(contact) { return contact.email; });
+  var externs = tipus === "pdf" ? avisos.filter(function(contact) {
+    return Array.isArray(contact.notifications) && contact.notifications.indexOf("accidents") !== -1;
+  }).map(function(contact) { return contact.email; }) : [];
   var coordinacioGeneral = tipus === "pdf" || tipus === "avis"
     ? (Array.isArray(contacts.coordinators) ? contacts.coordinators : []).filter(function(contact) {
         return contact && contact.role === "general";

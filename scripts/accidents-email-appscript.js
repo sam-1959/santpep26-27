@@ -18,6 +18,7 @@ var ACCIDENT_PDF_REMINDER_CC = "dtecnic@cbsantjosep.cat";
 var ACCIDENT_REQUESTS_URL = "https://sam-1959.github.io/santpep26-27/accidents-peticions.html";
 var ACCIDENT_PDF_REMINDER_START_KEY = "accidentPdfReminderStartAt";
 var SEASON_CONTACTS_PATH = "seasonContacts/season-26-27";
+var EXCLOSOS_AVISOS_ACCIDENTS = ["siniestros.baloncesto@aon.es"];
 var SEASON_CONTACTS_CACHE;
 var ACCIDENT_PDFS_FOLDER_ID = "1Jjp1cx9prEseFwzUDEvfMFFt_B7TpSSJ";
 
@@ -545,6 +546,10 @@ function normalitzarCorreus(llistaCorreus) {
     });
 }
 
+function esCorreuExclosAvisosAccidents(correu) {
+  return EXCLOSOS_AVISOS_ACCIDENTS.indexOf(String(correu || "").trim().toLowerCase()) !== -1;
+}
+
 // Els destinataris permanents es gestionen a Contactes. L'avís del formulari
 // és per a Pere i Coordinació general; el PDF adjunt inclou Digglo.
 function destinatarisComunicatsAccident(tipus) {
@@ -552,6 +557,7 @@ function destinatarisComunicatsAccident(tipus) {
   var avisos = Array.isArray(contacts.notificationRecipients) ? contacts.notificationRecipients : [];
   var externs = avisos.filter(function(contact) {
     if (!Array.isArray(contact.notifications) || contact.notifications.indexOf("accidents") === -1) return false;
+    if (esCorreuExclosAvisosAccidents(contact.email)) return false;
     var esDigglo = String(contact.email || "").trim().toLowerCase() === "basquetcatala@digglo.eu";
     return tipus === "pdf" ? true : !esDigglo;
   }).map(function(contact) { return contact.email; });

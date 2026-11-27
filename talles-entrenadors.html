@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+  <title>Talles de roba · CB Sant Josep</title>
+  <style>
+    :root{--brand:#713f97;--dark:#5a2f7d;--bg:#f5f3f8;--card:#fff;--ink:#2a2233;--muted:#71677a;--line:#e6e0ee;--ok:#16784a;--error:#a32626}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff}.logo{width:48px;height:48px;padding:3px;border-radius:10px;background:#fff;object-fit:contain}h1{margin:0;font-size:1.08rem}h1 span{display:block;font-size:.72rem;font-weight:500;letter-spacing:.04em;opacity:.86;text-transform:uppercase}header p{margin:3px 0 0;font-size:.82rem;opacity:.92}main{width:min(680px,100%);margin:0 auto;padding:30px 18px 52px}.back{display:inline-block;margin-bottom:18px;color:var(--brand);font-size:.86rem;font-weight:800;text-decoration:none}.panel{padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 4px 18px #3220460d}.panel h2{margin:0;color:var(--dark);font-size:1.3rem}.intro{margin:7px 0 22px;color:var(--muted)}.form{display:grid;gap:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}label{color:var(--dark);font-size:.76rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase}input,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit;color:var(--ink);background:#fff}input:focus,select:focus{outline:2px solid #d7c2e8;border-color:var(--brand)}.hint{margin:0;color:var(--muted);font-size:.78rem}.required{color:#b3261e}.button{border:0;border-radius:9px;padding:12px 16px;background:var(--brand);color:#fff;font:inherit;font-weight:900;cursor:pointer}.button:hover{background:var(--dark)}.button:disabled{opacity:.55;cursor:wait}.status{min-height:1.3em;margin:0;font-size:.85rem;font-weight:700}.status.ok{color:var(--ok)}.status.error{color:var(--error)}.notice{margin:0 0 18px;padding:11px 13px;border:1px solid #eadc9b;border-radius:10px;background:#fff9df;color:#665000;font-size:.84rem}@media(max-width:560px){main{padding:22px 14px 42px}.panel{padding:18px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <header><a href="index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"></a><div><h1><span>CB Sant Josep de Badalona</span>Talles de roba d'entrenament</h1><p>Entrenadors/es i ajudants · Temporada 2026-27</p></div></header>
+  <main>
+    <a class="back" href="index.html">← Tornar al portal</a>
+    <section class="panel">
+      <h2>Indica les teves talles</h2>
+      <p class="intro">Necessitem la talla de samarreta de cotó i de pantaló curt d'entrenament. Pots tornar a enviar el formulari per corregir-les: se substituirà la teva resposta anterior.</p>
+      <p class="notice">Si ajudes més d’un equip, escriu-los tots separats per comes.</p>
+      <form id="sizes-form" class="form">
+        <div class="grid">
+          <div class="field full"><label for="name">Nom i cognoms <span class="required">*</span></label><input id="name" name="name" autocomplete="name" required placeholder="Ex.: Anna Garcia" maxlength="100"></div>
+          <div class="field"><label for="role">Funció <span class="required">*</span></label><select id="role" name="role" required><option value="">Selecciona…</option><option>Entrenador/a</option><option>Ajudant</option><option>Entrenador/a i ajudant</option></select></div>
+          <div class="field"><label for="teams">Equip(s) <span class="required">*</span></label><input id="teams" name="teams" required placeholder="Ex.: JBF, IF" maxlength="100"></div>
+          <div class="field"><label for="tshirt">Samarreta de cotó <span class="required">*</span></label><select id="tshirt" name="tshirt" required><option value="">Selecciona…</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL</option><option>3XL</option><option>4XL</option><option>5XL</option></select></div>
+          <div class="field"><label for="shorts">Pantaló curt d'entrenament <span class="required">*</span></label><select id="shorts" name="shorts" required><option value="">Selecciona…</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL</option><option>3XL</option><option>4XL</option><option>5XL</option></select></div>
+        </div>
+        <p class="hint">Les dades s’utilitzaran únicament per preparar la comanda de roba del club.</p>
+        <button id="submit" class="button" type="submit">Enviar talles</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+  <script>
+    const DB_URL='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
+    const PATH='coachClothingSizes/season-26-27';
+    const form=document.getElementById('sizes-form'),submit=document.getElementById('submit'),status=document.getElementById('status');
+    const normalize=value=>String(value||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const setStatus=(text,type='')=>{status.textContent=text;status.className='status '+type};
+    form.addEventListener('submit',async event=>{event.preventDefault();if(!form.reportValidity())return;const name=form.name.value.trim(),key=normalize(name);if(!key){setStatus('Indica un nom vàlid.','error');return}const payload={name,role:form.role.value,teams:form.teams.value.trim(),cottonTshirtSize:form.tshirt.value,trainingShortsSize:form.shorts.value,submittedAt:new Date().toISOString()};submit.disabled=true;setStatus('Desant les talles…');try{const response=await fetch(DB_URL+'/'+PATH+'/'+encodeURIComponent(key)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!response.ok)throw new Error('HTTP '+response.status);setStatus('Gràcies! Les teves talles s’han desat correctament.','ok')}catch(error){console.error(error);setStatus('No s’han pogut desar les talles. Torna-ho a provar en uns instants.','error')}finally{submit.disabled=false}});
+  </script>
+</body>
+</html>

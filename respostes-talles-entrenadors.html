@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/favicon.png">
+  <title>Respostes de talles · CB Sant Josep</title>
+  <style>
+    :root{--brand:#713f97;--dark:#5a2f7d;--bg:#f5f3f8;--card:#fff;--ink:#2a2233;--muted:#71677a;--line:#e6e0ee;--male:#1b5c9a;--female:#a13369}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--brand);color:#fff}.logo{width:48px;height:48px;padding:3px;border-radius:10px;background:#fff;object-fit:contain}h1{margin:0;font-size:1.08rem}h1 span{display:block;font-size:.72rem;font-weight:500;letter-spacing:.04em;opacity:.86;text-transform:uppercase}header p{margin:3px 0 0;font-size:.82rem;opacity:.92}main{max-width:1180px;margin:0 auto;padding:28px 22px 50px}.intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}.intro h2{margin:0;color:var(--dark);font-size:1.35rem}.intro p{margin:4px 0 0;color:var(--muted)}.updated{color:var(--muted);font-size:.78rem;font-weight:700}.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}.card{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 2px 10px #3220460a}.card h3{margin:0;color:var(--dark);font-size:1rem}.count{display:inline-block;margin-left:7px;color:var(--muted);font-size:.82rem}.sizes{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.size{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#faf8fd;color:var(--dark);font-size:.78rem;font-weight:800}.size b{font-size:.84rem}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}.toolbar h3{margin:0;color:var(--dark);font-size:1.08rem}.search{min-width:250px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font:inherit}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#faf8fd;color:var(--dark);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase}td{font-size:.88rem}tr:last-child td{border-bottom:0}.tag{display:inline-flex;padding:3px 7px;border-radius:999px;background:#eee6f6;color:var(--brand);font-size:.74rem;font-weight:900}.size-cell{font-weight:900;color:var(--dark)}.empty{padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}.footer{margin-top:24px;color:var(--muted);font-size:.76rem;text-align:center}@media(max-width:680px){main{padding:22px 14px 42px}.summary{grid-template-columns:1fr}.search{width:100%;min-width:0}}
+  </style>
+</head>
+<body>
+  <header><a href="index.html"><img class="logo" src="assets/santpep-logo.png" alt="Escut CB Sant Josep"></a><div><h1><span>CB Sant Josep de Badalona</span>Respostes de talles</h1><p>Samarreta de cotó i pantaló curt d'entrenament</p></div></header>
+  <main>
+    <div class="intro"><div><h2>Resum de la comanda</h2><p>Respostes enviades per entrenadors/es i preparadors físics.</p></div><span id="updated" class="updated"></span></div>
+    <section id="summary" class="summary"></section>
+    <div class="toolbar"><h3 id="table-title">Respostes</h3><input id="search" class="search" type="search" placeholder="Cerca per nom, equip o funció"></div>
+    <div id="content" class="empty">Carregant respostes…</div>
+    <p class="footer">CB Sant Josep de Badalona · Temporada 2026-27</p>
+  </main>
+  <script>
+    const DB_URL='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
+    const PATH='christmasTrainingSchedule/season-26-27/coachClothingSizes';
+    const content=document.getElementById('content'),summary=document.getElementById('summary'),search=document.getElementById('search'),updated=document.getElementById('updated'),tableTitle=document.getElementById('table-title');
+    let rows=[];
+    const esc=value=>String(value||'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const normalize=value=>String(value||'').toLocaleLowerCase('ca').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const sortSizes=entries=>entries.sort(([a],[b])=>['XS','S','M','L','XL','2XL','3XL','4XL'].indexOf(a)-['XS','S','M','L','XL','2XL','3XL','4XL'].indexOf(b));
+    const counts=field=>sortSizes(Object.entries(rows.reduce((out,row)=>{const value=row[field];if(value)out[value]=(out[value]||0)+1;return out},{})));
+    function summaryCard(title,field){const items=counts(field),total=items.reduce((sum,[,count])=>sum+count,0);return '<article class="card"><h3>'+title+'<span class="count">'+total+'</span></h3><div class="sizes">'+(items.length?items.map(([size,count])=>'<span class="size"><b>'+esc(size)+'</b> '+count+'</span>').join(''):'<span class="size">Sense respostes</span>')+'</div></article>'}
+    function render(){const query=normalize(search.value).trim(),visible=rows.filter(row=>!query||normalize([row.name,row.role,row.teams].join(' ')).includes(query));summary.innerHTML=summaryCard('Samarreta de cotó','cottonTshirtSize')+summaryCard('Pantaló curt','trainingShortsSize');tableTitle.textContent='Respostes ('+visible.length+')';if(!visible.length){content.className='empty';content.textContent=query?'No hi ha cap resposta amb aquesta cerca.':'Encara no hi ha respostes.';return}content.className='table-wrap';content.innerHTML='<table><thead><tr><th>Nom</th><th>Funció</th><th>Equip</th><th>Samarreta</th><th>Pantaló curt</th><th>Enviat</th></tr></thead><tbody>'+visible.map(row=>'<tr><td><strong>'+esc(row.name)+'</strong></td><td>'+esc(row.role)+'</td><td><span class="tag">'+esc(row.teams)+'</span></td><td class="size-cell">'+esc(row.cottonTshirtSize)+'</td><td class="size-cell">'+esc(row.trainingShortsSize)+'</td><td>'+esc(row.submittedAt?new Date(row.submittedAt).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'—')+'</td></tr>').join('')+'</tbody></table>'}
+    async function load(){try{const response=await fetch(DB_URL+'/'+PATH+'.json',{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json()||{};rows=Object.values(data).filter(row=>row&&row.name).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ca'));updated.textContent=rows.length?'Actualitzat automàticament':'Sense respostes encara';render()}catch(error){console.error(error);content.className='empty';content.textContent='No s’han pogut carregar les respostes. Torna-ho a provar més tard.'}}
+    search.addEventListener('input',render);load();
+  </script>
+</body>
+</html>

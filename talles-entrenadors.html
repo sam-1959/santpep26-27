@@ -33,7 +33,7 @@
   </main>
   <script>
     const DB_URL='https://coord-fa09e-default-rtdb.europe-west1.firebasedatabase.app';
-    const PATH='coachClothingSizes/season-26-27';
+    const PATH='christmasTrainingSchedule/season-26-27/coachClothingSizes';
     const form=document.getElementById('sizes-form'),submit=document.getElementById('submit'),status=document.getElementById('status');
     const normalize=value=>String(value||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
     const setStatus=(text,type='')=>{status.textContent=text;status.className='status '+type};
